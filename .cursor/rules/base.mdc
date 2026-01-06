@@ -1,0 +1,67 @@
+---
+alwaysApply: true
+---
+
+## 基本方針
+
+- 新規コードにはコメントは書かない
+- できるだけ早期リターンを使ってネストを浅くする
+- コードはシンプルで読みやすく保つ
+- YAGNI 原則（現時点で不要なコードは書かない）の徹底
+- DRY 原則（重複コードの排除）の徹底
+- KISS 原則（シンプルなコードを追求）の徹底
+
+## 命名規則
+
+### 基本原則
+
+- 変数名、関数名、クラス名など、すべての識別子は英語を使用する。ローマ字（`hensuu`, `shinki`）は絶対禁止
+- 完全な単語: `usr` ではなく `user`、`addr` ではなく `address` のように省略せず記述する（慣習的な `id`, `url`, `http` 等は例外）
+- 具体性: `data`, `info`, `item`, `value`, `obj` などの汎用的で意味を持たない名前は禁止。中身を表す名前（`userProfile`, `cartItems`）にする
+
+### TypeScript / JavaScript (Frontend)
+
+- 変数・関数: `camelCase` (例: `handleSubmit`, `currentUser`)
+- 型・インターフェース・コンポーネント: `PascalCase` (例: `UserProfile`, `ArticleCard`)
+- 定数: `SCREAMING_SNAKE_CASE` (例: `MAX_UPLOAD_SIZE`)
+- Boolean 変数: `is`, `has`, `can`, `should` などの接頭辞を付ける (例: `isPublished`, `hasError`)
+- ファイル名:
+  - コンポーネント: `PascalCase` (例: `ArticleCard.tsx`)
+  - ユーティリティ・hooks: `camelCase` (例: `useAuth.ts`, `formatDate.ts`)
+  - ページ (App Router): `page.tsx`, `layout.tsx`
+
+### Rust (Tauri Backend)
+
+- 変数・関数: `snake_case` (例: `fetch_articles`, `get_user`)
+- 構造体・列挙型・トレイト: `PascalCase` (例: `UserProfile`, `AppState`)
+- 定数: `SCREAMING_SNAKE_CASE` (例: `MAX_CONNECTIONS`)
+- モジュール: `snake_case` (例: `user_service`)
+- Tauri コマンド: `snake_case` (例: `#[tauri::command] fn get_config()`)
+
+### 動詞の使い分け (Verbs)
+
+関数名の先頭に使用する動詞を統一する:
+
+- `fetch`: API や外部リソースからデータを取得する (例: `fetchArticles`)
+- `get`: ゲッター、または計算不要な単純な取得 (例: `getFullName`)
+- `find`: 検索して見つからない場合に `null`/`undefined`/`None` を返す (例: `findUser`)
+- `create`: 新しいデータを作成する
+- `update`: 既存のデータを更新する
+- `delete` / `remove`: データを削除する
+- `calc` / `compute`: 計算処理を行う
+- `check` / `validate`: 検証を行う
+- `handle`: イベントハンドラー (例: `handleSubmit`, `handleClick`)
+
+## Git 運用
+
+- ブランチ名は `feature/`, `fix/`, `chore/`, `test/`, `refactor/` などのプレフィックスを使用
+- コミットメッセージは明確に記述
+- Issue・PR 作成時はテンプレートを使用
+
+## コードレビュー時のチェックポイント
+
+- 型安全性（`any` の使用を避ける）
+- テストカバレッジ
+- パフォーマンス（不要な再レンダリング、メモ化の検討）
+- コードの可読性
+- エラーハンドリング
