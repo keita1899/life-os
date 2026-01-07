@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react'
 import { getDatabase } from '@/lib/db'
+import { Button } from '@/components/ui/button'
 
 export default function Home() {
   const [dbStatus, setDbStatus] = useState<'idle' | 'testing' | 'success' | 'error'>('idle')
@@ -49,7 +50,7 @@ export default function Home() {
           <h1 className="mb-8 text-3xl font-semibold text-black dark:text-zinc-50">
             SQLite 接続テスト
           </h1>
-          
+
           <div className="mb-8 rounded-lg border border-zinc-200 p-6 dark:border-zinc-800">
             <div className="mb-4">
               <p className="mb-2 text-sm font-medium text-zinc-600 dark:text-zinc-400">
@@ -70,20 +71,20 @@ export default function Home() {
                 )}
               </div>
             </div>
-            
+
             {dbMessage && (
               <p className="mb-4 text-sm text-zinc-700 dark:text-zinc-300">
                 {dbMessage}
               </p>
             )}
-            
-            <button
+
+            <Button
               onClick={testConnection}
               disabled={dbStatus === 'testing'}
-              className="rounded bg-blue-500 px-4 py-2 text-white transition-colors hover:bg-blue-600 disabled:opacity-50"
+              variant="default"
             >
-              再接続テスト
-            </button>
+              {dbStatus === 'testing' ? '接続中...' : '再接続テスト'}
+            </Button>
           </div>
 
           {testData.length > 0 && (
