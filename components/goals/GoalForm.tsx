@@ -1,5 +1,6 @@
 'use client'
 
+import { useEffect } from 'react'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import * as z from 'zod'
@@ -20,7 +21,7 @@ import {
   SelectValue,
 } from '@/components/ui/select'
 import { Button } from '@/components/ui/button'
-import type { CreateGoalInput } from '@/lib/types/goal'
+import type { CreateGoalInput, Goal } from '@/lib/types/goal'
 
 const goalFormSchema = z.object({
   title: z.string().min(1, 'タイトルは必須です'),
@@ -33,21 +34,48 @@ type GoalFormValues = z.infer<typeof goalFormSchema>
 interface GoalFormProps {
   onSubmit: (data: CreateGoalInput) => Promise<void>
   onCancel?: () => void
+  initialData?: Goal
+  submitLabel?: string
 }
 
-export const GoalForm = ({ onSubmit, onCancel }: GoalFormProps) => {
+export const GoalForm = ({
+  onSubmit,
+  onCancel,
+  initialData,
+  submitLabel = '作成',
+}: GoalFormProps) => {
+  const isEditMode = !!initialData
+
   const form = useForm<GoalFormValues>({
     resolver: zodResolver(goalFormSchema),
     defaultValues: {
-      title: '',
-      targetDate: '',
-      periodType: 'yearly',
+      title: initialData?.title || '',
+      targetDate: initialData?.targetDate ?? '',
+      periodType: initialData?.periodType || 'yearly',
     },
   })
 
+  useEffect(() => {
+    if (initialData) {
+      form.reset({
+        title: initialData.title,
+        targetDate: initialData.targetDate ?? '',
+        periodType: initialData.periodType,
+      })
+    } else {
+      form.reset({
+        title: '',
+        targetDate: '',
+        periodType: 'yearly',
+      })
+    }
+  }, [initialData, form])
+
   const handleSubmit = async (data: GoalFormValues) => {
     await onSubmit(data)
-    form.reset()
+    if (!isEditMode) {
+      form.reset()
+    }
   }
 
   return (
@@ -87,7 +115,7 @@ export const GoalForm = ({ onSubmit, onCancel }: GoalFormProps) => {
           render={({ field }) => (
             <FormItem>
               <FormLabel>期間タイプ</FormLabel>
-              <Select onValueChange={field.onChange} defaultValue={field.value}>
+              <Select onValueChange={field.onChange} value={field.value}>
                 <FormControl>
                   <SelectTrigger>
                     <SelectValue placeholder="期間タイプを選択" />
@@ -110,7 +138,9 @@ export const GoalForm = ({ onSubmit, onCancel }: GoalFormProps) => {
             </Button>
           )}
           <Button type="submit" disabled={form.formState.isSubmitting}>
-            {form.formState.isSubmitting ? '作成中...' : '作成'}
+            {form.formState.isSubmitting
+              ? `${submitLabel === '作成' ? '作成中...' : '更新中...'}`
+              : submitLabel}
           </Button>
         </div>
       </form>

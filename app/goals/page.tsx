@@ -2,7 +2,7 @@
 
 import { useState, useMemo } from 'react'
 import Link from 'next/link'
-import { X } from 'lucide-react'
+import { X, Pencil } from 'lucide-react'
 import { useGoals } from '@/hooks/useGoals'
 import { GoalDialog } from '@/components/goals/GoalDialog'
 import { Button } from '@/components/ui/button'
@@ -21,13 +21,14 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select'
-import type { CreateGoalInput, Goal } from '@/lib/types/goal'
+import type { CreateGoalInput, Goal, UpdateGoalInput } from '@/lib/types/goal'
 
 const GoalsPage = () => {
-  const { goals, isLoading, error, createGoal } = useGoals()
+  const { goals, isLoading, error, createGoal, updateGoal } = useGoals()
   const [isDialogOpen, setIsDialogOpen] = useState(false)
   const [selectedYear, setSelectedYear] = useState(new Date().getFullYear())
   const [createError, setCreateError] = useState<string | null>(null)
+  const [editingGoal, setEditingGoal] = useState<Goal | undefined>(undefined)
 
   const handleCreateGoal = async (input: CreateGoalInput) => {
     try {
@@ -38,6 +39,37 @@ const GoalsPage = () => {
       setCreateError(
         err instanceof Error ? err.message : '目標の作成に失敗しました',
       )
+    }
+  }
+
+  const handleUpdateGoal = async (input: CreateGoalInput) => {
+    if (!editingGoal) return
+    try {
+      setCreateError(null)
+      const updateInput: UpdateGoalInput = {
+        title: input.title,
+        targetDate: input.targetDate || null,
+        periodType: input.periodType,
+      }
+      await updateGoal(editingGoal.id, updateInput)
+      setIsDialogOpen(false)
+      setEditingGoal(undefined)
+    } catch (err) {
+      setCreateError(
+        err instanceof Error ? err.message : '目標の更新に失敗しました',
+      )
+    }
+  }
+
+  const handleEditClick = (goal: Goal) => {
+    setEditingGoal(goal)
+    setIsDialogOpen(true)
+  }
+
+  const handleDialogClose = (open: boolean) => {
+    setIsDialogOpen(open)
+    if (!open) {
+      setEditingGoal(undefined)
     }
   }
 
@@ -177,7 +209,7 @@ const GoalsPage = () => {
                 {yearlyGoals.map((goal) => (
                   <Card
                     key={goal.id}
-                    className="border-zinc-200 dark:border-zinc-800"
+                    className="group relative border-zinc-200 dark:border-zinc-800"
                   >
                     <CardHeader>
                       <CardTitle className="text-zinc-900 dark:text-zinc-100">
@@ -200,6 +232,17 @@ const GoalsPage = () => {
                         )}
                       </div>
                     </CardContent>
+                    <div className="absolute right-4 top-4 opacity-0 transition-opacity group-hover:opacity-100">
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        onClick={() => handleEditClick(goal)}
+                        className="h-8 w-8"
+                      >
+                        <Pencil className="h-4 w-4" />
+                        <span className="sr-only">編集</span>
+                      </Button>
+                    </div>
                   </Card>
                 ))}
               </div>
@@ -210,7 +253,7 @@ const GoalsPage = () => {
             <h2 className="mb-4 text-xl font-semibold text-stone-900 dark:text-stone-100">
               月間目標
             </h2>
-            <Accordion type="single" collapsible className="w-full">
+            <Accordion type="multiple" className="w-full">
               {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12].map((month) => {
                 const monthGoals = monthlyGoalsByMonth[month] || []
                 const currentDate = new Date()
@@ -245,7 +288,7 @@ const GoalsPage = () => {
                           {monthGoals.map((goal) => (
                             <Card
                               key={goal.id}
-                              className="border-stone-200 dark:border-stone-800"
+                              className="group relative border-stone-200 dark:border-stone-800"
                             >
                               <CardHeader>
                                 <CardTitle className="text-stone-900 dark:text-stone-100">
@@ -268,6 +311,17 @@ const GoalsPage = () => {
                                   )}
                                 </div>
                               </CardContent>
+                              <div className="absolute right-4 top-4 opacity-0 transition-opacity group-hover:opacity-100">
+                                <Button
+                                  variant="ghost"
+                                  size="icon"
+                                  onClick={() => handleEditClick(goal)}
+                                  className="h-8 w-8"
+                                >
+                                  <Pencil className="h-4 w-4" />
+                                  <span className="sr-only">編集</span>
+                                </Button>
+                              </div>
                             </Card>
                           ))}
                         </div>
@@ -283,8 +337,9 @@ const GoalsPage = () => {
 
       <GoalDialog
         open={isDialogOpen}
-        onOpenChange={setIsDialogOpen}
-        onSubmit={handleCreateGoal}
+        onOpenChange={handleDialogClose}
+        onSubmit={editingGoal ? handleUpdateGoal : handleCreateGoal}
+        goal={editingGoal}
       />
     </div>
   )

@@ -1,7 +1,7 @@
 import useSWR from 'swr'
 import { mutate } from 'swr'
-import { createGoal, getAllGoals } from '@/lib/goals'
-import type { Goal, CreateGoalInput } from '@/lib/types/goal'
+import { createGoal, getAllGoals, updateGoal } from '@/lib/goals'
+import type { Goal, CreateGoalInput, UpdateGoalInput } from '@/lib/types/goal'
 import { fetcher } from '@/lib/swr'
 
 const GOALS_KEY = 'goals'
@@ -22,6 +22,15 @@ export function useGoals() {
     }
   }
 
+  const handleUpdateGoal = async (id: number, input: UpdateGoalInput) => {
+    try {
+      await updateGoal(id, input)
+      await mutate(GOALS_KEY)
+    } catch (err) {
+      throw err
+    }
+  }
+
   return {
     goals,
     isLoading,
@@ -31,6 +40,7 @@ export function useGoals() {
         : 'Failed to fetch goals'
       : null,
     createGoal: handleCreateGoal,
+    updateGoal: handleUpdateGoal,
     refreshGoals: () => mutate(GOALS_KEY),
   }
 }
