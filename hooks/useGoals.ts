@@ -4,8 +4,8 @@ import {
   getYearlyAndMonthlyGoalsByYear,
   getAllAvailableYears,
 } from '@/lib/goals/index'
-import { createYearlyGoal } from '@/lib/goals/yearly'
-import { createMonthlyGoal } from '@/lib/goals/monthly'
+import { createYearlyGoal, deleteYearlyGoal } from '@/lib/goals/yearly'
+import { createMonthlyGoal, deleteMonthlyGoal } from '@/lib/goals/monthly'
 import type { YearlyGoal, CreateYearlyGoalInput } from '@/lib/types/yearly-goal'
 import type {
   MonthlyGoal,
@@ -51,6 +51,26 @@ export function useGoals(selectedYear: number) {
     }
   }
 
+  const handleDeleteYearlyGoal = async (id: number) => {
+    try {
+      await deleteYearlyGoal(id)
+      await mutate(goalsKey)
+      await mutate(availableYearsKey)
+    } catch (err) {
+      throw err
+    }
+  }
+
+  const handleDeleteMonthlyGoal = async (id: number) => {
+    try {
+      await deleteMonthlyGoal(id)
+      await mutate(goalsKey)
+      await mutate(availableYearsKey)
+    } catch (err) {
+      throw err
+    }
+  }
+
   return {
     yearlyGoals: data.yearlyGoals,
     monthlyGoals: data.monthlyGoals,
@@ -63,6 +83,8 @@ export function useGoals(selectedYear: number) {
       : null,
     createYearlyGoal: handleCreateYearlyGoal,
     createMonthlyGoal: handleCreateMonthlyGoal,
+    deleteYearlyGoal: handleDeleteYearlyGoal,
+    deleteMonthlyGoal: handleDeleteMonthlyGoal,
     refreshGoals: () => mutate(goalsKey),
   }
 }

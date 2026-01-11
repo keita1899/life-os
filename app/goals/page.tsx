@@ -2,7 +2,7 @@
 
 import { useState, useMemo } from 'react'
 import Link from 'next/link'
-import { X, Pencil } from 'lucide-react'
+import { X, Pencil, Trash2 } from 'lucide-react'
 import { useGoals } from '@/hooks/useGoals'
 import { YearlyGoalDialog } from '@/components/goals/YearlyGoalDialog'
 import { MonthlyGoalDialog } from '@/components/goals/MonthlyGoalDialog'
@@ -22,6 +22,14 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select'
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog'
 import type { YearlyGoal, CreateYearlyGoalInput } from '@/lib/types/yearly-goal'
 import type {
   MonthlyGoal,
@@ -40,11 +48,18 @@ const GoalsPage = () => {
     error,
     createYearlyGoal,
     createMonthlyGoal,
+    deleteYearlyGoal,
+    deleteMonthlyGoal,
     refreshGoals,
   } = useGoals(selectedYear)
   const [isYearlyDialogOpen, setIsYearlyDialogOpen] = useState(false)
   const [isMonthlyDialogOpen, setIsMonthlyDialogOpen] = useState(false)
   const [createError, setCreateError] = useState<string | null>(null)
+  const [deleteConfirmDialog, setDeleteConfirmDialog] = useState<{
+    open: boolean
+    message: string
+    onConfirm: () => void
+  }>({ open: false, message: '', onConfirm: () => {} })
   const [editingYearlyGoal, setEditingYearlyGoal] = useState<
     YearlyGoal | undefined
   >(undefined)
@@ -123,6 +138,44 @@ const GoalsPage = () => {
       setEditingYearlyGoal(goal)
       setIsYearlyDialogOpen(true)
     }
+  }
+
+  const handleDeleteClick = async (
+    e: React.MouseEvent,
+    goal: YearlyGoal | MonthlyGoal,
+  ) => {
+    e.preventDefault()
+    e.stopPropagation()
+
+    const goalType = 'month' in goal ? '月間目標' : '年間目標'
+    const message = `「${goal.title}」を削除してもよろしいですか？`
+
+    setDeleteConfirmDialog({
+      open: true,
+      message,
+      onConfirm: async () => {
+        setDeleteConfirmDialog({
+          open: false,
+          message: '',
+          onConfirm: () => {},
+        })
+
+        try {
+          setCreateError(null)
+          if ('month' in goal) {
+            await deleteMonthlyGoal(goal.id)
+          } else {
+            await deleteYearlyGoal(goal.id)
+          }
+        } catch (err) {
+          setCreateError(
+            err instanceof Error
+              ? err.message
+              : `${goalType}の削除に失敗しました`,
+          )
+        }
+      },
+    })
   }
 
   const handleYearlyDialogClose = (open: boolean) => {
@@ -268,7 +321,7 @@ const GoalsPage = () => {
                         )}
                       </div>
                     </CardContent>
-                    <div className="absolute right-4 top-4 opacity-0 transition-opacity group-hover:opacity-100">
+                    <div className="absolute right-4 top-4 z-10 flex gap-1 opacity-0 transition-opacity group-hover:opacity-100">
                       <Button
                         variant="ghost"
                         size="icon"
@@ -277,6 +330,15 @@ const GoalsPage = () => {
                       >
                         <Pencil className="h-4 w-4" />
                         <span className="sr-only">編集</span>
+                      </Button>
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        onClick={(e) => handleDeleteClick(e, goal)}
+                        className="h-8 w-8 text-destructive hover:text-destructive hover:bg-destructive/10 z-10"
+                      >
+                        <Trash2 className="h-4 w-4" />
+                        <span className="sr-only">削除</span>
                       </Button>
                     </div>
                   </Card>
@@ -363,7 +425,7 @@ const GoalsPage = () => {
                                   )}
                                 </div>
                               </CardContent>
-                              <div className="absolute right-4 top-4 opacity-0 transition-opacity group-hover:opacity-100">
+                              <div className="absolute right-4 top-4 flex gap-1 opacity-0 transition-opacity group-hover:opacity-100">
                                 <Button
                                   variant="ghost"
                                   size="icon"
@@ -372,6 +434,15 @@ const GoalsPage = () => {
                                 >
                                   <Pencil className="h-4 w-4" />
                                   <span className="sr-only">編集</span>
+                                </Button>
+                                <Button
+                                  variant="ghost"
+                                  size="icon"
+                                  onClick={(e) => handleDeleteClick(e, goal)}
+                                  className="h-8 w-8 text-destructive hover:text-destructive hover:bg-destructive/10"
+                                >
+                                  <Trash2 className="h-4 w-4" />
+                                  <span className="sr-only">削除</span>
                                 </Button>
                               </div>
                             </Card>
@@ -406,6 +477,46 @@ const GoalsPage = () => {
         goal={editingMonthlyGoal}
         selectedYear={selectedYear}
       />
+
+      <Dialog
+        open={deleteConfirmDialog.open}
+        onOpenChange={(open) => {
+          if (!open) {
+            setDeleteConfirmDialog({
+              open: false,
+              message: '',
+              onConfirm: () => {},
+            })
+          }
+        }}
+      >
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>削除の確認</DialogTitle>
+            <DialogDescription>{deleteConfirmDialog.message}</DialogDescription>
+          </DialogHeader>
+          <DialogFooter>
+            <Button
+              variant="outline"
+              onClick={() => {
+                setDeleteConfirmDialog({
+                  open: false,
+                  message: '',
+                  onConfirm: () => {},
+                })
+              }}
+            >
+              キャンセル
+            </Button>
+            <Button
+              variant="destructive"
+              onClick={deleteConfirmDialog.onConfirm}
+            >
+              削除
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   )
 }

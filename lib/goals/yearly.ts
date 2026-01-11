@@ -177,3 +177,8 @@ export async function updateYearlyGoal(
 
   return updatedGoal
 }
+
+export async function deleteYearlyGoal(id: number): Promise<void> {
+  const db = await getDatabase()
+  await db.execute('DELETE FROM yearly_goals WHERE id = ?', [id])
+}
