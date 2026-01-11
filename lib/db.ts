@@ -1,7 +1,7 @@
 import Database from '@tauri-apps/plugin-sql'
 
 let db: Database | null = null
-let initialized = false
+let dbPromise: Promise<Database> | null = null
 
 async function initializeAllTables(): Promise<void> {
   if (!db) return
@@ -33,12 +33,14 @@ async function initializeAllTables(): Promise<void> {
 export async function getDatabase(): Promise<Database> {
   if (db) return db
 
-  db = await Database.load('sqlite:life-os.db')
-
-  if (!initialized) {
-    await initializeAllTables()
-    initialized = true
+  if (!dbPromise) {
+    dbPromise = (async () => {
+      const database = await Database.load('sqlite:life-os.db')
+      db = database
+      await initializeAllTables()
+      return database
+    })()
   }
 
-  return db
+  return dbPromise
 }

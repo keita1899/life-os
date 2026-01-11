@@ -67,7 +67,7 @@ export async function createMonthlyGoal(
   const db = await getDatabase()
 
   const year = input.year ?? getYearFromDate(input.targetDate)
-  const month = input.month
+  const month = input.month ?? getMonthFromDate(input.targetDate)
 
   await validateMonthlyLimit(year, month)
 
@@ -81,7 +81,7 @@ export async function createMonthlyGoal(
     const result = await db.select<DbMonthlyGoal[]>(
       `SELECT * FROM monthly_goals 
        WHERE title = ? AND year = ? AND month = ? 
-       ORDER BY created_at DESC 
+       ORDER BY created_at DESC, id DESC 
        LIMIT 1`,
       [input.title, year, month],
     )
@@ -163,10 +163,16 @@ export async function updateMonthlyGoal(
   if (input.year !== undefined) {
     updates.push('year = ?')
     values.push(input.year)
+  } else if (newYear !== currentGoal.year) {
+    updates.push('year = ?')
+    values.push(newYear)
   }
   if (input.month !== undefined) {
     updates.push('month = ?')
     values.push(input.month)
+  } else if (newMonth !== currentGoal.month) {
+    updates.push('month = ?')
+    values.push(newMonth)
   }
 
   if (updates.length === 0) {

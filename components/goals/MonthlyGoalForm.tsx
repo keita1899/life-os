@@ -67,15 +67,8 @@ export const MonthlyGoalForm = ({
         year: initialData.year,
         month: initialData.month,
       })
-    } else {
-      form.reset({
-        title: '',
-        targetDate: '',
-        year: selectedYear ?? new Date().getFullYear(),
-        month: new Date().getMonth() + 1,
-      })
     }
-  }, [initialData, form, selectedYear])
+  }, [initialData])
 
   const handleSubmit = async (data: MonthlyGoalFormValues) => {
     await onSubmit({

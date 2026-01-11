@@ -28,7 +28,10 @@ alwaysApply: false
 
 - ファイル操作は `std::fs` または `tokio::fs` を使用
 - パス操作は `std::path::PathBuf` を使用
-- アプリケーションデータは `tauri::api::path` で取得したディレクトリに保存
+- アプリケーションデータは `app.path()` (Manager's PathResolver) で取得したディレクトリに保存
+  - 例: `app.path().app_data_dir()` でアプリ固有のディレクトリを取得
+  - 例: `app.path().resolve(path, BaseDirectory::Resource)` でリソースを解決
+- 古い `tauri::api::path` API は使用しない（Tauri v2では非推奨）
 
 ## エラーハンドリング
 
@@ -38,7 +41,10 @@ alwaysApply: false
 
 ## セキュリティ
 
-- `tauri.conf.json` の `allowlist` は必要最小限に設定
+- Tauri v2では capabilities-based permission system を使用（`allowlist` ではない）
+- 権限は `src-tauri/capabilities/*.json` で定義
+  - 例: `"core:default"`, `"sql:allow-execute"`, `"sql:allow-select"` など
+- `tauri.conf.json` の `allowlist` は使用しない（Tauri v2では非推奨）
 - ファイルアクセスはサンドボックス内に制限
 - 外部 URL へのアクセスは CSP で制御
 - シェルコマンドの実行は避ける（必要な場合は `sidecar` を使用）

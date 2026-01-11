@@ -29,22 +29,22 @@ export const YearlyGoalsSection = ({
         </Button>
       </div>
       {goals.length > 0 ? (
-        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+        <div className="flex flex-col gap-4">
           {goals.map((goal) => (
             <Card
               key={goal.id}
               className="group relative bg-white border-zinc-200 dark:bg-white dark:border-zinc-200"
             >
-              <CardHeader>
-                <CardTitle className="text-black dark:text-black">
+              <CardHeader className="pr-20">
+                <CardTitle className="text-black dark:text-black line-clamp-2 break-words">
                   {goal.title}
                 </CardTitle>
               </CardHeader>
               <CardContent>
                 <div className="space-y-2 text-sm">
                   {goal.targetDate && (
-                    <div className="flex justify-between">
-                      <span className="text-muted-foreground">期限</span>
+                    <div className="flex items-center gap-4">
+                      <span className="text-muted-foreground min-w-[3rem]">期限</span>
                       <span className="text-black dark:text-black">
                         {new Date(goal.targetDate).toLocaleDateString('ja-JP')}
                       </span>

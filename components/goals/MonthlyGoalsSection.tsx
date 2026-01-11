@@ -63,9 +63,7 @@ export const MonthlyGoalsSection = ({
               key={month}
               value={`month-${month}`}
               className={
-                isCurrentMonth
-                  ? 'border-stone-300 dark:border-stone-700'
-                  : ''
+                isCurrentMonth ? 'border-stone-300 dark:border-stone-700' : ''
               }
             >
               <AccordionTrigger
@@ -87,22 +85,22 @@ export const MonthlyGoalsSection = ({
                         key={goal.id}
                         className="group relative border-stone-200 dark:border-stone-800"
                       >
-                        <CardHeader>
-                          <CardTitle className="text-stone-900 dark:text-stone-100">
+                        <CardHeader className="pr-20">
+                          <CardTitle className="text-stone-900 dark:text-stone-100 line-clamp-2 break-words">
                             {goal.title}
                           </CardTitle>
                         </CardHeader>
                         <CardContent>
                           <div className="space-y-2 text-sm">
                             {goal.targetDate && (
-                              <div className="flex justify-between">
-                                <span className="text-muted-foreground">
+                              <div className="flex items-center gap-4">
+                                <span className="text-muted-foreground min-w-[5rem]">
                                   達成予定日:
                                 </span>
                                 <span>
-                                  {new Date(
-                                    goal.targetDate,
-                                  ).toLocaleDateString('ja-JP')}
+                                  {new Date(goal.targetDate).toLocaleDateString(
+                                    'ja-JP',
+                                  )}
                                 </span>
                               </div>
                             )}

@@ -32,43 +32,33 @@ export function useGoals(selectedYear: number) {
   )
 
   const handleCreateYearlyGoal = async (input: CreateYearlyGoalInput) => {
-    try {
-      await createYearlyGoal(input)
-      await mutate(goalsKey)
-      await mutate(availableYearsKey)
-    } catch (err) {
-      throw err
-    }
+    await createYearlyGoal(input)
+    const yearToRefresh = input.year ?? selectedYear
+    await Promise.all([
+      mutate(['goals', yearToRefresh]),
+      mutate(availableYearsKey),
+      yearToRefresh === selectedYear ? Promise.resolve() : mutate(goalsKey),
+    ])
   }
 
   const handleCreateMonthlyGoal = async (input: CreateMonthlyGoalInput) => {
-    try {
-      await createMonthlyGoal(input)
-      await mutate(goalsKey)
-      await mutate(availableYearsKey)
-    } catch (err) {
-      throw err
-    }
+    await createMonthlyGoal(input)
+    const yearToRefresh = input.year ?? selectedYear
+    await Promise.all([
+      mutate(['goals', yearToRefresh]),
+      mutate(availableYearsKey),
+      yearToRefresh === selectedYear ? Promise.resolve() : mutate(goalsKey),
+    ])
   }
 
   const handleDeleteYearlyGoal = async (id: number) => {
-    try {
-      await deleteYearlyGoal(id)
-      await mutate(goalsKey)
-      await mutate(availableYearsKey)
-    } catch (err) {
-      throw err
-    }
+    await deleteYearlyGoal(id)
+    await Promise.all([mutate(goalsKey), mutate(availableYearsKey)])
   }
 
   const handleDeleteMonthlyGoal = async (id: number) => {
-    try {
-      await deleteMonthlyGoal(id)
-      await mutate(goalsKey)
-      await mutate(availableYearsKey)
-    } catch (err) {
-      throw err
-    }
+    await deleteMonthlyGoal(id)
+    await Promise.all([mutate(goalsKey), mutate(availableYearsKey)])
   }
 
   return {

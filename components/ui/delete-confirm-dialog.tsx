@@ -1,5 +1,6 @@
 'use client'
 
+import { useState } from 'react'
 import {
   Dialog,
   DialogContent,
@@ -23,18 +24,41 @@ export const DeleteConfirmDialog = ({
   onConfirm,
   onCancel,
 }: DeleteConfirmDialogProps) => {
+  const [isConfirming, setIsConfirming] = useState(false)
+
+  const handleConfirm = async () => {
+    if (isConfirming) return
+    setIsConfirming(true)
+    try {
+      await onConfirm()
+    } finally {
+      setIsConfirming(false)
+    }
+  }
+
   return (
-    <Dialog open={open} onOpenChange={(isOpen) => !isOpen && onCancel()}>
+    <Dialog
+      open={open}
+      onOpenChange={(isOpen) => !isOpen && !isConfirming && onCancel()}
+    >
       <DialogContent>
         <DialogHeader>
           <DialogTitle>削除の確認</DialogTitle>
           <DialogDescription>{message}</DialogDescription>
         </DialogHeader>
         <DialogFooter>
-          <Button variant="outline" onClick={onCancel}>
+          <Button
+            variant="outline"
+            onClick={onCancel}
+            disabled={isConfirming}
+          >
             キャンセル
           </Button>
-          <Button variant="destructive" onClick={onConfirm}>
+          <Button
+            variant="destructive"
+            onClick={handleConfirm}
+            disabled={isConfirming}
+          >
             削除
           </Button>
         </DialogFooter>

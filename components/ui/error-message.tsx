@@ -26,6 +26,7 @@ export const ErrorMessage = ({
       <span>{message}</span>
       {onDismiss && (
         <button
+          type="button"
           onClick={onDismiss}
           className="rounded-sm opacity-70 hover:opacity-100 focus:outline-none focus:ring-2 focus:ring-ring"
         >

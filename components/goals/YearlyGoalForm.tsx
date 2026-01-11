@@ -22,7 +22,7 @@ const yearlyGoalFormSchema = z.object({
   year: z
     .number()
     .int()
-    .min(1900)
+    .min(1900, '年は1900〜2100の間で指定してください')
     .max(2100, '年は1900〜2100の間で指定してください'),
 })
 
@@ -61,14 +61,8 @@ export const YearlyGoalForm = ({
         targetDate: initialData.targetDate ?? '',
         year: initialData.year,
       })
-    } else {
-      form.reset({
-        title: '',
-        targetDate: '',
-        year: selectedYear ?? new Date().getFullYear(),
-      })
     }
-  }, [initialData, form, selectedYear])
+  }, [initialData])
 
   const handleSubmit = async (data: YearlyGoalFormValues) => {
     await onSubmit({
@@ -77,7 +71,11 @@ export const YearlyGoalForm = ({
       year: data.year ?? selectedYear ?? new Date().getFullYear(),
     })
     if (!isEditMode) {
-      form.reset()
+      form.reset({
+        title: '',
+        targetDate: '',
+        year: selectedYear ?? new Date().getFullYear(),
+      })
     }
   }
 
@@ -109,7 +107,10 @@ export const YearlyGoalForm = ({
                   type="number"
                   placeholder="年を入力"
                   {...field}
-                  onChange={(e) => field.onChange(Number(e.target.value))}
+                  onChange={(e) => {
+                    const v = e.target.value
+                    field.onChange(v === '' ? undefined : Number(v))
+                  }}
                   value={field.value ?? ''}
                 />
               </FormControl>

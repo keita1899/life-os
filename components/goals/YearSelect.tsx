@@ -19,25 +19,33 @@ export const YearSelect = ({
   availableYears,
   onYearChange,
 }: YearSelectProps) => {
-  const displayAvailableYears =
-    availableYears.length > 0 ? availableYears : [selectedYear]
+  const currentYear = new Date().getFullYear()
+  const displayAvailableYears = Array.from(
+    new Set(
+      (availableYears.length > 0 ? availableYears : [selectedYear]).concat(
+        availableYears.includes(selectedYear) ? [] : [selectedYear],
+      ),
+    ),
+  )
 
   return (
     <div className="mb-6 flex items-center gap-4">
       <div className="flex items-center gap-2">
-        <label htmlFor="year-select" className="text-sm font-medium">
+        <span id="year-select-label" className="text-sm font-medium">
           年:
-        </label>
+        </span>
         <Select
           value={selectedYear.toString()}
-          onValueChange={(value) => onYearChange(Number(value))}
+          onValueChange={(value) => {
+            const next = Number.parseInt(value, 10)
+            if (!Number.isNaN(next)) onYearChange(next)
+          }}
         >
-          <SelectTrigger id="year-select" className="w-32">
+          <SelectTrigger aria-labelledby="year-select-label" className="w-32">
             <SelectValue />
           </SelectTrigger>
           <SelectContent>
             {displayAvailableYears.map((year) => {
-              const currentYear = new Date().getFullYear()
               const isCurrentYear = year === currentYear
 
               return (

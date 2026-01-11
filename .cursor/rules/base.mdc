@@ -4,7 +4,7 @@ alwaysApply: true
 
 ## 基本方針
 
-- 新規コードにはコメントは書かない
+- コメントは必要最小限に。非自明なロジック、不変条件、セキュリティ制約、複雑なアルゴリズムには説明コメントを許可
 - できるだけ早期リターンを使ってネストを浅くする
 - コードはシンプルで読みやすく保つ
 - YAGNI 原則（現時点で不要なコードは書かない）の徹底
@@ -26,7 +26,7 @@ alwaysApply: true
 - 定数: `SCREAMING_SNAKE_CASE` (例: `MAX_UPLOAD_SIZE`)
 - Boolean 変数: `is`, `has`, `can`, `should` などの接頭辞を付ける (例: `isPublished`, `hasError`)
 - ファイル名:
-  - コンポーネント: `PascalCase` (例: `ArticleCard.tsx`)
+  - コンポーネント: `PascalCase` (例: `ArticleCard.tsx`)。ただし `components/ui/` 配下は `kebab-case` も許可 (例: `input.tsx`, `delete-confirm-dialog.tsx`)
   - ユーティリティ・hooks: `camelCase` (例: `useAuth.ts`, `formatDate.ts`)
   - ページ (App Router): `page.tsx`, `layout.tsx`
 

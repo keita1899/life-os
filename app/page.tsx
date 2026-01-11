@@ -1,5 +1,3 @@
-'use client'
-
 import Link from 'next/link'
 import { Button } from '@/components/ui/button'
 import {
@@ -33,9 +31,9 @@ export default function Home() {
                 </CardDescription>
               </CardHeader>
               <CardContent>
-                <Link href="/goals">
-                  <Button className="w-full">目標管理へ</Button>
-                </Link>
+                <Button asChild className="w-full">
+                  <Link href="/goals">目標管理へ</Link>
+                </Button>
               </CardContent>
             </Card>
           </div>

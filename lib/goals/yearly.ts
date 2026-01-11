@@ -76,7 +76,7 @@ export async function createYearlyGoal(
     const result = await db.select<DbYearlyGoal[]>(
       `SELECT * FROM yearly_goals 
        WHERE title = ? AND year = ? 
-       ORDER BY created_at DESC 
+       ORDER BY created_at DESC, id DESC 
        LIMIT 1`,
       [input.title, year],
     )
@@ -156,6 +156,9 @@ export async function updateYearlyGoal(
   if (input.year !== undefined) {
     updates.push('year = ?')
     values.push(input.year)
+  } else if (newYear !== currentGoal.year) {
+    updates.push('year = ?')
+    values.push(newYear)
   }
 
   if (updates.length === 0) {
