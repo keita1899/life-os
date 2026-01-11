@@ -1,0 +1,55 @@
+---
+description: Next.js、TypeScript、Tailwind CSS、フロントエンド実装に関するルール
+globs: app/**/*.tsx, app/**/*.ts, components/**/*.tsx, components/**/*.ts, hooks/**/*.ts, lib/**/*.ts
+alwaysApply: false
+---
+
+## Next.js (App Router) with Tauri
+
+- Tauri 環境では静的エクスポート（`output: 'export'`）を使用するため、すべてのコンポーネントは Client Components として動作
+- `page.tsx` でページを定義、`layout.tsx` で共通レイアウトを定義
+- データフェッチは Tauri コマンド経由で行う（Server Components のデータフェッチは使用不可）
+- メタデータは `metadata` オブジェクトで定義（`generateMetadata` は静的エクスポートでは制限あり）
+- 動的ルートは `[param]` ディレクトリで定義
+- ローディング状態は `loading.tsx` で定義
+- エラーハンドリングは `error.tsx` で定義
+
+## TypeScript
+
+- `any` の使用は禁止、代わりに `unknown` を使用し型ガードで絞り込む
+- 型定義は `interface` を優先（拡張が必要な場合）、ユニオン型は `type` を使用
+- Props の型は `ComponentNameProps` の命名規則で定義
+- 戻り値の型は明示的に記述
+- `as` によるキャストは避け、型ガードを使用
+- `null` と `undefined` を区別して使用
+
+## React コンポーネント
+
+- 関数コンポーネントを使用（クラスコンポーネントは使用しない）
+- コンポーネントは単一責任の原則に従う
+- カスタムフックでロジックを分離（`use` プレフィックス）
+- `useEffect` の依存配列は正確に記述
+- 不要な再レンダリングを避けるため `useMemo`、`useCallback` を適切に使用
+- Fragment は `<>` 短縮構文を使用
+
+## Tauri 連携
+
+- Tauri コマンドの呼び出しは `@tauri-apps/api/core` の `invoke` を使用
+- コマンド名と引数は Rust 側と型を同期
+- 非同期処理は `async/await` で記述
+
+## CSS / デザイン (Tailwind CSS)
+
+- 独自の CSS クラスは作らず、Tailwind のユーティリティクラスを使用する
+- モバイルファーストでレスポンシブ対応にする（`sm:`, `md:`, `lg:` プレフィックス）
+- カスタムカラーは `tailwind.config.ts` で定義
+- 条件付きクラスは `clsx` または `cn` ユーティリティを使用
+- `@apply` の使用は最小限に
+
+## パフォーマンス
+
+- 画像は標準の `<img>` タグを使用（`next/image` の最適化は静的エクスポートでは動作しない）
+- 必要に応じて事前に画像を最適化しておく（ビルド時やアセット準備時）
+- フォントは `next/font` を使用
+- 動的インポート（`next/dynamic`）で必要に応じてコード分割
+- リストには適切な `key` を設定
