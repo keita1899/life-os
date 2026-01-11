@@ -2,28 +2,15 @@
 
 import { useState, useMemo } from 'react'
 import Link from 'next/link'
-import { Pencil, Trash2 } from 'lucide-react'
 import { useGoals } from '@/hooks/useGoals'
 import { YearlyGoalDialog } from '@/components/goals/YearlyGoalDialog'
 import { MonthlyGoalDialog } from '@/components/goals/MonthlyGoalDialog'
 import { DeleteConfirmDialog } from '@/components/goals/DeleteConfirmDialog'
-import { Button } from '@/components/ui/button'
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import { YearSelect } from '@/components/goals/YearSelect'
+import { YearlyGoalsSection } from '@/components/goals/YearlyGoalsSection'
+import { MonthlyGoalsSection } from '@/components/goals/MonthlyGoalsSection'
 import { Loading } from '@/components/ui/loading'
 import { ErrorMessage } from '@/components/ui/error-message'
-import {
-  Accordion,
-  AccordionContent,
-  AccordionItem,
-  AccordionTrigger,
-} from '@/components/ui/accordion'
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select'
 import type { YearlyGoal, CreateYearlyGoalInput } from '@/lib/types/yearly-goal'
 import type {
   MonthlyGoal,
@@ -195,22 +182,6 @@ const GoalsPage = () => {
     }
   }
 
-  const monthlyGoalsByMonth = useMemo(() => {
-    const monthly: Record<number, MonthlyGoal[]> = {}
-
-    allMonthlyGoals.forEach((goal) => {
-      if (!monthly[goal.month]) {
-        monthly[goal.month] = []
-      }
-      monthly[goal.month].push(goal)
-    })
-
-    return monthly
-  }, [allMonthlyGoals])
-
-  const displayAvailableYears =
-    availableYears.length > 0 ? availableYears : [selectedYear]
-
   return (
     <div className="container mx-auto max-w-4xl py-8 px-4">
       <div className="mb-6">
@@ -228,41 +199,11 @@ const GoalsPage = () => {
         </p>
       </div>
 
-      <div className="mb-6 flex items-center gap-4">
-        <div className="flex items-center gap-2">
-          <label htmlFor="year-select" className="text-sm font-medium">
-            年:
-          </label>
-          <Select
-            value={selectedYear.toString()}
-            onValueChange={(value) => setSelectedYear(Number(value))}
-          >
-            <SelectTrigger id="year-select" className="w-32">
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              {displayAvailableYears.map((year) => {
-                const currentYear = new Date().getFullYear()
-                const isCurrentYear = year === currentYear
-
-                return (
-                  <SelectItem
-                    key={year}
-                    value={year.toString()}
-                    className={
-                      isCurrentYear
-                        ? 'text-blue-600 dark:text-blue-400 focus:text-blue-600 dark:focus:text-blue-400'
-                        : ''
-                    }
-                  >
-                    {year}年
-                  </SelectItem>
-                )
-              })}
-            </SelectContent>
-          </Select>
-        </div>
-      </div>
+      <YearSelect
+        selectedYear={selectedYear}
+        availableYears={availableYears}
+        onYearChange={setSelectedYear}
+      />
 
       <ErrorMessage
         message={createError || error || ''}
@@ -273,181 +214,26 @@ const GoalsPage = () => {
         <Loading />
       ) : (
         <div className="space-y-6">
-          <div className="rounded-lg border border-zinc-200 bg-zinc-50/30 p-6 dark:border-zinc-800 dark:bg-zinc-950/30">
-            <div className="mb-4 flex items-center justify-between">
-              <h2 className="text-xl font-semibold text-zinc-900 dark:text-zinc-100">
-                年間目標
-              </h2>
-              <Button
-                onClick={() => {
-                  setEditingYearlyGoal(undefined)
-                  setIsYearlyDialogOpen(true)
-                }}
-                size="sm"
-              >
-                年間目標を作成
-              </Button>
-            </div>
-            {yearlyGoals.length > 0 ? (
-              <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-                {yearlyGoals.map((goal) => (
-                  <Card
-                    key={goal.id}
-                    className="group relative bg-white border-zinc-200 dark:bg-white dark:border-zinc-200"
-                  >
-                    <CardHeader>
-                      <CardTitle className="text-black dark:text-black">
-                        {goal.title}
-                      </CardTitle>
-                    </CardHeader>
-                    <CardContent>
-                      <div className="space-y-2 text-sm">
-                        {goal.targetDate && (
-                          <div className="flex justify-between">
-                            <span className="text-muted-foreground">期限</span>
-                            <span className="text-black dark:text-black">
-                              {new Date(goal.targetDate).toLocaleDateString(
-                                'ja-JP',
-                              )}
-                            </span>
-                          </div>
-                        )}
-                      </div>
-                    </CardContent>
-                    <div className="absolute right-4 top-4 z-10 flex gap-1 opacity-0 transition-opacity group-hover:opacity-100">
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        onClick={() => handleEditClick(goal)}
-                        className="h-8 w-8"
-                      >
-                        <Pencil className="h-4 w-4" />
-                        <span className="sr-only">編集</span>
-                      </Button>
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        onClick={(e) => handleDeleteClick(e, goal)}
-                        className="h-8 w-8 text-destructive hover:text-destructive hover:bg-destructive/10 z-10"
-                      >
-                        <Trash2 className="h-4 w-4" />
-                        <span className="sr-only">削除</span>
-                      </Button>
-                    </div>
-                  </Card>
-                ))}
-              </div>
-            ) : (
-              <p className="text-sm text-muted-foreground py-4">
-                年間目標はありません
-              </p>
-            )}
-          </div>
+          <YearlyGoalsSection
+            goals={yearlyGoals}
+            onCreateClick={() => {
+              setEditingYearlyGoal(undefined)
+              setIsYearlyDialogOpen(true)
+            }}
+            onEditClick={handleEditClick}
+            onDeleteClick={handleDeleteClick}
+          />
 
-          <div className="rounded-lg border border-stone-200 bg-stone-50/30 p-6 dark:border-stone-800 dark:bg-stone-950/30">
-            <div className="mb-4 flex items-center justify-between">
-              <h2 className="text-xl font-semibold text-stone-900 dark:text-stone-100">
-                月間目標
-              </h2>
-              <Button
-                variant="outline"
-                onClick={() => {
-                  setEditingMonthlyGoal(undefined)
-                  setIsMonthlyDialogOpen(true)
-                }}
-                size="sm"
-              >
-                月間目標を作成
-              </Button>
-            </div>
-            <Accordion type="multiple" className="w-full">
-              {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12].map((month) => {
-                const monthGoals = monthlyGoalsByMonth[month] || []
-                const currentDate = new Date()
-                const isCurrentMonth =
-                  selectedYear === currentDate.getFullYear() &&
-                  month === currentDate.getMonth() + 1
-
-                return (
-                  <AccordionItem
-                    key={month}
-                    value={`month-${month}`}
-                    className={
-                      isCurrentMonth
-                        ? 'border-stone-300 dark:border-stone-700'
-                        : ''
-                    }
-                  >
-                    <AccordionTrigger
-                      className={
-                        isCurrentMonth ? 'text-blue-600 dark:text-blue-400' : ''
-                      }
-                    >
-                      {month}月
-                    </AccordionTrigger>
-                    <AccordionContent>
-                      {monthGoals.length === 0 ? (
-                        <p className="text-sm text-muted-foreground">
-                          この月の目標はありません
-                        </p>
-                      ) : (
-                        <div className="grid gap-4 grid-cols-1">
-                          {monthGoals.map((goal) => (
-                            <Card
-                              key={goal.id}
-                              className="group relative border-stone-200 dark:border-stone-800"
-                            >
-                              <CardHeader>
-                                <CardTitle className="text-stone-900 dark:text-stone-100">
-                                  {goal.title}
-                                </CardTitle>
-                              </CardHeader>
-                              <CardContent>
-                                <div className="space-y-2 text-sm">
-                                  {goal.targetDate && (
-                                    <div className="flex justify-between">
-                                      <span className="text-muted-foreground">
-                                        達成予定日:
-                                      </span>
-                                      <span>
-                                        {new Date(
-                                          goal.targetDate,
-                                        ).toLocaleDateString('ja-JP')}
-                                      </span>
-                                    </div>
-                                  )}
-                                </div>
-                              </CardContent>
-                              <div className="absolute right-4 top-4 flex gap-1 opacity-0 transition-opacity group-hover:opacity-100">
-                                <Button
-                                  variant="ghost"
-                                  size="icon"
-                                  onClick={() => handleEditClick(goal)}
-                                  className="h-8 w-8"
-                                >
-                                  <Pencil className="h-4 w-4" />
-                                  <span className="sr-only">編集</span>
-                                </Button>
-                                <Button
-                                  variant="ghost"
-                                  size="icon"
-                                  onClick={(e) => handleDeleteClick(e, goal)}
-                                  className="h-8 w-8 text-destructive hover:text-destructive hover:bg-destructive/10"
-                                >
-                                  <Trash2 className="h-4 w-4" />
-                                  <span className="sr-only">削除</span>
-                                </Button>
-                              </div>
-                            </Card>
-                          ))}
-                        </div>
-                      )}
-                    </AccordionContent>
-                  </AccordionItem>
-                )
-              })}
-            </Accordion>
-          </div>
+          <MonthlyGoalsSection
+            goals={allMonthlyGoals}
+            selectedYear={selectedYear}
+            onCreateClick={() => {
+              setEditingMonthlyGoal(undefined)
+              setIsMonthlyDialogOpen(true)
+            }}
+            onEditClick={handleEditClick}
+            onDeleteClick={handleDeleteClick}
+          />
         </div>
       )}
 
