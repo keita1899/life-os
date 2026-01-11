@@ -12,7 +12,7 @@ export function ModeSwitch() {
   const pathname = usePathname()
 
   useEffect(() => {
-    if (pathname) {
+    if (pathname && pathname !== '/') {
       setLastPath(pathname)
     }
   }, [pathname])
@@ -20,17 +20,18 @@ export function ModeSwitch() {
   const handleModeChange = (newMode: 'life' | 'development') => {
     if (newMode === mode) return
 
-    if (newMode === 'development' && pathname === '/goals') {
-      setLastPath('/goals')
-      router.push('/')
+    setMode(newMode)
+
+    if (newMode === 'development') {
+      if (pathname === '/goals') {
+        router.push('/')
+      }
     } else if (newMode === 'life') {
       const lastPath = getLastPath()
-      if (lastPath === '/goals' && pathname !== '/goals') {
-        router.push('/goals')
+      if (lastPath !== '/' && pathname !== lastPath) {
+        router.push(lastPath)
       }
     }
-
-    setMode(newMode)
   }
 
   return (

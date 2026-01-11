@@ -1,6 +1,6 @@
 'use client'
 
-import { createContext, useContext, useState, useEffect, type ReactNode } from 'react'
+import { createContext, useContext, useState, type ReactNode } from 'react'
 
 export type AppMode = 'life' | 'development'
 
@@ -15,14 +15,11 @@ const MODE_STORAGE_KEY = 'life-os-mode'
 const LAST_PATH_STORAGE_KEY = 'life-os-last-path'
 
 export function ModeProvider({ children }: { children: ReactNode }) {
-  const [mode, setModeState] = useState<AppMode>('life')
-
-  useEffect(() => {
+  const [mode, setModeState] = useState<AppMode>(() => {
+    if (typeof window === 'undefined') return 'life'
     const stored = localStorage.getItem(MODE_STORAGE_KEY)
-    if (stored === 'life' || stored === 'development') {
-      setModeState(stored)
-    }
-  }, [])
+    return stored === 'life' || stored === 'development' ? stored : 'life'
+  })
 
   const setMode = (newMode: AppMode) => {
     setModeState(newMode)

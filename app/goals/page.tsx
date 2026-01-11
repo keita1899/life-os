@@ -1,8 +1,7 @@
 'use client'
 
-import { useState, useMemo, useEffect } from 'react'
+import { useState, useMemo } from 'react'
 import Link from 'next/link'
-import { useRouter } from 'next/navigation'
 import { useGoals } from '@/hooks/useGoals'
 import { YearlyGoalDialog } from '@/components/goals/YearlyGoalDialog'
 import { MonthlyGoalDialog } from '@/components/goals/MonthlyGoalDialog'
@@ -186,13 +185,6 @@ const GoalsPage = () => {
   }
 
   const { mode } = useMode()
-  const router = useRouter()
-
-  useEffect(() => {
-    if (mode !== 'life') {
-      router.push('/')
-    }
-  }, [mode, router])
 
   if (mode !== 'life') {
     return null
