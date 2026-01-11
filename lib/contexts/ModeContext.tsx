@@ -12,7 +12,6 @@ interface ModeContextType {
 const ModeContext = createContext<ModeContextType | undefined>(undefined)
 
 const MODE_STORAGE_KEY = 'life-os-mode'
-const LAST_PATH_STORAGE_KEY = 'life-os-last-path'
 
 export function ModeProvider({ children }: { children: ReactNode }) {
   const [mode, setModeState] = useState<AppMode>(() => {
@@ -31,16 +30,6 @@ export function ModeProvider({ children }: { children: ReactNode }) {
       {children}
     </ModeContext.Provider>
   )
-}
-
-export function getLastPath(): string {
-  if (typeof window === 'undefined') return '/'
-  return localStorage.getItem(LAST_PATH_STORAGE_KEY) || '/'
-}
-
-export function setLastPath(path: string): void {
-  if (typeof window === 'undefined') return
-  localStorage.setItem(LAST_PATH_STORAGE_KEY, path)
 }
 
 export function useMode() {

@@ -185,8 +185,38 @@ const GoalsPage = () => {
   }
 
   const { mode } = useMode()
+  // #region agent log
+  fetch('http://127.0.0.1:7243/ingest/ed9f25c2-712b-409a-9782-41a243545311', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      location: 'app/goals/page.tsx:187',
+      message: 'GoalsPage render',
+      data: { mode },
+      timestamp: Date.now(),
+      sessionId: 'debug-session',
+      runId: 'run1',
+      hypothesisId: 'A',
+    }),
+  }).catch(() => {})
+  // #endregion
 
   if (mode !== 'life') {
+    // #region agent log
+    fetch('http://127.0.0.1:7243/ingest/ed9f25c2-712b-409a-9782-41a243545311', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        location: 'app/goals/page.tsx:190',
+        message: 'GoalsPage returning null',
+        data: { mode },
+        timestamp: Date.now(),
+        sessionId: 'debug-session',
+        runId: 'run1',
+        hypothesisId: 'A',
+      }),
+    }).catch(() => {})
+    // #endregion
     return null
   }
 

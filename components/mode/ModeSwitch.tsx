@@ -1,37 +1,19 @@
 'use client'
 
-import { useEffect } from 'react'
-import { useMode, setLastPath, getLastPath } from '@/lib/contexts/ModeContext'
+import { useMode } from '@/lib/contexts/ModeContext'
 import { Button } from '@/components/ui/button'
-import { useRouter, usePathname } from 'next/navigation'
+import { useRouter } from 'next/navigation'
 import { cn } from '@/lib/utils'
 
 export function ModeSwitch() {
   const { mode, setMode } = useMode()
   const router = useRouter()
-  const pathname = usePathname()
-
-  useEffect(() => {
-    if (pathname && pathname !== '/') {
-      setLastPath(pathname)
-    }
-  }, [pathname])
 
   const handleModeChange = (newMode: 'life' | 'development') => {
     if (newMode === mode) return
 
+    router.push('/')
     setMode(newMode)
-
-    if (newMode === 'development') {
-      if (pathname === '/goals') {
-        router.push('/')
-      }
-    } else if (newMode === 'life') {
-      const lastPath = getLastPath()
-      if (lastPath !== '/' && pathname !== lastPath) {
-        router.push(lastPath)
-      }
-    }
   }
 
   return (
