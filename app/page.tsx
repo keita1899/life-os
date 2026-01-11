@@ -14,21 +14,6 @@ import { useMode } from '@/lib/contexts/ModeContext'
 
 export default function Home() {
   const { mode } = useMode()
-  // #region agent log
-  fetch('http://127.0.0.1:7243/ingest/ed9f25c2-712b-409a-9782-41a243545311', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({
-      location: 'app/page.tsx:16',
-      message: 'HomePage render',
-      data: { mode },
-      timestamp: Date.now(),
-      sessionId: 'debug-session',
-      runId: 'run1',
-      hypothesisId: 'A',
-    }),
-  }).catch(() => {})
-  // #endregion
 
   return (
     <div className="flex min-h-screen items-center justify-center bg-zinc-50 font-sans dark:bg-black">
