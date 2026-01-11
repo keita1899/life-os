@@ -2,13 +2,15 @@
 
 import { useState, useMemo } from 'react'
 import Link from 'next/link'
-import { X, Pencil, Trash2 } from 'lucide-react'
+import { Pencil, Trash2 } from 'lucide-react'
 import { useGoals } from '@/hooks/useGoals'
 import { YearlyGoalDialog } from '@/components/goals/YearlyGoalDialog'
 import { MonthlyGoalDialog } from '@/components/goals/MonthlyGoalDialog'
+import { DeleteConfirmDialog } from '@/components/goals/DeleteConfirmDialog'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Loading } from '@/components/ui/loading'
+import { ErrorMessage } from '@/components/ui/error-message'
 import {
   Accordion,
   AccordionContent,
@@ -22,14 +24,6 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select'
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from '@/components/ui/dialog'
 import type { YearlyGoal, CreateYearlyGoalInput } from '@/lib/types/yearly-goal'
 import type {
   MonthlyGoal,
@@ -58,8 +52,8 @@ const GoalsPage = () => {
   const [deleteConfirmDialog, setDeleteConfirmDialog] = useState<{
     open: boolean
     message: string
-    onConfirm: () => void
-  }>({ open: false, message: '', onConfirm: () => {} })
+    onConfirm: () => Promise<void>
+  }>({ open: false, message: '', onConfirm: async () => {} })
   const [editingYearlyGoal, setEditingYearlyGoal] = useState<
     YearlyGoal | undefined
   >(undefined)
@@ -140,7 +134,7 @@ const GoalsPage = () => {
     }
   }
 
-  const handleDeleteClick = async (
+  const handleDeleteClick = (
     e: React.MouseEvent,
     goal: YearlyGoal | MonthlyGoal,
   ) => {
@@ -157,7 +151,7 @@ const GoalsPage = () => {
         setDeleteConfirmDialog({
           open: false,
           message: '',
-          onConfirm: () => {},
+          onConfirm: async () => {},
         })
 
         try {
@@ -167,6 +161,7 @@ const GoalsPage = () => {
           } else {
             await deleteYearlyGoal(goal.id)
           }
+          await refreshGoals()
         } catch (err) {
           setCreateError(
             err instanceof Error
@@ -175,6 +170,14 @@ const GoalsPage = () => {
           )
         }
       },
+    })
+  }
+
+  const handleDeleteCancel = () => {
+    setDeleteConfirmDialog({
+      open: false,
+      message: '',
+      onConfirm: async () => {},
     })
   }
 
@@ -261,20 +264,10 @@ const GoalsPage = () => {
         </div>
       </div>
 
-      {(error || createError) && (
-        <div className="mb-4 flex items-center justify-between rounded-lg border border-destructive bg-destructive/10 p-4 text-destructive">
-          <span>{createError || error}</span>
-          <button
-            onClick={() => {
-              setCreateError(null)
-            }}
-            className="rounded-sm opacity-70 hover:opacity-100 focus:outline-none focus:ring-2 focus:ring-ring"
-          >
-            <X className="h-4 w-4" />
-            <span className="sr-only">閉じる</span>
-          </button>
-        </div>
-      )}
+      <ErrorMessage
+        message={createError || error || ''}
+        onDismiss={createError ? () => setCreateError(null) : undefined}
+      />
 
       {isLoading ? (
         <Loading />
@@ -478,45 +471,12 @@ const GoalsPage = () => {
         selectedYear={selectedYear}
       />
 
-      <Dialog
+      <DeleteConfirmDialog
         open={deleteConfirmDialog.open}
-        onOpenChange={(open) => {
-          if (!open) {
-            setDeleteConfirmDialog({
-              open: false,
-              message: '',
-              onConfirm: () => {},
-            })
-          }
-        }}
-      >
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>削除の確認</DialogTitle>
-            <DialogDescription>{deleteConfirmDialog.message}</DialogDescription>
-          </DialogHeader>
-          <DialogFooter>
-            <Button
-              variant="outline"
-              onClick={() => {
-                setDeleteConfirmDialog({
-                  open: false,
-                  message: '',
-                  onConfirm: () => {},
-                })
-              }}
-            >
-              キャンセル
-            </Button>
-            <Button
-              variant="destructive"
-              onClick={deleteConfirmDialog.onConfirm}
-            >
-              削除
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+        message={deleteConfirmDialog.message}
+        onConfirm={deleteConfirmDialog.onConfirm}
+        onCancel={handleDeleteCancel}
+      />
     </div>
   )
 }
