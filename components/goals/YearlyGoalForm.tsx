@@ -13,45 +13,44 @@ import {
   FormMessage,
 } from '@/components/ui/form'
 import { Input } from '@/components/ui/input'
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select'
 import { Button } from '@/components/ui/button'
-import type { CreateGoalInput, Goal } from '@/lib/types/goal'
+import type { YearlyGoal, CreateYearlyGoalInput } from '@/lib/types/yearly-goal'
 
-const goalFormSchema = z.object({
+const yearlyGoalFormSchema = z.object({
   title: z.string().min(1, 'タイトルは必須です'),
   targetDate: z.string().optional(),
-  periodType: z.enum(['yearly', 'monthly']).optional(),
+  year: z
+    .number()
+    .int()
+    .min(1900)
+    .max(2100, '年は1900〜2100の間で指定してください'),
 })
 
-type GoalFormValues = z.infer<typeof goalFormSchema>
+type YearlyGoalFormValues = z.infer<typeof yearlyGoalFormSchema>
 
-interface GoalFormProps {
-  onSubmit: (data: CreateGoalInput) => Promise<void>
+interface YearlyGoalFormProps {
+  onSubmit: (data: CreateYearlyGoalInput) => Promise<void>
   onCancel?: () => void
-  initialData?: Goal
+  initialData?: YearlyGoal
   submitLabel?: string
+  selectedYear?: number
 }
 
-export const GoalForm = ({
+export const YearlyGoalForm = ({
   onSubmit,
   onCancel,
   initialData,
   submitLabel = '作成',
-}: GoalFormProps) => {
+  selectedYear,
+}: YearlyGoalFormProps) => {
   const isEditMode = !!initialData
 
-  const form = useForm<GoalFormValues>({
-    resolver: zodResolver(goalFormSchema),
+  const form = useForm<YearlyGoalFormValues>({
+    resolver: zodResolver(yearlyGoalFormSchema),
     defaultValues: {
       title: initialData?.title || '',
       targetDate: initialData?.targetDate ?? '',
-      periodType: initialData?.periodType || 'yearly',
+      year: initialData?.year ?? selectedYear ?? new Date().getFullYear(),
     },
   })
 
@@ -60,19 +59,23 @@ export const GoalForm = ({
       form.reset({
         title: initialData.title,
         targetDate: initialData.targetDate ?? '',
-        periodType: initialData.periodType,
+        year: initialData.year,
       })
     } else {
       form.reset({
         title: '',
         targetDate: '',
-        periodType: 'yearly',
+        year: selectedYear ?? new Date().getFullYear(),
       })
     }
-  }, [initialData, form])
+  }, [initialData, form, selectedYear])
 
-  const handleSubmit = async (data: GoalFormValues) => {
-    await onSubmit(data)
+  const handleSubmit = async (data: YearlyGoalFormValues) => {
+    await onSubmit({
+      title: data.title,
+      targetDate: data.targetDate || null,
+      year: data.year ?? selectedYear ?? new Date().getFullYear(),
+    })
     if (!isEditMode) {
       form.reset()
     }
@@ -97,12 +100,18 @@ export const GoalForm = ({
 
         <FormField
           control={form.control}
-          name="targetDate"
+          name="year"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>達成予定日</FormLabel>
+              <FormLabel>年</FormLabel>
               <FormControl>
-                <Input type="date" {...field} />
+                <Input
+                  type="number"
+                  placeholder="年を入力"
+                  {...field}
+                  onChange={(e) => field.onChange(Number(e.target.value))}
+                  value={field.value ?? ''}
+                />
               </FormControl>
               <FormMessage />
             </FormItem>
@@ -111,21 +120,13 @@ export const GoalForm = ({
 
         <FormField
           control={form.control}
-          name="periodType"
+          name="targetDate"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>期間タイプ</FormLabel>
-              <Select onValueChange={field.onChange} value={field.value}>
-                <FormControl>
-                  <SelectTrigger>
-                    <SelectValue placeholder="期間タイプを選択" />
-                  </SelectTrigger>
-                </FormControl>
-                <SelectContent>
-                  <SelectItem value="yearly">年間</SelectItem>
-                  <SelectItem value="monthly">月間</SelectItem>
-                </SelectContent>
-              </Select>
+              <FormLabel>期限</FormLabel>
+              <FormControl>
+                <Input type="date" {...field} />
+              </FormControl>
               <FormMessage />
             </FormItem>
           )}

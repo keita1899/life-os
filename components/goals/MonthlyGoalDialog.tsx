@@ -7,23 +7,25 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog'
-import { GoalForm } from './GoalForm'
-import type { CreateGoalInput, Goal } from '@/lib/types/goal'
+import { MonthlyGoalForm } from './MonthlyGoalForm'
+import type { MonthlyGoal, CreateMonthlyGoalInput } from '@/lib/types/monthly-goal'
 
-interface GoalDialogProps {
+interface MonthlyGoalDialogProps {
   open: boolean
   onOpenChange: (open: boolean) => void
-  onSubmit: (input: CreateGoalInput) => Promise<void>
-  goal?: Goal
+  onSubmit: (input: CreateMonthlyGoalInput) => Promise<void>
+  goal?: MonthlyGoal
+  selectedYear?: number
 }
 
-export const GoalDialog = ({
+export const MonthlyGoalDialog = ({
   open,
   onOpenChange,
   onSubmit,
   goal,
-}: GoalDialogProps) => {
-  const handleSubmit = async (input: CreateGoalInput) => {
+  selectedYear,
+}: MonthlyGoalDialogProps) => {
+  const handleSubmit = async (input: CreateMonthlyGoalInput) => {
     await onSubmit(input)
     onOpenChange(false)
   }
@@ -35,19 +37,20 @@ export const GoalDialog = ({
       <DialogContent>
         <DialogHeader>
           <DialogTitle>
-            {isEditMode ? '目標を編集' : '新しい目標を作成'}
+            {isEditMode ? '月間目標を編集' : '新しい月間目標を作成'}
           </DialogTitle>
           <DialogDescription>
             {isEditMode
-              ? '目標の詳細を編集してください'
-              : '目標の詳細を入力してください'}
+              ? '月間目標の詳細を編集してください'
+              : '月間目標の詳細を入力してください'}
           </DialogDescription>
         </DialogHeader>
-        <GoalForm
+        <MonthlyGoalForm
           onSubmit={handleSubmit}
           onCancel={() => onOpenChange(false)}
           initialData={goal}
           submitLabel={isEditMode ? '更新' : '作成'}
+          selectedYear={selectedYear}
         />
       </DialogContent>
     </Dialog>

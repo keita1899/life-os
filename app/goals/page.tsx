@@ -4,7 +4,8 @@ import { useState, useMemo } from 'react'
 import Link from 'next/link'
 import { X, Pencil } from 'lucide-react'
 import { useGoals } from '@/hooks/useGoals'
-import { GoalDialog } from '@/components/goals/GoalDialog'
+import { YearlyGoalDialog } from '@/components/goals/YearlyGoalDialog'
+import { MonthlyGoalDialog } from '@/components/goals/MonthlyGoalDialog'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Loading } from '@/components/ui/loading'
@@ -21,126 +22,154 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select'
-import type { CreateGoalInput, Goal, UpdateGoalInput } from '@/lib/types/goal'
+import type { YearlyGoal, CreateYearlyGoalInput } from '@/lib/types/yearly-goal'
+import type {
+  MonthlyGoal,
+  CreateMonthlyGoalInput,
+} from '@/lib/types/monthly-goal'
+import { updateYearlyGoal } from '@/lib/goals/yearly'
+import { updateMonthlyGoal } from '@/lib/goals/monthly'
 
 const GoalsPage = () => {
-  const { goals, isLoading, error, createGoal, updateGoal } = useGoals()
-  const [isDialogOpen, setIsDialogOpen] = useState(false)
   const [selectedYear, setSelectedYear] = useState(new Date().getFullYear())
+  const {
+    yearlyGoals,
+    monthlyGoals: allMonthlyGoals,
+    availableYears,
+    isLoading,
+    error,
+    createYearlyGoal,
+    createMonthlyGoal,
+    refreshGoals,
+  } = useGoals(selectedYear)
+  const [isYearlyDialogOpen, setIsYearlyDialogOpen] = useState(false)
+  const [isMonthlyDialogOpen, setIsMonthlyDialogOpen] = useState(false)
   const [createError, setCreateError] = useState<string | null>(null)
-  const [editingGoal, setEditingGoal] = useState<Goal | undefined>(undefined)
+  const [editingYearlyGoal, setEditingYearlyGoal] = useState<
+    YearlyGoal | undefined
+  >(undefined)
+  const [editingMonthlyGoal, setEditingMonthlyGoal] = useState<
+    MonthlyGoal | undefined
+  >(undefined)
 
-  const handleCreateGoal = async (input: CreateGoalInput) => {
+  const handleCreateYearlyGoal = async (input: CreateYearlyGoalInput) => {
     try {
       setCreateError(null)
-      await createGoal(input)
-      setIsDialogOpen(false)
+      await createYearlyGoal(input)
+      setIsYearlyDialogOpen(false)
     } catch (err) {
       setCreateError(
-        err instanceof Error ? err.message : '目標の作成に失敗しました',
+        err instanceof Error ? err.message : '年間目標の作成に失敗しました',
       )
     }
   }
 
-  const handleUpdateGoal = async (input: CreateGoalInput) => {
-    if (!editingGoal) return
+  const handleCreateMonthlyGoal = async (input: CreateMonthlyGoalInput) => {
     try {
       setCreateError(null)
-      const updateInput: UpdateGoalInput = {
+      await createMonthlyGoal(input)
+      setIsMonthlyDialogOpen(false)
+    } catch (err) {
+      setCreateError(
+        err instanceof Error ? err.message : '月間目標の作成に失敗しました',
+      )
+    }
+  }
+
+  const handleUpdateYearlyGoal = async (input: CreateYearlyGoalInput) => {
+    if (!editingYearlyGoal) return
+    try {
+      setCreateError(null)
+      await updateYearlyGoal(editingYearlyGoal.id, {
         title: input.title,
-        targetDate: input.targetDate || null,
-        periodType: input.periodType,
-      }
-      await updateGoal(editingGoal.id, updateInput)
-      setIsDialogOpen(false)
-      setEditingGoal(undefined)
+        targetDate: input.targetDate,
+        year: input.year,
+      })
+      await refreshGoals()
+      setIsYearlyDialogOpen(false)
+      setEditingYearlyGoal(undefined)
     } catch (err) {
       setCreateError(
-        err instanceof Error ? err.message : '目標の更新に失敗しました',
+        err instanceof Error ? err.message : '年間目標の更新に失敗しました',
       )
     }
   }
 
-  const handleEditClick = (goal: Goal) => {
-    setEditingGoal(goal)
-    setIsDialogOpen(true)
+  const handleUpdateMonthlyGoal = async (input: CreateMonthlyGoalInput) => {
+    if (!editingMonthlyGoal) return
+    try {
+      setCreateError(null)
+      await updateMonthlyGoal(editingMonthlyGoal.id, {
+        title: input.title,
+        targetDate: input.targetDate,
+        year: input.year,
+        month: input.month,
+      })
+      await refreshGoals()
+      setIsMonthlyDialogOpen(false)
+      setEditingMonthlyGoal(undefined)
+    } catch (err) {
+      setCreateError(
+        err instanceof Error ? err.message : '月間目標の更新に失敗しました',
+      )
+    }
   }
 
-  const handleDialogClose = (open: boolean) => {
-    setIsDialogOpen(open)
+  const handleEditClick = (goal: YearlyGoal | MonthlyGoal) => {
+    if ('month' in goal) {
+      setEditingMonthlyGoal(goal)
+      setIsMonthlyDialogOpen(true)
+    } else {
+      setEditingYearlyGoal(goal)
+      setIsYearlyDialogOpen(true)
+    }
+  }
+
+  const handleYearlyDialogClose = (open: boolean) => {
+    setIsYearlyDialogOpen(open)
     if (!open) {
-      setEditingGoal(undefined)
+      setEditingYearlyGoal(undefined)
     }
   }
 
-  const getMonthFromTargetDate = (
-    targetDate: string | null,
-    createdAt: string,
-  ): number => {
-    if (targetDate) {
-      return new Date(targetDate).getMonth() + 1
+  const handleMonthlyDialogClose = (open: boolean) => {
+    setIsMonthlyDialogOpen(open)
+    if (!open) {
+      setEditingMonthlyGoal(undefined)
     }
-    return new Date(createdAt).getMonth() + 1
   }
 
-  const { yearlyGoals, monthlyGoalsByMonth } = useMemo(() => {
-    const yearly: Goal[] = []
-    const monthly: Record<number, Goal[]> = {}
+  const monthlyGoalsByMonth = useMemo(() => {
+    const monthly: Record<number, MonthlyGoal[]> = {}
 
-    goals.forEach((goal) => {
-      if (goal.periodType === 'yearly') {
-        const goalYear = goal.targetDate
-          ? new Date(goal.targetDate).getFullYear()
-          : new Date(goal.createdAt).getFullYear()
-        if (goalYear === selectedYear) {
-          yearly.push(goal)
-        }
-      } else if (goal.periodType === 'monthly') {
-        const month = getMonthFromTargetDate(goal.targetDate, goal.createdAt)
-        const goalYear = goal.targetDate
-          ? new Date(goal.targetDate).getFullYear()
-          : new Date(goal.createdAt).getFullYear()
-        if (goalYear === selectedYear) {
-          if (!monthly[month]) {
-            monthly[month] = []
-          }
-          monthly[month].push(goal)
-        }
+    allMonthlyGoals.forEach((goal) => {
+      if (!monthly[goal.month]) {
+        monthly[goal.month] = []
       }
+      monthly[goal.month].push(goal)
     })
 
-    return { yearlyGoals: yearly, monthlyGoalsByMonth: monthly }
-  }, [goals, selectedYear])
+    return monthly
+  }, [allMonthlyGoals])
 
-  const availableYears = useMemo(() => {
-    const years = new Set<number>()
-    goals.forEach((goal) => {
-      const year = goal.targetDate
-        ? new Date(goal.targetDate).getFullYear()
-        : new Date(goal.createdAt).getFullYear()
-      years.add(year)
-    })
-    return Array.from(years).sort((a, b) => b - a)
-  }, [goals])
+  const displayAvailableYears =
+    availableYears.length > 0 ? availableYears : [selectedYear]
 
   return (
     <div className="container mx-auto max-w-4xl py-8 px-4">
-      <div className="mb-6 flex items-center justify-between">
-        <div>
-          <div className="mb-2">
-            <Link
-              href="/"
-              className="text-sm text-muted-foreground hover:text-foreground"
-            >
-              ← ホームに戻る
-            </Link>
-          </div>
-          <h1 className="text-3xl font-bold">目標管理</h1>
-          <p className="text-muted-foreground mt-2">
-            あなたの目標を管理しましょう
-          </p>
+      <div className="mb-6">
+        <div className="mb-2">
+          <Link
+            href="/"
+            className="text-sm text-muted-foreground hover:text-foreground"
+          >
+            ← ホームに戻る
+          </Link>
         </div>
-        <Button onClick={() => setIsDialogOpen(true)}>新しい目標を作成</Button>
+        <h1 className="text-3xl font-bold">目標管理</h1>
+        <p className="text-muted-foreground mt-2">
+          あなたの目標を管理しましょう
+        </p>
       </div>
 
       <div className="mb-6 flex items-center gap-4">
@@ -156,17 +185,24 @@ const GoalsPage = () => {
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
-              {availableYears.length > 0 ? (
-                availableYears.map((year) => (
-                  <SelectItem key={year} value={year.toString()}>
+              {displayAvailableYears.map((year) => {
+                const currentYear = new Date().getFullYear()
+                const isCurrentYear = year === currentYear
+
+                return (
+                  <SelectItem
+                    key={year}
+                    value={year.toString()}
+                    className={
+                      isCurrentYear
+                        ? 'text-blue-600 dark:text-blue-400 focus:text-blue-600 dark:focus:text-blue-400'
+                        : ''
+                    }
+                  >
                     {year}年
                   </SelectItem>
-                ))
-              ) : (
-                <SelectItem value={selectedYear.toString()}>
-                  {selectedYear}年
-                </SelectItem>
-              )}
+                )
+              })}
             </SelectContent>
           </Select>
         </div>
@@ -189,30 +225,32 @@ const GoalsPage = () => {
 
       {isLoading ? (
         <Loading />
-      ) : yearlyGoals.length === 0 &&
-        Object.keys(monthlyGoalsByMonth).length === 0 ? (
-        <Card>
-          <CardContent className="py-8 text-center">
-            <p className="text-muted-foreground">
-              {selectedYear}年の目標がありません。新しい目標を作成しましょう。
-            </p>
-          </CardContent>
-        </Card>
       ) : (
         <div className="space-y-6">
-          {yearlyGoals.length > 0 && (
-            <div className="rounded-lg border border-zinc-200 bg-zinc-50/30 p-6 dark:border-zinc-800 dark:bg-zinc-950/30">
-              <h2 className="mb-4 text-xl font-semibold text-zinc-900 dark:text-zinc-100">
+          <div className="rounded-lg border border-zinc-200 bg-zinc-50/30 p-6 dark:border-zinc-800 dark:bg-zinc-950/30">
+            <div className="mb-4 flex items-center justify-between">
+              <h2 className="text-xl font-semibold text-zinc-900 dark:text-zinc-100">
                 年間目標
               </h2>
+              <Button
+                onClick={() => {
+                  setEditingYearlyGoal(undefined)
+                  setIsYearlyDialogOpen(true)
+                }}
+                size="sm"
+              >
+                年間目標を作成
+              </Button>
+            </div>
+            {yearlyGoals.length > 0 ? (
               <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
                 {yearlyGoals.map((goal) => (
                   <Card
                     key={goal.id}
-                    className="group relative border-zinc-200 dark:border-zinc-800"
+                    className="group relative bg-white border-zinc-200 dark:bg-white dark:border-zinc-200"
                   >
                     <CardHeader>
-                      <CardTitle className="text-zinc-900 dark:text-zinc-100">
+                      <CardTitle className="text-black dark:text-black">
                         {goal.title}
                       </CardTitle>
                     </CardHeader>
@@ -220,10 +258,8 @@ const GoalsPage = () => {
                       <div className="space-y-2 text-sm">
                         {goal.targetDate && (
                           <div className="flex justify-between">
-                            <span className="text-muted-foreground">
-                              達成予定日:
-                            </span>
-                            <span>
+                            <span className="text-muted-foreground">期限</span>
+                            <span className="text-black dark:text-black">
                               {new Date(goal.targetDate).toLocaleDateString(
                                 'ja-JP',
                               )}
@@ -246,13 +282,29 @@ const GoalsPage = () => {
                   </Card>
                 ))}
               </div>
-            </div>
-          )}
+            ) : (
+              <p className="text-sm text-muted-foreground py-4">
+                年間目標はありません
+              </p>
+            )}
+          </div>
 
           <div className="rounded-lg border border-stone-200 bg-stone-50/30 p-6 dark:border-stone-800 dark:bg-stone-950/30">
-            <h2 className="mb-4 text-xl font-semibold text-stone-900 dark:text-stone-100">
-              月間目標
-            </h2>
+            <div className="mb-4 flex items-center justify-between">
+              <h2 className="text-xl font-semibold text-stone-900 dark:text-stone-100">
+                月間目標
+              </h2>
+              <Button
+                variant="outline"
+                onClick={() => {
+                  setEditingMonthlyGoal(undefined)
+                  setIsMonthlyDialogOpen(true)
+                }}
+                size="sm"
+              >
+                月間目標を作成
+              </Button>
+            </div>
             <Accordion type="multiple" className="w-full">
               {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12].map((month) => {
                 const monthGoals = monthlyGoalsByMonth[month] || []
@@ -335,11 +387,24 @@ const GoalsPage = () => {
         </div>
       )}
 
-      <GoalDialog
-        open={isDialogOpen}
-        onOpenChange={handleDialogClose}
-        onSubmit={editingGoal ? handleUpdateGoal : handleCreateGoal}
-        goal={editingGoal}
+      <YearlyGoalDialog
+        open={isYearlyDialogOpen}
+        onOpenChange={handleYearlyDialogClose}
+        onSubmit={
+          editingYearlyGoal ? handleUpdateYearlyGoal : handleCreateYearlyGoal
+        }
+        goal={editingYearlyGoal}
+        selectedYear={selectedYear}
+      />
+
+      <MonthlyGoalDialog
+        open={isMonthlyDialogOpen}
+        onOpenChange={handleMonthlyDialogClose}
+        onSubmit={
+          editingMonthlyGoal ? handleUpdateMonthlyGoal : handleCreateMonthlyGoal
+        }
+        goal={editingMonthlyGoal}
+        selectedYear={selectedYear}
       />
     </div>
   )

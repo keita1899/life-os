@@ -1,46 +1,68 @@
 import useSWR from 'swr'
 import { mutate } from 'swr'
-import { createGoal, getAllGoals, updateGoal } from '@/lib/goals'
-import type { Goal, CreateGoalInput, UpdateGoalInput } from '@/lib/types/goal'
+import {
+  getYearlyAndMonthlyGoalsByYear,
+  getAllAvailableYears,
+} from '@/lib/goals/index'
+import { createYearlyGoal } from '@/lib/goals/yearly'
+import { createMonthlyGoal } from '@/lib/goals/monthly'
+import type { YearlyGoal, CreateYearlyGoalInput } from '@/lib/types/yearly-goal'
+import type {
+  MonthlyGoal,
+  CreateMonthlyGoalInput,
+} from '@/lib/types/monthly-goal'
 import { fetcher } from '@/lib/swr'
 
-const GOALS_KEY = 'goals'
+export function useGoals(selectedYear: number) {
+  const goalsKey = ['goals', selectedYear]
+  const availableYearsKey = 'available-years'
 
-export function useGoals() {
   const {
-    data: goals = [],
+    data = { yearlyGoals: [], monthlyGoals: [] },
     error,
     isLoading,
-  } = useSWR<Goal[]>(GOALS_KEY, () => fetcher(() => getAllGoals()))
+  } = useSWR<{ yearlyGoals: YearlyGoal[]; monthlyGoals: MonthlyGoal[] }>(
+    goalsKey,
+    () => fetcher(() => getYearlyAndMonthlyGoalsByYear(selectedYear)),
+  )
 
-  const handleCreateGoal = async (input: CreateGoalInput) => {
+  const { data: availableYears = [] } = useSWR<number[]>(
+    availableYearsKey,
+    () => fetcher(() => getAllAvailableYears()),
+  )
+
+  const handleCreateYearlyGoal = async (input: CreateYearlyGoalInput) => {
     try {
-      await createGoal(input)
-      await mutate(GOALS_KEY)
+      await createYearlyGoal(input)
+      await mutate(goalsKey)
+      await mutate(availableYearsKey)
     } catch (err) {
       throw err
     }
   }
 
-  const handleUpdateGoal = async (id: number, input: UpdateGoalInput) => {
+  const handleCreateMonthlyGoal = async (input: CreateMonthlyGoalInput) => {
     try {
-      await updateGoal(id, input)
-      await mutate(GOALS_KEY)
+      await createMonthlyGoal(input)
+      await mutate(goalsKey)
+      await mutate(availableYearsKey)
     } catch (err) {
       throw err
     }
   }
 
   return {
-    goals,
+    yearlyGoals: data.yearlyGoals,
+    monthlyGoals: data.monthlyGoals,
+    availableYears,
     isLoading,
     error: error
       ? error instanceof Error
         ? error.message
         : 'Failed to fetch goals'
       : null,
-    createGoal: handleCreateGoal,
-    updateGoal: handleUpdateGoal,
-    refreshGoals: () => mutate(GOALS_KEY),
+    createYearlyGoal: handleCreateYearlyGoal,
+    createMonthlyGoal: handleCreateMonthlyGoal,
+    refreshGoals: () => mutate(goalsKey),
   }
 }
