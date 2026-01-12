@@ -11,6 +11,8 @@ import { YearlyGoalsSection } from '@/components/goals/YearlyGoalsSection'
 import { MonthlyGoalsSection } from '@/components/goals/MonthlyGoalsSection'
 import { Loading } from '@/components/ui/loading'
 import { ErrorMessage } from '@/components/ui/error-message'
+import { ModeSwitch } from '@/components/mode/ModeSwitch'
+import { useMode } from '@/lib/contexts/ModeContext'
 import type { YearlyGoal, CreateYearlyGoalInput } from '@/lib/types/yearly-goal'
 import type {
   MonthlyGoal,
@@ -182,16 +184,23 @@ const GoalsPage = () => {
     }
   }
 
+  const { mode } = useMode()
+
+  if (mode !== 'life') {
+    return null
+  }
+
   return (
     <div className="container mx-auto max-w-4xl py-8 px-4">
       <div className="mb-6">
-        <div className="mb-2">
+        <div className="mb-2 flex items-center justify-between">
           <Link
             href="/"
             className="text-sm text-muted-foreground hover:text-foreground"
           >
             ← ホームに戻る
           </Link>
+          <ModeSwitch />
         </div>
         <h1 className="text-3xl font-bold">目標管理</h1>
         <p className="text-muted-foreground mt-2">
