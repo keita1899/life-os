@@ -28,6 +28,17 @@ async function initializeAllTables(): Promise<void> {
       updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
     )
   `)
+
+  await db.execute(`
+    CREATE TABLE IF NOT EXISTS weekly_goals (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      title TEXT NOT NULL,
+      year INTEGER NOT NULL,
+      week_start_date DATE NOT NULL,
+      created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+      updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
+    )
+  `)
 }
 
 export async function getDatabase(): Promise<Database> {

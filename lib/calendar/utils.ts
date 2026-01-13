@@ -91,6 +91,10 @@ export function navigateMonth(date: Date, direction: 'prev' | 'next'): Date {
   return direction === 'next' ? addMonths(date, 1) : subMonths(date, 1)
 }
 
+export function getWeekStartDate(date: Date): Date {
+  return startOfWeek(date, { weekStartsOn: 1 })
+}
+
 export function getWeekDays(date: Date): Date[] {
   const weekStart = startOfWeek(date, { weekStartsOn: 1 })
   const weekEnd = endOfWeek(date, { weekStartsOn: 1 })

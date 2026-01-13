@@ -9,18 +9,26 @@ import {
   getGoalsForDate,
   weekdays,
 } from '@/lib/calendar/utils'
+import { WeeklyGoalForm } from '@/components/goals/WeeklyGoalForm'
 import type { MonthlyGoal } from '@/lib/types/monthly-goal'
+import type { WeeklyGoal } from '@/lib/types/weekly-goal'
 
 interface WeekViewProps {
   currentDate: Date
   monthlyGoals: MonthlyGoal[]
+  weeklyGoals: WeeklyGoal[]
 }
 
-export function WeekView({ currentDate, monthlyGoals }: WeekViewProps) {
+export function WeekView({
+  currentDate,
+  monthlyGoals,
+  weeklyGoals,
+}: WeekViewProps) {
   const weekDays = useMemo(() => getWeekDays(currentDate), [currentDate])
 
   return (
     <div className="w-full">
+      <WeeklyGoalForm currentDate={currentDate} weeklyGoals={weeklyGoals} />
       <div className="grid grid-cols-7 gap-px border border-stone-200 bg-stone-200 dark:border-stone-800 dark:bg-stone-800">
         {weekdays.map((day) => (
           <div
@@ -40,7 +48,7 @@ export function WeekView({ currentDate, monthlyGoals }: WeekViewProps) {
             <div
               key={date.toISOString()}
               className={cn(
-                'min-h-[400px] bg-white p-2 dark:bg-stone-900',
+                'min-h-[400px] bg-white p-2 dark:bg-stone-950',
                 isTodayDate && 'ring-2 ring-blue-500 dark:ring-blue-400',
               )}
             >
