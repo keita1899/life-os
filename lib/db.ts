@@ -36,7 +36,8 @@ async function initializeAllTables(): Promise<void> {
       year INTEGER NOT NULL,
       week_start_date DATE NOT NULL,
       created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-      updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
+      updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+      UNIQUE(year, week_start_date)
     )
   `)
 }
