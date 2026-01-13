@@ -34,7 +34,7 @@ export function CalendarView({ initialDate }: CalendarViewProps) {
   const [viewMode, setViewMode] = useState<ViewMode>('month')
 
   const currentYear = currentDate.getFullYear()
-  const { monthlyGoals, isLoading } = useGoals(currentYear)
+  const { monthlyGoals, weeklyGoals, isLoading } = useGoals(currentYear)
 
   const currentMonthGoals = useMemo(
     () => getMonthlyGoalsForDate(monthlyGoals, currentDate),
@@ -126,7 +126,11 @@ export function CalendarView({ initialDate }: CalendarViewProps) {
           ) : viewMode === 'month' ? (
             <MonthView currentDate={currentDate} monthlyGoals={monthlyGoals} />
           ) : (
-            <WeekView currentDate={currentDate} monthlyGoals={monthlyGoals} />
+            <WeekView
+              currentDate={currentDate}
+              monthlyGoals={monthlyGoals}
+              weeklyGoals={weeklyGoals}
+            />
           )}
         </CardContent>
       </Card>

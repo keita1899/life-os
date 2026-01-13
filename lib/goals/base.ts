@@ -1,3 +1,5 @@
+import { startOfWeek } from 'date-fns'
+
 export function getYearFromDate(date: string | null | undefined): number {
   if (date) {
     const parsed = new Date(date)
@@ -14,4 +16,16 @@ export function getMonthFromDate(date: string | null | undefined): number {
     return Number.isNaN(month) ? new Date().getMonth() + 1 : month + 1
   }
   return new Date().getMonth() + 1
+}
+
+export function getWeekStartDateFromDate(
+  date: string | null | undefined,
+): string {
+  if (date) {
+    const parsed = new Date(date)
+    const weekStart = startOfWeek(parsed, { weekStartsOn: 1 })
+    return weekStart.toISOString().split('T')[0]
+  }
+  const weekStart = startOfWeek(new Date(), { weekStartsOn: 1 })
+  return weekStart.toISOString().split('T')[0]
 }

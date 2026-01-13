@@ -6,24 +6,38 @@ import {
 } from '@/lib/goals/index'
 import { createYearlyGoal, deleteYearlyGoal } from '@/lib/goals/yearly'
 import { createMonthlyGoal, deleteMonthlyGoal } from '@/lib/goals/monthly'
+import {
+  createWeeklyGoal,
+  updateWeeklyGoal,
+  deleteWeeklyGoal,
+} from '@/lib/goals/weekly'
 import type { YearlyGoal, CreateYearlyGoalInput } from '@/lib/types/yearly-goal'
 import type {
   MonthlyGoal,
   CreateMonthlyGoalInput,
 } from '@/lib/types/monthly-goal'
+import type {
+  WeeklyGoal,
+  CreateWeeklyGoalInput,
+  UpdateWeeklyGoalInput,
+} from '@/lib/types/weekly-goal'
 import { fetcher } from '@/lib/swr'
+import { getYearFromDate } from '@/lib/goals/base'
 
 export function useGoals(selectedYear: number) {
   const goalsKey = ['goals', selectedYear]
   const availableYearsKey = 'available-years'
 
   const {
-    data = { yearlyGoals: [], monthlyGoals: [] },
+    data = { yearlyGoals: [], monthlyGoals: [], weeklyGoals: [] },
     error,
     isLoading,
-  } = useSWR<{ yearlyGoals: YearlyGoal[]; monthlyGoals: MonthlyGoal[] }>(
-    goalsKey,
-    () => fetcher(() => getYearlyAndMonthlyGoalsByYear(selectedYear)),
+  } = useSWR<{
+    yearlyGoals: YearlyGoal[]
+    monthlyGoals: MonthlyGoal[]
+    weeklyGoals: WeeklyGoal[]
+  }>(goalsKey, () =>
+    fetcher(() => getYearlyAndMonthlyGoalsByYear(selectedYear)),
   )
 
   const { data: availableYears = [] } = useSWR<number[]>(
@@ -51,6 +65,16 @@ export function useGoals(selectedYear: number) {
     ])
   }
 
+  const handleCreateWeeklyGoal = async (input: CreateWeeklyGoalInput) => {
+    await createWeeklyGoal(input)
+    const yearToRefresh = getYearFromDate(input.weekStartDate)
+    await Promise.all([
+      mutate(['goals', yearToRefresh]),
+      mutate(availableYearsKey),
+      yearToRefresh === selectedYear ? Promise.resolve() : mutate(goalsKey),
+    ])
+  }
+
   const handleDeleteYearlyGoal = async (id: number) => {
     await deleteYearlyGoal(id)
     await Promise.all([mutate(goalsKey), mutate(availableYearsKey)])
@@ -61,9 +85,29 @@ export function useGoals(selectedYear: number) {
     await Promise.all([mutate(goalsKey), mutate(availableYearsKey)])
   }
 
+  const handleUpdateWeeklyGoal = async (
+    id: number,
+    input: UpdateWeeklyGoalInput,
+  ) => {
+    await updateWeeklyGoal(id, input)
+    const yearToRefresh =
+      input.year ?? getYearFromDate(input.weekStartDate) ?? selectedYear
+    await Promise.all([
+      mutate(['goals', yearToRefresh]),
+      mutate(availableYearsKey),
+      yearToRefresh === selectedYear ? Promise.resolve() : mutate(goalsKey),
+    ])
+  }
+
+  const handleDeleteWeeklyGoal = async (id: number) => {
+    await deleteWeeklyGoal(id)
+    await Promise.all([mutate(goalsKey), mutate(availableYearsKey)])
+  }
+
   return {
     yearlyGoals: data.yearlyGoals,
     monthlyGoals: data.monthlyGoals,
+    weeklyGoals: data.weeklyGoals,
     availableYears,
     isLoading,
     error: error
@@ -73,8 +117,11 @@ export function useGoals(selectedYear: number) {
       : null,
     createYearlyGoal: handleCreateYearlyGoal,
     createMonthlyGoal: handleCreateMonthlyGoal,
+    createWeeklyGoal: handleCreateWeeklyGoal,
+    updateWeeklyGoal: handleUpdateWeeklyGoal,
     deleteYearlyGoal: handleDeleteYearlyGoal,
     deleteMonthlyGoal: handleDeleteMonthlyGoal,
+    deleteWeeklyGoal: handleDeleteWeeklyGoal,
     refreshGoals: () => mutate(goalsKey),
   }
 }
