@@ -28,6 +28,11 @@ export function useTasks() {
     await mutate(tasksKey)
   }
 
+  const handleToggleTaskCompletion = async (id: number, completed: boolean) => {
+    await updateTask(id, { completed })
+    await mutate(tasksKey)
+  }
+
   return {
     tasks: data,
     isLoading,
@@ -39,6 +44,7 @@ export function useTasks() {
     createTask: handleCreateTask,
     updateTask: handleUpdateTask,
     deleteTask: handleDeleteTask,
+    toggleTaskCompletion: handleToggleTaskCompletion,
     refreshTasks: () => mutate(tasksKey),
   }
 }

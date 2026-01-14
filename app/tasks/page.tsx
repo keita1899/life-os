@@ -22,8 +22,15 @@ type TaskGroup = {
 
 export default function TasksPage() {
   const { mode } = useMode()
-  const { tasks, isLoading, error, createTask, updateTask, deleteTask } =
-    useTasks()
+  const {
+    tasks,
+    isLoading,
+    error,
+    createTask,
+    updateTask,
+    deleteTask,
+    toggleTaskCompletion,
+  } = useTasks()
   const [isDialogOpen, setIsDialogOpen] = useState(false)
   const [editingTask, setEditingTask] = useState<Task | undefined>(undefined)
   const [deletingTask, setDeletingTask] = useState<Task | undefined>(undefined)
@@ -42,6 +49,17 @@ export default function TasksPage() {
     const todayStr = format(today, 'yyyy-MM-dd')
     const tomorrowStr = format(tomorrow, 'yyyy-MM-dd')
 
+    const incompleteTasks: Task[] = []
+    const completedTasks: Task[] = []
+
+    tasks.forEach((task) => {
+      if (task.completed) {
+        completedTasks.push(task)
+      } else {
+        incompleteTasks.push(task)
+      }
+    })
+
     const groups: TaskGroup[] = [
       { key: 'none', title: '日付なし', tasks: [] },
       { key: 'today', title: '今日', tasks: [] },
@@ -55,7 +73,7 @@ export default function TasksPage() {
     }
     const dateGroups = new Map<string, Task[]>()
 
-    tasks.forEach((task) => {
+    incompleteTasks.forEach((task) => {
       if (!task.executionDate) {
         groups[0].tasks.push(task)
         return
@@ -88,12 +106,15 @@ export default function TasksPage() {
         tasks,
       }))
 
-    const filteredGroups = groups.filter((g) => g.tasks.length > 0)
-    const result = filteredGroups.concat(sortedDateGroups)
+    const result: TaskGroup[] = [groups[0], groups[1], groups[2], overdueGroup]
 
-    if (overdueGroup.tasks.length > 0) {
-      result.push(overdueGroup)
-    }
+    result.push(...sortedDateGroups)
+
+    result.push({
+      key: 'completed',
+      title: '完了済み',
+      tasks: completedTasks,
+    })
 
     return result
   }, [tasks])
@@ -160,6 +181,19 @@ export default function TasksPage() {
     setDeletingTask(task)
   }
 
+  const handleToggleCompletion = async (task: Task) => {
+    try {
+      setCreateError(null)
+      await toggleTaskCompletion(task.id, !task.completed)
+    } catch (err) {
+      setCreateError(
+        err instanceof Error
+          ? err.message
+          : 'タスクの完了状態の更新に失敗しました',
+      )
+    }
+  }
+
   return (
     <div className="container mx-auto max-w-4xl py-8 px-4">
       <div className="mb-6">
@@ -186,10 +220,6 @@ export default function TasksPage() {
 
       {isLoading ? (
         <Loading />
-      ) : groupedTasks.length === 0 ? (
-        <div className="rounded-lg border border-stone-200 bg-stone-50/30 p-8 text-center dark:border-stone-800 dark:bg-stone-950/30">
-          <p className="text-muted-foreground">タスクがありません</p>
-        </div>
       ) : (
         <div className="space-y-6">
           {groupedTasks.map((group) => (
@@ -201,6 +231,7 @@ export default function TasksPage() {
                 tasks={group.tasks}
                 onEdit={handleEditTask}
                 onDelete={handleDeleteClick}
+                onToggleCompletion={handleToggleCompletion}
               />
             </div>
           ))}

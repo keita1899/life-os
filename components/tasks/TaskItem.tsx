@@ -12,9 +12,15 @@ interface TaskItemProps {
   task: Task
   onEdit?: (task: Task) => void
   onDelete?: (task: Task) => void
+  onToggleCompletion?: (task: Task) => void
 }
 
-export function TaskItem({ task, onEdit, onDelete }: TaskItemProps) {
+export function TaskItem({
+  task,
+  onEdit,
+  onDelete,
+  onToggleCompletion,
+}: TaskItemProps) {
   const dateLabel = useMemo(() => {
     if (!task.executionDate) return null
 
@@ -54,7 +60,19 @@ export function TaskItem({ task, onEdit, onDelete }: TaskItemProps) {
       )}
     >
       <div className="mt-0.5">
-        {task.completed ? (
+        {onToggleCompletion ? (
+          <button
+            type="button"
+            onClick={() => onToggleCompletion(task)}
+            className="focus:outline-none"
+          >
+            {task.completed ? (
+              <CheckCircle2 className="h-5 w-5 text-green-500" />
+            ) : (
+              <Circle className="h-5 w-5 text-stone-400" />
+            )}
+          </button>
+        ) : task.completed ? (
           <CheckCircle2 className="h-5 w-5 text-green-500" />
         ) : (
           <Circle className="h-5 w-5 text-stone-400" />
@@ -77,7 +95,7 @@ export function TaskItem({ task, onEdit, onDelete }: TaskItemProps) {
         </div>
       </div>
       <div className="mt-0.5 flex items-center gap-2">
-        {dateLabel && (
+        {!task.completed && dateLabel && (
           <span
             className={cn(
               'rounded-md px-2.5 py-1 text-sm font-medium',
@@ -94,7 +112,7 @@ export function TaskItem({ task, onEdit, onDelete }: TaskItemProps) {
             {dateLabel.text}
           </span>
         )}
-        {onEdit && (
+        {!task.completed && onEdit && (
           <Button
             type="button"
             variant="ghost"
