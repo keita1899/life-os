@@ -1,6 +1,12 @@
 import useSWR from 'swr'
 import { mutate } from 'swr'
-import { createTask, getAllTasks, updateTask, deleteTask } from '@/lib/tasks'
+import {
+  createTask,
+  getAllTasks,
+  updateTask,
+  deleteTask,
+  deleteCompletedTasks,
+} from '@/lib/tasks'
 import type { Task, CreateTaskInput, UpdateTaskInput } from '@/lib/types/task'
 import { fetcher } from '@/lib/swr'
 
@@ -33,6 +39,11 @@ export function useTasks() {
     await mutate(tasksKey)
   }
 
+  const handleDeleteCompletedTasks = async () => {
+    await deleteCompletedTasks()
+    await mutate(tasksKey)
+  }
+
   return {
     tasks: data,
     isLoading,
@@ -45,6 +56,7 @@ export function useTasks() {
     updateTask: handleUpdateTask,
     deleteTask: handleDeleteTask,
     toggleTaskCompletion: handleToggleTaskCompletion,
+    deleteCompletedTasks: handleDeleteCompletedTasks,
     refreshTasks: () => mutate(tasksKey),
   }
 }

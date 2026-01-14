@@ -184,3 +184,17 @@ export async function deleteTask(id: number): Promise<void> {
     throw new Error('Failed to delete task: unknown error')
   }
 }
+
+export async function deleteCompletedTasks(): Promise<number> {
+  const db = await getDatabase()
+
+  try {
+    const result = await db.execute('DELETE FROM tasks WHERE completed = 1')
+    return result.rowsAffected
+  } catch (err) {
+    if (err instanceof Error) {
+      throw err
+    }
+    throw new Error('Failed to delete completed tasks: unknown error')
+  }
+}

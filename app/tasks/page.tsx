@@ -4,6 +4,7 @@ import { useState, useMemo } from 'react'
 import Link from 'next/link'
 import { format, parseISO } from 'date-fns'
 import { ja } from 'date-fns/locale/ja'
+import { Trash2 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { TaskList } from '@/components/tasks/TaskList'
 import { TaskDialog } from '@/components/tasks/TaskDialog'
@@ -30,10 +31,13 @@ export default function TasksPage() {
     updateTask,
     deleteTask,
     toggleTaskCompletion,
+    deleteCompletedTasks,
   } = useTasks()
   const [isDialogOpen, setIsDialogOpen] = useState(false)
   const [editingTask, setEditingTask] = useState<Task | undefined>(undefined)
   const [deletingTask, setDeletingTask] = useState<Task | undefined>(undefined)
+  const [isDeletingCompletedDialogOpen, setIsDeletingCompletedDialogOpen] =
+    useState(false)
   const [createError, setCreateError] = useState<string | null>(null)
 
   if (mode !== 'life') {
@@ -194,6 +198,24 @@ export default function TasksPage() {
     }
   }
 
+  const handleDeleteCompletedTasksClick = () => {
+    setIsDeletingCompletedDialogOpen(true)
+  }
+
+  const handleDeleteCompletedTasks = async () => {
+    try {
+      setCreateError(null)
+      await deleteCompletedTasks()
+      setIsDeletingCompletedDialogOpen(false)
+    } catch (err) {
+      setCreateError(
+        err instanceof Error
+          ? err.message
+          : '完了済みタスクの削除に失敗しました',
+      )
+    }
+  }
+
   return (
     <div className="container mx-auto max-w-4xl py-8 px-4">
       <div className="mb-6">
@@ -224,9 +246,23 @@ export default function TasksPage() {
         <div className="space-y-6">
           {groupedTasks.map((group) => (
             <div key={group.key}>
-              <h2 className="mb-3 text-lg font-semibold text-stone-900 dark:text-stone-100">
-                {group.title}
-              </h2>
+              <div className="mb-3 flex items-center justify-between">
+                <h2 className="text-lg font-semibold text-stone-900 dark:text-stone-100">
+                  {group.title}
+                </h2>
+                {group.key === 'completed' && group.tasks.length > 0 && (
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="sm"
+                    className="h-8 w-8 p-0 text-destructive hover:text-destructive hover:bg-destructive/10"
+                    onClick={handleDeleteCompletedTasksClick}
+                  >
+                    <Trash2 className="h-4 w-4" />
+                    <span className="sr-only">完了済みタスクを一括削除</span>
+                  </Button>
+                )}
+              </div>
               <TaskList
                 tasks={group.tasks}
                 onEdit={handleEditTask}
@@ -250,6 +286,15 @@ export default function TasksPage() {
         message={`「${deletingTask?.title}」を削除しますか？この操作は取り消せません。`}
         onConfirm={handleDeleteTask}
         onCancel={() => setDeletingTask(undefined)}
+      />
+
+      <DeleteConfirmDialog
+        open={isDeletingCompletedDialogOpen}
+        message={`完了済みのタスク（${
+          groupedTasks.find((g) => g.key === 'completed')?.tasks.length ?? 0
+        }件）をすべて削除しますか？この操作は取り消せません。`}
+        onConfirm={handleDeleteCompletedTasks}
+        onCancel={() => setIsDeletingCompletedDialogOpen(false)}
       />
     </div>
   )
