@@ -1,2 +1,2 @@
-export { createTask, getAllTasks, updateTask } from './task'
+export { createTask, getAllTasks, updateTask, deleteTask } from './task'
 export type { Task, CreateTaskInput, UpdateTaskInput } from '../types/task'

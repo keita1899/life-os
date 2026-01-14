@@ -7,6 +7,7 @@ import { ja } from 'date-fns/locale/ja'
 import { Button } from '@/components/ui/button'
 import { TaskList } from '@/components/tasks/TaskList'
 import { TaskDialog } from '@/components/tasks/TaskDialog'
+import { DeleteConfirmDialog } from '@/components/ui/delete-confirm-dialog'
 import { Loading } from '@/components/ui/loading'
 import { ErrorMessage } from '@/components/ui/error-message'
 import { useTasks } from '@/hooks/useTasks'
@@ -21,9 +22,11 @@ type TaskGroup = {
 
 export default function TasksPage() {
   const { mode } = useMode()
-  const { tasks, isLoading, error, createTask, updateTask } = useTasks()
+  const { tasks, isLoading, error, createTask, updateTask, deleteTask } =
+    useTasks()
   const [isDialogOpen, setIsDialogOpen] = useState(false)
   const [editingTask, setEditingTask] = useState<Task | undefined>(undefined)
+  const [deletingTask, setDeletingTask] = useState<Task | undefined>(undefined)
   const [createError, setCreateError] = useState<string | null>(null)
 
   if (mode !== 'life') {
@@ -139,6 +142,24 @@ export default function TasksPage() {
     }
   }
 
+  const handleDeleteTask = async () => {
+    if (!deletingTask) return
+
+    try {
+      setCreateError(null)
+      await deleteTask(deletingTask.id)
+      setDeletingTask(undefined)
+    } catch (err) {
+      setCreateError(
+        err instanceof Error ? err.message : 'タスクの削除に失敗しました',
+      )
+    }
+  }
+
+  const handleDeleteClick = (task: Task) => {
+    setDeletingTask(task)
+  }
+
   return (
     <div className="container mx-auto max-w-4xl py-8 px-4">
       <div className="mb-6">
@@ -176,7 +197,11 @@ export default function TasksPage() {
               <h2 className="mb-3 text-lg font-semibold text-stone-900 dark:text-stone-100">
                 {group.title}
               </h2>
-              <TaskList tasks={group.tasks} onEdit={handleEditTask} />
+              <TaskList
+                tasks={group.tasks}
+                onEdit={handleEditTask}
+                onDelete={handleDeleteClick}
+              />
             </div>
           ))}
         </div>
@@ -187,6 +212,13 @@ export default function TasksPage() {
         onOpenChange={handleDialogClose}
         onSubmit={editingTask ? handleUpdateTask : handleCreateTask}
         task={editingTask}
+      />
+
+      <DeleteConfirmDialog
+        open={!!deletingTask}
+        message={`「${deletingTask?.title}」を削除しますか？この操作は取り消せません。`}
+        onConfirm={handleDeleteTask}
+        onCancel={() => setDeletingTask(undefined)}
       />
     </div>
   )

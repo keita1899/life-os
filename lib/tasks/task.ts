@@ -167,3 +167,20 @@ export async function updateTask(
     throw new Error('Failed to update task: unknown error')
   }
 }
+
+export async function deleteTask(id: number): Promise<void> {
+  const db = await getDatabase()
+
+  try {
+    const result = await db.execute('DELETE FROM tasks WHERE id = ?', [id])
+
+    if (result.rowsAffected === 0) {
+      throw new Error('Task not found')
+    }
+  } catch (err) {
+    if (err instanceof Error) {
+      throw err
+    }
+    throw new Error('Failed to delete task: unknown error')
+  }
+}

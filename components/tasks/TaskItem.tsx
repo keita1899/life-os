@@ -1,7 +1,7 @@
 'use client'
 
 import { useMemo } from 'react'
-import { CheckCircle2, Circle, Pencil } from 'lucide-react'
+import { CheckCircle2, Circle, Pencil, Trash2 } from 'lucide-react'
 import { format, parseISO } from 'date-fns'
 import { ja } from 'date-fns/locale/ja'
 import { Button } from '@/components/ui/button'
@@ -11,9 +11,10 @@ import type { Task } from '@/lib/types/task'
 interface TaskItemProps {
   task: Task
   onEdit?: (task: Task) => void
+  onDelete?: (task: Task) => void
 }
 
-export function TaskItem({ task, onEdit }: TaskItemProps) {
+export function TaskItem({ task, onEdit, onDelete }: TaskItemProps) {
   const dateLabel = useMemo(() => {
     if (!task.executionDate) return null
 
@@ -103,6 +104,18 @@ export function TaskItem({ task, onEdit }: TaskItemProps) {
           >
             <Pencil className="h-4 w-4" />
             <span className="sr-only">編集</span>
+          </Button>
+        )}
+        {onDelete && (
+          <Button
+            type="button"
+            variant="ghost"
+            size="sm"
+            className="h-8 w-8 p-0 text-destructive hover:text-destructive hover:bg-destructive/10"
+            onClick={() => onDelete(task)}
+          >
+            <Trash2 className="h-4 w-4" />
+            <span className="sr-only">削除</span>
           </Button>
         )}
       </div>
