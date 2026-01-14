@@ -90,3 +90,80 @@ export async function getAllTasks(): Promise<Task[]> {
     throw new Error('Failed to get tasks: unknown error')
   }
 }
+
+export async function updateTask(
+  id: number,
+  input: UpdateTaskInput,
+): Promise<Task> {
+  const db = await getDatabase()
+
+  const updateFields: string[] = []
+  const updateValues: unknown[] = []
+
+  if (input.title !== undefined) {
+    updateFields.push('title = ?')
+    updateValues.push(input.title)
+  }
+
+  if (input.executionDate !== undefined) {
+    updateFields.push('execution_date = ?')
+    updateValues.push(input.executionDate || null)
+  }
+
+  if (input.completed !== undefined) {
+    updateFields.push('completed = ?')
+    updateValues.push(input.completed ? 1 : 0)
+  }
+
+  if (input.order !== undefined) {
+    updateFields.push('"order" = ?')
+    updateValues.push(input.order)
+  }
+
+  if (input.actualTime !== undefined) {
+    updateFields.push('actual_time = ?')
+    updateValues.push(input.actualTime)
+  }
+
+  if (input.estimatedTime !== undefined) {
+    updateFields.push('estimated_time = ?')
+    updateValues.push(input.estimatedTime || null)
+  }
+
+  if (updateFields.length === 0) {
+    const result = await db.select<DbTask[]>(
+      'SELECT * FROM tasks WHERE id = ?',
+      [id],
+    )
+    if (result.length === 0) {
+      throw new Error('Task not found')
+    }
+    return mapDbTaskToTask(result[0])
+  }
+
+  updateFields.push('updated_at = CURRENT_TIMESTAMP')
+  updateValues.push(id)
+
+  try {
+    await db.execute(
+      `UPDATE tasks SET ${updateFields.join(', ')} WHERE id = ?`,
+      updateValues,
+    )
+
+    const result = await db.select<DbTask[]>(
+      'SELECT * FROM tasks WHERE id = ?',
+      [id],
+    )
+
+    if (result.length === 0) {
+      throw new Error('Failed to update task: record not found after update')
+    }
+
+    return mapDbTaskToTask(result[0])
+  } catch (err) {
+    if (err instanceof Error) {
+      throw err
+    }
+    throw new Error('Failed to update task: unknown error')
+  }
+}

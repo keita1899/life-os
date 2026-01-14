@@ -25,7 +25,6 @@ export const TaskDialog = ({
 }: TaskDialogProps) => {
   const handleSubmit = async (input: CreateTaskInput) => {
     await onSubmit(input)
-    onOpenChange(false)
   }
 
   const isEditMode = !!task

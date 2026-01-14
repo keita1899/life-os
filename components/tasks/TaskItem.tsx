@@ -1,17 +1,19 @@
 'use client'
 
 import { useMemo } from 'react'
-import { CheckCircle2, Circle } from 'lucide-react'
+import { CheckCircle2, Circle, Pencil } from 'lucide-react'
 import { format, parseISO } from 'date-fns'
 import { ja } from 'date-fns/locale/ja'
+import { Button } from '@/components/ui/button'
 import { cn } from '@/lib/utils'
 import type { Task } from '@/lib/types/task'
 
 interface TaskItemProps {
   task: Task
+  onEdit?: (task: Task) => void
 }
 
-export function TaskItem({ task }: TaskItemProps) {
+export function TaskItem({ task, onEdit }: TaskItemProps) {
   const dateLabel = useMemo(() => {
     if (!task.executionDate) return null
 
@@ -73,8 +75,8 @@ export function TaskItem({ task }: TaskItemProps) {
           {task.actualTime > 0 && <div>実績: {task.actualTime}分</div>}
         </div>
       </div>
-      {dateLabel && (
-        <div className="mt-0.5">
+      <div className="mt-0.5 flex items-center gap-2">
+        {dateLabel && (
           <span
             className={cn(
               'rounded-md px-2.5 py-1 text-sm font-medium',
@@ -90,8 +92,20 @@ export function TaskItem({ task }: TaskItemProps) {
           >
             {dateLabel.text}
           </span>
-        </div>
-      )}
+        )}
+        {onEdit && (
+          <Button
+            type="button"
+            variant="ghost"
+            size="sm"
+            className="h-8 w-8 p-0"
+            onClick={() => onEdit(task)}
+          >
+            <Pencil className="h-4 w-4" />
+            <span className="sr-only">編集</span>
+          </Button>
+        )}
+      </div>
     </div>
   )
 }

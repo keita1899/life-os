@@ -11,7 +11,7 @@ import { Loading } from '@/components/ui/loading'
 import { ErrorMessage } from '@/components/ui/error-message'
 import { useTasks } from '@/hooks/useTasks'
 import { useMode } from '@/lib/contexts/ModeContext'
-import type { CreateTaskInput, Task } from '@/lib/types/task'
+import type { CreateTaskInput, Task, UpdateTaskInput } from '@/lib/types/task'
 
 type TaskGroup = {
   key: string
@@ -21,8 +21,9 @@ type TaskGroup = {
 
 export default function TasksPage() {
   const { mode } = useMode()
-  const { tasks, isLoading, error, createTask } = useTasks()
+  const { tasks, isLoading, error, createTask, updateTask } = useTasks()
   const [isDialogOpen, setIsDialogOpen] = useState(false)
+  const [editingTask, setEditingTask] = useState<Task | undefined>(undefined)
   const [createError, setCreateError] = useState<string | null>(null)
 
   if (mode !== 'life') {
@@ -106,6 +107,38 @@ export default function TasksPage() {
     }
   }
 
+  const handleUpdateTask = async (input: CreateTaskInput) => {
+    if (!editingTask) return
+
+    try {
+      setCreateError(null)
+      const updateInput: UpdateTaskInput = {
+        title: input.title,
+        executionDate: input.executionDate,
+        estimatedTime: input.estimatedTime,
+      }
+      await updateTask(editingTask.id, updateInput)
+      setIsDialogOpen(false)
+      setEditingTask(undefined)
+    } catch (err) {
+      setCreateError(
+        err instanceof Error ? err.message : 'タスクの更新に失敗しました',
+      )
+    }
+  }
+
+  const handleEditTask = (task: Task) => {
+    setEditingTask(task)
+    setIsDialogOpen(true)
+  }
+
+  const handleDialogClose = (open: boolean) => {
+    setIsDialogOpen(open)
+    if (!open) {
+      setEditingTask(undefined)
+    }
+  }
+
   return (
     <div className="container mx-auto max-w-4xl py-8 px-4">
       <div className="mb-6">
@@ -143,7 +176,7 @@ export default function TasksPage() {
               <h2 className="mb-3 text-lg font-semibold text-stone-900 dark:text-stone-100">
                 {group.title}
               </h2>
-              <TaskList tasks={group.tasks} />
+              <TaskList tasks={group.tasks} onEdit={handleEditTask} />
             </div>
           ))}
         </div>
@@ -151,8 +184,9 @@ export default function TasksPage() {
 
       <TaskDialog
         open={isDialogOpen}
-        onOpenChange={setIsDialogOpen}
-        onSubmit={handleCreateTask}
+        onOpenChange={handleDialogClose}
+        onSubmit={editingTask ? handleUpdateTask : handleCreateTask}
+        task={editingTask}
       />
     </div>
   )

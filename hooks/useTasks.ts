@@ -1,7 +1,7 @@
 import useSWR from 'swr'
 import { mutate } from 'swr'
-import { createTask, getAllTasks } from '@/lib/tasks'
-import type { Task, CreateTaskInput } from '@/lib/types/task'
+import { createTask, getAllTasks, updateTask } from '@/lib/tasks'
+import type { Task, CreateTaskInput, UpdateTaskInput } from '@/lib/types/task'
 import { fetcher } from '@/lib/swr'
 
 const tasksKey = 'tasks'
@@ -18,6 +18,11 @@ export function useTasks() {
     await mutate(tasksKey)
   }
 
+  const handleUpdateTask = async (id: number, input: UpdateTaskInput) => {
+    await updateTask(id, input)
+    await mutate(tasksKey)
+  }
+
   return {
     tasks: data,
     isLoading,
@@ -27,6 +32,7 @@ export function useTasks() {
         : 'Failed to fetch tasks'
       : null,
     createTask: handleCreateTask,
+    updateTask: handleUpdateTask,
     refreshTasks: () => mutate(tasksKey),
   }
 }
