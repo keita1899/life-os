@@ -49,6 +49,17 @@ export default function Home() {
                     </Button>
                   </CardContent>
                 </Card>
+                <Card>
+                  <CardHeader>
+                    <CardTitle>タスク管理</CardTitle>
+                    <CardDescription>タスクを作成して管理</CardDescription>
+                  </CardHeader>
+                  <CardContent>
+                    <Button asChild className="w-full">
+                      <Link href="/tasks">タスク管理へ</Link>
+                    </Button>
+                  </CardContent>
+                </Card>
               </div>
             </div>
           )}
