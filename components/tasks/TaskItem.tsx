@@ -1,10 +1,22 @@
 'use client'
 
 import { useMemo } from 'react'
-import { CheckCircle2, Circle, Pencil, Trash2 } from 'lucide-react'
+import {
+  CheckCircle2,
+  Circle,
+  MoreVertical,
+  Pencil,
+  Trash2,
+} from 'lucide-react'
 import { format, parseISO } from 'date-fns'
 import { ja } from 'date-fns/locale/ja'
 import { Button } from '@/components/ui/button'
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu'
 import { cn } from '@/lib/utils'
 import type { Task } from '@/lib/types/task'
 
@@ -53,7 +65,7 @@ export function TaskItem({
   return (
     <div
       className={cn(
-        'flex items-start gap-3 rounded-lg border p-4',
+        'group flex items-start gap-3 rounded-lg border p-4',
         task.completed
           ? 'border-stone-200 bg-stone-50 dark:border-stone-800 dark:bg-stone-950'
           : 'border-stone-200 bg-white dark:border-stone-800 dark:bg-stone-900',
@@ -112,30 +124,38 @@ export function TaskItem({
             {dateLabel.text}
           </span>
         )}
-        {!task.completed && onEdit && (
-          <Button
-            type="button"
-            variant="ghost"
-            size="sm"
-            className="h-8 w-8 p-0"
-            onClick={() => onEdit(task)}
-          >
-            <Pencil className="h-4 w-4" />
-            <span className="sr-only">編集</span>
-          </Button>
-        )}
-        {onDelete && (
-          <Button
-            type="button"
-            variant="ghost"
-            size="sm"
-            className="h-8 w-8 p-0 text-destructive hover:text-destructive hover:bg-destructive/10"
-            onClick={() => onDelete(task)}
-          >
-            <Trash2 className="h-4 w-4" />
-            <span className="sr-only">削除</span>
-          </Button>
-        )}
+        <div className="flex min-w-[40px] items-center justify-end">
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button
+                type="button"
+                variant="ghost"
+                size="sm"
+                className="h-8 w-8 p-0 opacity-0 transition-opacity group-hover:opacity-100"
+              >
+                <MoreVertical className="h-4 w-4" />
+                <span className="sr-only">メニュー</span>
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end">
+              {!task.completed && onEdit && (
+                <DropdownMenuItem onClick={() => onEdit(task)}>
+                  <Pencil className="mr-2 h-4 w-4" />
+                  <span>編集</span>
+                </DropdownMenuItem>
+              )}
+              {onDelete && (
+                <DropdownMenuItem
+                  onClick={() => onDelete(task)}
+                  className="text-destructive focus:text-destructive"
+                >
+                  <Trash2 className="mr-2 h-4 w-4" />
+                  <span>削除</span>
+                </DropdownMenuItem>
+              )}
+            </DropdownMenuContent>
+          </DropdownMenu>
+        </div>
       </div>
     </div>
   )
