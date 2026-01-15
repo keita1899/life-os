@@ -1,0 +1,319 @@
+'use client'
+
+import { useState, useMemo } from 'react'
+import Link from 'next/link'
+import { format, parseISO } from 'date-fns'
+import { ja } from 'date-fns/locale/ja'
+import { Trash2 } from 'lucide-react'
+import { Button } from '@/components/ui/button'
+import {
+  Accordion,
+  AccordionContent,
+  AccordionItem,
+  AccordionTrigger,
+} from '@/components/ui/accordion'
+import { TaskList } from '@/components/tasks/TaskList'
+import { TaskDialog } from '@/components/tasks/TaskDialog'
+import { DeleteConfirmDialog } from '@/components/ui/delete-confirm-dialog'
+import { Loading } from '@/components/ui/loading'
+import { ErrorMessage } from '@/components/ui/error-message'
+import { useTasks } from '@/hooks/useTasks'
+import { useMode } from '@/lib/contexts/ModeContext'
+import type { CreateTaskInput, Task, UpdateTaskInput } from '@/lib/types/task'
+
+type TaskGroup = {
+  key: string
+  title: string
+  tasks: Task[]
+}
+
+export default function TasksPage() {
+  const { mode } = useMode()
+  const {
+    tasks,
+    isLoading,
+    error,
+    createTask,
+    updateTask,
+    deleteTask,
+    toggleTaskCompletion,
+    deleteCompletedTasks,
+  } = useTasks()
+  const [isDialogOpen, setIsDialogOpen] = useState(false)
+  const [editingTask, setEditingTask] = useState<Task | undefined>(undefined)
+  const [deletingTask, setDeletingTask] = useState<Task | undefined>(undefined)
+  const [isDeletingCompletedDialogOpen, setIsDeletingCompletedDialogOpen] =
+    useState(false)
+  const [createError, setCreateError] = useState<string | null>(null)
+
+  const groupedTasks = useMemo(() => {
+    const today = new Date()
+    today.setHours(0, 0, 0, 0)
+    const tomorrow = new Date(today)
+    tomorrow.setDate(tomorrow.getDate() + 1)
+
+    const todayStr = format(today, 'yyyy-MM-dd')
+    const tomorrowStr = format(tomorrow, 'yyyy-MM-dd')
+
+    const incompleteTasks: Task[] = []
+    const completedTasks: Task[] = []
+
+    tasks.forEach((task) => {
+      if (task.completed) {
+        completedTasks.push(task)
+      } else {
+        incompleteTasks.push(task)
+      }
+    })
+
+    const groups: TaskGroup[] = [
+      { key: 'none', title: '日付なし', tasks: [] },
+      { key: 'today', title: '今日', tasks: [] },
+      { key: 'tomorrow', title: '明日', tasks: [] },
+    ]
+
+    const overdueGroup: TaskGroup = {
+      key: 'overdue',
+      title: '期限切れ',
+      tasks: [],
+    }
+    const dateGroups = new Map<string, Task[]>()
+
+    incompleteTasks.forEach((task) => {
+      if (!task.executionDate) {
+        groups[0].tasks.push(task)
+        return
+      }
+
+      const taskDateStr = task.executionDate
+      if (taskDateStr === todayStr) {
+        groups[1].tasks.push(task)
+      } else if (taskDateStr === tomorrowStr) {
+        groups[2].tasks.push(task)
+      } else {
+        const taskDate = parseISO(taskDateStr)
+        taskDate.setHours(0, 0, 0, 0)
+        if (taskDate < today) {
+          overdueGroup.tasks.push(task)
+        } else {
+          if (!dateGroups.has(taskDateStr)) {
+            dateGroups.set(taskDateStr, [])
+          }
+          dateGroups.get(taskDateStr)!.push(task)
+        }
+      }
+    })
+
+    const sortedDateGroups = Array.from(dateGroups.entries())
+      .sort(([a], [b]) => a.localeCompare(b))
+      .map(([dateStr, tasks]) => ({
+        key: dateStr,
+        title: format(parseISO(dateStr), 'yyyy年M月d日(E)', { locale: ja }),
+        tasks,
+      }))
+
+    const result: TaskGroup[] = [groups[1], groups[2], groups[0], overdueGroup]
+
+    result.push(...sortedDateGroups)
+
+    result.push({
+      key: 'completed',
+      title: '完了済み',
+      tasks: completedTasks,
+    })
+
+    return result
+  }, [tasks])
+
+  if (mode !== 'life') {
+    return null
+  }
+
+  const handleCreateTask = async (input: CreateTaskInput) => {
+    try {
+      setCreateError(null)
+      await createTask(input)
+      setIsDialogOpen(false)
+    } catch (err) {
+      setCreateError(
+        err instanceof Error ? err.message : 'タスクの作成に失敗しました',
+      )
+    }
+  }
+
+  const handleUpdateTask = async (input: CreateTaskInput) => {
+    if (!editingTask) return
+
+    try {
+      setCreateError(null)
+      const updateInput: UpdateTaskInput = {
+        title: input.title,
+        executionDate: input.executionDate,
+        estimatedTime: input.estimatedTime,
+      }
+      await updateTask(editingTask.id, updateInput)
+      setIsDialogOpen(false)
+      setEditingTask(undefined)
+    } catch (err) {
+      setCreateError(
+        err instanceof Error ? err.message : 'タスクの更新に失敗しました',
+      )
+    }
+  }
+
+  const handleEditTask = (task: Task) => {
+    setEditingTask(task)
+    setIsDialogOpen(true)
+  }
+
+  const handleDialogClose = (open: boolean) => {
+    setIsDialogOpen(open)
+    if (!open) {
+      setEditingTask(undefined)
+    }
+  }
+
+  const handleDeleteTask = async () => {
+    if (!deletingTask) return
+
+    try {
+      setCreateError(null)
+      await deleteTask(deletingTask.id)
+      setDeletingTask(undefined)
+    } catch (err) {
+      setCreateError(
+        err instanceof Error ? err.message : 'タスクの削除に失敗しました',
+      )
+    }
+  }
+
+  const handleDeleteClick = (task: Task) => {
+    setDeletingTask(task)
+  }
+
+  const handleToggleCompletion = async (task: Task) => {
+    try {
+      setCreateError(null)
+      await toggleTaskCompletion(task.id, !task.completed)
+    } catch (err) {
+      setCreateError(
+        err instanceof Error
+          ? err.message
+          : 'タスクの完了状態の更新に失敗しました',
+      )
+    }
+  }
+
+  const handleDeleteCompletedTasksClick = () => {
+    setIsDeletingCompletedDialogOpen(true)
+  }
+
+  const handleDeleteCompletedTasks = async () => {
+    try {
+      setCreateError(null)
+      await deleteCompletedTasks()
+      setIsDeletingCompletedDialogOpen(false)
+    } catch (err) {
+      setCreateError(
+        err instanceof Error
+          ? err.message
+          : '完了済みタスクの削除に失敗しました',
+      )
+    }
+  }
+
+  return (
+    <div className="container mx-auto max-w-4xl py-8 px-4">
+      <div className="mb-6">
+        <div className="mb-2 flex items-center justify-between">
+          <Link
+            href="/"
+            className="text-sm text-muted-foreground hover:text-foreground"
+          >
+            ← ホームに戻る
+          </Link>
+        </div>
+        <div className="flex items-center justify-between">
+          <div>
+            <h1 className="text-3xl font-bold">タスク管理</h1>
+          </div>
+          <Button onClick={() => setIsDialogOpen(true)}>タスクを作成</Button>
+        </div>
+      </div>
+
+      <ErrorMessage
+        message={createError || error || ''}
+        onDismiss={createError ? () => setCreateError(null) : undefined}
+      />
+
+      {isLoading ? (
+        <Loading />
+      ) : (
+        <Accordion type="multiple" className="w-full">
+          {groupedTasks.map((group) => (
+            <AccordionItem key={group.key} value={group.key}>
+              <AccordionTrigger className="hover:no-underline">
+                <div className="flex w-full items-center justify-between pr-4">
+                  <div className="flex items-center gap-2">
+                    <h2 className="text-lg font-semibold text-stone-900 dark:text-stone-100">
+                      {group.title}
+                    </h2>
+                    <span className="text-sm text-muted-foreground">
+                      ({group.tasks.length})
+                    </span>
+                  </div>
+                  {group.key === 'completed' && group.tasks.length > 0 && (
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="sm"
+                      className="h-8 w-8 p-0 text-destructive hover:text-destructive hover:bg-destructive/10"
+                      onClick={(e) => {
+                        e.stopPropagation()
+                        handleDeleteCompletedTasksClick()
+                      }}
+                    >
+                      <Trash2 className="h-4 w-4" />
+                      <span className="sr-only">完了済みタスクを一括削除</span>
+                    </Button>
+                  )}
+                </div>
+              </AccordionTrigger>
+              <AccordionContent>
+                <TaskList
+                  tasks={group.tasks}
+                  onEdit={handleEditTask}
+                  onDelete={handleDeleteClick}
+                  onToggleCompletion={handleToggleCompletion}
+                />
+              </AccordionContent>
+            </AccordionItem>
+          ))}
+        </Accordion>
+      )}
+
+      <TaskDialog
+        open={isDialogOpen}
+        onOpenChange={handleDialogClose}
+        onSubmit={editingTask ? handleUpdateTask : handleCreateTask}
+        task={editingTask}
+      />
+
+      <DeleteConfirmDialog
+        open={!!deletingTask}
+        message={`「${deletingTask?.title}」を削除しますか？この操作は取り消せません。`}
+        onConfirm={handleDeleteTask}
+        onCancel={() => setDeletingTask(undefined)}
+      />
+
+      <DeleteConfirmDialog
+        open={isDeletingCompletedDialogOpen}
+        message={`完了済みのタスク（${
+          groupedTasks.find((g) => g.key === 'completed')?.tasks.length ?? 0
+        }件）をすべて削除しますか？この操作は取り消せません。`}
+        onConfirm={handleDeleteCompletedTasks}
+        onCancel={() => setIsDeletingCompletedDialogOpen(false)}
+      />
+    </div>
+  )
+}

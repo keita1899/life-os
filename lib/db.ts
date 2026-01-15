@@ -40,6 +40,20 @@ async function initializeAllTables(): Promise<void> {
       UNIQUE(year, week_start_date)
     )
   `)
+
+  await db.execute(`
+    CREATE TABLE IF NOT EXISTS tasks (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      title TEXT NOT NULL,
+      execution_date DATE,
+      completed INTEGER NOT NULL DEFAULT 0,
+      "order" INTEGER NOT NULL DEFAULT 0,
+      actual_time INTEGER NOT NULL DEFAULT 0,
+      estimated_time INTEGER,
+      created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+      updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
+    )
+  `)
 }
 
 export async function getDatabase(): Promise<Database> {
