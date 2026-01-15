@@ -129,3 +129,117 @@ export async function getEventsByDateRange(
     throw new Error('Failed to get events by date range: unknown error')
   }
 }
+
+export async function updateEvent(
+  id: number,
+  input: UpdateEventInput,
+): Promise<Event> {
+  const db = await getDatabase()
+
+  const updateFields: string[] = []
+  const updateValues: unknown[] = []
+
+  if (input.title !== undefined) {
+    updateFields.push('title = ?')
+    updateValues.push(input.title)
+  }
+
+  if (input.startDatetime !== undefined) {
+    updateFields.push('start_datetime = ?')
+    updateValues.push(input.startDatetime)
+  }
+
+  if (input.endDatetime !== undefined) {
+    updateFields.push('end_datetime = ?')
+    updateValues.push(input.endDatetime || null)
+  }
+
+  if (input.allDay !== undefined) {
+    updateFields.push('all_day = ?')
+    updateValues.push(input.allDay ? 1 : 0)
+  }
+
+  if (input.recurrenceType !== undefined) {
+    updateFields.push('recurrence_type = ?')
+    updateValues.push(input.recurrenceType)
+  }
+
+  if (input.recurrenceEndDate !== undefined) {
+    updateFields.push('recurrence_end_date = ?')
+    updateValues.push(input.recurrenceEndDate || null)
+  }
+
+  if (input.recurrenceCount !== undefined) {
+    updateFields.push('recurrence_count = ?')
+    updateValues.push(input.recurrenceCount || null)
+  }
+
+  if (input.recurrenceDaysOfWeek !== undefined) {
+    updateFields.push('recurrence_days_of_week = ?')
+    updateValues.push(
+      input.recurrenceDaysOfWeek
+        ? JSON.stringify(input.recurrenceDaysOfWeek)
+        : null,
+    )
+  }
+
+  if (input.category !== undefined) {
+    updateFields.push('category = ?')
+    updateValues.push(input.category || null)
+  }
+
+  if (input.description !== undefined) {
+    updateFields.push('description = ?')
+    updateValues.push(input.description || null)
+  }
+
+  if (updateFields.length === 0) {
+    const result = await db.select<DbEvent[]>(
+      'SELECT * FROM events WHERE id = ?',
+      [id],
+    )
+    if (result.length === 0) {
+      throw new Error('Event not found')
+    }
+    return mapDbEventToEvent(result[0])
+  }
+
+  updateFields.push('updated_at = CURRENT_TIMESTAMP')
+  updateValues.push(id)
+
+  try {
+    await db.execute(
+      `UPDATE events SET ${updateFields.join(', ')} WHERE id = ?`,
+      updateValues,
+    )
+
+    const result = await db.select<DbEvent[]>(
+      'SELECT * FROM events WHERE id = ?',
+      [id],
+    )
+
+    if (result.length === 0) {
+      throw new Error('Failed to update event: record not found after update')
+    }
+
+    return mapDbEventToEvent(result[0])
+  } catch (err) {
+    if (err instanceof Error) {
+      throw err
+    }
+    throw new Error('Failed to update event: unknown error')
+  }
+}
+
+export async function deleteEvent(id: number): Promise<void> {
+  const db = await getDatabase()
+
+  try {
+    await db.execute('DELETE FROM events WHERE id = ?', [id])
+  } catch (err) {
+    if (err instanceof Error) {
+      throw err
+    }
+    throw new Error('Failed to delete event: unknown error')
+  }
+}

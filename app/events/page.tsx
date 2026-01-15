@@ -13,11 +13,16 @@ import {
 } from '@/components/ui/accordion'
 import { EventList } from '@/components/events/EventList'
 import { EventDialog } from '@/components/events/EventDialog'
+import { DeleteConfirmDialog } from '@/components/ui/delete-confirm-dialog'
 import { Loading } from '@/components/ui/loading'
 import { ErrorMessage } from '@/components/ui/error-message'
 import { useEvents } from '@/hooks/useEvents'
 import { useMode } from '@/lib/contexts/ModeContext'
-import type { CreateEventInput, Event } from '@/lib/types/event'
+import type {
+  CreateEventInput,
+  Event,
+  UpdateEventInput,
+} from '@/lib/types/event'
 
 type EventGroup = {
   key: string
@@ -155,8 +160,13 @@ function groupEvents(events: Event[]): EventGroup[] {
 
 export default function EventsPage() {
   const { mode } = useMode()
-  const { events, isLoading, error, createEvent } = useEvents()
+  const { events, isLoading, error, createEvent, updateEvent, deleteEvent } =
+    useEvents()
   const [isDialogOpen, setIsDialogOpen] = useState(false)
+  const [editingEvent, setEditingEvent] = useState<Event | undefined>(undefined)
+  const [deletingEvent, setDeletingEvent] = useState<Event | undefined>(
+    undefined,
+  )
   const [createError, setCreateError] = useState<string | null>(null)
 
   const groupedEvents = useMemo(() => groupEvents(events), [events])
@@ -173,8 +183,61 @@ export default function EventsPage() {
     }
   }
 
+  const handleUpdateEvent = async (input: CreateEventInput) => {
+    if (!editingEvent) return
+
+    try {
+      setCreateError(null)
+      const updateInput: UpdateEventInput = {
+        title: input.title,
+        startDatetime: input.startDatetime,
+        endDatetime: input.endDatetime,
+        allDay: input.allDay,
+        recurrenceType: input.recurrenceType,
+        recurrenceEndDate: input.recurrenceEndDate,
+        recurrenceCount: input.recurrenceCount,
+        recurrenceDaysOfWeek: input.recurrenceDaysOfWeek,
+        category: input.category,
+        description: input.description,
+      }
+      await updateEvent(editingEvent.id, updateInput)
+      setIsDialogOpen(false)
+      setEditingEvent(undefined)
+    } catch (err) {
+      setCreateError(
+        err instanceof Error ? err.message : '予定の更新に失敗しました',
+      )
+    }
+  }
+
+  const handleEditEvent = (event: Event) => {
+    setEditingEvent(event)
+    setIsDialogOpen(true)
+  }
+
+  const handleDeleteEvent = async () => {
+    if (!deletingEvent) return
+
+    try {
+      setCreateError(null)
+      await deleteEvent(deletingEvent.id)
+      setDeletingEvent(undefined)
+    } catch (err) {
+      setCreateError(
+        err instanceof Error ? err.message : '予定の削除に失敗しました',
+      )
+    }
+  }
+
+  const handleDeleteClick = (event: Event) => {
+    setDeletingEvent(event)
+  }
+
   const handleDialogClose = (open: boolean) => {
     setIsDialogOpen(open)
+    if (!open) {
+      setEditingEvent(undefined)
+    }
   }
 
   if (mode !== 'life') {
@@ -224,7 +287,11 @@ export default function EventsPage() {
                 </div>
               </AccordionTrigger>
               <AccordionContent>
-                <EventList events={group.events} />
+                <EventList
+                  events={group.events}
+                  onEdit={handleEditEvent}
+                  onDelete={handleDeleteClick}
+                />
               </AccordionContent>
             </AccordionItem>
           ))}
@@ -234,7 +301,15 @@ export default function EventsPage() {
       <EventDialog
         open={isDialogOpen}
         onOpenChange={handleDialogClose}
-        onSubmit={handleCreateEvent}
+        onSubmit={editingEvent ? handleUpdateEvent : handleCreateEvent}
+        event={editingEvent}
+      />
+
+      <DeleteConfirmDialog
+        open={!!deletingEvent}
+        message={`「${deletingEvent?.title}」を削除しますか？この操作は取り消せません。`}
+        onConfirm={handleDeleteEvent}
+        onCancel={() => setDeletingEvent(undefined)}
       />
     </div>
   )

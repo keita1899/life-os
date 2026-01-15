@@ -1,2 +1,8 @@
-export { createEvent, getAllEvents, getEventsByDateRange } from './event'
+export {
+  createEvent,
+  getAllEvents,
+  getEventsByDateRange,
+  updateEvent,
+  deleteEvent,
+} from './event'
 export type { Event, CreateEventInput, UpdateEventInput } from '../types/event'

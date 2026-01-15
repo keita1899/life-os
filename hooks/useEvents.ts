@@ -1,7 +1,16 @@
 import useSWR from 'swr'
 import { mutate } from 'swr'
-import { createEvent, getAllEvents } from '@/lib/events'
-import type { Event, CreateEventInput } from '@/lib/types/event'
+import {
+  createEvent,
+  getAllEvents,
+  updateEvent,
+  deleteEvent,
+} from '@/lib/events'
+import type {
+  Event,
+  CreateEventInput,
+  UpdateEventInput,
+} from '@/lib/types/event'
 import { fetcher } from '@/lib/swr'
 
 const eventsKey = 'events'
@@ -18,6 +27,16 @@ export function useEvents() {
     await mutate(eventsKey)
   }
 
+  const handleUpdateEvent = async (id: number, input: UpdateEventInput) => {
+    await updateEvent(id, input)
+    await mutate(eventsKey)
+  }
+
+  const handleDeleteEvent = async (id: number) => {
+    await deleteEvent(id)
+    await mutate(eventsKey)
+  }
+
   return {
     events: data,
     isLoading,
@@ -27,6 +46,8 @@ export function useEvents() {
         : 'Failed to fetch events'
       : null,
     createEvent: handleCreateEvent,
+    updateEvent: handleUpdateEvent,
+    deleteEvent: handleDeleteEvent,
     refreshEvents: () => mutate(eventsKey),
   }
 }
