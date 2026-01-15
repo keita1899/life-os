@@ -60,6 +60,17 @@ export default function Home() {
                     </Button>
                   </CardContent>
                 </Card>
+                <Card>
+                  <CardHeader>
+                    <CardTitle>予定管理</CardTitle>
+                    <CardDescription>予定を作成して管理</CardDescription>
+                  </CardHeader>
+                  <CardContent>
+                    <Button asChild className="w-full">
+                      <Link href="/events">予定管理へ</Link>
+                    </Button>
+                  </CardContent>
+                </Card>
               </div>
             </div>
           )}

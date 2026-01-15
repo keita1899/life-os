@@ -54,6 +54,31 @@ async function initializeAllTables(): Promise<void> {
       updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
     )
   `)
+
+  await db.execute(`
+    CREATE TABLE IF NOT EXISTS events (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      title TEXT NOT NULL,
+      start_datetime DATETIME NOT NULL,
+      end_datetime DATETIME,
+      all_day INTEGER NOT NULL DEFAULT 0,
+      recurrence_type TEXT NOT NULL DEFAULT 'none',
+      recurrence_end_date DATE,
+      recurrence_count INTEGER,
+      recurrence_days_of_week TEXT,
+      category TEXT,
+      description TEXT,
+      created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+      updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
+    )
+  `)
+
+  // Add category column if it doesn't exist (for existing databases)
+  try {
+    await db.execute(`ALTER TABLE events ADD COLUMN category TEXT`)
+  } catch {
+    // Column already exists, ignore error
+  }
 }
 
 export async function getDatabase(): Promise<Database> {
