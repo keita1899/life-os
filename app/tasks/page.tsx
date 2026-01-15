@@ -46,10 +46,6 @@ export default function TasksPage() {
     useState(false)
   const [createError, setCreateError] = useState<string | null>(null)
 
-  if (mode !== 'life') {
-    return null
-  }
-
   const groupedTasks = useMemo(() => {
     const today = new Date()
     today.setHours(0, 0, 0, 0)
@@ -128,6 +124,10 @@ export default function TasksPage() {
 
     return result
   }, [tasks])
+
+  if (mode !== 'life') {
+    return null
+  }
 
   const handleCreateTask = async (input: CreateTaskInput) => {
     try {
