@@ -1,5 +1,4 @@
-import { format, parseISO } from 'date-fns'
-import { ja } from 'date-fns/locale/ja'
+import { formatDateDisplay, getTodayDate, getTomorrowDate, getTodayDateString, getTomorrowDateString, parseDateString } from '@/lib/date/formats'
 import type { Event } from '@/lib/types/event'
 
 export type EventGroup = {
@@ -15,16 +14,14 @@ const GROUP_KEYS = {
 } as const
 
 function getDateStrings() {
-  const today = new Date()
-  today.setHours(0, 0, 0, 0)
-  const tomorrow = new Date(today)
-  tomorrow.setDate(tomorrow.getDate() + 1)
+  const today = getTodayDate()
+  const tomorrow = getTomorrowDate()
 
   return {
     today,
     tomorrow,
-    todayStr: format(today, 'yyyy-MM-dd'),
-    tomorrowStr: format(tomorrow, 'yyyy-MM-dd'),
+    todayStr: getTodayDateString(),
+    tomorrowStr: getTomorrowDateString(),
   }
 }
 
@@ -41,9 +38,8 @@ function createInitialGroups(): {
 }
 
 function getEventDateString(event: Event): string {
-  const eventStartDate = parseISO(event.startDatetime)
-  eventStartDate.setHours(0, 0, 0, 0)
-  return format(eventStartDate, 'yyyy-MM-dd')
+  const eventStartDate = parseDateString(event.startDatetime)
+  return formatDateISO(eventStartDate)
 }
 
 function categorizeEvent(
@@ -71,7 +67,7 @@ function categorizeEvent(
 function createDateGroup(dateStr: string): EventGroup {
   return {
     key: dateStr,
-    title: format(parseISO(dateStr), 'yyyy年M月d日(E)', { locale: ja }),
+    title: formatDateDisplay(dateStr),
     events: [],
   }
 }

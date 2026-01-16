@@ -1,6 +1,8 @@
 import { format, parseISO } from 'date-fns'
 import { ja } from 'date-fns/locale/ja'
 
+export { formatDateISO }
+
 export const DATE_FORMATS = {
   ISO_DATE: 'yyyy-MM-dd',
   ISO_DATETIME: "yyyy-MM-dd'T'HH:mm:ss",

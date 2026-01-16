@@ -34,32 +34,7 @@ export function TaskItem({
   onToggleCompletion,
 }: TaskItemProps) {
   const dateLabel = useMemo(() => {
-    if (!task.executionDate) return null
-
-    const today = new Date()
-    today.setHours(0, 0, 0, 0)
-    const tomorrow = new Date(today)
-    tomorrow.setDate(tomorrow.getDate() + 1)
-
-    const todayStr = format(today, 'yyyy-MM-dd')
-    const tomorrowStr = format(tomorrow, 'yyyy-MM-dd')
-    const taskDateStr = task.executionDate
-
-    const taskDate = parseISO(taskDateStr)
-    taskDate.setHours(0, 0, 0, 0)
-
-    if (taskDateStr === todayStr) {
-      return { text: '今日', type: 'today' as const }
-    }
-    if (taskDateStr === tomorrowStr) {
-      return { text: '明日', type: 'tomorrow' as const }
-    }
-    if (taskDate < today) {
-      return { text: '期限切れ', type: 'overdue' as const }
-    }
-
-    const dateText = format(taskDate, 'M/d(E)', { locale: ja })
-    return { text: dateText, type: 'future' as const }
+    return getDateLabel(task.executionDate)
   }, [task.executionDate])
 
   return (

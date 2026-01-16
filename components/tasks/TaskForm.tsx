@@ -47,39 +47,13 @@ export const TaskForm = ({
   const isEditMode = !!initialData
   const [datePreset, setDatePreset] = useState<string>('none')
 
-  const getTodayDate = () => {
-    const today = new Date()
-    const year = today.getFullYear()
-    const month = String(today.getMonth() + 1).padStart(2, '0')
-    const day = String(today.getDate()).padStart(2, '0')
-    return `${year}-${month}-${day}`
-  }
-
-  const getTomorrowDate = () => {
-    const tomorrow = new Date()
-    tomorrow.setDate(tomorrow.getDate() + 1)
-    const year = tomorrow.getFullYear()
-    const month = String(tomorrow.getMonth() + 1).padStart(2, '0')
-    const day = String(tomorrow.getDate()).padStart(2, '0')
-    return `${year}-${month}-${day}`
-  }
-
   const getInitialDatePreset = (executionDate: string | null | undefined) => {
     if (!executionDate) return 'none'
-    const today = getTodayDate()
-    const tomorrow = getTomorrowDate()
+    const today = getTodayDateString()
+    const tomorrow = getTomorrowDateString()
     if (executionDate === today) return 'today'
     if (executionDate === tomorrow) return 'tomorrow'
     return 'custom'
-  }
-
-  const formatDateForInput = (dateStr: string | null | undefined): string => {
-    if (!dateStr) return ''
-    const date = new Date(dateStr + 'T00:00:00')
-    const year = date.getFullYear()
-    const month = String(date.getMonth() + 1).padStart(2, '0')
-    const day = String(date.getDate()).padStart(2, '0')
-    return `${year}-${month}-${day}`
   }
 
   const form = useForm<TaskFormValues>({
