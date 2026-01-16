@@ -33,9 +33,11 @@ export default function Home() {
           </div>
 
           {mode === 'life' && (
-            <div className="space-y-6">
-              <CalendarView />
-              <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+            <div className="flex flex-col gap-6 md:flex-row">
+              <div className="flex-1">
+                <CalendarView />
+              </div>
+              <aside className="w-full space-y-4 md:w-64 md:flex-shrink-0">
                 <Card>
                   <CardHeader>
                     <CardTitle>目標管理</CardTitle>
@@ -71,7 +73,7 @@ export default function Home() {
                     </Button>
                   </CardContent>
                 </Card>
-              </div>
+              </aside>
             </div>
           )}
           {mode === 'development' && (
