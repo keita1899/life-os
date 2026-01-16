@@ -20,11 +20,7 @@ export const YearlyGoalDialog = ({
   selectedYear,
 }: YearlyGoalDialogProps) => {
   return (
-    <FormDialog<
-      CreateYearlyGoalInput,
-      YearlyGoal,
-      { selectedYear?: number }
-    >
+    <FormDialog<CreateYearlyGoalInput, YearlyGoal, { selectedYear?: number }>
       open={open}
       onOpenChange={onOpenChange}
       onSubmit={onSubmit}
