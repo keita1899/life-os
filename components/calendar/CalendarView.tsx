@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useMemo, useEffect } from 'react'
+import { useState, useEffect } from 'react'
 import { ChevronLeft, ChevronRight } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
@@ -13,6 +13,7 @@ import {
 } from '@/components/ui/select'
 import { MonthView } from './MonthView'
 import { WeekView } from './WeekView'
+import { MonthlyGoalCalendarForm } from '@/components/goals/MonthlyGoalCalendarForm'
 import { useGoals } from '@/hooks/useGoals'
 import { useEvents } from '@/hooks/useEvents'
 import {
@@ -20,9 +21,7 @@ import {
   formatWeekRange,
   navigateMonth,
   navigateWeek,
-  getMonthlyGoalsForDate,
 } from '@/lib/calendar/utils'
-import type { MonthlyGoal } from '@/lib/types/monthly-goal'
 
 type ViewMode = 'month' | 'week'
 
@@ -43,11 +42,6 @@ export function CalendarView({ initialDate }: CalendarViewProps) {
   const { events, isLoading: isLoadingEvents } = useEvents()
 
   const isLoading = isLoadingGoals || isLoadingEvents
-
-  const currentMonthGoals = useMemo(
-    () => getMonthlyGoalsForDate(monthlyGoals, currentDate),
-    [monthlyGoals, currentDate],
-  )
 
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
@@ -157,17 +151,11 @@ export function CalendarView({ initialDate }: CalendarViewProps) {
           </div>
         </CardHeader>
         <CardContent className="space-y-4">
-          {viewMode === 'month' && currentMonthGoals.length > 0 && (
-            <div className="rounded-lg border border-stone-200 bg-stone-50/50 p-4 dark:border-stone-800 dark:bg-stone-950/50">
-              <h3 className="mb-3 text-sm font-semibold text-stone-900 dark:text-stone-100">
-                今月の目標
-              </h3>
-              <div className="space-y-2">
-                {currentMonthGoals.map((goal) => (
-                  <MonthlyGoalItem key={goal.id} goal={goal} />
-                ))}
-              </div>
-            </div>
+          {viewMode === 'month' && (
+            <MonthlyGoalCalendarForm
+              currentDate={currentDate}
+              monthlyGoals={monthlyGoals}
+            />
           )}
           {isLoading ? (
             <div className="flex h-96 items-center justify-center text-muted-foreground">
@@ -189,28 +177,6 @@ export function CalendarView({ initialDate }: CalendarViewProps) {
           )}
         </CardContent>
       </Card>
-    </div>
-  )
-}
-
-interface MonthlyGoalItemProps {
-  goal: MonthlyGoal
-}
-
-function MonthlyGoalItem({ goal }: MonthlyGoalItemProps) {
-  return (
-    <div className="flex items-start gap-2 rounded-md bg-white p-2 dark:bg-stone-900">
-      <div className="h-2 w-2 rounded-full bg-blue-500 mt-1.5 dark:bg-blue-400" />
-      <div className="flex-1">
-        <div className="text-sm text-stone-900 dark:text-stone-100">
-          {goal.title}
-        </div>
-        {goal.targetDate && (
-          <div className="mt-0.5 text-xs text-muted-foreground">
-            達成予定日: {new Date(goal.targetDate).toLocaleDateString('ja-JP')}
-          </div>
-        )}
-      </div>
     </div>
   )
 }

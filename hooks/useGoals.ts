@@ -5,7 +5,11 @@ import {
   getAllAvailableYears,
 } from '@/lib/goals/index'
 import { createYearlyGoal, deleteYearlyGoal } from '@/lib/goals/yearly'
-import { createMonthlyGoal, deleteMonthlyGoal } from '@/lib/goals/monthly'
+import {
+  createMonthlyGoal,
+  updateMonthlyGoal,
+  deleteMonthlyGoal,
+} from '@/lib/goals/monthly'
 import {
   createWeeklyGoal,
   updateWeeklyGoal,
@@ -15,6 +19,7 @@ import type { YearlyGoal, CreateYearlyGoalInput } from '@/lib/types/yearly-goal'
 import type {
   MonthlyGoal,
   CreateMonthlyGoalInput,
+  UpdateMonthlyGoalInput,
 } from '@/lib/types/monthly-goal'
 import type {
   WeeklyGoal,
@@ -80,6 +85,19 @@ export function useGoals(selectedYear: number) {
     await Promise.all([mutate(goalsKey), mutate(availableYearsKey)])
   }
 
+  const handleUpdateMonthlyGoal = async (
+    id: number,
+    input: UpdateMonthlyGoalInput,
+  ) => {
+    await updateMonthlyGoal(id, input)
+    const yearToRefresh = input.year ?? selectedYear
+    await Promise.all([
+      mutate(['goals', yearToRefresh]),
+      mutate(availableYearsKey),
+      yearToRefresh === selectedYear ? Promise.resolve() : mutate(goalsKey),
+    ])
+  }
+
   const handleDeleteMonthlyGoal = async (id: number) => {
     await deleteMonthlyGoal(id)
     await Promise.all([mutate(goalsKey), mutate(availableYearsKey)])
@@ -118,6 +136,7 @@ export function useGoals(selectedYear: number) {
     createYearlyGoal: handleCreateYearlyGoal,
     createMonthlyGoal: handleCreateMonthlyGoal,
     createWeeklyGoal: handleCreateWeeklyGoal,
+    updateMonthlyGoal: handleUpdateMonthlyGoal,
     updateWeeklyGoal: handleUpdateWeeklyGoal,
     deleteYearlyGoal: handleDeleteYearlyGoal,
     deleteMonthlyGoal: handleDeleteMonthlyGoal,
