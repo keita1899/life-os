@@ -1,6 +1,13 @@
 import { getDatabase } from '../db'
 import type { Event, CreateEventInput, UpdateEventInput } from '../types/event'
 
+function handleDbError(err: unknown, operation: string): never {
+  if (err instanceof Error) {
+    throw new Error(`Failed to ${operation}: ${err.message}`)
+  }
+  throw new Error(`Failed to ${operation}: unknown error`)
+}
+
 interface DbEvent {
   id: number
   title: string
@@ -62,10 +69,7 @@ export async function createEvent(input: CreateEventInput): Promise<Event> {
 
     return mapDbEventToEvent(result[0])
   } catch (err) {
-    if (err instanceof Error) {
-      throw err
-    }
-    throw new Error('Failed to create event: unknown error')
+    handleDbError(err, 'create event')
   }
 }
 
@@ -79,10 +83,7 @@ export async function getAllEvents(): Promise<Event[]> {
 
     return result.map(mapDbEventToEvent)
   } catch (err) {
-    if (err instanceof Error) {
-      throw err
-    }
-    throw new Error('Failed to get events: unknown error')
+    handleDbError(err, 'get events')
   }
 }
 
@@ -101,10 +102,7 @@ export async function getEventById(id: number): Promise<Event | null> {
 
     return mapDbEventToEvent(result[0])
   } catch (err) {
-    if (err instanceof Error) {
-      throw err
-    }
-    throw new Error('Failed to get event by id: unknown error')
+    handleDbError(err, 'get event by id')
   }
 }
 
@@ -124,10 +122,7 @@ export async function getEventsByDateRange(
 
     return result.map(mapDbEventToEvent)
   } catch (err) {
-    if (err instanceof Error) {
-      throw err
-    }
-    throw new Error('Failed to get events by date range: unknown error')
+    handleDbError(err, 'get events by date range')
   }
 }
 
@@ -201,10 +196,7 @@ export async function updateEvent(
 
     return mapDbEventToEvent(result[0])
   } catch (err) {
-    if (err instanceof Error) {
-      throw err
-    }
-    throw new Error('Failed to update event: unknown error')
+    handleDbError(err, 'update event')
   }
 }
 
@@ -214,9 +206,6 @@ export async function deleteEvent(id: number): Promise<void> {
   try {
     await db.execute('DELETE FROM events WHERE id = ?', [id])
   } catch (err) {
-    if (err instanceof Error) {
-      throw err
-    }
-    throw new Error('Failed to delete event: unknown error')
+    handleDbError(err, 'delete event')
   }
 }

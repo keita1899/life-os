@@ -14,6 +14,7 @@ import {
 import { MonthView } from './MonthView'
 import { WeekView } from './WeekView'
 import { useGoals } from '@/hooks/useGoals'
+import { useEvents } from '@/hooks/useEvents'
 import {
   formatMonthYear,
   formatWeekRange,
@@ -34,7 +35,10 @@ export function CalendarView({ initialDate }: CalendarViewProps) {
   const [viewMode, setViewMode] = useState<ViewMode>('month')
 
   const currentYear = currentDate.getFullYear()
-  const { monthlyGoals, weeklyGoals, isLoading } = useGoals(currentYear)
+  const { monthlyGoals, weeklyGoals, isLoading: isLoadingGoals } = useGoals(currentYear)
+  const { events, isLoading: isLoadingEvents } = useEvents()
+
+  const isLoading = isLoadingGoals || isLoadingEvents
 
   const currentMonthGoals = useMemo(
     () => getMonthlyGoalsForDate(monthlyGoals, currentDate),
@@ -124,12 +128,17 @@ export function CalendarView({ initialDate }: CalendarViewProps) {
               読み込み中...
             </div>
           ) : viewMode === 'month' ? (
-            <MonthView currentDate={currentDate} monthlyGoals={monthlyGoals} />
+            <MonthView
+              currentDate={currentDate}
+              monthlyGoals={monthlyGoals}
+              events={events}
+            />
           ) : (
             <WeekView
               currentDate={currentDate}
               monthlyGoals={monthlyGoals}
               weeklyGoals={weeklyGoals}
+              events={events}
             />
           )}
         </CardContent>

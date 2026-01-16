@@ -21,21 +21,15 @@ import {
   SelectValue,
 } from '@/components/ui/select'
 import { Textarea } from '@/components/ui/textarea'
-import { cn } from '@/lib/utils'
+import { EVENT_CATEGORIES } from '@/lib/events/constants'
 import type { Event, CreateEventInput, EventCategory } from '@/lib/types/event'
 
-const EVENT_CATEGORIES: Array<{ value: EventCategory; label: string }> = [
-  { value: null, label: 'カテゴリーなし' },
-  { value: 'work', label: '仕事' },
-  { value: 'life', label: '生活' },
-  { value: 'housework', label: '家事' },
-  { value: 'social', label: '交際' },
-  { value: 'play', label: '遊び' },
-  { value: 'hobby', label: '趣味' },
-  { value: 'health', label: '健康' },
-  { value: 'procedure', label: '手続き' },
-  { value: 'birthday', label: '誕生日' },
-  { value: 'anniversary', label: '記念日' },
+const EVENT_CATEGORY_VALUES = EVENT_CATEGORIES.filter(
+  (cat): cat is { value: NonNullable<EventCategory>; label: string } =>
+    cat.value !== null,
+).map((cat) => cat.value) as [
+  NonNullable<EventCategory>,
+  ...NonNullable<EventCategory>[],
 ]
 
 const eventFormSchema = z.object({
@@ -45,21 +39,7 @@ const eventFormSchema = z.object({
   endDate: z.string().optional(),
   endTime: z.string().optional(),
   allDay: z.boolean(),
-  category: z
-    .enum([
-      'work',
-      'life',
-      'housework',
-      'social',
-      'play',
-      'hobby',
-      'health',
-      'procedure',
-      'birthday',
-      'anniversary',
-    ])
-    .nullable()
-    .optional(),
+  category: z.enum(EVENT_CATEGORY_VALUES).nullable().optional(),
   description: z.string().optional(),
 })
 

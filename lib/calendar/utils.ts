@@ -13,9 +13,12 @@ import {
   subWeeks,
   getYear,
   getMonth,
+  parseISO,
+  isWithinInterval,
 } from 'date-fns'
 import { ja } from 'date-fns/locale/ja'
 import type { MonthlyGoal } from '@/lib/types/monthly-goal'
+import type { Event } from '@/lib/types/event'
 
 export const weekdays = ['月', '火', '水', '木', '金', '土', '日'] as const
 
@@ -153,5 +156,74 @@ export function getGoalsForWeek(
         day.getMonth() === targetDate.getMonth() &&
         day.getDate() === targetDate.getDate(),
     )
+  })
+}
+
+export function getEventsForDate(events: Event[], date: Date): Event[] {
+  const dateStr = format(date, 'yyyy-MM-dd')
+  const dateStart = new Date(dateStr + 'T00:00:00')
+  const dateEnd = new Date(dateStr + 'T23:59:59')
+
+  return events.filter((event) => {
+    const eventStart = parseISO(event.startDatetime)
+    const eventStartDate = format(eventStart, 'yyyy-MM-dd')
+
+    if (event.allDay) {
+      if (event.endDatetime) {
+        const eventEnd = parseISO(event.endDatetime)
+        const eventEndDate = format(eventEnd, 'yyyy-MM-dd')
+        return (
+          (dateStr >= eventStartDate && dateStr <= eventEndDate) ||
+          (dateStr >= eventEndDate && dateStr <= eventStartDate)
+        )
+      }
+      return eventStartDate === dateStr
+    }
+
+    if (event.endDatetime) {
+      const eventEnd = parseISO(event.endDatetime)
+      return (
+        isWithinInterval(dateStart, { start: eventStart, end: eventEnd }) ||
+        isWithinInterval(dateEnd, { start: eventStart, end: eventEnd }) ||
+        (eventStart <= dateStart && eventEnd >= dateEnd)
+      )
+    }
+
+    return eventStartDate === dateStr
+  })
+}
+
+export function formatEventTime(event: Event): string {
+  if (event.allDay) {
+    return '終日'
+  }
+
+  const startDate = parseISO(event.startDatetime)
+  const startTime = format(startDate, 'HH:mm')
+
+  if (event.endDatetime) {
+    const endDate = parseISO(event.endDatetime)
+    const endTime = format(endDate, 'HH:mm')
+    return `${startTime} - ${endTime}`
+  }
+
+  return startTime
+}
+
+export function sortEventsByTime(events: Event[]): Event[] {
+  return [...events].sort((a, b) => {
+    if (a.allDay && !b.allDay) {
+      return -1
+    }
+    if (!a.allDay && b.allDay) {
+      return 1
+    }
+    if (a.allDay && b.allDay) {
+      return a.title.localeCompare(b.title)
+    }
+
+    const aStart = parseISO(a.startDatetime)
+    const bStart = parseISO(b.startDatetime)
+    return aStart.getTime() - bStart.getTime()
   })
 }
