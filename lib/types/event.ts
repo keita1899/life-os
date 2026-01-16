@@ -1,5 +1,3 @@
-export type RecurrenceType = 'none' | 'daily' | 'weekly' | 'monthly' | 'yearly'
-
 export type EventCategory =
   | 'work'
   | 'life'
@@ -19,10 +17,6 @@ export interface Event {
   startDatetime: string
   endDatetime: string | null
   allDay: boolean
-  recurrenceType: RecurrenceType
-  recurrenceEndDate: string | null
-  recurrenceCount: number | null
-  recurrenceDaysOfWeek: number[] | null
   category: EventCategory
   description: string | null
   createdAt: string
@@ -34,10 +28,6 @@ export interface CreateEventInput {
   startDatetime: string
   endDatetime?: string | null
   allDay?: boolean
-  recurrenceType?: RecurrenceType
-  recurrenceEndDate?: string | null
-  recurrenceCount?: number | null
-  recurrenceDaysOfWeek?: number[] | null
   category?: EventCategory
   description?: string | null
 }
@@ -47,10 +37,6 @@ export interface UpdateEventInput {
   startDatetime?: string
   endDatetime?: string | null
   allDay?: boolean
-  recurrenceType?: RecurrenceType
-  recurrenceEndDate?: string | null
-  recurrenceCount?: number | null
-  recurrenceDaysOfWeek?: number[] | null
   category?: EventCategory
   description?: string | null
 }

@@ -1,6 +1,7 @@
 export {
   createEvent,
   getAllEvents,
+  getEventById,
   getEventsByDateRange,
   updateEvent,
   deleteEvent,

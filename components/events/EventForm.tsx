@@ -22,12 +22,7 @@ import {
 } from '@/components/ui/select'
 import { Textarea } from '@/components/ui/textarea'
 import { cn } from '@/lib/utils'
-import type {
-  Event,
-  CreateEventInput,
-  RecurrenceType,
-  EventCategory,
-} from '@/lib/types/event'
+import type { Event, CreateEventInput, EventCategory } from '@/lib/types/event'
 
 const EVENT_CATEGORIES: Array<{ value: EventCategory; label: string }> = [
   { value: null, label: 'カテゴリーなし' },
@@ -50,10 +45,6 @@ const eventFormSchema = z.object({
   endDate: z.string().optional(),
   endTime: z.string().optional(),
   allDay: z.boolean(),
-  recurrenceType: z.enum(['none', 'daily', 'weekly', 'monthly', 'yearly']),
-  recurrenceEndDate: z.string().optional(),
-  recurrenceCount: z.string().optional(),
-  recurrenceDaysOfWeek: z.array(z.number().min(0).max(6)).optional(),
   category: z
     .enum([
       'work',
@@ -139,18 +130,12 @@ export const EventForm = ({
             .time
         : '',
       allDay: initialData?.allDay || false,
-      recurrenceType: initialData?.recurrenceType || 'none',
-      recurrenceEndDate: initialData?.recurrenceEndDate || '',
-      recurrenceCount: initialData?.recurrenceCount?.toString() || '',
-      recurrenceDaysOfWeek: initialData?.recurrenceDaysOfWeek || [],
       category: initialData?.category || null,
       description: initialData?.description || '',
     },
   })
 
   const allDay = form.watch('allDay')
-  const recurrenceType = form.watch('recurrenceType')
-  const recurrenceDaysOfWeek = form.watch('recurrenceDaysOfWeek') || []
 
   const handleSubmit = async (data: EventFormValues) => {
     const startDate =
@@ -172,45 +157,12 @@ export const EventForm = ({
         startDatetime,
         endDatetime,
         allDay: data.allDay,
-        recurrenceType: data.recurrenceType as RecurrenceType,
-        recurrenceEndDate:
-          data.recurrenceEndDate && data.recurrenceEndDate !== ''
-            ? data.recurrenceEndDate
-            : null,
-        recurrenceCount:
-          data.recurrenceCount && data.recurrenceCount !== ''
-            ? Number(data.recurrenceCount)
-            : null,
-        recurrenceDaysOfWeek:
-          data.recurrenceType === 'weekly' &&
-          data.recurrenceDaysOfWeek &&
-          data.recurrenceDaysOfWeek.length > 0
-            ? data.recurrenceDaysOfWeek
-            : null,
         category: data.category || null,
         description: data.description || null,
       })
     } catch (error) {
       throw error
     }
-  }
-
-  const weekDays = [
-    { value: 0, label: '日' },
-    { value: 1, label: '月' },
-    { value: 2, label: '火' },
-    { value: 3, label: '水' },
-    { value: 4, label: '木' },
-    { value: 5, label: '金' },
-    { value: 6, label: '土' },
-  ]
-
-  const toggleDayOfWeek = (day: number) => {
-    const current = form.getValues('recurrenceDaysOfWeek') || []
-    const newDays = current.includes(day)
-      ? current.filter((d) => d !== day)
-      : [...current, day].sort()
-    form.setValue('recurrenceDaysOfWeek', newDays)
   }
 
   return (
@@ -346,95 +298,6 @@ export const EventForm = ({
             />
           )}
         </div>
-
-        <FormField
-          control={form.control}
-          name="recurrenceType"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>繰り返し</FormLabel>
-              <Select onValueChange={field.onChange} value={field.value}>
-                <FormControl>
-                  <SelectTrigger>
-                    <SelectValue />
-                  </SelectTrigger>
-                </FormControl>
-                <SelectContent>
-                  <SelectItem value="none">繰り返さない</SelectItem>
-                  <SelectItem value="daily">毎日</SelectItem>
-                  <SelectItem value="weekly">毎週</SelectItem>
-                  <SelectItem value="monthly">毎月</SelectItem>
-                  <SelectItem value="yearly">毎年</SelectItem>
-                </SelectContent>
-              </Select>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
-
-        {recurrenceType === 'weekly' && (
-          <FormField
-            control={form.control}
-            name="recurrenceDaysOfWeek"
-            render={() => (
-              <FormItem>
-                <FormLabel>繰り返す曜日</FormLabel>
-                <div className="flex flex-wrap gap-2">
-                  {weekDays.map((day) => (
-                    <button
-                      key={day.value}
-                      type="button"
-                      onClick={() => toggleDayOfWeek(day.value)}
-                      className={cn(
-                        'rounded-md px-3 py-1.5 text-sm font-medium transition-colors',
-                        recurrenceDaysOfWeek.includes(day.value)
-                          ? 'bg-blue-600 text-white dark:bg-blue-500'
-                          : 'bg-stone-100 text-stone-700 hover:bg-stone-200 dark:bg-stone-800 dark:text-stone-300 dark:hover:bg-stone-700',
-                      )}
-                    >
-                      {day.label}
-                    </button>
-                  ))}
-                </div>
-              </FormItem>
-            )}
-          />
-        )}
-
-        {recurrenceType !== 'none' && (
-          <div className="grid grid-cols-2 gap-4">
-            <FormField
-              control={form.control}
-              name="recurrenceEndDate"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>繰り返し終了日</FormLabel>
-                  <FormControl>
-                    <Input type="date" {...field} />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-            <FormField
-              control={form.control}
-              name="recurrenceCount"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>繰り返し回数</FormLabel>
-                  <FormControl>
-                    <Input
-                      type="number"
-                      placeholder="回数（任意）"
-                      {...field}
-                    />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-          </div>
-        )}
 
         <FormField
           control={form.control}

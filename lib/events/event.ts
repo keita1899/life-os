@@ -18,25 +18,12 @@ interface DbEvent {
 }
 
 function mapDbEventToEvent(dbEvent: DbEvent): Event {
-  let recurrenceDaysOfWeek: number[] | null = null
-  if (dbEvent.recurrence_days_of_week) {
-    try {
-      recurrenceDaysOfWeek = JSON.parse(dbEvent.recurrence_days_of_week)
-    } catch {
-      recurrenceDaysOfWeek = null
-    }
-  }
-
   return {
     id: dbEvent.id,
     title: dbEvent.title,
     startDatetime: dbEvent.start_datetime,
     endDatetime: dbEvent.end_datetime,
     allDay: dbEvent.all_day === 1,
-    recurrenceType: dbEvent.recurrence_type as Event['recurrenceType'],
-    recurrenceEndDate: dbEvent.recurrence_end_date,
-    recurrenceCount: dbEvent.recurrence_count,
-    recurrenceDaysOfWeek,
     category: (dbEvent.category as Event['category']) || null,
     description: dbEvent.description,
     createdAt: dbEvent.created_at,
@@ -48,22 +35,14 @@ export async function createEvent(input: CreateEventInput): Promise<Event> {
   const db = await getDatabase()
 
   try {
-    const recurrenceDaysOfWeekJson = input.recurrenceDaysOfWeek
-      ? JSON.stringify(input.recurrenceDaysOfWeek)
-      : null
-
     await db.execute(
-      `INSERT INTO events (title, start_datetime, end_datetime, all_day, recurrence_type, recurrence_end_date, recurrence_count, recurrence_days_of_week, category, description)
-       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+      `INSERT INTO events (title, start_datetime, end_datetime, all_day, recurrence_type, category, description)
+       VALUES (?, ?, ?, ?, 'none', ?, ?)`,
       [
         input.title,
         input.startDatetime,
         input.endDatetime || null,
         input.allDay ? 1 : 0,
-        input.recurrenceType || 'none',
-        input.recurrenceEndDate || null,
-        input.recurrenceCount || null,
-        recurrenceDaysOfWeekJson,
         input.category || null,
         input.description || null,
       ],
@@ -104,6 +83,28 @@ export async function getAllEvents(): Promise<Event[]> {
       throw err
     }
     throw new Error('Failed to get events: unknown error')
+  }
+}
+
+export async function getEventById(id: number): Promise<Event | null> {
+  const db = await getDatabase()
+
+  try {
+    const result = await db.select<DbEvent[]>(
+      'SELECT * FROM events WHERE id = ?',
+      [id],
+    )
+
+    if (result.length === 0) {
+      return null
+    }
+
+    return mapDbEventToEvent(result[0])
+  } catch (err) {
+    if (err instanceof Error) {
+      throw err
+    }
+    throw new Error('Failed to get event by id: unknown error')
   }
 }
 
@@ -157,30 +158,6 @@ export async function updateEvent(
   if (input.allDay !== undefined) {
     updateFields.push('all_day = ?')
     updateValues.push(input.allDay ? 1 : 0)
-  }
-
-  if (input.recurrenceType !== undefined) {
-    updateFields.push('recurrence_type = ?')
-    updateValues.push(input.recurrenceType)
-  }
-
-  if (input.recurrenceEndDate !== undefined) {
-    updateFields.push('recurrence_end_date = ?')
-    updateValues.push(input.recurrenceEndDate || null)
-  }
-
-  if (input.recurrenceCount !== undefined) {
-    updateFields.push('recurrence_count = ?')
-    updateValues.push(input.recurrenceCount || null)
-  }
-
-  if (input.recurrenceDaysOfWeek !== undefined) {
-    updateFields.push('recurrence_days_of_week = ?')
-    updateValues.push(
-      input.recurrenceDaysOfWeek
-        ? JSON.stringify(input.recurrenceDaysOfWeek)
-        : null,
-    )
   }
 
   if (input.category !== undefined) {

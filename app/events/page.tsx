@@ -33,7 +33,6 @@ type EventGroup = {
 const GROUP_KEYS = {
   TODAY: 'today',
   TOMORROW: 'tomorrow',
-  RECURRING: 'recurring',
   OVERDUE: 'overdue',
 } as const
 
@@ -54,17 +53,11 @@ function getDateStrings() {
 function createInitialGroups(): {
   todayGroup: EventGroup
   tomorrowGroup: EventGroup
-  recurringGroup: EventGroup
   overdueGroup: EventGroup
 } {
   return {
     todayGroup: { key: GROUP_KEYS.TODAY, title: '今日', events: [] },
     tomorrowGroup: { key: GROUP_KEYS.TOMORROW, title: '明日', events: [] },
-    recurringGroup: {
-      key: GROUP_KEYS.RECURRING,
-      title: '繰り返し',
-      events: [],
-    },
     overdueGroup: { key: GROUP_KEYS.OVERDUE, title: '過去', events: [] },
   }
 }
@@ -80,11 +73,7 @@ function categorizeEvent(
   todayStr: string,
   tomorrowStr: string,
   today: Date,
-): 'today' | 'tomorrow' | 'overdue' | 'future' | 'recurring' {
-  if (event.recurrenceType !== 'none') {
-    return 'recurring'
-  }
-
+): 'today' | 'tomorrow' | 'overdue' | 'future' {
   const eventDateStr = getEventDateString(event)
   const eventStartDate = parseISO(event.startDatetime)
   eventStartDate.setHours(0, 0, 0, 0)
@@ -111,17 +100,13 @@ function createDateGroup(dateStr: string): EventGroup {
 
 function groupEvents(events: Event[]): EventGroup[] {
   const { today, todayStr, tomorrowStr } = getDateStrings()
-  const { todayGroup, tomorrowGroup, recurringGroup, overdueGroup } =
-    createInitialGroups()
+  const { todayGroup, tomorrowGroup, overdueGroup } = createInitialGroups()
   const dateGroups = new Map<string, Event[]>()
 
   events.forEach((event) => {
     const category = categorizeEvent(event, todayStr, tomorrowStr, today)
 
     switch (category) {
-      case 'recurring':
-        recurringGroup.events.push(event)
-        break
       case 'today':
         todayGroup.events.push(event)
         break
@@ -149,13 +134,9 @@ function groupEvents(events: Event[]): EventGroup[] {
       events: groupEvents,
     }))
 
-  return [
-    todayGroup,
-    tomorrowGroup,
-    recurringGroup,
-    overdueGroup,
-    ...sortedDateGroups,
-  ].filter((group) => group.events.length > 0)
+  return [todayGroup, tomorrowGroup, overdueGroup, ...sortedDateGroups].filter(
+    (group) => group.events.length > 0,
+  )
 }
 
 export default function EventsPage() {
@@ -193,10 +174,6 @@ export default function EventsPage() {
         startDatetime: input.startDatetime,
         endDatetime: input.endDatetime,
         allDay: input.allDay,
-        recurrenceType: input.recurrenceType,
-        recurrenceEndDate: input.recurrenceEndDate,
-        recurrenceCount: input.recurrenceCount,
-        recurrenceDaysOfWeek: input.recurrenceDaysOfWeek,
         category: input.category,
         description: input.description,
       }

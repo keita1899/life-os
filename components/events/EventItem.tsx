@@ -90,29 +90,6 @@ export function EventItem({ event, onEdit, onDelete }: EventItemProps) {
     return startDateStr
   }, [event.startDatetime, event.endDatetime, event.allDay])
 
-  const recurrenceLabel = useMemo(() => {
-    const labels: Record<Event['recurrenceType'], string> = {
-      none: '',
-      daily: '毎日',
-      weekly: '毎週',
-      monthly: '毎月',
-      yearly: '毎年',
-    }
-    let label = labels[event.recurrenceType]
-
-    if (event.recurrenceType === 'weekly' && event.recurrenceDaysOfWeek) {
-      const dayLabels = ['日', '月', '火', '水', '木', '金', '土']
-      const selectedDays = event.recurrenceDaysOfWeek
-        .map((day) => dayLabels[day])
-        .join('・')
-      if (selectedDays) {
-        label = `毎週 ${selectedDays}`
-      }
-    }
-
-    return label
-  }, [event.recurrenceType, event.recurrenceDaysOfWeek])
-
   return (
     <div className="group flex items-start gap-3 rounded-lg border border-stone-200 bg-white p-4 dark:border-stone-800 dark:bg-stone-900">
       <div className="mt-0.5">
@@ -140,11 +117,6 @@ export function EventItem({ event, onEdit, onDelete }: EventItemProps) {
           {event.allDay && (
             <span className="rounded-md bg-blue-100 px-2 py-0.5 text-blue-700 dark:bg-blue-900/30 dark:text-blue-300">
               終日
-            </span>
-          )}
-          {recurrenceLabel && (
-            <span className="rounded-md bg-purple-100 px-2 py-0.5 text-purple-700 dark:bg-purple-900/30 dark:text-purple-300">
-              {recurrenceLabel}
             </span>
           )}
         </div>
