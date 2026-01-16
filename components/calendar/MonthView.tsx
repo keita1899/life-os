@@ -8,16 +8,31 @@ import {
   isCurrentMonth,
   isToday,
   getGoalsForDate,
+  getEventsForDate,
+  formatEventTime,
+  sortEventsByTime,
   weekdays,
 } from '@/lib/calendar/utils'
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from '@/components/ui/popover'
+import { EventPopoverContent } from './EventPopover'
 import type { MonthlyGoal } from '@/lib/types/monthly-goal'
+import type { Event } from '@/lib/types/event'
 
 interface MonthViewProps {
   currentDate: Date
   monthlyGoals: MonthlyGoal[]
+  events?: Event[]
 }
 
-export function MonthView({ currentDate, monthlyGoals }: MonthViewProps) {
+export function MonthView({
+  currentDate,
+  monthlyGoals,
+  events = [],
+}: MonthViewProps) {
   const calendarDays = useMemo(
     () => getCalendarDays(currentDate),
     [currentDate],
@@ -47,6 +62,22 @@ export function MonthView({ currentDate, monthlyGoals }: MonthViewProps) {
             const isCurrentMonthDay = isCurrentMonth(date, currentDate)
             const isTodayDate = isToday(date)
             const dayGoals = getGoalsForDate(monthlyGoals, date)
+            const dayEvents = sortEventsByTime(getEventsForDate(events, date))
+            const allItems = [
+              ...dayGoals.map((goal) => ({
+                type: 'goal' as const,
+                id: goal.id,
+                title: goal.title,
+                data: goal,
+              })),
+              ...dayEvents.slice(0, 1).map((event) => ({
+                type: 'event' as const,
+                id: event.id,
+                title: event.title,
+                time: formatEventTime(event),
+                data: event,
+              })),
+            ]
 
             return (
               <div
@@ -60,27 +91,61 @@ export function MonthView({ currentDate, monthlyGoals }: MonthViewProps) {
               >
                 <div
                   className={cn(
-                    'mb-1 text-sm',
-                    isTodayDate &&
-                      'flex h-6 w-6 items-center justify-center rounded-full bg-blue-500 font-semibold text-white dark:bg-blue-400',
+                    'mb-1 flex h-6 items-center text-sm',
                     !isTodayDate && 'font-medium',
                   )}
                 >
-                  {formatDay(date)}
+                  {isTodayDate ? (
+                    <span className="flex h-6 w-6 items-center justify-center rounded-full bg-blue-500 font-semibold text-white dark:bg-blue-400">
+                      {formatDay(date)}
+                    </span>
+                  ) : (
+                    formatDay(date)
+                  )}
                 </div>
                 <div className="space-y-0.5">
-                  {dayGoals.slice(0, 2).map((goal) => (
-                    <div
-                      key={goal.id}
-                      className="truncate rounded bg-blue-100 px-1 text-xs text-blue-900 dark:bg-blue-900/30 dark:text-blue-300"
-                      title={goal.title}
-                    >
-                      {goal.title}
-                    </div>
-                  ))}
-                  {dayGoals.length > 2 && (
+                  {allItems.map((item) => {
+                    if (item.type === 'event') {
+                      return (
+                        <Popover key={`${item.type}-${item.id}`}>
+                          <PopoverTrigger asChild>
+                            <button
+                              className={cn(
+                                'w-full truncate rounded px-1 text-left text-xs hover:opacity-80',
+                                'bg-green-100 text-green-900 dark:bg-green-900/30 dark:text-green-300',
+                              )}
+                              title={item.title}
+                            >
+                              {!item.data.allDay && (
+                                <span className="mr-1 text-[10px] opacity-70">
+                                  {item.time}
+                                </span>
+                              )}
+                              {item.title}
+                            </button>
+                          </PopoverTrigger>
+                          <PopoverContent>
+                            <EventPopoverContent event={item.data} />
+                          </PopoverContent>
+                        </Popover>
+                      )
+                    }
+                    return (
+                      <div
+                        key={`${item.type}-${item.id}`}
+                        className={cn(
+                          'truncate rounded px-1 text-xs',
+                          'bg-blue-100 text-blue-900 dark:bg-blue-900/30 dark:text-blue-300',
+                        )}
+                        title={item.title}
+                      >
+                        {item.title}
+                      </div>
+                    )
+                  })}
+                  {dayEvents.length > 1 && (
                     <div className="text-xs text-muted-foreground">
-                      +{dayGoals.length - 2}
+                      +{dayEvents.length - 1}
                     </div>
                   )}
                 </div>
