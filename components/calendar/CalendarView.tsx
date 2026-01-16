@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useMemo } from 'react'
+import { useState, useMemo, useEffect } from 'react'
 import { ChevronLeft, ChevronRight } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
@@ -35,7 +35,11 @@ export function CalendarView({ initialDate }: CalendarViewProps) {
   const [viewMode, setViewMode] = useState<ViewMode>('month')
 
   const currentYear = currentDate.getFullYear()
-  const { monthlyGoals, weeklyGoals, isLoading: isLoadingGoals } = useGoals(currentYear)
+  const {
+    monthlyGoals,
+    weeklyGoals,
+    isLoading: isLoadingGoals,
+  } = useGoals(currentYear)
   const { events, isLoading: isLoadingEvents } = useEvents()
 
   const isLoading = isLoadingGoals || isLoadingEvents
@@ -44,6 +48,34 @@ export function CalendarView({ initialDate }: CalendarViewProps) {
     () => getMonthlyGoalsForDate(monthlyGoals, currentDate),
     [monthlyGoals, currentDate],
   )
+
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      const target = e.target as HTMLElement
+      const isInputFocused =
+        target.tagName === 'INPUT' ||
+        target.tagName === 'TEXTAREA' ||
+        target.tagName === 'SELECT' ||
+        target.isContentEditable
+
+      if (isInputFocused) {
+        return
+      }
+
+      if (e.key === 'm' || e.key === 'M') {
+        e.preventDefault()
+        setViewMode('month')
+      } else if (e.key === 'w' || e.key === 'W') {
+        e.preventDefault()
+        setViewMode('week')
+      }
+    }
+
+    window.addEventListener('keydown', handleKeyDown)
+    return () => {
+      window.removeEventListener('keydown', handleKeyDown)
+    }
+  }, [])
 
   const handlePrev = () => {
     setCurrentDate((prev) =>
@@ -68,7 +100,7 @@ export function CalendarView({ initialDate }: CalendarViewProps) {
 
   return (
     <div className="w-full space-y-4">
-      <Card>
+      <Card className="border-border shadow-none">
         <CardHeader>
           <div className="flex items-center justify-between">
             <CardTitle className="text-2xl">{displayTitle}</CardTitle>
@@ -81,8 +113,22 @@ export function CalendarView({ initialDate }: CalendarViewProps) {
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="month">月表示</SelectItem>
-                  <SelectItem value="week">週表示</SelectItem>
+                  <SelectItem value="month">
+                    <span className="flex items-center justify-between w-full">
+                      <span>月</span>
+                      <span className="ml-4 text-xs text-muted-foreground">
+                        M
+                      </span>
+                    </span>
+                  </SelectItem>
+                  <SelectItem value="week">
+                    <span className="flex items-center justify-between w-full">
+                      <span>週</span>
+                      <span className="ml-4 text-xs text-muted-foreground">
+                        W
+                      </span>
+                    </span>
+                  </SelectItem>
                 </SelectContent>
               </Select>
               <Button
