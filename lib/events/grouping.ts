@@ -1,4 +1,12 @@
-import { formatDateDisplay, getTodayDate, getTomorrowDate, getTodayDateString, getTomorrowDateString, parseDateString } from '@/lib/date/formats'
+import {
+  formatDateDisplay,
+  formatDateISO,
+  getTodayDate,
+  getTomorrowDate,
+  getTodayDateString,
+  getTomorrowDateString,
+  parseDateString,
+} from '@/lib/date/formats'
 import type { Event } from '@/lib/types/event'
 
 export type EventGroup = {
@@ -49,8 +57,7 @@ function categorizeEvent(
   today: Date,
 ): 'today' | 'tomorrow' | 'overdue' | 'future' {
   const eventDateStr = getEventDateString(event)
-  const eventStartDate = parseISO(event.startDatetime)
-  eventStartDate.setHours(0, 0, 0, 0)
+  const eventStartDate = parseDateString(event.startDatetime)
 
   if (eventDateStr === todayStr) {
     return 'today'

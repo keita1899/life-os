@@ -1,8 +1,6 @@
 import { format, parseISO } from 'date-fns'
 import { ja } from 'date-fns/locale/ja'
 
-export { formatDateISO }
-
 export const DATE_FORMATS = {
   ISO_DATE: 'yyyy-MM-dd',
   ISO_DATETIME: "yyyy-MM-dd'T'HH:mm:ss",
@@ -67,4 +65,10 @@ export function isSameDate(date1: Date | string, date2: Date | string): boolean 
   const d1 = typeof date1 === 'string' ? parseDateString(date1) : date1
   const d2 = typeof date2 === 'string' ? parseDateString(date2) : date2
   return formatDateISO(d1) === formatDateISO(d2)
+}
+
+export function formatDateForInput(dateStr: string | null | undefined): string {
+  if (!dateStr) return ''
+  const date = parseDateString(dateStr)
+  return formatDateISO(date)
 }

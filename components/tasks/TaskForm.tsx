@@ -22,6 +22,13 @@ import {
   SelectValue,
 } from '@/components/ui/select'
 import type { Task, CreateTaskInput } from '@/lib/types/task'
+import {
+  getTodayDateString,
+  getTomorrowDateString,
+  formatDateForInput,
+  getTodayDate,
+  getTomorrowDate,
+} from '@/lib/date/formats'
 
 const taskFormSchema = z.object({
   title: z.string().min(1, 'タイトルは必須です'),
@@ -84,9 +91,9 @@ export const TaskForm = ({
     if (value === 'none') {
       form.setValue('executionDate', '')
     } else if (value === 'today') {
-      form.setValue('executionDate', getTodayDate())
+      form.setValue('executionDate', getTodayDateString())
     } else if (value === 'tomorrow') {
-      form.setValue('executionDate', getTomorrowDate())
+      form.setValue('executionDate', getTomorrowDateString())
     }
   }
 

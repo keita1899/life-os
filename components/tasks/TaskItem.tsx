@@ -8,8 +8,7 @@ import {
   Pencil,
   Trash2,
 } from 'lucide-react'
-import { format, parseISO } from 'date-fns'
-import { ja } from 'date-fns/locale/ja'
+import { getDateLabel } from '@/lib/date/labels'
 import { Button } from '@/components/ui/button'
 import {
   DropdownMenu,

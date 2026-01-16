@@ -2,8 +2,6 @@
 
 import { useState, useMemo } from 'react'
 import Link from 'next/link'
-import { format, parseISO } from 'date-fns'
-import { ja } from 'date-fns/locale/ja'
 import { Trash2 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import {
@@ -19,13 +17,8 @@ import { Loading } from '@/components/ui/loading'
 import { ErrorMessage } from '@/components/ui/error-message'
 import { useTasks } from '@/hooks/useTasks'
 import { useMode } from '@/lib/contexts/ModeContext'
+import { groupTasks } from '@/lib/tasks/grouping'
 import type { CreateTaskInput, Task, UpdateTaskInput } from '@/lib/types/task'
-
-type TaskGroup = {
-  key: string
-  title: string
-  tasks: Task[]
-}
 
 export default function TasksPage() {
   const { mode } = useMode()
@@ -46,84 +39,7 @@ export default function TasksPage() {
     useState(false)
   const [createError, setCreateError] = useState<string | null>(null)
 
-  const groupedTasks = useMemo(() => {
-    const today = new Date()
-    today.setHours(0, 0, 0, 0)
-    const tomorrow = new Date(today)
-    tomorrow.setDate(tomorrow.getDate() + 1)
-
-    const todayStr = format(today, 'yyyy-MM-dd')
-    const tomorrowStr = format(tomorrow, 'yyyy-MM-dd')
-
-    const incompleteTasks: Task[] = []
-    const completedTasks: Task[] = []
-
-    tasks.forEach((task) => {
-      if (task.completed) {
-        completedTasks.push(task)
-      } else {
-        incompleteTasks.push(task)
-      }
-    })
-
-    const groups: TaskGroup[] = [
-      { key: 'none', title: '日付なし', tasks: [] },
-      { key: 'today', title: '今日', tasks: [] },
-      { key: 'tomorrow', title: '明日', tasks: [] },
-    ]
-
-    const overdueGroup: TaskGroup = {
-      key: 'overdue',
-      title: '期限切れ',
-      tasks: [],
-    }
-    const dateGroups = new Map<string, Task[]>()
-
-    incompleteTasks.forEach((task) => {
-      if (!task.executionDate) {
-        groups[0].tasks.push(task)
-        return
-      }
-
-      const taskDateStr = task.executionDate
-      if (taskDateStr === todayStr) {
-        groups[1].tasks.push(task)
-      } else if (taskDateStr === tomorrowStr) {
-        groups[2].tasks.push(task)
-      } else {
-        const taskDate = parseISO(taskDateStr)
-        taskDate.setHours(0, 0, 0, 0)
-        if (taskDate < today) {
-          overdueGroup.tasks.push(task)
-        } else {
-          if (!dateGroups.has(taskDateStr)) {
-            dateGroups.set(taskDateStr, [])
-          }
-          dateGroups.get(taskDateStr)!.push(task)
-        }
-      }
-    })
-
-    const sortedDateGroups = Array.from(dateGroups.entries())
-      .sort(([a], [b]) => a.localeCompare(b))
-      .map(([dateStr, tasks]) => ({
-        key: dateStr,
-        title: format(parseISO(dateStr), 'yyyy年M月d日(E)', { locale: ja }),
-        tasks,
-      }))
-
-    const result: TaskGroup[] = [groups[1], groups[2], groups[0], overdueGroup]
-
-    result.push(...sortedDateGroups)
-
-    result.push({
-      key: 'completed',
-      title: '完了済み',
-      tasks: completedTasks,
-    })
-
-    return result
-  }, [tasks])
+  const groupedTasks = useMemo(() => groupTasks(tasks), [tasks])
 
   if (mode !== 'life') {
     return null
