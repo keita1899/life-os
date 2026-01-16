@@ -82,7 +82,7 @@ function createDateGroup(dateStr: string): EventGroup {
 export function groupEvents(events: Event[]): EventGroup[] {
   const { today, todayStr, tomorrowStr } = getDateStrings()
   const { todayGroup, tomorrowGroup, overdueGroup } = createInitialGroups()
-  const dateGroups = new Map<string, Event[]>();
+  const dateGroups = new Map<string, Event[]>()
 
   events.forEach((event) => {
     const category = categorizeEvent(event, todayStr, tomorrowStr, today)

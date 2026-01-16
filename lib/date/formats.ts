@@ -61,7 +61,10 @@ export function parseDateString(dateStr: string): Date {
   return date
 }
 
-export function isSameDate(date1: Date | string, date2: Date | string): boolean {
+export function isSameDate(
+  date1: Date | string,
+  date2: Date | string,
+): boolean {
   const d1 = typeof date1 === 'string' ? parseDateString(date1) : date1
   const d2 = typeof date2 === 'string' ? parseDateString(date2) : date2
   return formatDateISO(d1) === formatDateISO(d2)

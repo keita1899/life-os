@@ -16,7 +16,9 @@ export interface DateLabel {
   type: DateLabelType
 }
 
-export function getDateLabel(dateStr: string | null | undefined): DateLabel | null {
+export function getDateLabel(
+  dateStr: string | null | undefined,
+): DateLabel | null {
   if (!dateStr) return null
 
   const today = getTodayDate()
