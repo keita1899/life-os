@@ -37,7 +37,7 @@ export default function TasksPage() {
   const [deletingTask, setDeletingTask] = useState<Task | undefined>(undefined)
   const [isDeletingCompletedDialogOpen, setIsDeletingCompletedDialogOpen] =
     useState(false)
-  const [createError, setCreateError] = useState<string | null>(null)
+  const [operationError, setOperationError] = useState<string | null>(null)
 
   const groupedTasks = useMemo(() => groupTasks(tasks), [tasks])
 
@@ -47,11 +47,11 @@ export default function TasksPage() {
 
   const handleCreateTask = async (input: CreateTaskInput) => {
     try {
-      setCreateError(null)
+      setOperationError(null)
       await createTask(input)
       setIsDialogOpen(false)
     } catch (err) {
-      setCreateError(
+      setOperationError(
         err instanceof Error ? err.message : 'タスクの作成に失敗しました',
       )
     }
@@ -61,7 +61,7 @@ export default function TasksPage() {
     if (!editingTask) return
 
     try {
-      setCreateError(null)
+      setOperationError(null)
       const updateInput: UpdateTaskInput = {
         title: input.title,
         executionDate: input.executionDate,
@@ -71,7 +71,7 @@ export default function TasksPage() {
       setIsDialogOpen(false)
       setEditingTask(undefined)
     } catch (err) {
-      setCreateError(
+      setOperationError(
         err instanceof Error ? err.message : 'タスクの更新に失敗しました',
       )
     }
@@ -93,11 +93,11 @@ export default function TasksPage() {
     if (!deletingTask) return
 
     try {
-      setCreateError(null)
+      setOperationError(null)
       await deleteTask(deletingTask.id)
       setDeletingTask(undefined)
     } catch (err) {
-      setCreateError(
+      setOperationError(
         err instanceof Error ? err.message : 'タスクの削除に失敗しました',
       )
     }
@@ -109,10 +109,10 @@ export default function TasksPage() {
 
   const handleToggleCompletion = async (task: Task) => {
     try {
-      setCreateError(null)
+      setOperationError(null)
       await toggleTaskCompletion(task.id, !task.completed)
     } catch (err) {
-      setCreateError(
+      setOperationError(
         err instanceof Error
           ? err.message
           : 'タスクの完了状態の更新に失敗しました',
@@ -126,11 +126,11 @@ export default function TasksPage() {
 
   const handleDeleteCompletedTasks = async () => {
     try {
-      setCreateError(null)
+      setOperationError(null)
       await deleteCompletedTasks()
       setIsDeletingCompletedDialogOpen(false)
     } catch (err) {
-      setCreateError(
+      setOperationError(
         err instanceof Error
           ? err.message
           : '完了済みタスクの削除に失敗しました',
@@ -158,8 +158,8 @@ export default function TasksPage() {
       </div>
 
       <ErrorMessage
-        message={createError || error || ''}
-        onDismiss={createError ? () => setCreateError(null) : undefined}
+        message={operationError || error || ''}
+        onDismiss={operationError ? () => setOperationError(null) : undefined}
       />
 
       {isLoading ? (
