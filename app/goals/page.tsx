@@ -37,7 +37,7 @@ const GoalsPage = () => {
   } = useGoals(selectedYear)
   const [isYearlyDialogOpen, setIsYearlyDialogOpen] = useState(false)
   const [isMonthlyDialogOpen, setIsMonthlyDialogOpen] = useState(false)
-  const [createError, setCreateError] = useState<string | null>(null)
+  const [operationError, setOperationError] = useState<string | null>(null)
   const [deleteConfirmDialog, setDeleteConfirmDialog] = useState<{
     open: boolean
     message: string
@@ -52,11 +52,11 @@ const GoalsPage = () => {
 
   const handleCreateYearlyGoal = async (input: CreateYearlyGoalInput) => {
     try {
-      setCreateError(null)
+      setOperationError(null)
       await createYearlyGoal(input)
       setIsYearlyDialogOpen(false)
     } catch (err) {
-      setCreateError(
+      setOperationError(
         err instanceof Error ? err.message : '年間目標の作成に失敗しました',
       )
     }
@@ -64,11 +64,11 @@ const GoalsPage = () => {
 
   const handleCreateMonthlyGoal = async (input: CreateMonthlyGoalInput) => {
     try {
-      setCreateError(null)
+      setOperationError(null)
       await createMonthlyGoal(input)
       setIsMonthlyDialogOpen(false)
     } catch (err) {
-      setCreateError(
+      setOperationError(
         err instanceof Error ? err.message : '月間目標の作成に失敗しました',
       )
     }
@@ -77,7 +77,7 @@ const GoalsPage = () => {
   const handleUpdateYearlyGoal = async (input: CreateYearlyGoalInput) => {
     if (!editingYearlyGoal) return
     try {
-      setCreateError(null)
+      setOperationError(null)
       await updateYearlyGoal(editingYearlyGoal.id, {
         title: input.title,
         targetDate: input.targetDate,
@@ -87,7 +87,7 @@ const GoalsPage = () => {
       setIsYearlyDialogOpen(false)
       setEditingYearlyGoal(undefined)
     } catch (err) {
-      setCreateError(
+      setOperationError(
         err instanceof Error ? err.message : '年間目標の更新に失敗しました',
       )
     }
@@ -96,7 +96,7 @@ const GoalsPage = () => {
   const handleUpdateMonthlyGoal = async (input: CreateMonthlyGoalInput) => {
     if (!editingMonthlyGoal) return
     try {
-      setCreateError(null)
+      setOperationError(null)
       await updateMonthlyGoal(editingMonthlyGoal.id, {
         title: input.title,
         targetDate: input.targetDate,
@@ -107,7 +107,7 @@ const GoalsPage = () => {
       setIsMonthlyDialogOpen(false)
       setEditingMonthlyGoal(undefined)
     } catch (err) {
-      setCreateError(
+      setOperationError(
         err instanceof Error ? err.message : '月間目標の更新に失敗しました',
       )
     }
@@ -144,7 +144,7 @@ const GoalsPage = () => {
         })
 
         try {
-          setCreateError(null)
+          setOperationError(null)
           if ('month' in goal) {
             await deleteMonthlyGoal(goal.id)
           } else {
@@ -152,7 +152,7 @@ const GoalsPage = () => {
           }
           await refreshGoals()
         } catch (err) {
-          setCreateError(
+          setOperationError(
             err instanceof Error
               ? err.message
               : `${goalType}の削除に失敗しました`,
@@ -215,8 +215,8 @@ const GoalsPage = () => {
       />
 
       <ErrorMessage
-        message={createError || error || ''}
-        onDismiss={createError ? () => setCreateError(null) : undefined}
+        message={operationError || error || ''}
+        onDismiss={operationError ? () => setOperationError(null) : undefined}
       />
 
       {isLoading ? (

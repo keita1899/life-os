@@ -1,12 +1,6 @@
 'use client'
 
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogHeader,
-  DialogTitle,
-} from '@/components/ui/dialog'
+import { FormDialog } from '@/components/ui/form-dialog'
 import { TaskForm } from './TaskForm'
 import type { Task, CreateTaskInput } from '@/lib/types/task'
 
@@ -23,32 +17,17 @@ export const TaskDialog = ({
   onSubmit,
   task,
 }: TaskDialogProps) => {
-  const handleSubmit = async (input: CreateTaskInput) => {
-    await onSubmit(input)
-  }
-
-  const isEditMode = !!task
-
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent>
-        <DialogHeader>
-          <DialogTitle>
-            {isEditMode ? 'タスクを編集' : '新しいタスクを作成'}
-          </DialogTitle>
-          <DialogDescription>
-            {isEditMode
-              ? 'タスクの詳細を編集してください'
-              : 'タスクの詳細を入力してください'}
-          </DialogDescription>
-        </DialogHeader>
-        <TaskForm
-          onSubmit={handleSubmit}
-          onCancel={() => onOpenChange(false)}
-          initialData={task}
-          submitLabel={isEditMode ? '更新' : '作成'}
-        />
-      </DialogContent>
-    </Dialog>
+    <FormDialog
+      open={open}
+      onOpenChange={onOpenChange}
+      onSubmit={onSubmit}
+      initialData={task}
+      title={{
+        create: '新しいタスクを作成',
+        edit: 'タスクを編集',
+      }}
+      formComponent={TaskForm}
+    />
   )
 }

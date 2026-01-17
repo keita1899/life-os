@@ -1,4 +1,5 @@
-import { getDatabase } from '../db'
+import { getDatabase, handleDbError } from '../db'
+import { DB_COLUMNS } from '../db/constants'
 import { getYearFromDate } from './base'
 import type {
   YearlyGoal,
@@ -74,7 +75,7 @@ export async function createYearlyGoal(
     )
 
     const result = await db.select<DbYearlyGoal[]>(
-      `SELECT * FROM yearly_goals 
+      `SELECT ${DB_COLUMNS.YEARLY_GOALS.join(', ')} FROM yearly_goals 
        WHERE title = ? AND year = ? 
        ORDER BY created_at DESC, id DESC 
        LIMIT 1`,
@@ -89,17 +90,14 @@ export async function createYearlyGoal(
 
     return mapDbYearlyGoalToYearlyGoal(result[0])
   } catch (err) {
-    if (err instanceof Error) {
-      throw err
-    }
-    throw new Error('Failed to create yearly goal: unknown error')
+    handleDbError(err, 'create yearly goal')
   }
 }
 
 export async function getYearlyGoal(id: number): Promise<YearlyGoal | null> {
   const db = await getDatabase()
   const result = await db.select<DbYearlyGoal[]>(
-    'SELECT * FROM yearly_goals WHERE id = ?',
+    `SELECT ${DB_COLUMNS.YEARLY_GOALS.join(', ')} FROM yearly_goals WHERE id = ?`,
     [id],
   )
 
@@ -115,7 +113,7 @@ export async function getYearlyGoalsByYear(
 ): Promise<YearlyGoal[]> {
   const db = await getDatabase()
   const result = await db.select<DbYearlyGoal[]>(
-    'SELECT * FROM yearly_goals WHERE year = ? ORDER BY created_at DESC',
+    `SELECT ${DB_COLUMNS.YEARLY_GOALS.join(', ')} FROM yearly_goals WHERE year = ? ORDER BY created_at DESC`,
     [year],
   )
 
@@ -183,5 +181,9 @@ export async function updateYearlyGoal(
 
 export async function deleteYearlyGoal(id: number): Promise<void> {
   const db = await getDatabase()
-  await db.execute('DELETE FROM yearly_goals WHERE id = ?', [id])
+  try {
+    await db.execute('DELETE FROM yearly_goals WHERE id = ?', [id])
+  } catch (err) {
+    handleDbError(err, 'delete yearly goal')
+  }
 }

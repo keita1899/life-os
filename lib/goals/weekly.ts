@@ -1,4 +1,5 @@
-import { getDatabase } from '../db'
+import { getDatabase, handleDbError } from '../db'
+import { DB_COLUMNS } from '../db/constants'
 import { getYearFromDate, getWeekStartDateFromDate } from './base'
 import type {
   WeeklyGoal,
@@ -83,7 +84,7 @@ export async function createWeeklyGoal(
     )
 
     const result = await db.select<DbWeeklyGoal[]>(
-      `SELECT * FROM weekly_goals 
+      `SELECT ${DB_COLUMNS.WEEKLY_GOALS.join(', ')} FROM weekly_goals 
        WHERE title = ? AND year = ? AND week_start_date = ? 
        ORDER BY created_at DESC, id DESC 
        LIMIT 1`,
@@ -98,17 +99,16 @@ export async function createWeeklyGoal(
 
     return mapDbWeeklyGoalToWeeklyGoal(result[0])
   } catch (err) {
-    if (err instanceof Error) {
-      throw err
-    }
-    throw new Error('Failed to create weekly goal: unknown error')
+    handleDbError(err, 'create weekly goal')
   }
 }
 
 export async function getWeeklyGoal(id: number): Promise<WeeklyGoal | null> {
   const db = await getDatabase()
   const result = await db.select<DbWeeklyGoal[]>(
-    'SELECT * FROM weekly_goals WHERE id = ?',
+    `SELECT ${DB_COLUMNS.WEEKLY_GOALS.join(
+      ', ',
+    )} FROM weekly_goals WHERE id = ?`,
     [id],
   )
 
@@ -124,7 +124,9 @@ export async function getWeeklyGoalsByYear(
 ): Promise<WeeklyGoal[]> {
   const db = await getDatabase()
   const result = await db.select<DbWeeklyGoal[]>(
-    'SELECT * FROM weekly_goals WHERE year = ? ORDER BY week_start_date ASC, created_at DESC',
+    `SELECT ${DB_COLUMNS.WEEKLY_GOALS.join(
+      ', ',
+    )} FROM weekly_goals WHERE year = ? ORDER BY week_start_date ASC, created_at DESC`,
     [year],
   )
 
@@ -137,7 +139,9 @@ export async function getWeeklyGoalByWeekStart(
   const db = await getDatabase()
   const year = getYearFromDate(weekStartDate)
   const result = await db.select<DbWeeklyGoal[]>(
-    'SELECT * FROM weekly_goals WHERE year = ? AND week_start_date = ? LIMIT 1',
+    `SELECT ${DB_COLUMNS.WEEKLY_GOALS.join(
+      ', ',
+    )} FROM weekly_goals WHERE year = ? AND week_start_date = ? LIMIT 1`,
     [year, weekStartDate],
   )
 
@@ -210,5 +214,9 @@ export async function updateWeeklyGoal(
 
 export async function deleteWeeklyGoal(id: number): Promise<void> {
   const db = await getDatabase()
-  await db.execute('DELETE FROM weekly_goals WHERE id = ?', [id])
+  try {
+    await db.execute('DELETE FROM weekly_goals WHERE id = ?', [id])
+  } catch (err) {
+    handleDbError(err, 'delete weekly goal')
+  }
 }

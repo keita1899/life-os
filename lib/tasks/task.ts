@@ -1,4 +1,5 @@
-import { getDatabase } from '../db'
+import { getDatabase, handleDbError } from '../db'
+import { DB_COLUMNS } from '../db/constants'
 import type { Task, CreateTaskInput, UpdateTaskInput } from '../types/task'
 
 interface DbTask {
@@ -54,7 +55,9 @@ export async function createTask(input: CreateTaskInput): Promise<Task> {
     )
 
     const result = await db.select<DbTask[]>(
-      `SELECT * FROM tasks 
+      `SELECT ${DB_COLUMNS.TASKS.map((col) =>
+        col === 'order' ? '"order"' : col,
+      ).join(', ')} FROM tasks 
        WHERE title = ? AND "order" = ?
        ORDER BY created_at DESC, id DESC 
        LIMIT 1`,
@@ -67,10 +70,7 @@ export async function createTask(input: CreateTaskInput): Promise<Task> {
 
     return mapDbTaskToTask(result[0])
   } catch (err) {
-    if (err instanceof Error) {
-      throw err
-    }
-    throw new Error('Failed to create task: unknown error')
+    handleDbError(err, 'create task')
   }
 }
 
@@ -79,15 +79,14 @@ export async function getAllTasks(): Promise<Task[]> {
 
   try {
     const result = await db.select<DbTask[]>(
-      'SELECT * FROM tasks ORDER BY "order" ASC, created_at ASC',
+      `SELECT ${DB_COLUMNS.TASKS.map((col) =>
+        col === 'order' ? '"order"' : col,
+      ).join(', ')} FROM tasks ORDER BY "order" ASC, created_at ASC`,
     )
 
     return result.map(mapDbTaskToTask)
   } catch (err) {
-    if (err instanceof Error) {
-      throw err
-    }
-    throw new Error('Failed to get tasks: unknown error')
+    handleDbError(err, 'get tasks')
   }
 }
 
@@ -132,7 +131,9 @@ export async function updateTask(
 
   if (updateFields.length === 0) {
     const result = await db.select<DbTask[]>(
-      'SELECT * FROM tasks WHERE id = ?',
+      `SELECT ${DB_COLUMNS.TASKS.map((col) =>
+        col === 'order' ? '"order"' : col,
+      ).join(', ')} FROM tasks WHERE id = ?`,
       [id],
     )
     if (result.length === 0) {
@@ -151,7 +152,9 @@ export async function updateTask(
     )
 
     const result = await db.select<DbTask[]>(
-      'SELECT * FROM tasks WHERE id = ?',
+      `SELECT ${DB_COLUMNS.TASKS.map((col) =>
+        col === 'order' ? '"order"' : col,
+      ).join(', ')} FROM tasks WHERE id = ?`,
       [id],
     )
 
@@ -161,10 +164,7 @@ export async function updateTask(
 
     return mapDbTaskToTask(result[0])
   } catch (err) {
-    if (err instanceof Error) {
-      throw err
-    }
-    throw new Error('Failed to update task: unknown error')
+    handleDbError(err, 'update task')
   }
 }
 
@@ -178,10 +178,7 @@ export async function deleteTask(id: number): Promise<void> {
       throw new Error('Task not found')
     }
   } catch (err) {
-    if (err instanceof Error) {
-      throw err
-    }
-    throw new Error('Failed to delete task: unknown error')
+    handleDbError(err, 'delete task')
   }
 }
 
@@ -192,9 +189,6 @@ export async function deleteCompletedTasks(): Promise<number> {
     const result = await db.execute('DELETE FROM tasks WHERE completed = 1')
     return result.rowsAffected
   } catch (err) {
-    if (err instanceof Error) {
-      throw err
-    }
-    throw new Error('Failed to delete completed tasks: unknown error')
+    handleDbError(err, 'delete completed tasks')
   }
 }

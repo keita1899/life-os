@@ -1,4 +1,5 @@
-import { getDatabase } from '../db'
+import { getDatabase, handleDbError } from '../db'
+import { DB_COLUMNS } from '../db/constants'
 import { getYearFromDate, getMonthFromDate } from './base'
 import type {
   MonthlyGoal,
@@ -79,7 +80,7 @@ export async function createMonthlyGoal(
     )
 
     const result = await db.select<DbMonthlyGoal[]>(
-      `SELECT * FROM monthly_goals 
+      `SELECT ${DB_COLUMNS.MONTHLY_GOALS.join(', ')} FROM monthly_goals 
        WHERE title = ? AND year = ? AND month = ? 
        ORDER BY created_at DESC, id DESC 
        LIMIT 1`,
@@ -94,17 +95,16 @@ export async function createMonthlyGoal(
 
     return mapDbMonthlyGoalToMonthlyGoal(result[0])
   } catch (err) {
-    if (err instanceof Error) {
-      throw err
-    }
-    throw new Error('Failed to create monthly goal: unknown error')
+    handleDbError(err, 'create monthly goal')
   }
 }
 
 export async function getMonthlyGoal(id: number): Promise<MonthlyGoal | null> {
   const db = await getDatabase()
   const result = await db.select<DbMonthlyGoal[]>(
-    'SELECT * FROM monthly_goals WHERE id = ?',
+    `SELECT ${DB_COLUMNS.MONTHLY_GOALS.join(
+      ', ',
+    )} FROM monthly_goals WHERE id = ?`,
     [id],
   )
 
@@ -120,7 +120,9 @@ export async function getMonthlyGoalsByYear(
 ): Promise<MonthlyGoal[]> {
   const db = await getDatabase()
   const result = await db.select<DbMonthlyGoal[]>(
-    'SELECT * FROM monthly_goals WHERE year = ? ORDER BY month ASC, created_at DESC',
+    `SELECT ${DB_COLUMNS.MONTHLY_GOALS.join(
+      ', ',
+    )} FROM monthly_goals WHERE year = ? ORDER BY month ASC, created_at DESC`,
     [year],
   )
 
@@ -197,5 +199,9 @@ export async function updateMonthlyGoal(
 
 export async function deleteMonthlyGoal(id: number): Promise<void> {
   const db = await getDatabase()
-  await db.execute('DELETE FROM monthly_goals WHERE id = ?', [id])
+  try {
+    await db.execute('DELETE FROM monthly_goals WHERE id = ?', [id])
+  } catch (err) {
+    handleDbError(err, 'delete monthly goal')
+  }
 }

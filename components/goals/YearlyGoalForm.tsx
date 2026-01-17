@@ -1,6 +1,5 @@
 'use client'
 
-import { useEffect } from 'react'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import * as z from 'zod'
@@ -47,22 +46,18 @@ export const YearlyGoalForm = ({
 
   const form = useForm<YearlyGoalFormValues>({
     resolver: zodResolver(yearlyGoalFormSchema),
-    defaultValues: {
-      title: initialData?.title || '',
-      targetDate: initialData?.targetDate ?? '',
-      year: initialData?.year ?? selectedYear ?? new Date().getFullYear(),
-    },
+    values: initialData
+      ? {
+          title: initialData.title,
+          targetDate: initialData.targetDate ?? '',
+          year: initialData.year,
+        }
+      : {
+          title: '',
+          targetDate: '',
+          year: selectedYear ?? new Date().getFullYear(),
+        },
   })
-
-  useEffect(() => {
-    if (initialData) {
-      form.reset({
-        title: initialData.title,
-        targetDate: initialData.targetDate ?? '',
-        year: initialData.year,
-      })
-    }
-  }, [initialData])
 
   const handleSubmit = async (data: YearlyGoalFormValues) => {
     await onSubmit({

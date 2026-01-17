@@ -22,6 +22,7 @@ import {
 } from '@/components/ui/select'
 import { Textarea } from '@/components/ui/textarea'
 import { EVENT_CATEGORIES } from '@/lib/events/constants'
+import { getEventFormValues } from '@/lib/events/form'
 import type { Event, CreateEventInput, EventCategory } from '@/lib/types/event'
 
 const EVENT_CATEGORY_VALUES = EVENT_CATEGORIES.filter(
@@ -58,8 +59,6 @@ export const EventForm = ({
   initialData,
   submitLabel = '作成',
 }: EventFormProps) => {
-  const isEditMode = !!initialData
-
   const getTodayDate = () => {
     const today = new Date()
     const year = today.getFullYear()
@@ -68,51 +67,9 @@ export const EventForm = ({
     return `${year}-${month}-${day}`
   }
 
-  const formatDateTimeForInput = (
-    datetime: string,
-    isAllDay: boolean,
-  ): { date: string; time: string } => {
-    const date = new Date(datetime)
-    const year = date.getFullYear()
-    const month = String(date.getMonth() + 1).padStart(2, '0')
-    const day = String(date.getDate()).padStart(2, '0')
-    const dateStr = `${year}-${month}-${day}`
-
-    if (isAllDay) {
-      return { date: dateStr, time: '' }
-    }
-
-    const hours = String(date.getHours()).padStart(2, '0')
-    const minutes = String(date.getMinutes()).padStart(2, '0')
-    const timeStr = `${hours}:${minutes}`
-
-    return { date: dateStr, time: timeStr }
-  }
-
   const form = useForm<EventFormValues>({
     resolver: zodResolver(eventFormSchema),
-    defaultValues: {
-      title: initialData?.title || '',
-      startDate: initialData
-        ? formatDateTimeForInput(initialData.startDatetime, initialData.allDay)
-            .date
-        : '',
-      startTime: initialData
-        ? formatDateTimeForInput(initialData.startDatetime, initialData.allDay)
-            .time
-        : '',
-      endDate: initialData?.endDatetime
-        ? formatDateTimeForInput(initialData.endDatetime, initialData.allDay)
-            .date
-        : '',
-      endTime: initialData?.endDatetime
-        ? formatDateTimeForInput(initialData.endDatetime, initialData.allDay)
-            .time
-        : '',
-      allDay: initialData?.allDay || false,
-      category: initialData?.category || null,
-      description: initialData?.description || '',
-    },
+    values: getEventFormValues(initialData) as EventFormValues,
   })
 
   const allDay = form.watch('allDay')

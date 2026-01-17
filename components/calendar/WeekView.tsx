@@ -119,7 +119,7 @@ export function WeekView({
                             </span>
                           )}
                           <span className="font-medium line-clamp-2">
-                            {event.title}
+                          {event.title}
                           </span>
                         </div>
                       </button>

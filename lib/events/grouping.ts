@@ -1,5 +1,10 @@
-import { format, parseISO } from 'date-fns'
-import { ja } from 'date-fns/locale/ja'
+import {
+  formatDateDisplay,
+  formatDateISO,
+  getTodayDate,
+  getTomorrowDate,
+  parseDateString,
+} from '@/lib/date/formats'
 import type { Event } from '@/lib/types/event'
 
 export type EventGroup = {
@@ -15,16 +20,14 @@ const GROUP_KEYS = {
 } as const
 
 function getDateStrings() {
-  const today = new Date()
-  today.setHours(0, 0, 0, 0)
-  const tomorrow = new Date(today)
-  tomorrow.setDate(tomorrow.getDate() + 1)
+  const today = getTodayDate()
+  const tomorrow = getTomorrowDate()
 
   return {
     today,
     tomorrow,
-    todayStr: format(today, 'yyyy-MM-dd'),
-    tomorrowStr: format(tomorrow, 'yyyy-MM-dd'),
+    todayStr: formatDateISO(today),
+    tomorrowStr: formatDateISO(tomorrow),
   }
 }
 
@@ -41,9 +44,8 @@ function createInitialGroups(): {
 }
 
 function getEventDateString(event: Event): string {
-  const eventStartDate = parseISO(event.startDatetime)
-  eventStartDate.setHours(0, 0, 0, 0)
-  return format(eventStartDate, 'yyyy-MM-dd')
+  const eventStartDate = parseDateString(event.startDatetime)
+  return formatDateISO(eventStartDate)
 }
 
 function categorizeEvent(
@@ -53,8 +55,7 @@ function categorizeEvent(
   today: Date,
 ): 'today' | 'tomorrow' | 'overdue' | 'future' {
   const eventDateStr = getEventDateString(event)
-  const eventStartDate = parseISO(event.startDatetime)
-  eventStartDate.setHours(0, 0, 0, 0)
+  const eventStartDate = parseDateString(event.startDatetime)
 
   if (eventDateStr === todayStr) {
     return 'today'
@@ -71,7 +72,7 @@ function categorizeEvent(
 function createDateGroup(dateStr: string): EventGroup {
   return {
     key: dateStr,
-    title: format(parseISO(dateStr), 'yyyy年M月d日(E)', { locale: ja }),
+    title: formatDateDisplay(dateStr),
     events: [],
   }
 }
@@ -79,7 +80,7 @@ function createDateGroup(dateStr: string): EventGroup {
 export function groupEvents(events: Event[]): EventGroup[] {
   const { today, todayStr, tomorrowStr } = getDateStrings()
   const { todayGroup, tomorrowGroup, overdueGroup } = createInitialGroups()
-  const dateGroups = new Map<string, Event[]>();
+  const dateGroups = new Map<string, Event[]>()
 
   events.forEach((event) => {
     const category = categorizeEvent(event, todayStr, tomorrowStr, today)

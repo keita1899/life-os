@@ -1,12 +1,6 @@
-import { getDatabase } from '../db'
+import { getDatabase, handleDbError } from '../db'
+import { DB_COLUMNS } from '../db/constants'
 import type { Event, CreateEventInput, UpdateEventInput } from '../types/event'
-
-function handleDbError(err: unknown, operation: string): never {
-  if (err instanceof Error) {
-    throw new Error(`Failed to ${operation}: ${err.message}`)
-  }
-  throw new Error(`Failed to ${operation}: unknown error`)
-}
 
 interface DbEvent {
   id: number
@@ -14,10 +8,6 @@ interface DbEvent {
   start_datetime: string
   end_datetime: string | null
   all_day: number
-  recurrence_type: string
-  recurrence_end_date: string | null
-  recurrence_count: number | null
-  recurrence_days_of_week: string | null
   category: string | null
   description: string | null
   created_at: string
@@ -43,8 +33,8 @@ export async function createEvent(input: CreateEventInput): Promise<Event> {
 
   try {
     await db.execute(
-      `INSERT INTO events (title, start_datetime, end_datetime, all_day, recurrence_type, category, description)
-       VALUES (?, ?, ?, ?, 'none', ?, ?)`,
+      `INSERT INTO events (title, start_datetime, end_datetime, all_day, category, description)
+       VALUES (?, ?, ?, ?, ?, ?)`,
       [
         input.title,
         input.startDatetime,
@@ -56,7 +46,7 @@ export async function createEvent(input: CreateEventInput): Promise<Event> {
     )
 
     const result = await db.select<DbEvent[]>(
-      `SELECT * FROM events 
+      `SELECT ${DB_COLUMNS.EVENTS.join(', ')} FROM events 
        WHERE title = ? AND start_datetime = ?
        ORDER BY created_at DESC, id DESC 
        LIMIT 1`,
@@ -78,7 +68,9 @@ export async function getAllEvents(): Promise<Event[]> {
 
   try {
     const result = await db.select<DbEvent[]>(
-      'SELECT * FROM events ORDER BY start_datetime ASC, created_at ASC',
+      `SELECT ${DB_COLUMNS.EVENTS.join(
+        ', ',
+      )} FROM events ORDER BY start_datetime ASC, created_at ASC`,
     )
 
     return result.map(mapDbEventToEvent)
@@ -92,7 +84,7 @@ export async function getEventById(id: number): Promise<Event | null> {
 
   try {
     const result = await db.select<DbEvent[]>(
-      'SELECT * FROM events WHERE id = ?',
+      `SELECT ${DB_COLUMNS.EVENTS.join(', ')} FROM events WHERE id = ?`,
       [id],
     )
 
@@ -114,7 +106,7 @@ export async function getEventsByDateRange(
 
   try {
     const result = await db.select<DbEvent[]>(
-      `SELECT * FROM events 
+      `SELECT ${DB_COLUMNS.EVENTS.join(', ')} FROM events 
        WHERE start_datetime >= ? AND start_datetime <= ?
        ORDER BY start_datetime ASC, created_at ASC`,
       [startDate, endDate],
@@ -167,7 +159,7 @@ export async function updateEvent(
 
   if (updateFields.length === 0) {
     const result = await db.select<DbEvent[]>(
-      'SELECT * FROM events WHERE id = ?',
+      `SELECT ${DB_COLUMNS.EVENTS.join(', ')} FROM events WHERE id = ?`,
       [id],
     )
     if (result.length === 0) {
@@ -186,7 +178,7 @@ export async function updateEvent(
     )
 
     const result = await db.select<DbEvent[]>(
-      'SELECT * FROM events WHERE id = ?',
+      `SELECT ${DB_COLUMNS.EVENTS.join(', ')} FROM events WHERE id = ?`,
       [id],
     )
 
