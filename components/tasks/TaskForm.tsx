@@ -65,26 +65,23 @@ export const TaskForm = ({
 
   const form = useForm<TaskFormValues>({
     resolver: zodResolver(taskFormSchema),
-    defaultValues: {
-      title: initialData?.title || '',
-      executionDate: initialData?.executionDate
-        ? formatDateForInput(initialData.executionDate)
-        : '',
-      estimatedTime: initialData?.estimatedTime?.toString() || '',
-    },
+    values: initialData
+      ? {
+          title: initialData.title,
+          executionDate: formatDateForInput(initialData.executionDate),
+          estimatedTime: initialData.estimatedTime?.toString() || '',
+        }
+      : {
+          title: '',
+          executionDate: '',
+          estimatedTime: '',
+        },
   })
 
   useEffect(() => {
-    if (initialData) {
-      const preset = getInitialDatePreset(initialData.executionDate)
-      setDatePreset(preset)
-      form.reset({
-        title: initialData.title,
-        executionDate: formatDateForInput(initialData.executionDate),
-        estimatedTime: initialData.estimatedTime?.toString() || '',
-      })
-    }
-  }, [initialData])
+    const preset = getInitialDatePreset(initialData?.executionDate)
+    setDatePreset(preset)
+  }, [initialData?.executionDate])
 
   const handleDatePresetChange = (value: string) => {
     setDatePreset(value)

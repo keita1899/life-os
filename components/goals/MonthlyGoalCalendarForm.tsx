@@ -51,24 +51,19 @@ export function MonthlyGoalCalendarForm({
 
   const form = useForm<MonthlyGoalFormValues>({
     resolver: zodResolver(monthlyGoalFormSchema),
-    defaultValues: {
-      title: currentMonthlyGoal?.title || '',
-    },
+    values: currentMonthlyGoal
+      ? {
+          title: currentMonthlyGoal.title,
+        }
+      : {
+          title: '',
+        },
   })
 
   useEffect(() => {
-    if (currentMonthlyGoal) {
-      form.reset({
-        title: currentMonthlyGoal.title,
-      })
-    } else {
-      form.reset({
-        title: '',
-      })
-    }
-    setTimeout(() => setIsEditing(false), 0)
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [currentMonthlyGoal, year, month])
+    const timeoutId = setTimeout(() => setIsEditing(false), 0)
+    return () => clearTimeout(timeoutId)
+  }, [currentMonthlyGoal])
 
   useEffect(() => {
     if (isEditing) {
@@ -115,7 +110,6 @@ export function MonthlyGoalCalendarForm({
 
     try {
       await deleteMonthlyGoal(currentMonthlyGoal.id)
-      form.reset({ title: '' })
       setIsEditing(false)
     } catch (err) {
       console.error('Failed to delete monthly goal:', err)
@@ -129,9 +123,6 @@ export function MonthlyGoalCalendarForm({
   }
 
   const handleCancel = () => {
-    form.reset({
-      title: currentMonthlyGoal?.title || '',
-    })
     setIsEditing(false)
   }
 

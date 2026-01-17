@@ -58,23 +58,18 @@ export function WeeklyGoalForm({
 
   const form = useForm<WeeklyGoalFormValues>({
     resolver: zodResolver(weeklyGoalFormSchema),
-    defaultValues: {
-      title: currentWeeklyGoal?.title || '',
-    },
+    values: currentWeeklyGoal
+      ? {
+          title: currentWeeklyGoal.title,
+        }
+      : {
+          title: '',
+        },
   })
 
   useEffect(() => {
-    if (currentWeeklyGoal) {
-      form.reset({
-        title: currentWeeklyGoal.title,
-      })
-    } else {
-      form.reset({
-        title: '',
-      })
-    }
-    setTimeout(() => setIsEditing(false), 0)
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+    const timeoutId = setTimeout(() => setIsEditing(false), 0)
+    return () => clearTimeout(timeoutId)
   }, [currentWeeklyGoal])
 
   useEffect(() => {
@@ -121,7 +116,6 @@ export function WeeklyGoalForm({
 
     try {
       await deleteWeeklyGoal(currentWeeklyGoal.id)
-      form.reset({ title: '' })
       setIsEditing(false)
     } catch (err) {
       console.error('Failed to delete weekly goal:', err)
@@ -135,9 +129,6 @@ export function WeeklyGoalForm({
   }
 
   const handleCancel = () => {
-    form.reset({
-      title: currentWeeklyGoal?.title || '',
-    })
     setIsEditing(false)
   }
 
