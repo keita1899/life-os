@@ -141,6 +141,9 @@ export async function getDatabase(): Promise<Database> {
 
 export function handleDbError(err: unknown, operation: string): never {
   if (err instanceof Error) {
+    if (err.message.startsWith('Failed to ')) {
+      throw err
+    }
     throw new Error(`Failed to ${operation}: ${err.message}`)
   }
   throw new Error(`Failed to ${operation}: unknown error`)
