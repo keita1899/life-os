@@ -24,12 +24,12 @@ const monthlyGoalFormSchema = z.object({
   targetDate: z.string().optional(),
   year: z
     .number()
-    .int()
+    .int('年は整数で入力してください')
     .min(1900, '年は1900〜2100の間で指定してください')
     .max(2100, '年は1900〜2100の間で指定してください'),
   month: z
     .number()
-    .int()
+    .int('月は整数で入力してください')
     .min(1, '月は1〜12の間で指定してください')
     .max(12, '月は1〜12の間で指定してください'),
 })

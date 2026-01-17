@@ -18,6 +18,7 @@ import { ErrorMessage } from '@/components/ui/error-message'
 import { useTasks } from '@/hooks/useTasks'
 import { useMode } from '@/lib/contexts/ModeContext'
 import { groupTasks } from '@/lib/tasks/grouping'
+import { getTodayDateString } from '@/lib/date/formats'
 import type { CreateTaskInput, Task, UpdateTaskInput } from '@/lib/types/task'
 
 export default function TasksPage() {
@@ -39,7 +40,8 @@ export default function TasksPage() {
     useState(false)
   const [operationError, setOperationError] = useState<string | null>(null)
 
-  const groupedTasks = useMemo(() => groupTasks(tasks), [tasks])
+  const todayStr = getTodayDateString()
+  const groupedTasks = useMemo(() => groupTasks(tasks), [tasks, todayStr])
 
   if (mode !== 'life') {
     return null

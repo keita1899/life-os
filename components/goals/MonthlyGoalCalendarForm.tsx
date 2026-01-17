@@ -100,6 +100,7 @@ export function MonthlyGoalCalendarForm({
       } else {
         await createMonthlyGoal({
           title: trimmedValue,
+          year,
           month,
         })
       }

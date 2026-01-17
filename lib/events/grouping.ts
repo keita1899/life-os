@@ -3,8 +3,6 @@ import {
   formatDateISO,
   getTodayDate,
   getTomorrowDate,
-  getTodayDateString,
-  getTomorrowDateString,
   parseDateString,
 } from '@/lib/date/formats'
 import type { Event } from '@/lib/types/event'
@@ -28,8 +26,8 @@ function getDateStrings() {
   return {
     today,
     tomorrow,
-    todayStr: getTodayDateString(),
-    tomorrowStr: getTomorrowDateString(),
+    todayStr: formatDateISO(today),
+    tomorrowStr: formatDateISO(tomorrow),
   }
 }
 

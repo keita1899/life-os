@@ -65,8 +65,14 @@ export function isSameDate(
   date1: Date | string,
   date2: Date | string,
 ): boolean {
-  const d1 = typeof date1 === 'string' ? parseDateString(date1) : date1
-  const d2 = typeof date2 === 'string' ? parseDateString(date2) : date2
+  const d1 =
+    typeof date1 === 'string'
+      ? parseDateString(date1)
+      : parseDateString(formatDateISO(date1))
+  const d2 =
+    typeof date2 === 'string'
+      ? parseDateString(date2)
+      : parseDateString(formatDateISO(date2))
   return formatDateISO(d1) === formatDateISO(d2)
 }
 
