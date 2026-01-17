@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useMemo, useEffect, useRef } from 'react'
+import { useState, useMemo, useEffect } from 'react'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import * as z from 'zod'
@@ -54,7 +54,6 @@ export function WeeklyGoalForm({
   )
 
   const [isEditing, setIsEditing] = useState(false)
-  const inputRef = useRef<HTMLInputElement>(null)
 
   const form = useForm<WeeklyGoalFormValues>({
     resolver: zodResolver(weeklyGoalFormSchema),
@@ -71,12 +70,6 @@ export function WeeklyGoalForm({
     const timeoutId = setTimeout(() => setIsEditing(false), 0)
     return () => clearTimeout(timeoutId)
   }, [currentWeeklyGoal])
-
-  useEffect(() => {
-    if (isEditing) {
-      inputRef.current?.focus()
-    }
-  }, [isEditing])
 
   const handleSubmit = async (data: WeeklyGoalFormValues) => {
     const trimmedValue = data.title.trim()
@@ -152,10 +145,8 @@ export function WeeklyGoalForm({
                   <FormControl>
                     <Input
                       {...field}
-                      ref={(e) => {
-                        field.ref(e)
-                        inputRef.current = e
-                      }}
+                      ref={field.ref}
+                      autoFocus
                       placeholder="週間目標を入力"
                       disabled={form.formState.isSubmitting}
                       className="bg-white text-stone-900 border-stone-200 dark:bg-stone-50 dark:text-stone-900 dark:border-stone-800"

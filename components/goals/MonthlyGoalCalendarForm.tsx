@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useMemo, useEffect, useRef } from 'react'
+import { useState, useMemo, useEffect } from 'react'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import * as z from 'zod'
@@ -47,7 +47,6 @@ export function MonthlyGoalCalendarForm({
     useGoals(year)
 
   const [isEditing, setIsEditing] = useState(false)
-  const inputRef = useRef<HTMLInputElement>(null)
 
   const form = useForm<MonthlyGoalFormValues>({
     resolver: zodResolver(monthlyGoalFormSchema),
@@ -64,12 +63,6 @@ export function MonthlyGoalCalendarForm({
     const timeoutId = setTimeout(() => setIsEditing(false), 0)
     return () => clearTimeout(timeoutId)
   }, [currentMonthlyGoal])
-
-  useEffect(() => {
-    if (isEditing) {
-      inputRef.current?.focus()
-    }
-  }, [isEditing])
 
   const handleSubmit = async (data: MonthlyGoalFormValues) => {
     const trimmedValue = data.title.trim()
@@ -146,10 +139,8 @@ export function MonthlyGoalCalendarForm({
                     <FormControl>
                       <Input
                         {...field}
-                        ref={(e) => {
-                          field.ref(e)
-                          inputRef.current = e
-                        }}
+                        ref={field.ref}
+                        autoFocus
                         placeholder="月間目標を入力"
                         disabled={form.formState.isSubmitting}
                         className="bg-white text-stone-900 border-stone-200 dark:bg-stone-50 dark:text-stone-900 dark:border-stone-800"
