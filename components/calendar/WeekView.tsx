@@ -10,7 +10,7 @@ import {
   getEventsForDate,
   formatEventTime,
   sortEventsByTime,
-  weekdays,
+  getWeekdays,
 } from '@/lib/calendar/utils'
 import { ChevronDown, ChevronUp } from 'lucide-react'
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover'
@@ -25,6 +25,7 @@ interface WeekViewProps {
   monthlyGoals: MonthlyGoal[]
   weeklyGoals: WeeklyGoal[]
   events?: Event[]
+  weekStartDay?: number
 }
 
 export function WeekView({
@@ -32,8 +33,13 @@ export function WeekView({
   monthlyGoals,
   weeklyGoals,
   events = [],
+  weekStartDay = 1,
 }: WeekViewProps) {
-  const weekDays = useMemo(() => getWeekDays(currentDate), [currentDate])
+  const weekDays = useMemo(
+    () => getWeekDays(currentDate, weekStartDay),
+    [currentDate, weekStartDay],
+  )
+  const weekdaysList = useMemo(() => getWeekdays(weekStartDay), [weekStartDay])
   const [expandedDates, setExpandedDates] = useState<Set<string>>(new Set())
 
   const toggleDate = (dateStr: string) => {
@@ -52,7 +58,7 @@ export function WeekView({
     <div className="w-full">
       <WeeklyGoalForm currentDate={currentDate} weeklyGoals={weeklyGoals} />
       <div className="grid grid-cols-7 gap-px border border-stone-200 bg-stone-200 dark:border-stone-800 dark:bg-stone-800">
-        {weekdays.map((day) => (
+        {weekdaysList.map((day) => (
           <div
             key={day}
             className="bg-stone-50 px-2 py-2 text-center text-sm font-medium text-stone-700 dark:bg-stone-950 dark:text-stone-300"

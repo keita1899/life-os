@@ -11,7 +11,7 @@ import {
   getEventsForDate,
   formatEventTime,
   sortEventsByTime,
-  weekdays,
+  getWeekdays,
 } from '@/lib/calendar/utils'
 import {
   Popover,
@@ -26,16 +26,18 @@ interface MonthViewProps {
   currentDate: Date
   monthlyGoals: MonthlyGoal[]
   events?: Event[]
+  weekStartDay?: number
 }
 
 export function MonthView({
   currentDate,
   monthlyGoals,
   events = [],
+  weekStartDay = 1,
 }: MonthViewProps) {
   const calendarDays = useMemo(
-    () => getCalendarDays(currentDate),
-    [currentDate],
+    () => getCalendarDays(currentDate, weekStartDay),
+    [currentDate, weekStartDay],
   )
 
   const weeks = useMemo(() => {
@@ -46,10 +48,12 @@ export function MonthView({
     return weeks
   }, [calendarDays])
 
+  const weekdaysList = useMemo(() => getWeekdays(weekStartDay), [weekStartDay])
+
   return (
     <div className="w-full">
       <div className="grid grid-cols-7 gap-px border border-stone-200 bg-stone-200 dark:border-stone-800 dark:bg-stone-800">
-        {weekdays.map((day) => (
+        {weekdaysList.map((day) => (
           <div
             key={day}
             className="bg-stone-50 px-2 py-2 text-center text-sm font-medium text-stone-700 dark:bg-stone-950 dark:text-stone-300"

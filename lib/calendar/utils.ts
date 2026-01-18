@@ -22,11 +22,19 @@ import type { Event } from '@/lib/types/event'
 
 export const weekdays = ['月', '火', '水', '木', '金', '土', '日'] as const
 
-export function getCalendarDays(date: Date): Date[] {
+export function getWeekdays(weekStartDay: number = 1): readonly string[] {
+  if (weekStartDay === 0) {
+    return ['日', '月', '火', '水', '木', '金', '土'] as const
+  }
+  return weekdays
+}
+
+export function getCalendarDays(date: Date, weekStartDay: number = 1): Date[] {
   const monthStart = startOfMonth(date)
   const monthEnd = endOfMonth(date)
-  const calendarStart = startOfWeek(monthStart, { weekStartsOn: 1 })
-  const calendarEnd = endOfWeek(monthEnd, { weekStartsOn: 1 })
+  const weekStartsOn = (weekStartDay === 0 ? 0 : 1) as 0 | 1
+  const calendarStart = startOfWeek(monthStart, { weekStartsOn })
+  const calendarEnd = endOfWeek(monthEnd, { weekStartsOn })
 
   return eachDayOfInterval({
     start: calendarStart,
@@ -94,13 +102,15 @@ export function navigateMonth(date: Date, direction: 'prev' | 'next'): Date {
   return direction === 'next' ? addMonths(date, 1) : subMonths(date, 1)
 }
 
-export function getWeekStartDate(date: Date): Date {
-  return startOfWeek(date, { weekStartsOn: 1 })
+export function getWeekStartDate(date: Date, weekStartDay: number = 1): Date {
+  const weekStartsOn = (weekStartDay === 0 ? 0 : 1) as 0 | 1
+  return startOfWeek(date, { weekStartsOn })
 }
 
-export function getWeekDays(date: Date): Date[] {
-  const weekStart = startOfWeek(date, { weekStartsOn: 1 })
-  const weekEnd = endOfWeek(date, { weekStartsOn: 1 })
+export function getWeekDays(date: Date, weekStartDay: number = 1): Date[] {
+  const weekStartsOn = (weekStartDay === 0 ? 0 : 1) as 0 | 1
+  const weekStart = startOfWeek(date, { weekStartsOn })
+  const weekEnd = endOfWeek(date, { weekStartsOn })
 
   return eachDayOfInterval({
     start: weekStart,
@@ -108,9 +118,10 @@ export function getWeekDays(date: Date): Date[] {
   })
 }
 
-export function formatWeekRange(date: Date): string {
-  const weekStart = startOfWeek(date, { weekStartsOn: 1 })
-  const weekEnd = endOfWeek(date, { weekStartsOn: 1 })
+export function formatWeekRange(date: Date, weekStartDay: number = 1): string {
+  const weekStartsOn = (weekStartDay === 0 ? 0 : 1) as 0 | 1
+  const weekStart = startOfWeek(date, { weekStartsOn })
+  const weekEnd = endOfWeek(date, { weekStartsOn })
   const startMonth = getMonth(weekStart) + 1
   const endMonth = getMonth(weekEnd) + 1
   const startYear = getYear(weekStart)
@@ -140,9 +151,11 @@ export function navigateWeek(date: Date, direction: 'prev' | 'next'): Date {
 export function getGoalsForWeek(
   goals: MonthlyGoal[],
   weekStart: Date,
+  weekStartDay: number = 1,
 ): MonthlyGoal[] {
-  const weekEnd = endOfWeek(weekStart, { weekStartsOn: 1 })
-  const weekDays = getWeekDays(weekStart)
+  const weekStartsOn = (weekStartDay === 0 ? 0 : 1) as 0 | 1
+  const weekEnd = endOfWeek(weekStart, { weekStartsOn })
+  const weekDays = getWeekDays(weekStart, weekStartDay)
 
   return goals.filter((goal) => {
     if (!goal.targetDate) {

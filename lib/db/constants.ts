@@ -46,4 +46,14 @@ export const DB_COLUMNS = {
     'created_at',
     'updated_at',
   ],
+  USER_SETTINGS: [
+    'id',
+    'birthday',
+    'default_calendar_view',
+    'week_start_day',
+    'morning_review_time',
+    'evening_review_time',
+    'created_at',
+    'updated_at',
+  ],
 } as const
