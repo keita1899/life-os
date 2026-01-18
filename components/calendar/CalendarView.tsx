@@ -33,9 +33,7 @@ interface CalendarViewProps {
 export function CalendarView({ initialDate }: CalendarViewProps) {
   const { userSettings, isLoading: isLoadingSettings } = useUserSettings()
   const [currentDate, setCurrentDate] = useState(initialDate || new Date())
-  const [viewMode, setViewMode] = useState<ViewMode>(
-    userSettings?.defaultCalendarView || 'month'
-  )
+  const [viewMode, setViewMode] = useState<ViewMode>('month')
 
   const currentYear = currentDate.getFullYear()
   const {
@@ -47,7 +45,7 @@ export function CalendarView({ initialDate }: CalendarViewProps) {
 
   const isLoading = isLoadingGoals || isLoadingEvents || isLoadingSettings
 
-  const weekStartDay = userSettings?.weekStartDay ?? 1
+  const weekStartDay = userSettings?.weekStartDay ?? 0
 
   useEffect(() => {
     if (userSettings?.defaultCalendarView) {
@@ -163,31 +161,35 @@ export function CalendarView({ initialDate }: CalendarViewProps) {
           </div>
         </CardHeader>
         <CardContent className="space-y-4">
-          {viewMode === 'month' && (
-            <MonthlyGoalCalendarForm
-              currentDate={currentDate}
-              monthlyGoals={monthlyGoals}
-            />
-          )}
           {isLoading ? (
             <div className="flex h-96 items-center justify-center text-muted-foreground">
               読み込み中...
             </div>
-          ) : viewMode === 'month' ? (
-            <MonthView
-              currentDate={currentDate}
-              monthlyGoals={monthlyGoals}
-              events={events}
-              weekStartDay={weekStartDay}
-            />
           ) : (
-            <WeekView
-              currentDate={currentDate}
-              monthlyGoals={monthlyGoals}
-              weeklyGoals={weeklyGoals}
-              events={events}
-              weekStartDay={weekStartDay}
-            />
+            <>
+              {viewMode === 'month' && (
+                <MonthlyGoalCalendarForm
+                  currentDate={currentDate}
+                  monthlyGoals={monthlyGoals}
+                />
+              )}
+              {viewMode === 'month' ? (
+                <MonthView
+                  currentDate={currentDate}
+                  monthlyGoals={monthlyGoals}
+                  events={events}
+                  weekStartDay={weekStartDay}
+                />
+              ) : (
+                <WeekView
+                  currentDate={currentDate}
+                  monthlyGoals={monthlyGoals}
+                  weeklyGoals={weeklyGoals}
+                  events={events}
+                  weekStartDay={weekStartDay}
+                />
+              )}
+            </>
           )}
         </CardContent>
       </Card>

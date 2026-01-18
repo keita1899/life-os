@@ -33,7 +33,7 @@ export function MonthView({
   currentDate,
   monthlyGoals,
   events = [],
-  weekStartDay = 1,
+  weekStartDay = 0,
 }: MonthViewProps) {
   const calendarDays = useMemo(
     () => getCalendarDays(currentDate, weekStartDay),

@@ -14,6 +14,7 @@ import {
   FormDescription,
 } from '@/components/ui/form'
 import { Input } from '@/components/ui/input'
+import { Button } from '@/components/ui/button'
 import {
   Select,
   SelectContent,
@@ -37,11 +38,13 @@ type UserSettingsFormValues = z.infer<typeof userSettingsFormSchema>
 interface UserSettingsFormProps {
   onSubmit: (data: UpdateUserSettingsInput) => Promise<void>
   initialData?: UserSettings
+  isSubmitting?: boolean
 }
 
 export const UserSettingsForm = ({
   onSubmit,
   initialData,
+  isSubmitting = false,
 }: UserSettingsFormProps) => {
   const formValues = useMemo<UserSettingsFormValues>(() => {
     const weekStartDayValue = initialData?.weekStartDay ?? 0
@@ -178,6 +181,12 @@ export const UserSettingsForm = ({
             </FormItem>
           )}
         />
+
+        <div className="flex justify-end">
+          <Button type="submit" disabled={isSubmitting || form.formState.isSubmitting}>
+            {isSubmitting || form.formState.isSubmitting ? '保存中...' : '保存'}
+          </Button>
+        </div>
       </form>
     </Form>
   )

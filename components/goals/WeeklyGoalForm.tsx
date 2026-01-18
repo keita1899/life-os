@@ -28,15 +28,17 @@ type WeeklyGoalFormValues = z.infer<typeof weeklyGoalFormSchema>
 interface WeeklyGoalFormProps {
   currentDate: Date
   weeklyGoals: WeeklyGoal[]
+  weekStartDay?: number
 }
 
 export function WeeklyGoalForm({
   currentDate,
   weeklyGoals,
+  weekStartDay = 0,
 }: WeeklyGoalFormProps) {
   const weekStartDate = useMemo(
-    () => getWeekStartDate(currentDate),
-    [currentDate],
+    () => getWeekStartDate(currentDate, weekStartDay),
+    [currentDate, weekStartDay],
   )
   const weekStartDateString = useMemo(
     () => weekStartDate.toISOString().split('T')[0],

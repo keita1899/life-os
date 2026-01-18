@@ -19,10 +19,16 @@ interface DbUserSettings {
 function mapDbUserSettingsToUserSettings(
   dbSettings: DbUserSettings,
 ): UserSettings {
+  const validatedDefaultCalendarView: 'month' | 'week' =
+    dbSettings.default_calendar_view === 'month' ||
+    dbSettings.default_calendar_view === 'week'
+      ? dbSettings.default_calendar_view
+      : 'month'
+
   return {
     id: dbSettings.id,
     birthday: dbSettings.birthday,
-    defaultCalendarView: dbSettings.default_calendar_view as 'month' | 'week',
+    defaultCalendarView: validatedDefaultCalendarView,
     weekStartDay: dbSettings.week_start_day,
     morningReviewTime: dbSettings.morning_review_time,
     eveningReviewTime: dbSettings.evening_review_time,
@@ -134,6 +140,7 @@ export async function updateUserSettings(
     return mapDbUserSettingsToUserSettings(result[0])
   } catch (err) {
     handleDbError(err, 'update user settings')
+    throw err
   }
 }
 

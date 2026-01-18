@@ -2,17 +2,14 @@
 
 import { useState } from 'react'
 import Link from 'next/link'
-import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Loading } from '@/components/ui/loading'
 import { ErrorMessage } from '@/components/ui/error-message'
 import { UserSettingsForm } from '@/components/settings/UserSettingsForm'
 import { useUserSettings } from '@/hooks/useUserSettings'
-import { useMode } from '@/lib/contexts/ModeContext'
 import type { UpdateUserSettingsInput } from '@/lib/types/user-settings'
 
 export default function SettingsPage() {
-  const { mode } = useMode()
   const {
     userSettings,
     isLoading,
@@ -76,18 +73,8 @@ export default function SettingsPage() {
             <UserSettingsForm
               onSubmit={handleSubmit}
               initialData={userSettings}
+              isSubmitting={isSaving}
             />
-            <div className="mt-6 flex justify-end">
-              <Button
-                onClick={() => {
-                  const form = document.querySelector('form')
-                  form?.requestSubmit()
-                }}
-                disabled={isSaving}
-              >
-                {isSaving ? '保存中...' : '保存'}
-              </Button>
-            </div>
           </CardContent>
         </Card>
       )}
