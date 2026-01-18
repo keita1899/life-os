@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useMemo, useEffect, useRef } from 'react'
+import { useState, useMemo, useEffect } from 'react'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import * as z from 'zod'
@@ -54,34 +54,22 @@ export function WeeklyGoalForm({
   )
 
   const [isEditing, setIsEditing] = useState(false)
-  const inputRef = useRef<HTMLInputElement>(null)
 
   const form = useForm<WeeklyGoalFormValues>({
     resolver: zodResolver(weeklyGoalFormSchema),
-    defaultValues: {
-      title: currentWeeklyGoal?.title || '',
-    },
+    values: currentWeeklyGoal
+      ? {
+          title: currentWeeklyGoal.title,
+        }
+      : {
+          title: '',
+        },
   })
 
   useEffect(() => {
-    if (currentWeeklyGoal) {
-      form.reset({
-        title: currentWeeklyGoal.title,
-      })
-      setIsEditing(false)
-    } else {
-      form.reset({
-        title: '',
-      })
-      setIsEditing(false)
-    }
+    const timeoutId = setTimeout(() => setIsEditing(false), 0)
+    return () => clearTimeout(timeoutId)
   }, [currentWeeklyGoal])
-
-  useEffect(() => {
-    if (isEditing) {
-      inputRef.current?.focus()
-    }
-  }, [isEditing])
 
   const handleSubmit = async (data: WeeklyGoalFormValues) => {
     const trimmedValue = data.title.trim()
@@ -121,7 +109,6 @@ export function WeeklyGoalForm({
 
     try {
       await deleteWeeklyGoal(currentWeeklyGoal.id)
-      form.reset({ title: '' })
       setIsEditing(false)
     } catch (err) {
       console.error('Failed to delete weekly goal:', err)
@@ -135,24 +122,30 @@ export function WeeklyGoalForm({
   }
 
   const handleCancel = () => {
-    form.reset({
-      title: currentWeeklyGoal?.title || '',
-    })
+    form.reset(
+      currentWeeklyGoal
+        ? { title: currentWeeklyGoal.title }
+        : { title: '' },
+    )
     setIsEditing(false)
   }
 
   return (
-    <div className="mb-3 space-y-2">
-      <Label className="text-sm font-medium text-stone-900 dark:text-stone-100">
-        週間目標
-      </Label>
-      {isEditing || !currentWeeklyGoal ? (
-        <Form {...form}>
-          <form
-            onSubmit={form.handleSubmit(handleSubmit)}
-            className="flex gap-2"
-          >
-            <FormField
+    <div className="mb-4">
+      <div className="flex items-center gap-3">
+        <Label
+          htmlFor="weekly-goal-title"
+          className="text-sm font-semibold text-stone-900 dark:text-stone-100 whitespace-nowrap min-w-[80px]"
+        >
+          週間目標
+        </Label>
+        {isEditing || !currentWeeklyGoal ? (
+          <Form {...form}>
+            <form
+              onSubmit={form.handleSubmit(handleSubmit)}
+              className="flex items-center gap-2 flex-1"
+            >
+              <FormField
               control={form.control}
               name="title"
               render={({ field }) => (
@@ -160,10 +153,9 @@ export function WeeklyGoalForm({
                   <FormControl>
                     <Input
                       {...field}
-                      ref={(e) => {
-                        field.ref(e)
-                        inputRef.current = e
-                      }}
+                      id="weekly-goal-title"
+                      ref={field.ref}
+                      autoFocus
                       placeholder="週間目標を入力"
                       disabled={form.formState.isSubmitting}
                       className="bg-white text-stone-900 border-stone-200 dark:bg-stone-50 dark:text-stone-900 dark:border-stone-800"
@@ -196,15 +188,23 @@ export function WeeklyGoalForm({
                 キャンセル
               </Button>
             )}
-          </form>
-        </Form>
-      ) : (
-        <div
-          onDoubleClick={handleDoubleClick}
-          className="group relative flex h-10 w-full cursor-pointer items-center rounded-md bg-black px-3 py-2 text-sm font-bold text-white dark:bg-black dark:text-white"
-        >
-          {currentWeeklyGoal.title}
-          <div className="absolute right-2 flex gap-1 opacity-0 transition-opacity group-hover:opacity-100">
+            </form>
+          </Form>
+        ) : (
+          <div
+            role="button"
+            tabIndex={0}
+            onDoubleClick={handleDoubleClick}
+            onKeyDown={(e) => {
+              if (e.key === 'Enter' || e.key === ' ') {
+                e.preventDefault()
+                handleDoubleClick()
+              }
+            }}
+            className="group relative flex h-10 flex-1 cursor-pointer items-center gap-2 rounded-lg border border-purple-200 bg-purple-50 px-3 py-2 text-sm font-medium text-purple-900 transition-colors hover:bg-purple-100 dark:border-purple-800 dark:bg-purple-950/50 dark:text-purple-100 dark:hover:bg-purple-900/50"
+          >
+            <span className="flex-1 truncate">{currentWeeklyGoal.title}</span>
+          <div className="absolute right-2 flex gap-1 opacity-0 transition-opacity group-hover:opacity-100 group-focus-within:opacity-100">
             <Button
               variant="ghost"
               size="icon"
@@ -212,14 +212,15 @@ export function WeeklyGoalForm({
                 e.stopPropagation()
                 handleDelete()
               }}
-              className="h-6 w-6 text-white hover:bg-white/20"
+              className="h-6 w-6 text-purple-600 hover:bg-purple-200 dark:text-purple-400 dark:hover:bg-purple-800"
             >
               <Trash2 className="h-3 w-3" />
               <span className="sr-only">削除</span>
             </Button>
           </div>
-        </div>
-      )}
+          </div>
+        )}
+      </div>
     </div>
   )
 }

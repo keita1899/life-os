@@ -22,6 +22,13 @@ import {
   SelectValue,
 } from '@/components/ui/select'
 import type { Task, CreateTaskInput } from '@/lib/types/task'
+import {
+  getTodayDateString,
+  getTomorrowDateString,
+  formatDateForInput,
+  getTodayDate,
+  getTomorrowDate,
+} from '@/lib/date/formats'
 
 const taskFormSchema = z.object({
   title: z.string().min(1, 'タイトルは必須です'),
@@ -47,72 +54,44 @@ export const TaskForm = ({
   const isEditMode = !!initialData
   const [datePreset, setDatePreset] = useState<string>('none')
 
-  const getTodayDate = () => {
-    const today = new Date()
-    const year = today.getFullYear()
-    const month = String(today.getMonth() + 1).padStart(2, '0')
-    const day = String(today.getDate()).padStart(2, '0')
-    return `${year}-${month}-${day}`
-  }
-
-  const getTomorrowDate = () => {
-    const tomorrow = new Date()
-    tomorrow.setDate(tomorrow.getDate() + 1)
-    const year = tomorrow.getFullYear()
-    const month = String(tomorrow.getMonth() + 1).padStart(2, '0')
-    const day = String(tomorrow.getDate()).padStart(2, '0')
-    return `${year}-${month}-${day}`
-  }
-
   const getInitialDatePreset = (executionDate: string | null | undefined) => {
     if (!executionDate) return 'none'
-    const today = getTodayDate()
-    const tomorrow = getTomorrowDate()
-    if (executionDate === today) return 'today'
-    if (executionDate === tomorrow) return 'tomorrow'
+    const dateOnly = formatDateForInput(executionDate)
+    const today = getTodayDateString()
+    const tomorrow = getTomorrowDateString()
+    if (dateOnly === today) return 'today'
+    if (dateOnly === tomorrow) return 'tomorrow'
     return 'custom'
-  }
-
-  const formatDateForInput = (dateStr: string | null | undefined): string => {
-    if (!dateStr) return ''
-    const date = new Date(dateStr + 'T00:00:00')
-    const year = date.getFullYear()
-    const month = String(date.getMonth() + 1).padStart(2, '0')
-    const day = String(date.getDate()).padStart(2, '0')
-    return `${year}-${month}-${day}`
   }
 
   const form = useForm<TaskFormValues>({
     resolver: zodResolver(taskFormSchema),
-    defaultValues: {
-      title: initialData?.title || '',
-      executionDate: initialData?.executionDate
-        ? formatDateForInput(initialData.executionDate)
-        : '',
-      estimatedTime: initialData?.estimatedTime?.toString() || '',
-    },
+    values: initialData
+      ? {
+          title: initialData.title,
+          executionDate: formatDateForInput(initialData.executionDate),
+          estimatedTime: initialData.estimatedTime?.toString() || '',
+        }
+      : {
+          title: '',
+          executionDate: '',
+          estimatedTime: '',
+        },
   })
 
   useEffect(() => {
-    if (initialData) {
-      const preset = getInitialDatePreset(initialData.executionDate)
-      setDatePreset(preset)
-      form.reset({
-        title: initialData.title,
-        executionDate: formatDateForInput(initialData.executionDate),
-        estimatedTime: initialData.estimatedTime?.toString() || '',
-      })
-    }
-  }, [initialData])
+    const preset = getInitialDatePreset(initialData?.executionDate)
+    setDatePreset(preset)
+  }, [initialData?.executionDate])
 
   const handleDatePresetChange = (value: string) => {
     setDatePreset(value)
     if (value === 'none') {
       form.setValue('executionDate', '')
     } else if (value === 'today') {
-      form.setValue('executionDate', getTodayDate())
+      form.setValue('executionDate', getTodayDateString())
     } else if (value === 'tomorrow') {
-      form.setValue('executionDate', getTomorrowDate())
+      form.setValue('executionDate', getTomorrowDateString())
     }
   }
 

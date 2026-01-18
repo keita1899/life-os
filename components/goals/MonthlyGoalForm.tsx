@@ -1,6 +1,5 @@
 'use client'
 
-import { useEffect } from 'react'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import * as z from 'zod'
@@ -13,21 +12,25 @@ import {
   FormMessage,
 } from '@/components/ui/form'
 import { Input } from '@/components/ui/input'
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select'
 import { Button } from '@/components/ui/button'
-import type { MonthlyGoal, CreateMonthlyGoalInput } from '@/lib/types/monthly-goal'
+import type {
+  MonthlyGoal,
+  CreateMonthlyGoalInput,
+} from '@/lib/types/monthly-goal'
 
 const monthlyGoalFormSchema = z.object({
   title: z.string().min(1, 'タイトルは必須です'),
   targetDate: z.string().optional(),
-  year: z.number().int().min(1900).max(2100, '年は1900〜2100の間で指定してください'),
-  month: z.number().int().min(1).max(12, '月は1〜12の間で指定してください'),
+  year: z
+    .number()
+    .int('年は整数で入力してください')
+    .min(1900, '年は1900〜2100の間で指定してください')
+    .max(2100, '年は1900〜2100の間で指定してください'),
+  month: z
+    .number()
+    .int('月は整数で入力してください')
+    .min(1, '月は1〜12の間で指定してください')
+    .max(12, '月は1〜12の間で指定してください'),
 })
 
 type MonthlyGoalFormValues = z.infer<typeof monthlyGoalFormSchema>
@@ -51,24 +54,20 @@ export const MonthlyGoalForm = ({
 
   const form = useForm<MonthlyGoalFormValues>({
     resolver: zodResolver(monthlyGoalFormSchema),
-    defaultValues: {
-      title: initialData?.title || '',
-      targetDate: initialData?.targetDate ?? '',
-      year: initialData?.year ?? selectedYear ?? new Date().getFullYear(),
-      month: initialData?.month ?? new Date().getMonth() + 1,
-    },
+    values: initialData
+      ? {
+          title: initialData.title,
+          targetDate: initialData.targetDate ?? '',
+          year: initialData.year,
+          month: initialData.month,
+        }
+      : {
+          title: '',
+          targetDate: '',
+          year: selectedYear ?? new Date().getFullYear(),
+          month: new Date().getMonth() + 1,
+        },
   })
-
-  useEffect(() => {
-    if (initialData) {
-      form.reset({
-        title: initialData.title,
-        targetDate: initialData.targetDate ?? '',
-        year: initialData.year,
-        month: initialData.month,
-      })
-    }
-  }, [initialData])
 
   const handleSubmit = async (data: MonthlyGoalFormValues) => {
     await onSubmit({
@@ -78,24 +77,14 @@ export const MonthlyGoalForm = ({
       month: data.month,
     })
     if (!isEditMode) {
-      form.reset()
+      form.reset({
+        title: '',
+        targetDate: '',
+        year: selectedYear ?? new Date().getFullYear(),
+        month: new Date().getMonth() + 1,
+      })
     }
   }
-
-  const months = [
-    { value: 1, label: '1月' },
-    { value: 2, label: '2月' },
-    { value: 3, label: '3月' },
-    { value: 4, label: '4月' },
-    { value: 5, label: '5月' },
-    { value: 6, label: '6月' },
-    { value: 7, label: '7月' },
-    { value: 8, label: '8月' },
-    { value: 9, label: '9月' },
-    { value: 10, label: '10月' },
-    { value: 11, label: '11月' },
-    { value: 12, label: '12月' },
-  ]
 
   return (
     <Form {...form}>
@@ -125,7 +114,10 @@ export const MonthlyGoalForm = ({
                   type="number"
                   placeholder="年を入力"
                   {...field}
-                  onChange={(e) => field.onChange(Number(e.target.value))}
+                  onChange={(e) => {
+                    const v = e.target.value
+                    field.onChange(v === '' ? undefined : Number(v))
+                  }}
                   value={field.value ?? ''}
                 />
               </FormControl>
@@ -140,23 +132,18 @@ export const MonthlyGoalForm = ({
           render={({ field }) => (
             <FormItem>
               <FormLabel>月</FormLabel>
-              <Select
-                onValueChange={(value) => field.onChange(Number(value))}
-                value={field.value?.toString()}
-              >
-                <FormControl>
-                  <SelectTrigger>
-                    <SelectValue placeholder="月を選択" />
-                  </SelectTrigger>
-                </FormControl>
-                <SelectContent>
-                  {months.map((month) => (
-                    <SelectItem key={month.value} value={month.value.toString()}>
-                      {month.label}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+              <FormControl>
+                <Input
+                  type="number"
+                  placeholder="月を入力"
+                  {...field}
+                  onChange={(e) => {
+                    const v = e.target.value
+                    field.onChange(v === '' ? undefined : Number(v))
+                  }}
+                  value={field.value ?? ''}
+                />
+              </FormControl>
               <FormMessage />
             </FormItem>
           )}
