@@ -56,10 +56,11 @@ export const TaskForm = ({
 
   const getInitialDatePreset = (executionDate: string | null | undefined) => {
     if (!executionDate) return 'none'
+    const dateOnly = formatDateForInput(executionDate)
     const today = getTodayDateString()
     const tomorrow = getTomorrowDateString()
-    if (executionDate === today) return 'today'
-    if (executionDate === tomorrow) return 'tomorrow'
+    if (dateOnly === today) return 'today'
+    if (dateOnly === tomorrow) return 'tomorrow'
     return 'custom'
   }
 

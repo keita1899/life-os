@@ -116,13 +116,21 @@ export function MonthlyGoalCalendarForm({
   }
 
   const handleCancel = () => {
+    form.reset(
+      currentMonthlyGoal
+        ? { title: currentMonthlyGoal.title }
+        : { title: '' },
+    )
     setIsEditing(false)
   }
 
   return (
     <div className="mb-4">
       <div className="flex items-center gap-3">
-        <Label className="text-sm font-semibold text-stone-900 dark:text-stone-100 whitespace-nowrap min-w-[80px]">
+        <Label
+          htmlFor="monthly-goal-title"
+          className="text-sm font-semibold text-stone-900 dark:text-stone-100 whitespace-nowrap min-w-[80px]"
+        >
           月間目標
         </Label>
         {isEditing || !currentMonthlyGoal ? (
@@ -139,6 +147,7 @@ export function MonthlyGoalCalendarForm({
                     <FormControl>
                       <Input
                         {...field}
+                        id="monthly-goal-title"
                         ref={field.ref}
                         autoFocus
                         placeholder="月間目標を入力"
@@ -177,11 +186,19 @@ export function MonthlyGoalCalendarForm({
           </Form>
         ) : (
           <div
+            role="button"
+            tabIndex={0}
             onDoubleClick={handleDoubleClick}
+            onKeyDown={(e) => {
+              if (e.key === 'Enter' || e.key === ' ') {
+                e.preventDefault()
+                handleDoubleClick()
+              }
+            }}
             className="group relative flex h-10 flex-1 cursor-pointer items-center gap-2 rounded-lg border border-blue-200 bg-blue-50 px-3 py-2 text-sm font-medium text-blue-900 transition-colors hover:bg-blue-100 dark:border-blue-800 dark:bg-blue-950/50 dark:text-blue-100 dark:hover:bg-blue-900/50"
           >
             <span className="flex-1 truncate">{currentMonthlyGoal.title}</span>
-            <div className="absolute right-2 flex gap-1 opacity-0 transition-opacity group-hover:opacity-100">
+            <div className="absolute right-2 flex gap-1 opacity-0 transition-opacity group-hover:opacity-100 group-focus-within:opacity-100">
               <Button
                 variant="ghost"
                 size="icon"
