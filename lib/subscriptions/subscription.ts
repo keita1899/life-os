@@ -69,7 +69,7 @@ export async function createSubscription(
   const db = await getDatabase()
 
   try {
-    await db.execute(
+    const insertResult = await db.execute(
       `INSERT INTO subscriptions (name, monthly_price, billing_cycle, next_billing_date, start_date, cancellation_url, active)
        VALUES (?, ?, ?, ?, ?, ?, ?)`,
       [
@@ -83,11 +83,22 @@ export async function createSubscription(
       ],
     )
 
-    const lastInsertIdResult = await db.select<
-      { 'last_insert_rowid()': number }[]
-    >('SELECT last_insert_rowid() as "last_insert_rowid()"')
+    let insertedId: number | undefined
 
-    const insertedId = lastInsertIdResult[0]?.['last_insert_rowid()']
+    if (
+      insertResult &&
+      typeof insertResult === 'object' &&
+      'lastInsertId' in insertResult
+    ) {
+      insertedId = (insertResult as { lastInsertId: number }).lastInsertId
+    }
+
+    if (!insertedId) {
+      const lastInsertIdResult = await db.select<
+        { last_insert_rowid: number }[]
+      >('SELECT last_insert_rowid() as last_insert_rowid')
+      insertedId = lastInsertIdResult[0]?.last_insert_rowid
+    }
 
     if (!insertedId) {
       throw new Error('Failed to get inserted subscription id')
