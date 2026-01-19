@@ -84,11 +84,18 @@ export const WishlistItemForm = ({
   }
 
   const handleCategoryCreate = async (input: CreateWishlistCategoryInput) => {
-    const newCategory = await createWishlistCategory(input)
-    const categoryIdStr = newCategory.id.toString()
-    form.setValue('categoryId', categoryIdStr)
-    setSelectedCategoryId(categoryIdStr)
-    setIsCategoryDialogOpen(false)
+    try {
+      const newCategory = await createWishlistCategory(input)
+      const categoryIdStr = newCategory.id.toString()
+      form.setValue('categoryId', categoryIdStr)
+      setSelectedCategoryId(categoryIdStr)
+      setIsCategoryDialogOpen(false)
+    } catch (err) {
+      form.setError('categoryId', {
+        type: 'server',
+        message: err instanceof Error ? err.message : 'カテゴリーの作成に失敗しました',
+      })
+    }
   }
 
   const handleSubmit = async (data: WishlistItemFormValues) => {

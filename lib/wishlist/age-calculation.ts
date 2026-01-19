@@ -1,4 +1,4 @@
-import { parseISO, differenceInYears } from 'date-fns'
+import { parseISO, differenceInYears, isValid } from 'date-fns'
 
 export function calculateAgeAtYear(
   birthdate: string | null,
@@ -8,8 +8,12 @@ export function calculateAgeAtYear(
 
   try {
     const birth = parseISO(birthdate)
+    if (!isValid(birth)) {
+      return null
+    }
     const targetDate = new Date(targetYear, 0, 1)
-    return differenceInYears(targetDate, birth)
+    const age = differenceInYears(targetDate, birth)
+    return Number.isNaN(age) ? null : age
   } catch {
     return null
   }
