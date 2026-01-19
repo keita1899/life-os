@@ -19,14 +19,26 @@ interface DbSubscription {
   updated_at: string
 }
 
+function isValidBillingCycle(
+  value: string,
+): value is Subscription['billingCycle'] {
+  return ['monthly', 'yearly', 'quarterly', 'other'].includes(value)
+}
+
 function mapDbSubscriptionToSubscription(
   dbSubscription: DbSubscription,
 ): Subscription {
+  if (!isValidBillingCycle(dbSubscription.billing_cycle)) {
+    throw new Error(
+      `Invalid billing cycle: ${dbSubscription.billing_cycle} (subscription id: ${dbSubscription.id})`,
+    )
+  }
+
   return {
     id: dbSubscription.id,
     name: dbSubscription.name,
     monthlyPrice: dbSubscription.monthly_price,
-    billingCycle: dbSubscription.billing_cycle as Subscription['billingCycle'],
+    billingCycle: dbSubscription.billing_cycle,
     nextBillingDate: dbSubscription.next_billing_date,
     startDate: dbSubscription.start_date,
     cancellationUrl: dbSubscription.cancellation_url,
@@ -71,16 +83,27 @@ export async function createSubscription(
       ],
     )
 
+    const lastInsertIdResult = await db.select<
+      { 'last_insert_rowid()': number }[]
+    >('SELECT last_insert_rowid() as "last_insert_rowid()"')
+
+    const insertedId = lastInsertIdResult[0]?.['last_insert_rowid()']
+
+    if (!insertedId) {
+      throw new Error('Failed to get inserted subscription id')
+    }
+
     const result = await db.select<DbSubscription[]>(
       `SELECT ${DB_COLUMNS.SUBSCRIPTIONS.join(', ')} FROM subscriptions
-       WHERE name = ? AND next_billing_date = ?
-       ORDER BY created_at DESC, id DESC
+       WHERE id = ?
        LIMIT 1`,
-      [input.name, input.nextBillingDate],
+      [insertedId],
     )
 
     if (result.length === 0) {
-      throw new Error('Failed to create subscription: record not found after insert')
+      throw new Error(
+        'Failed to create subscription: record not found after insert',
+      )
     }
 
     return mapDbSubscriptionToSubscription(result[0])
