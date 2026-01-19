@@ -1,7 +1,7 @@
 'use client'
 
 import Link from 'next/link'
-import { Target, CheckSquare, Calendar } from 'lucide-react'
+import { Target, CheckSquare, Calendar, Heart } from 'lucide-react'
 import { ModeSwitch } from '@/components/mode/ModeSwitch'
 import { CalendarView } from '@/components/calendar/CalendarView'
 import { SettingsIcon } from '@/components/settings/SettingsIcon'
@@ -83,6 +83,24 @@ export default function Home() {
                       <div className="font-semibold">予定管理</div>
                       <div className="text-sm text-muted-foreground">
                         予定を作成して管理
+                      </div>
+                    </div>
+                  </Link>
+                  <Link
+                    href="/wishlist"
+                    className={cn(
+                      'flex items-center gap-3 rounded-lg border border-border bg-card p-4 transition-colors',
+                      'hover:bg-accent hover:text-accent-foreground',
+                      'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring',
+                    )}
+                  >
+                    <div className="flex h-10 w-10 items-center justify-center rounded-md bg-orange-100 dark:bg-orange-900/30">
+                      <Heart className="h-5 w-5 text-orange-600 dark:text-orange-400" />
+                    </div>
+                    <div className="flex-1">
+                      <div className="font-semibold">やりたいことリスト</div>
+                      <div className="text-sm text-muted-foreground">
+                        やりたいことをリスト化
                       </div>
                     </div>
                   </Link>

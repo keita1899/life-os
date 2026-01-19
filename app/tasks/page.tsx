@@ -7,6 +7,7 @@ import { Button } from '@/components/ui/button'
 import {
   Accordion,
   AccordionContent,
+  AccordionHeader,
   AccordionItem,
   AccordionTrigger,
 } from '@/components/ui/accordion'
@@ -170,8 +171,8 @@ export default function TasksPage() {
         <Accordion type="multiple" className="w-full">
           {groupedTasks.map((group) => (
             <AccordionItem key={group.key} value={group.key}>
-              <AccordionTrigger className="hover:no-underline">
-                <div className="flex w-full items-center justify-between pr-4">
+              <AccordionHeader>
+                <AccordionTrigger className="hover:no-underline">
                   <div className="flex items-center gap-2">
                     <h2 className="text-lg font-semibold text-stone-900 dark:text-stone-100">
                       {group.title}
@@ -180,30 +181,31 @@ export default function TasksPage() {
                       ({group.tasks.length})
                     </span>
                   </div>
+                </AccordionTrigger>
+              </AccordionHeader>
+              <AccordionContent>
+                <div className="space-y-4">
+                  <TaskList
+                    tasks={group.tasks}
+                    onEdit={handleEditTask}
+                    onDelete={handleDeleteClick}
+                    onToggleCompletion={handleToggleCompletion}
+                  />
                   {group.key === 'completed' && group.tasks.length > 0 && (
-                    <Button
-                      type="button"
-                      variant="ghost"
-                      size="sm"
-                      className="h-8 w-8 p-0 text-destructive hover:text-destructive hover:bg-destructive/10"
-                      onClick={(e) => {
-                        e.stopPropagation()
-                        handleDeleteCompletedTasksClick()
-                      }}
-                    >
-                      <Trash2 className="h-4 w-4" />
-                      <span className="sr-only">完了済みタスクを一括削除</span>
-                    </Button>
+                    <div className="flex justify-end">
+                      <Button
+                        type="button"
+                        variant="outline"
+                        size="sm"
+                        className="text-destructive hover:text-destructive hover:bg-destructive/10"
+                        onClick={handleDeleteCompletedTasksClick}
+                      >
+                        <Trash2 className="mr-2 h-4 w-4" />
+                        完了済みを一括削除
+                      </Button>
+                    </div>
                   )}
                 </div>
-              </AccordionTrigger>
-              <AccordionContent>
-                <TaskList
-                  tasks={group.tasks}
-                  onEdit={handleEditTask}
-                  onDelete={handleDeleteClick}
-                  onToggleCompletion={handleToggleCompletion}
-                />
               </AccordionContent>
             </AccordionItem>
           ))}
