@@ -105,6 +105,21 @@ async function initializeAllTables(): Promise<void> {
       FOREIGN KEY (category_id) REFERENCES wishlist_categories(id) ON DELETE SET NULL
     )
   `)
+
+  await db.execute(`
+    CREATE TABLE IF NOT EXISTS subscriptions (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      name TEXT NOT NULL,
+      monthly_price INTEGER NOT NULL,
+      billing_cycle TEXT NOT NULL,
+      next_billing_date DATE NOT NULL,
+      start_date DATE,
+      cancellation_url TEXT,
+      active INTEGER NOT NULL DEFAULT 1,
+      created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+      updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
+    )
+  `)
 }
 
 export async function getDatabase(): Promise<Database> {

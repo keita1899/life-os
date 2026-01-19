@@ -1,7 +1,7 @@
 'use client'
 
 import Link from 'next/link'
-import { Target, CheckSquare, Calendar, Heart } from 'lucide-react'
+import { Target, CheckSquare, Calendar, Heart, CreditCard } from 'lucide-react'
 import { ModeSwitch } from '@/components/mode/ModeSwitch'
 import { CalendarView } from '@/components/calendar/CalendarView'
 import { SettingsIcon } from '@/components/settings/SettingsIcon'
@@ -101,6 +101,24 @@ export default function Home() {
                       <div className="font-semibold">やりたいことリスト</div>
                       <div className="text-sm text-muted-foreground">
                         やりたいことをリスト化
+                      </div>
+                    </div>
+                  </Link>
+                  <Link
+                    href="/subscriptions"
+                    className={cn(
+                      'flex items-center gap-3 rounded-lg border border-border bg-card p-4 transition-colors',
+                      'hover:bg-accent hover:text-accent-foreground',
+                      'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring',
+                    )}
+                  >
+                    <div className="flex h-10 w-10 items-center justify-center rounded-md bg-green-100 dark:bg-green-900/30">
+                      <CreditCard className="h-5 w-5 text-green-600 dark:text-green-400" />
+                    </div>
+                    <div className="flex-1">
+                      <div className="font-semibold">サブスク管理</div>
+                      <div className="text-sm text-muted-foreground">
+                        サブスクリプションを管理
                       </div>
                     </div>
                   </Link>

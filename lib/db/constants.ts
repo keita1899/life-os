@@ -73,4 +73,16 @@ export const DB_COLUMNS = {
     'created_at',
     'updated_at',
   ],
+  SUBSCRIPTIONS: [
+    'id',
+    'name',
+    'monthly_price',
+    'billing_cycle',
+    'next_billing_date',
+    'start_date',
+    'cancellation_url',
+    'active',
+    'created_at',
+    'updated_at',
+  ],
 } as const
