@@ -168,15 +168,19 @@ export async function updateSubscription(
   }
 
   if (updateFields.length === 0) {
-    const result = await db.select<DbSubscription[]>(
-      `SELECT ${DB_COLUMNS.SUBSCRIPTIONS.join(', ')} FROM subscriptions
-       WHERE id = ?`,
-      [id],
-    )
-    if (result.length === 0) {
-      throw new Error('Subscription not found')
+    try {
+      const result = await db.select<DbSubscription[]>(
+        `SELECT ${DB_COLUMNS.SUBSCRIPTIONS.join(', ')} FROM subscriptions
+         WHERE id = ?`,
+        [id],
+      )
+      if (result.length === 0) {
+        throw new Error('Subscription not found')
+      }
+      return mapDbSubscriptionToSubscription(result[0])
+    } catch (err) {
+      handleDbError(err, 'fetch subscription')
     }
-    return mapDbSubscriptionToSubscription(result[0])
   }
 
   updateFields.push('updated_at = CURRENT_TIMESTAMP')
