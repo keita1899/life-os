@@ -81,6 +81,15 @@ async function initializeAllTables(): Promise<void> {
       updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
     )
   `)
+
+  await db.execute(`
+    CREATE TABLE IF NOT EXISTS wishlist_categories (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      name TEXT NOT NULL UNIQUE,
+      created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+      updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
+    )
+  `)
 }
 
 export async function getDatabase(): Promise<Database> {
