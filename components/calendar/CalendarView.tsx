@@ -16,6 +16,7 @@ import { WeekView } from './WeekView'
 import { MonthlyGoalCalendarForm } from '@/components/goals/MonthlyGoalCalendarForm'
 import { useGoals } from '@/hooks/useGoals'
 import { useEvents } from '@/hooks/useEvents'
+import { useUserSettings } from '@/hooks/useUserSettings'
 import {
   formatMonthYear,
   formatWeekRange,
@@ -30,6 +31,7 @@ interface CalendarViewProps {
 }
 
 export function CalendarView({ initialDate }: CalendarViewProps) {
+  const { userSettings, isLoading: isLoadingSettings } = useUserSettings()
   const [currentDate, setCurrentDate] = useState(initialDate || new Date())
   const [viewMode, setViewMode] = useState<ViewMode>('month')
 
@@ -41,7 +43,15 @@ export function CalendarView({ initialDate }: CalendarViewProps) {
   } = useGoals(currentYear)
   const { events, isLoading: isLoadingEvents } = useEvents()
 
-  const isLoading = isLoadingGoals || isLoadingEvents
+  const isLoading = isLoadingGoals || isLoadingEvents || isLoadingSettings
+
+  const weekStartDay = userSettings?.weekStartDay ?? 0
+
+  useEffect(() => {
+    if (userSettings?.defaultCalendarView) {
+      setViewMode(userSettings.defaultCalendarView)
+    }
+  }, [userSettings?.defaultCalendarView])
 
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
@@ -90,7 +100,7 @@ export function CalendarView({ initialDate }: CalendarViewProps) {
   const displayTitle =
     viewMode === 'month'
       ? formatMonthYear(currentDate)
-      : formatWeekRange(currentDate)
+      : formatWeekRange(currentDate, weekStartDay)
 
   return (
     <div className="w-full space-y-4">
@@ -151,29 +161,35 @@ export function CalendarView({ initialDate }: CalendarViewProps) {
           </div>
         </CardHeader>
         <CardContent className="space-y-4">
-          {viewMode === 'month' && (
-            <MonthlyGoalCalendarForm
-              currentDate={currentDate}
-              monthlyGoals={monthlyGoals}
-            />
-          )}
           {isLoading ? (
             <div className="flex h-96 items-center justify-center text-muted-foreground">
               読み込み中...
             </div>
-          ) : viewMode === 'month' ? (
-            <MonthView
-              currentDate={currentDate}
-              monthlyGoals={monthlyGoals}
-              events={events}
-            />
           ) : (
-            <WeekView
-              currentDate={currentDate}
-              monthlyGoals={monthlyGoals}
-              weeklyGoals={weeklyGoals}
-              events={events}
-            />
+            <>
+              {viewMode === 'month' && (
+                <MonthlyGoalCalendarForm
+                  currentDate={currentDate}
+                  monthlyGoals={monthlyGoals}
+                />
+              )}
+              {viewMode === 'month' ? (
+                <MonthView
+                  currentDate={currentDate}
+                  monthlyGoals={monthlyGoals}
+                  events={events}
+                  weekStartDay={weekStartDay}
+                />
+              ) : (
+                <WeekView
+                  currentDate={currentDate}
+                  monthlyGoals={monthlyGoals}
+                  weeklyGoals={weeklyGoals}
+                  events={events}
+                  weekStartDay={weekStartDay}
+                />
+              )}
+            </>
           )}
         </CardContent>
       </Card>

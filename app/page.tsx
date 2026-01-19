@@ -4,6 +4,7 @@ import Link from 'next/link'
 import { Target, CheckSquare, Calendar } from 'lucide-react'
 import { ModeSwitch } from '@/components/mode/ModeSwitch'
 import { CalendarView } from '@/components/calendar/CalendarView'
+import { SettingsIcon } from '@/components/settings/SettingsIcon'
 import { useMode } from '@/lib/contexts/ModeContext'
 import { cn } from '@/lib/utils'
 
@@ -18,7 +19,10 @@ export default function Home() {
             <h1 className="text-3xl font-semibold text-black dark:text-zinc-50">
               Life OS
             </h1>
-            <ModeSwitch />
+            <div className="flex items-center gap-2">
+              <SettingsIcon />
+              <ModeSwitch />
+            </div>
           </div>
 
           {mode === 'life' && (
