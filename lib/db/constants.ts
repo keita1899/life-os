@@ -62,4 +62,15 @@ export const DB_COLUMNS = {
     'created_at',
     'updated_at',
   ],
+  WISHLIST_ITEMS: [
+    'id',
+    'title',
+    'category_id',
+    'target_year',
+    'achieved_date',
+    'completed',
+    'order',
+    'created_at',
+    'updated_at',
+  ],
 } as const
