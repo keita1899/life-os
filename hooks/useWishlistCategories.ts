@@ -26,9 +26,10 @@ export function useWishlistCategories() {
 
   const handleCreateWishlistCategory = async (
     input: CreateWishlistCategoryInput,
-  ) => {
-    await createWishlistCategory(input)
+  ): Promise<WishlistCategory> => {
+    const newCategory = await createWishlistCategory(input)
     await mutate(wishlistCategoriesKey)
+    return newCategory
   }
 
   const handleUpdateWishlistCategory = async (
@@ -36,12 +37,18 @@ export function useWishlistCategories() {
     input: UpdateWishlistCategoryInput,
   ) => {
     await updateWishlistCategory(id, input)
-    await mutate(wishlistCategoriesKey)
+    await Promise.all([
+      mutate(wishlistCategoriesKey),
+      mutate('wishlist'),
+    ])
   }
 
   const handleDeleteWishlistCategory = async (id: number) => {
     await deleteWishlistCategory(id)
-    await mutate(wishlistCategoriesKey)
+    await Promise.all([
+      mutate(wishlistCategoriesKey),
+      mutate('wishlist'),
+    ])
   }
 
   return {

@@ -24,6 +24,21 @@ function mapDbWishlistCategoryToWishlistCategory(
   }
 }
 
+function isUniqueConstraintError(err: unknown): boolean {
+  const errorStr = String(err).toLowerCase()
+  const errorMessage =
+    err instanceof Error ? err.message.toLowerCase() : errorStr
+
+  return (
+    errorMessage.includes('unique') ||
+    errorMessage.includes('constraint') ||
+    errorStr.includes('unique') ||
+    errorStr.includes('constraint') ||
+    (err instanceof Error &&
+      (err.message.includes('19') || err.message.includes('2067')))
+  )
+}
+
 export async function getAllWishlistCategories(): Promise<WishlistCategory[]> {
   const db = await getDatabase()
 
@@ -65,6 +80,10 @@ export async function createWishlistCategory(
 
     return mapDbWishlistCategoryToWishlistCategory(result[0])
   } catch (err) {
+    if (isUniqueConstraintError(err)) {
+      throw new Error(`「${input.name}」という名前のカテゴリーは既に存在します`)
+    }
+
     handleDbError(err, 'create wishlist category')
   }
 }
@@ -116,6 +135,11 @@ export async function updateWishlistCategory(
 
     return mapDbWishlistCategoryToWishlistCategory(result[0])
   } catch (err) {
+    if (isUniqueConstraintError(err)) {
+      const categoryName = input.name || ''
+      throw new Error(`「${categoryName}」という名前のカテゴリーは既に存在します`)
+    }
+
     handleDbError(err, 'update wishlist category')
   }
 }
