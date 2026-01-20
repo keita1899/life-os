@@ -14,11 +14,13 @@ import { useGoals } from '@/hooks/useGoals'
 import { useTasks } from '@/hooks/useTasks'
 import { useEvents } from '@/hooks/useEvents'
 import { useUserSettings } from '@/hooks/useUserSettings'
+import { useDailyLog } from '@/hooks/useDailyLog'
 import { Loading } from '@/components/ui/loading'
 import { ErrorMessage } from '@/components/ui/error-message'
 import { LogGoalsSection } from '@/components/logs/LogGoalsSection'
 import { LogTasksSection } from '@/components/logs/LogTasksSection'
 import { LogEventsSection } from '@/components/logs/LogEventsSection'
+import { LogDiarySection } from '@/components/logs/LogDiarySection'
 import { TaskDialog } from '@/components/tasks/TaskDialog'
 import { DeleteConfirmDialog } from '@/components/ui/delete-confirm-dialog'
 import {
@@ -29,6 +31,7 @@ import {
   getEventsForDateSorted,
 } from '@/lib/logs/utils'
 import type { Task, CreateTaskInput, UpdateTaskInput } from '@/lib/types/task'
+import type { UpdateDailyLogInput } from '@/lib/types/daily-log'
 
 function LogPageContent() {
   const { mode } = useMode()
@@ -80,6 +83,12 @@ function LogPageContent() {
     error: eventsError,
   } = useEvents()
   const { userSettings } = useUserSettings()
+  const {
+    dailyLog,
+    isLoading: isLoadingDailyLog,
+    createDailyLog,
+    updateDailyLog,
+  } = useDailyLog(date)
 
   const weekStartDay = userSettings?.weekStartDay ?? 1
 
@@ -166,11 +175,27 @@ function LogPageContent() {
     }
   }
 
+  const handleUpdateDiary = async (input: UpdateDailyLogInput) => {
+    try {
+      setOperationError(null)
+      if (dailyLog) {
+        await updateDailyLog(input)
+      } else {
+        await createDailyLog({ logDate: date, diary: input.diary })
+      }
+    } catch (err) {
+      setOperationError(
+        err instanceof Error ? err.message : '日記の保存に失敗しました',
+      )
+    }
+  }
+
   if (mode !== 'life') {
     return null
   }
 
-  const isLoading = isLoadingGoals || isLoadingTasks || isLoadingEvents
+  const isLoading =
+    isLoadingGoals || isLoadingTasks || isLoadingEvents || isLoadingDailyLog
   const error = goalsError || tasksError || eventsError
 
   return (
@@ -234,6 +259,11 @@ function LogPageContent() {
               onDelete={handleDeleteClick}
             />
           </div>
+          <LogDiarySection
+            dailyLog={dailyLog}
+            isLoading={isLoadingDailyLog}
+            onUpdate={handleUpdateDiary}
+          />
         </div>
       )}
 
