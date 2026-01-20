@@ -85,4 +85,11 @@ export const DB_COLUMNS = {
     'created_at',
     'updated_at',
   ],
+  DAILY_LOGS: [
+    'id',
+    'log_date',
+    'diary',
+    'created_at',
+    'updated_at',
+  ],
 } as const

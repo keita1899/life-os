@@ -120,6 +120,16 @@ async function initializeAllTables(): Promise<void> {
       updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
     )
   `)
+
+  await db.execute(`
+    CREATE TABLE IF NOT EXISTS daily_logs (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      log_date DATE NOT NULL UNIQUE,
+      diary TEXT,
+      created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+      updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
+    )
+  `)
 }
 
 export async function getDatabase(): Promise<Database> {
