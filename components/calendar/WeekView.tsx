@@ -1,6 +1,8 @@
 'use client'
 
 import { useMemo, useState } from 'react'
+import Link from 'next/link'
+import { format } from 'date-fns'
 import { cn } from '@/lib/utils'
 import {
   getWeekDays,
@@ -84,10 +86,13 @@ export function WeekView({
           const hasMoreEvents = dayEvents.length > 3
 
           return (
-            <div
+            <Link
               key={date.toISOString()}
+              href={`/logs?date=${format(date, 'yyyy-MM-dd')}`}
               className={cn(
-                'min-h-[400px] bg-white p-2 dark:bg-stone-950',
+                'block min-h-[400px] bg-white p-2 dark:bg-stone-950',
+                'hover:bg-stone-50 dark:hover:bg-stone-900',
+                'transition-colors',
                 isTodayDate && 'ring-2 ring-blue-500 dark:ring-blue-400',
               )}
             >
@@ -121,6 +126,7 @@ export function WeekView({
                       <button
                         className="w-full rounded bg-green-100 px-2 py-1.5 text-left text-xs text-green-900 hover:opacity-80 dark:bg-green-900/30 dark:text-green-300"
                         title={event.title}
+                        onClick={(e) => e.stopPropagation()}
                       >
                         <div className="flex items-center gap-1.5">
                           {!event.allDay && (
@@ -141,7 +147,10 @@ export function WeekView({
                 ))}
                 {hasMoreEvents && (
                   <button
-                    onClick={() => toggleDate(dateStr)}
+                    onClick={(e) => {
+                      e.stopPropagation()
+                      toggleDate(dateStr)
+                    }}
                     className="flex w-full items-center justify-center gap-1 rounded px-2 py-1 text-xs text-muted-foreground hover:bg-stone-100 dark:hover:bg-stone-800"
                   >
                     {isExpanded ? (
@@ -158,7 +167,7 @@ export function WeekView({
                   </button>
                 )}
               </div>
-            </div>
+            </Link>
           )
         })}
       </div>

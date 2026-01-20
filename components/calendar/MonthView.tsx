@@ -1,6 +1,8 @@
 'use client'
 
 import { useMemo } from 'react'
+import Link from 'next/link'
+import { format } from 'date-fns'
 import { cn } from '@/lib/utils'
 import {
   getCalendarDays,
@@ -84,10 +86,13 @@ export function MonthView({
             ]
 
             return (
-              <div
+              <Link
                 key={`${weekIndex}-${dayIndex}`}
+                href={`/logs?date=${format(date, 'yyyy-MM-dd')}`}
                 className={cn(
-                  'min-h-[80px] bg-white p-1 dark:bg-stone-900',
+                  'block min-h-[80px] bg-white p-1 dark:bg-stone-900',
+                  'hover:bg-stone-50 dark:hover:bg-stone-800',
+                  'transition-colors',
                   !isCurrentMonthDay &&
                     'bg-stone-50 text-stone-400 dark:bg-stone-950 dark:text-stone-600',
                   isTodayDate && 'ring-2 ring-blue-500 dark:ring-blue-400',
@@ -119,6 +124,7 @@ export function MonthView({
                                 'bg-green-100 text-green-900 dark:bg-green-900/30 dark:text-green-300',
                               )}
                               title={item.title}
+                              onClick={(e) => e.stopPropagation()}
                             >
                               {!item.data.allDay && (
                                 <span className="mr-1 text-[10px] opacity-70">
@@ -153,7 +159,7 @@ export function MonthView({
                     </div>
                   )}
                 </div>
-              </div>
+              </Link>
             )
           }),
         )}
