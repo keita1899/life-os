@@ -132,7 +132,11 @@ export default function EventsPage() {
       {isLoading ? (
         <Loading />
       ) : (
-        <Accordion type="multiple" className="w-full">
+        <Accordion
+          type="multiple"
+          className="w-full"
+          defaultValue={groupedEvents.map((group) => group.key)}
+        >
           {groupedEvents.map((group) => (
             <AccordionItem key={group.key} value={group.key}>
               <AccordionTrigger className="hover:no-underline">

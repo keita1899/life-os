@@ -205,7 +205,11 @@ export default function WishlistPage() {
       {isLoading ? (
         <Loading />
       ) : (
-        <Accordion type="multiple" className="w-full">
+        <Accordion
+          type="multiple"
+          className="w-full"
+          defaultValue={groupedItems.map((group) => group.key)}
+        >
           {groupedItems.map((group) => (
             <AccordionItem key={group.key} value={group.key}>
               <AccordionHeader>

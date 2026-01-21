@@ -168,7 +168,11 @@ export default function TasksPage() {
       {isLoading ? (
         <Loading />
       ) : (
-        <Accordion type="multiple" className="w-full">
+        <Accordion
+          type="multiple"
+          className="w-full"
+          defaultValue={groupedTasks.map((group) => group.key)}
+        >
           {groupedTasks.map((group) => (
             <AccordionItem key={group.key} value={group.key}>
               <AccordionHeader>

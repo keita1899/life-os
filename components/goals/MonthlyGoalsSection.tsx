@@ -40,6 +40,15 @@ export const MonthlyGoalsSection = ({
     return monthly
   }, [goals])
 
+  const defaultOpenMonth = useMemo(() => {
+    const currentDate = new Date()
+    const isCurrentYear = selectedYear === currentDate.getFullYear()
+    if (isCurrentYear) {
+      return [`month-${currentDate.getMonth() + 1}`]
+    }
+    return []
+  }, [selectedYear])
+
   return (
     <div className="rounded-lg border border-stone-200 bg-stone-50/30 p-6 dark:border-stone-800 dark:bg-stone-950/30">
       <div className="mb-4 flex items-center justify-between">
@@ -50,7 +59,11 @@ export const MonthlyGoalsSection = ({
           月間目標を作成
         </Button>
       </div>
-      <Accordion type="multiple" className="w-full">
+      <Accordion
+        type="multiple"
+        className="w-full"
+        defaultValue={defaultOpenMonth}
+      >
         {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12].map((month) => {
           const monthGoals = monthlyGoalsByMonth[month] || []
           const currentDate = new Date()
