@@ -17,6 +17,7 @@ import { Button } from '@/components/ui/button'
 import { Trash2 } from 'lucide-react'
 import { useGoals } from '@/hooks/useGoals'
 import { getWeekStartDate } from '@/lib/calendar/utils'
+import { formatDateISO } from '@/lib/date/formats'
 import type { WeeklyGoal } from '@/lib/types/weekly-goal'
 
 const weeklyGoalFormSchema = z.object({
@@ -40,10 +41,11 @@ export function WeeklyGoalForm({
     () => getWeekStartDate(currentDate, weekStartDay),
     [currentDate, weekStartDay],
   )
-  const weekStartDateString = useMemo(
-    () => weekStartDate.toISOString().split('T')[0],
-    [weekStartDate],
-  )
+  const weekStartDateString = useMemo(() => {
+    const date = new Date(weekStartDate)
+    date.setHours(0, 0, 0, 0)
+    return formatDateISO(date)
+  }, [weekStartDate])
 
   const currentWeeklyGoal = useMemo(
     () =>

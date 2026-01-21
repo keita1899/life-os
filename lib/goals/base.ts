@@ -1,4 +1,5 @@
 import { startOfWeek } from 'date-fns'
+import { formatDateISO } from '../date/formats'
 
 export function getYearFromDate(date: string | null | undefined): number {
   if (date) {
@@ -24,8 +25,10 @@ export function getWeekStartDateFromDate(
   if (date) {
     const parsed = new Date(date)
     const weekStart = startOfWeek(parsed, { weekStartsOn: 1 })
-    return weekStart.toISOString().split('T')[0]
+    weekStart.setHours(0, 0, 0, 0)
+    return formatDateISO(weekStart)
   }
   const weekStart = startOfWeek(new Date(), { weekStartsOn: 1 })
-  return weekStart.toISOString().split('T')[0]
+  weekStart.setHours(0, 0, 0, 0)
+  return formatDateISO(weekStart)
 }
