@@ -1,12 +1,7 @@
 'use client'
 
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select'
+import { ChevronLeft, ChevronRight } from 'lucide-react'
+import { Button } from '@/components/ui/button'
 
 interface YearSelectProps {
   selectedYear: number
@@ -19,52 +14,37 @@ export const YearSelect = ({
   availableYears,
   onYearChange,
 }: YearSelectProps) => {
-  const currentYear = new Date().getFullYear()
-  const displayAvailableYears = Array.from(
-    new Set(
-      (availableYears.length > 0 ? availableYears : [selectedYear]).concat(
-        availableYears.includes(selectedYear) ? [] : [selectedYear],
-      ),
-    ),
-  )
+  const handlePrev = () => {
+    onYearChange(selectedYear - 1)
+  }
+
+  const handleNext = () => {
+    onYearChange(selectedYear + 1)
+  }
 
   return (
-    <div className="mb-6 flex items-center gap-4">
-      <div className="flex items-center gap-2">
-        <span id="year-select-label" className="text-sm font-medium">
-          年:
-        </span>
-        <Select
-          value={selectedYear.toString()}
-          onValueChange={(value) => {
-            const next = Number.parseInt(value, 10)
-            if (!Number.isNaN(next)) onYearChange(next)
-          }}
-        >
-          <SelectTrigger aria-labelledby="year-select-label" className="w-32">
-            <SelectValue />
-          </SelectTrigger>
-          <SelectContent>
-            {displayAvailableYears.map((year) => {
-              const isCurrentYear = year === currentYear
-
-              return (
-                <SelectItem
-                  key={year}
-                  value={year.toString()}
-                  className={
-                    isCurrentYear
-                      ? 'text-blue-600 dark:text-blue-400 focus:text-blue-600 dark:focus:text-blue-400'
-                      : ''
-                  }
-                >
-                  {year}年
-                </SelectItem>
-              )
-            })}
-          </SelectContent>
-        </Select>
-      </div>
+    <div className="flex items-center gap-2">
+      <Button
+        variant="ghost"
+        size="icon"
+        onClick={handlePrev}
+        className="h-8 w-8"
+        aria-label="前の年"
+      >
+        <ChevronLeft className="h-4 w-4" />
+      </Button>
+      <span className="min-w-[4rem] text-center text-lg font-semibold">
+        {selectedYear}
+      </span>
+      <Button
+        variant="ghost"
+        size="icon"
+        onClick={handleNext}
+        className="h-8 w-8"
+        aria-label="次の年"
+      >
+        <ChevronRight className="h-4 w-4" />
+      </Button>
     </div>
   )
 }

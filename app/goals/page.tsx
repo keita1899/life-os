@@ -192,15 +192,14 @@ const GoalsPage = () => {
   return (
     <MainLayout>
       <div className="container mx-auto max-w-4xl py-8 px-4">
-        <div className="mb-6">
+        <div className="mb-6 flex items-center justify-between">
           <h1 className="text-3xl font-bold">目標</h1>
+          <YearSelect
+            selectedYear={selectedYear}
+            availableYears={availableYears}
+            onYearChange={setSelectedYear}
+          />
         </div>
-
-      <YearSelect
-        selectedYear={selectedYear}
-        availableYears={availableYears}
-        onYearChange={setSelectedYear}
-      />
 
       <ErrorMessage
         message={operationError || error || ''}

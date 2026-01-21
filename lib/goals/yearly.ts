@@ -53,8 +53,8 @@ async function validateYearlyLimit(
   excludeId?: number,
 ): Promise<void> {
   const count = await countYearlyGoalsByYear(year, excludeId)
-  if (count >= 3) {
-    throw new Error(`${year}年の年間目標は3つまで設定できます`)
+  if (count >= 1) {
+    throw new Error(`${year}年の年間目標は1つまで設定できます`)
   }
 }
 
