@@ -24,7 +24,15 @@ import { Loading } from '@/components/ui/loading'
 import { ErrorMessage } from '@/components/ui/error-message'
 import { MainLayout } from '@/components/layout/MainLayout'
 import { useWishlist } from '@/hooks/useWishlist'
+import { useWishlistCategories } from '@/hooks/useWishlistCategories'
 import { useMode } from '@/lib/contexts/ModeContext'
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select'
 import type {
   CreateWishlistItemInput,
   WishlistItem,
@@ -43,6 +51,8 @@ export default function WishlistPage() {
     toggleWishlistItemCompletion,
     deleteCompletedWishlistItems,
   } = useWishlist()
+  const { categories } = useWishlistCategories()
+  const [selectedCategoryId, setSelectedCategoryId] = useState<string>('all')
   const [isDialogOpen, setIsDialogOpen] = useState(false)
   const [editingItem, setEditingItem] = useState<WishlistItem | undefined>(
     undefined,
@@ -56,9 +66,20 @@ export default function WishlistPage() {
     useState(false)
   const [operationError, setOperationError] = useState<string | null>(null)
 
+  const filteredItems = useMemo(() => {
+    if (selectedCategoryId === 'all') {
+      return items
+    }
+    if (selectedCategoryId === 'none') {
+      return items.filter((item) => item.categoryId === null)
+    }
+    const categoryId = Number(selectedCategoryId)
+    return items.filter((item) => item.categoryId === categoryId)
+  }, [items, selectedCategoryId])
+
   const groupedItems = useMemo(() => {
-    const incomplete = items.filter((item) => !item.completed)
-    const completed = items.filter((item) => item.completed)
+    const incomplete = filteredItems.filter((item) => !item.completed)
+    const completed = filteredItems.filter((item) => item.completed)
     return [
       {
         key: 'incomplete',
@@ -71,7 +92,7 @@ export default function WishlistPage() {
         items: completed,
       },
     ]
-  }, [items])
+  }, [filteredItems])
 
   if (mode !== 'life') {
     return null
@@ -198,52 +219,70 @@ export default function WishlistPage() {
       {isLoading ? (
         <Loading />
       ) : (
-        <Accordion
-          type="multiple"
-          className="w-full"
-          defaultValue={groupedItems.map((group) => group.key)}
-        >
-          {groupedItems.map((group) => (
-            <AccordionItem key={group.key} value={group.key}>
-              <AccordionHeader>
-                <AccordionTrigger className="hover:no-underline">
-                  <div className="flex items-center gap-2">
-                    <h2 className="text-lg font-semibold text-stone-900 dark:text-stone-100">
-                      {group.title}
-                    </h2>
-                    <span className="text-sm text-muted-foreground">
-                      ({group.items.length})
-                    </span>
-                  </div>
-                </AccordionTrigger>
-              </AccordionHeader>
-              <AccordionContent>
-                <div className="space-y-4">
-                  <WishlistList
-                    items={group.items}
-                    onEdit={handleEditItem}
-                    onDelete={handleDeleteClick}
-                    onToggleCompletion={handleToggleCompletion}
-                  />
-                  {group.key === 'completed' && group.items.length > 0 && (
-                    <div className="flex justify-end">
-                      <Button
-                        type="button"
-                        variant="outline"
-                        size="sm"
-                        className="text-destructive hover:text-destructive hover:bg-destructive/10"
-                        onClick={handleDeleteCompletedItemsClick}
-                      >
-                        <Trash2 className="mr-2 h-4 w-4" />
-                        完了済みを一括削除
-                      </Button>
+        <>
+          <div className="mb-4">
+            <Select value={selectedCategoryId} onValueChange={setSelectedCategoryId}>
+              <SelectTrigger className="w-[200px]">
+                <SelectValue placeholder="カテゴリーを選択" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">すべて</SelectItem>
+                <SelectItem value="none">カテゴリーなし</SelectItem>
+                {categories.map((category) => (
+                  <SelectItem key={category.id} value={category.id.toString()}>
+                    {category.name}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+          <Accordion
+            type="multiple"
+            className="w-full"
+            defaultValue={groupedItems.map((group) => group.key)}
+          >
+            {groupedItems.map((group) => (
+              <AccordionItem key={group.key} value={group.key}>
+                <AccordionHeader>
+                  <AccordionTrigger className="hover:no-underline">
+                    <div className="flex items-center gap-2">
+                      <h2 className="text-lg font-semibold text-stone-900 dark:text-stone-100">
+                        {group.title}
+                      </h2>
+                      <span className="text-sm text-muted-foreground">
+                        ({group.items.length})
+                      </span>
                     </div>
-                  )}
-                </div>
-              </AccordionContent>
-            </AccordionItem>
-          ))}
-        </Accordion>
+                  </AccordionTrigger>
+                </AccordionHeader>
+                <AccordionContent>
+                  <div className="space-y-4">
+                    <WishlistList
+                      items={group.items}
+                      onEdit={handleEditItem}
+                      onDelete={handleDeleteClick}
+                      onToggleCompletion={handleToggleCompletion}
+                    />
+                    {group.key === 'completed' && group.items.length > 0 && (
+                      <div className="flex justify-end">
+                        <Button
+                          type="button"
+                          variant="outline"
+                          size="sm"
+                          className="text-destructive hover:text-destructive hover:bg-destructive/10"
+                          onClick={handleDeleteCompletedItemsClick}
+                        >
+                          <Trash2 className="mr-2 h-4 w-4" />
+                          完了済みを一括削除
+                        </Button>
+                      </div>
+                    )}
+                  </div>
+                </AccordionContent>
+              </AccordionItem>
+            ))}
+          </Accordion>
+        </>
       )}
 
       <WishlistDialog
