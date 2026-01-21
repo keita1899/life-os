@@ -161,7 +161,7 @@ export default function SubscriptionsPage() {
       <div className="container mx-auto max-w-4xl py-8 px-4">
         <div className="mb-6">
           <div className="flex items-center justify-between">
-            <h1 className="text-3xl font-bold">サブスク管理</h1>
+            <h1 className="text-3xl font-bold">サブスク</h1>
             <Button onClick={() => setIsDialogOpen(true)}>
               サブスクを追加
             </Button>
@@ -204,7 +204,11 @@ export default function SubscriptionsPage() {
       {isLoading ? (
         <Loading />
       ) : (
-        <Accordion type="multiple" className="w-full">
+        <Accordion
+          type="multiple"
+          className="w-full"
+          defaultValue={['active']}
+        >
           {groupedSubscriptions.map((group) => (
             <AccordionItem key={group.key} value={group.key}>
               <AccordionHeader className="flex items-center justify-between">

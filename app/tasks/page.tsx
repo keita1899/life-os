@@ -147,7 +147,7 @@ export default function TasksPage() {
         <div className="mb-6">
           <div className="flex items-center justify-between">
             <div>
-              <h1 className="text-3xl font-bold">タスク管理</h1>
+              <h1 className="text-3xl font-bold">タスク</h1>
             </div>
             <Button onClick={() => setIsDialogOpen(true)}>タスクを作成</Button>
           </div>

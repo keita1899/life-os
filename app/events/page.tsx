@@ -111,7 +111,7 @@ export default function EventsPage() {
         <div className="mb-6">
           <div className="flex items-center justify-between">
             <div>
-              <h1 className="text-3xl font-bold">予定管理</h1>
+              <h1 className="text-3xl font-bold">予定</h1>
             </div>
             <Button onClick={() => setIsDialogOpen(true)}>予定を作成</Button>
           </div>

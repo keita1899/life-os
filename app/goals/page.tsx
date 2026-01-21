@@ -193,10 +193,7 @@ const GoalsPage = () => {
     <MainLayout>
       <div className="container mx-auto max-w-4xl py-8 px-4">
         <div className="mb-6">
-          <h1 className="text-3xl font-bold">目標管理</h1>
-          <p className="text-muted-foreground mt-2">
-            あなたの目標を管理しましょう
-          </p>
+          <h1 className="text-3xl font-bold">目標</h1>
         </div>
 
       <YearSelect
