@@ -16,11 +16,11 @@ import {
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
-  DropdownMenuSeparator,
 } from '@/components/ui/dropdown-menu'
 import {
   Popover,
   PopoverContent,
+  PopoverTrigger,
 } from '@/components/ui/popover'
 import { Input } from '@/components/ui/input'
 import { cn } from '@/lib/utils'
@@ -61,7 +61,8 @@ export function TaskItem({
     [task.executionDate],
   )
 
-  const [isDatePickerOpen, setIsDatePickerOpen] = useState(false)
+  const [isDateMenuOpen, setIsDateMenuOpen] = useState(false)
+  const [showCalendar, setShowCalendar] = useState(false)
   const [customDate, setCustomDate] = useState(
     formatDateForInput(task.executionDate),
   )
@@ -70,15 +71,21 @@ export function TaskItem({
     setCustomDate(formatDateForInput(task.executionDate))
   }, [task.executionDate])
 
+  useEffect(() => {
+    if (!isDateMenuOpen) {
+      setShowCalendar(false)
+    }
+  }, [isDateMenuOpen])
+
   const handleDateSelect = (date: string | null) => {
     onUpdateExecutionDate?.(task, date)
+    setIsDateMenuOpen(false)
   }
 
   const handleCustomDateSubmit = (e: React.FormEvent) => {
     e.preventDefault()
     if (customDate) {
       handleDateSelect(customDate)
-      setIsDatePickerOpen(false)
     }
   }
 
@@ -132,61 +139,78 @@ export function TaskItem({
       </div>
       <div className="mt-0.5 flex items-center gap-2">
         {!task.completed && onUpdateExecutionDate && (
-          <>
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <button
-                  type="button"
-                  className={cn(
-                    'rounded-md px-2.5 py-1 text-sm font-medium transition-colors hover:opacity-80',
-                    dateLabelStyle,
-                  )}
-                >
-                  {dateLabel?.text ?? '日付なし'}
-                </button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent align="end">
-                <DropdownMenuItem
-                  onClick={() => handleDateSelect(getTodayDateString())}
-                >
-                  今日
-                </DropdownMenuItem>
-                <DropdownMenuItem
-                  onClick={() => handleDateSelect(getTomorrowDateString())}
-                >
-                  明日
-                </DropdownMenuItem>
-                <DropdownMenuItem onClick={() => handleDateSelect(null)}>
-                  日付なし
-                </DropdownMenuItem>
-                <DropdownMenuSeparator />
-                <DropdownMenuItem
-                  onSelect={(e) => {
-                    e.preventDefault()
-                    setIsDatePickerOpen(true)
-                  }}
-                >
-                  <Calendar className="mr-2 h-4 w-4" />
-                  カレンダー
-                </DropdownMenuItem>
-              </DropdownMenuContent>
-            </DropdownMenu>
-            <Popover open={isDatePickerOpen} onOpenChange={setIsDatePickerOpen}>
-              <PopoverContent className="w-auto p-3" align="end">
-                <form onSubmit={handleCustomDateSubmit} className="space-y-2">
+          <Popover open={isDateMenuOpen} onOpenChange={setIsDateMenuOpen}>
+            <PopoverTrigger asChild>
+              <button
+                type="button"
+                className={cn(
+                  'rounded-md px-2.5 py-1 text-sm font-medium transition-colors hover:opacity-80',
+                  dateLabelStyle,
+                )}
+              >
+                {dateLabel?.text ?? '日付なし'}
+              </button>
+            </PopoverTrigger>
+            <PopoverContent className="w-48 p-1" align="end">
+              {!showCalendar ? (
+                <div className="flex flex-col">
+                  <button
+                    type="button"
+                    className="flex w-full items-center rounded-sm px-2 py-1.5 text-sm hover:bg-stone-100 dark:hover:bg-stone-800"
+                    onClick={() => handleDateSelect(getTodayDateString())}
+                  >
+                    今日
+                  </button>
+                  <button
+                    type="button"
+                    className="flex w-full items-center rounded-sm px-2 py-1.5 text-sm hover:bg-stone-100 dark:hover:bg-stone-800"
+                    onClick={() => handleDateSelect(getTomorrowDateString())}
+                  >
+                    明日
+                  </button>
+                  <button
+                    type="button"
+                    className="flex w-full items-center rounded-sm px-2 py-1.5 text-sm hover:bg-stone-100 dark:hover:bg-stone-800"
+                    onClick={() => handleDateSelect(null)}
+                  >
+                    日付なし
+                  </button>
+                  <div className="my-1 h-px bg-stone-200 dark:bg-stone-700" />
+                  <button
+                    type="button"
+                    className="flex w-full items-center rounded-sm px-2 py-1.5 text-sm hover:bg-stone-100 dark:hover:bg-stone-800"
+                    onClick={() => setShowCalendar(true)}
+                  >
+                    <Calendar className="mr-2 h-4 w-4" />
+                    カレンダー
+                  </button>
+                </div>
+              ) : (
+                <form onSubmit={handleCustomDateSubmit} className="space-y-2 p-2">
                   <Input
                     type="date"
                     value={customDate}
                     onChange={(e) => setCustomDate(e.target.value)}
                     className="w-full"
                   />
-                  <Button type="submit" size="sm" className="w-full">
-                    設定
-                  </Button>
+                  <div className="flex gap-2">
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      className="flex-1"
+                      onClick={() => setShowCalendar(false)}
+                    >
+                      戻る
+                    </Button>
+                    <Button type="submit" size="sm" className="flex-1">
+                      設定
+                    </Button>
+                  </div>
                 </form>
-              </PopoverContent>
-            </Popover>
-          </>
+              )}
+            </PopoverContent>
+          </Popover>
         )}
         {!task.completed && !onUpdateExecutionDate && dateLabel && (
           <span
