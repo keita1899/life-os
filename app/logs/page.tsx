@@ -33,30 +33,13 @@ import {
 import type { Task, CreateTaskInput, UpdateTaskInput } from '@/lib/types/task'
 import type { UpdateDailyLogInput } from '@/lib/types/daily-log'
 
-function LogPageContent() {
-  const { mode } = useMode()
+interface LogPageViewProps {
+  logDate: Date
+  date: string
+}
+
+function LogPageView({ logDate, date }: LogPageViewProps) {
   const router = useRouter()
-  const searchParams = useSearchParams()
-  const dateParam = searchParams.get('date')
-  const date = dateParam || format(new Date(), 'yyyy-MM-dd')
-
-  const logDate = parseISO(date)
-  if (!isValid(logDate)) {
-    return (
-      <div className="container mx-auto max-w-4xl py-8 px-4">
-        <div className="text-center">
-          <h1 className="text-2xl font-bold text-destructive">無効な日付です</h1>
-          <Link
-            href="/"
-            className="mt-4 inline-block text-sm text-muted-foreground hover:text-foreground"
-          >
-            ← ホームに戻る
-          </Link>
-        </div>
-      </div>
-    )
-  }
-
   const year = getYear(logDate)
   const {
     yearlyGoals: allYearlyGoals,
@@ -190,10 +173,6 @@ function LogPageContent() {
     }
   }
 
-  if (mode !== 'life') {
-    return null
-  }
-
   const isLoading =
     isLoadingGoals || isLoadingTasks || isLoadingEvents || isLoadingDailyLog
   const error = goalsError || tasksError || eventsError
@@ -282,6 +261,36 @@ function LogPageContent() {
       />
     </div>
   )
+}
+
+function LogPageContent() {
+  const { mode } = useMode()
+  const searchParams = useSearchParams()
+  const dateParam = searchParams.get('date')
+  const date = dateParam || format(new Date(), 'yyyy-MM-dd')
+
+  const logDate = parseISO(date)
+  if (!isValid(logDate)) {
+    return (
+      <div className="container mx-auto max-w-4xl py-8 px-4">
+        <div className="text-center">
+          <h1 className="text-2xl font-bold text-destructive">無効な日付です</h1>
+          <Link
+            href="/"
+            className="mt-4 inline-block text-sm text-muted-foreground hover:text-foreground"
+          >
+            ← ホームに戻る
+          </Link>
+        </div>
+      </div>
+    )
+  }
+
+  if (mode !== 'life') {
+    return null
+  }
+
+  return <LogPageView logDate={logDate} date={date} />
 }
 
 export default function LogPage() {

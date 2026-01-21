@@ -54,7 +54,7 @@ export async function createDailyLog(
     await db.execute(
       `INSERT INTO daily_logs (log_date, diary)
        VALUES (?, ?)`,
-      [input.logDate, input.diary || null],
+      [input.logDate, input.diary ?? null],
     )
 
     const result = await db.select<DbDailyLog[]>(
@@ -86,7 +86,7 @@ export async function updateDailyLog(
     await db.execute(
       `UPDATE daily_logs SET diary = ?, updated_at = CURRENT_TIMESTAMP
        WHERE log_date = ?`,
-      [input.diary || null, logDate],
+      [input.diary ?? null, logDate],
     )
 
     const result = await db.select<DbDailyLog[]>(
