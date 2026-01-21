@@ -123,6 +123,20 @@ export default function TasksPage() {
     }
   }
 
+  const handleUpdateExecutionDate = async (
+    task: Task,
+    executionDate: string | null,
+  ) => {
+    try {
+      setOperationError(null)
+      await updateTask(task.id, { executionDate })
+    } catch (err) {
+      setOperationError(
+        err instanceof Error ? err.message : 'タスクの実行日の更新に失敗しました',
+      )
+    }
+  }
+
   const handleDeleteCompletedTasksClick = () => {
     setIsDeletingCompletedDialogOpen(true)
   }
@@ -187,6 +201,7 @@ export default function TasksPage() {
                     onEdit={handleEditTask}
                     onDelete={handleDeleteClick}
                     onToggleCompletion={handleToggleCompletion}
+                    onUpdateExecutionDate={handleUpdateExecutionDate}
                   />
                   {group.key === 'completed' && group.tasks.length > 0 && (
                     <div className="flex justify-end">

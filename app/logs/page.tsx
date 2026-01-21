@@ -173,6 +173,20 @@ function LogPageView({ logDate, date }: LogPageViewProps) {
     }
   }
 
+  const handleUpdateExecutionDate = async (
+    task: Task,
+    executionDate: string | null,
+  ) => {
+    try {
+      setOperationError(null)
+      await updateTask(task.id, { executionDate })
+    } catch (err) {
+      setOperationError(
+        err instanceof Error ? err.message : 'タスクの実行日の更新に失敗しました',
+      )
+    }
+  }
+
   const isLoading =
     isLoadingGoals || isLoadingTasks || isLoadingEvents || isLoadingDailyLog
   const error = goalsError || tasksError || eventsError
@@ -229,6 +243,7 @@ function LogPageView({ logDate, date }: LogPageViewProps) {
               }
               onEdit={handleEditTask}
               onDelete={handleDeleteClick}
+              onUpdateExecutionDate={handleUpdateExecutionDate}
             />
           </div>
           <LogDiarySection
