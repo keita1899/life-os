@@ -3,6 +3,7 @@ export interface WeeklyGoal {
   title: string
   year: number
   weekStartDate: string
+  achieved: boolean
   createdAt: string
   updatedAt: string
 }

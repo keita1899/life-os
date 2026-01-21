@@ -1,15 +1,17 @@
 'use client'
 
 import { useMemo } from 'react'
-import { Pencil, Trash2 } from 'lucide-react'
+import { Pencil, Trash2, CheckCircle2, Circle } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import {
   Accordion,
   AccordionContent,
+  AccordionHeader,
   AccordionItem,
   AccordionTrigger,
 } from '@/components/ui/accordion'
+import { cn } from '@/lib/utils'
 import type { MonthlyGoal } from '@/lib/types/monthly-goal'
 
 interface MonthlyGoalsSectionProps {
@@ -18,6 +20,7 @@ interface MonthlyGoalsSectionProps {
   onCreateClick: () => void
   onEditClick: (goal: MonthlyGoal) => void
   onDeleteClick: (e: React.MouseEvent, goal: MonthlyGoal) => void
+  onToggleAchievement?: (goal: MonthlyGoal) => void
 }
 
 export const MonthlyGoalsSection = ({
@@ -26,6 +29,7 @@ export const MonthlyGoalsSection = ({
   onCreateClick,
   onEditClick,
   onDeleteClick,
+  onToggleAchievement,
 }: MonthlyGoalsSectionProps) => {
   const monthlyGoalsByMonth = useMemo(() => {
     const monthly: Record<number, MonthlyGoal[]> = {}
@@ -79,13 +83,15 @@ export const MonthlyGoalsSection = ({
                 isCurrentMonth ? 'border-stone-300 dark:border-stone-700' : ''
               }
             >
-              <AccordionTrigger
-                className={
-                  isCurrentMonth ? 'text-blue-600 dark:text-blue-400' : ''
-                }
-              >
-                {month}月
-              </AccordionTrigger>
+              <AccordionHeader>
+                <AccordionTrigger
+                  className={
+                    isCurrentMonth ? 'text-blue-600 dark:text-blue-400' : ''
+                  }
+                >
+                  {month}月
+                </AccordionTrigger>
+              </AccordionHeader>
               <AccordionContent>
                 {monthGoals.length === 0 ? (
                   <p className="text-sm text-muted-foreground">
@@ -99,9 +105,30 @@ export const MonthlyGoalsSection = ({
                         className="group relative border-stone-200 dark:border-stone-800"
                       >
                         <CardHeader className="pr-20">
-                          <CardTitle className="text-stone-900 dark:text-stone-100 line-clamp-2 break-words">
-                            {goal.title}
-                          </CardTitle>
+                          <div className="flex items-start gap-3">
+                            {onToggleAchievement && (
+                              <button
+                                type="button"
+                                onClick={() => onToggleAchievement(goal)}
+                                className="mt-0.5 focus:outline-none"
+                              >
+                                {goal.achieved ? (
+                                  <CheckCircle2 className="h-5 w-5 text-green-500" />
+                                ) : (
+                                  <Circle className="h-5 w-5 text-stone-400" />
+                                )}
+                              </button>
+                            )}
+                            <CardTitle
+                              className={cn(
+                                'text-stone-900 dark:text-stone-100 line-clamp-2 break-words flex-1',
+                                goal.achieved &&
+                                  'line-through text-stone-500 dark:text-stone-400',
+                              )}
+                            >
+                              {goal.title}
+                            </CardTitle>
+                          </div>
                         </CardHeader>
                         <CardContent>
                           <div className="space-y-2 text-sm">

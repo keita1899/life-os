@@ -4,6 +4,7 @@ export interface MonthlyGoal {
   targetDate: string | null
   year: number
   month: number
+  achieved: boolean
   createdAt: string
   updatedAt: string
 }

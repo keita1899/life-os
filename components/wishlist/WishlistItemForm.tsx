@@ -145,7 +145,7 @@ export const WishlistItemForm = ({
                       <SelectValue placeholder="カテゴリーを選択（オプション）" />
                     </SelectTrigger>
                   </FormControl>
-                  <SelectContent>
+                  <SelectContent position="item-aligned" className="z-[200]">
                     <SelectItem value="none">カテゴリーなし</SelectItem>
                     {categories.map((category) => (
                       <SelectItem key={category.id} value={category.id.toString()}>

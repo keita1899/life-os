@@ -3,6 +3,7 @@ export interface YearlyGoal {
   title: string
   targetDate: string | null
   year: number
+  achieved: boolean
   createdAt: string
   updatedAt: string
 }

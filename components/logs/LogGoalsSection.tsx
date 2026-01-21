@@ -1,6 +1,7 @@
 'use client'
 
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import { cn } from '@/lib/utils'
 import type { YearlyGoal } from '@/lib/types/yearly-goal'
 import type { MonthlyGoal } from '@/lib/types/monthly-goal'
 import type { WeeklyGoal } from '@/lib/types/weekly-goal'
@@ -36,7 +37,14 @@ export function LogGoalsSection({
                 </h3>
                 <ul className="space-y-2">
                   {yearlyGoals.map((goal) => (
-                    <li key={goal.id} className="text-sm">
+                    <li
+                      key={goal.id}
+                      className={cn(
+                        'text-sm',
+                        goal.achieved &&
+                          'line-through text-stone-500 dark:text-stone-400',
+                      )}
+                    >
                       {goal.title}
                     </li>
                   ))}
@@ -51,7 +59,14 @@ export function LogGoalsSection({
                 </h3>
                 <ul className="space-y-2">
                   {monthlyGoals.map((goal) => (
-                    <li key={goal.id} className="text-sm">
+                    <li
+                      key={goal.id}
+                      className={cn(
+                        'text-sm',
+                        goal.achieved &&
+                          'line-through text-stone-500 dark:text-stone-400',
+                      )}
+                    >
                       {goal.title}
                     </li>
                   ))}
@@ -66,7 +81,14 @@ export function LogGoalsSection({
                 </h3>
                 <ul className="space-y-2">
                   {weeklyGoals.map((goal) => (
-                    <li key={goal.id} className="text-sm">
+                    <li
+                      key={goal.id}
+                      className={cn(
+                        'text-sm',
+                        goal.achieved &&
+                          'line-through text-stone-500 dark:text-stone-400',
+                      )}
+                    >
                       {goal.title}
                     </li>
                   ))}

@@ -4,16 +4,22 @@ import {
   getYearlyAndMonthlyGoalsByYear,
   getAllAvailableYears,
 } from '@/lib/goals/index'
-import { createYearlyGoal, deleteYearlyGoal } from '@/lib/goals/yearly'
+import {
+  createYearlyGoal,
+  deleteYearlyGoal,
+  toggleYearlyGoalAchievement,
+} from '@/lib/goals/yearly'
 import {
   createMonthlyGoal,
   updateMonthlyGoal,
   deleteMonthlyGoal,
+  toggleMonthlyGoalAchievement,
 } from '@/lib/goals/monthly'
 import {
   createWeeklyGoal,
   updateWeeklyGoal,
   deleteWeeklyGoal,
+  toggleWeeklyGoalAchievement,
 } from '@/lib/goals/weekly'
 import type { YearlyGoal, CreateYearlyGoalInput } from '@/lib/types/yearly-goal'
 import type {
@@ -122,6 +128,21 @@ export function useGoals(selectedYear: number) {
     await Promise.all([mutate(goalsKey), mutate(availableYearsKey)])
   }
 
+  const handleToggleYearlyGoalAchievement = async (id: number) => {
+    await toggleYearlyGoalAchievement(id)
+    await mutate(goalsKey)
+  }
+
+  const handleToggleMonthlyGoalAchievement = async (id: number) => {
+    await toggleMonthlyGoalAchievement(id)
+    await mutate(goalsKey)
+  }
+
+  const handleToggleWeeklyGoalAchievement = async (id: number) => {
+    await toggleWeeklyGoalAchievement(id)
+    await mutate(goalsKey)
+  }
+
   return {
     yearlyGoals: data.yearlyGoals,
     monthlyGoals: data.monthlyGoals,
@@ -141,6 +162,9 @@ export function useGoals(selectedYear: number) {
     deleteYearlyGoal: handleDeleteYearlyGoal,
     deleteMonthlyGoal: handleDeleteMonthlyGoal,
     deleteWeeklyGoal: handleDeleteWeeklyGoal,
+    toggleYearlyGoalAchievement: handleToggleYearlyGoalAchievement,
+    toggleMonthlyGoalAchievement: handleToggleMonthlyGoalAchievement,
+    toggleWeeklyGoalAchievement: handleToggleWeeklyGoalAchievement,
     refreshGoals: () => mutate(goalsKey),
   }
 }

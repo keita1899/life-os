@@ -1,8 +1,9 @@
 'use client'
 
-import { Pencil, Trash2 } from 'lucide-react'
+import { Pencil, Trash2, CheckCircle2, Circle } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import { cn } from '@/lib/utils'
 import type { YearlyGoal } from '@/lib/types/yearly-goal'
 
 interface YearlyGoalsSectionProps {
@@ -10,6 +11,7 @@ interface YearlyGoalsSectionProps {
   onCreateClick: () => void
   onEditClick: (goal: YearlyGoal) => void
   onDeleteClick: (e: React.MouseEvent, goal: YearlyGoal) => void
+  onToggleAchievement?: (goal: YearlyGoal) => void
 }
 
 export const YearlyGoalsSection = ({
@@ -17,6 +19,7 @@ export const YearlyGoalsSection = ({
   onCreateClick,
   onEditClick,
   onDeleteClick,
+  onToggleAchievement,
 }: YearlyGoalsSectionProps) => {
   return (
     <div className="rounded-lg border border-zinc-200 bg-zinc-50/30 p-6 dark:border-zinc-800 dark:bg-zinc-950/30">
@@ -36,9 +39,29 @@ export const YearlyGoalsSection = ({
               className="group relative bg-white border-zinc-200 dark:bg-white dark:border-zinc-200"
             >
               <CardHeader className="pr-20">
-                <CardTitle className="text-black dark:text-black line-clamp-2 break-words">
-                  {goal.title}
-                </CardTitle>
+                <div className="flex items-start gap-3">
+                  {onToggleAchievement && (
+                    <button
+                      type="button"
+                      onClick={() => onToggleAchievement(goal)}
+                      className="mt-0.5 focus:outline-none"
+                    >
+                      {goal.achieved ? (
+                        <CheckCircle2 className="h-5 w-5 text-green-500" />
+                      ) : (
+                        <Circle className="h-5 w-5 text-stone-400" />
+                      )}
+                    </button>
+                  )}
+                  <CardTitle
+                    className={cn(
+                      'text-black dark:text-black line-clamp-2 break-words flex-1',
+                      goal.achieved && 'line-through text-stone-500 dark:text-stone-400',
+                    )}
+                  >
+                    {goal.title}
+                  </CardTitle>
+                </div>
               </CardHeader>
               <CardContent>
                 <div className="space-y-2 text-sm">
