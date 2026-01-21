@@ -55,10 +55,14 @@ function mapDbBucketListItemToBucketListItem(
 
 async function getMaxOrder(): Promise<number> {
   const db = await getDatabase()
-  const result = await db.select<{ max_order: number | null }[]>(
-    'SELECT MAX("order") as max_order FROM bucket_list_items',
-  )
-  return result[0]?.max_order ?? -1
+  try {
+    const result = await db.select<{ max_order: number | null }[]>(
+      'SELECT MAX("order") as max_order FROM bucket_list_items',
+    )
+    return result[0]?.max_order ?? -1
+  } catch (err) {
+    handleDbError(err, 'get max order')
+  }
 }
 
 export async function getAllBucketListItems(): Promise<BucketListItem[]> {
@@ -67,22 +71,22 @@ export async function getAllBucketListItems(): Promise<BucketListItem[]> {
   try {
     const result = await db.select<DbBucketListItemWithCategory[]>(
       `SELECT 
-        wi.id,
-        wi.title,
-        wi.category_id,
-        wi.target_year,
-        wi.achieved_date,
-        wi.completed,
-        wi."order",
-        wi.created_at,
-        wi.updated_at,
-        wc.id as category_id_from_join,
-        wc.name as category_name,
-        wc.created_at as category_created_at,
-        wc.updated_at as category_updated_at
-      FROM bucket_list_items wi
-      LEFT JOIN bucket_list_categories wc ON wi.category_id = wc.id
-      ORDER BY wi."order" ASC, wi.created_at ASC`,
+        bli.id,
+        bli.title,
+        bli.category_id,
+        bli.target_year,
+        bli.achieved_date,
+        bli.completed,
+        bli."order",
+        bli.created_at,
+        bli.updated_at,
+        blc.id as category_id_from_join,
+        blc.name as category_name,
+        blc.created_at as category_created_at,
+        blc.updated_at as category_updated_at
+      FROM bucket_list_items bli
+      LEFT JOIN bucket_list_categories blc ON bli.category_id = blc.id
+      ORDER BY bli."order" ASC, bli.created_at ASC`,
     )
 
     return result.map(mapDbBucketListItemToBucketListItem)
@@ -113,23 +117,23 @@ export async function createBucketListItem(
 
     const result = await db.select<DbBucketListItemWithCategory[]>(
       `SELECT 
-        wi.id,
-        wi.title,
-        wi.category_id,
-        wi.target_year,
-        wi.achieved_date,
-        wi.completed,
-        wi."order",
-        wi.created_at,
-        wi.updated_at,
-        wc.id as category_id_from_join,
-        wc.name as category_name,
-        wc.created_at as category_created_at,
-        wc.updated_at as category_updated_at
-      FROM bucket_list_items wi
-      LEFT JOIN bucket_list_categories wc ON wi.category_id = wc.id
-      WHERE wi.title = ? AND wi."order" = ?
-      ORDER BY wi.created_at DESC, wi.id DESC
+        bli.id,
+        bli.title,
+        bli.category_id,
+        bli.target_year,
+        bli.achieved_date,
+        bli.completed,
+        bli."order",
+        bli.created_at,
+        bli.updated_at,
+        blc.id as category_id_from_join,
+        blc.name as category_name,
+        blc.created_at as category_created_at,
+        blc.updated_at as category_updated_at
+      FROM bucket_list_items bli
+      LEFT JOIN bucket_list_categories blc ON bli.category_id = blc.id
+      WHERE bli.title = ? AND bli."order" = ?
+      ORDER BY bli.created_at DESC, bli.id DESC
       LIMIT 1`,
       [input.title, newOrder],
     )
@@ -198,30 +202,34 @@ export async function updateBucketListItem(
   }
 
   if (updateFields.length === 0) {
-    const result = await db.select<DbBucketListItemWithCategory[]>(
-      `SELECT 
-        wi.id,
-        wi.title,
-        wi.category_id,
-        wi.target_year,
-        wi.achieved_date,
-        wi.completed,
-        wi."order",
-        wi.created_at,
-        wi.updated_at,
-        wc.id as category_id_from_join,
-        wc.name as category_name,
-        wc.created_at as category_created_at,
-        wc.updated_at as category_updated_at
-      FROM bucket_list_items wi
-      LEFT JOIN bucket_list_categories wc ON wi.category_id = wc.id
-      WHERE wi.id = ?`,
-      [id],
-    )
-    if (result.length === 0) {
-      throw new Error('Bucket list item not found')
+    try {
+      const result = await db.select<DbBucketListItemWithCategory[]>(
+        `SELECT 
+          bli.id,
+          bli.title,
+          bli.category_id,
+          bli.target_year,
+          bli.achieved_date,
+          bli.completed,
+          bli."order",
+          bli.created_at,
+          bli.updated_at,
+          blc.id as category_id_from_join,
+          blc.name as category_name,
+          blc.created_at as category_created_at,
+          blc.updated_at as category_updated_at
+        FROM bucket_list_items bli
+        LEFT JOIN bucket_list_categories blc ON bli.category_id = blc.id
+        WHERE bli.id = ?`,
+        [id],
+      )
+      if (result.length === 0) {
+        throw new Error('Bucket list item not found')
+      }
+      return mapDbBucketListItemToBucketListItem(result[0])
+    } catch (err) {
+      handleDbError(err, 'get bucket list item')
     }
-    return mapDbBucketListItemToBucketListItem(result[0])
   }
 
   updateFields.push('updated_at = CURRENT_TIMESTAMP')
@@ -235,22 +243,22 @@ export async function updateBucketListItem(
 
     const result = await db.select<DbBucketListItemWithCategory[]>(
       `SELECT 
-        wi.id,
-        wi.title,
-        wi.category_id,
-        wi.target_year,
-        wi.achieved_date,
-        wi.completed,
-        wi."order",
-        wi.created_at,
-        wi.updated_at,
-        wc.id as category_id_from_join,
-        wc.name as category_name,
-        wc.created_at as category_created_at,
-        wc.updated_at as category_updated_at
-      FROM bucket_list_items wi
-      LEFT JOIN bucket_list_categories wc ON wi.category_id = wc.id
-      WHERE wi.id = ?`,
+        bli.id,
+        bli.title,
+        bli.category_id,
+        bli.target_year,
+        bli.achieved_date,
+        bli.completed,
+        bli."order",
+        bli.created_at,
+        bli.updated_at,
+        blc.id as category_id_from_join,
+        blc.name as category_name,
+        blc.created_at as category_created_at,
+        blc.updated_at as category_updated_at
+      FROM bucket_list_items bli
+      LEFT JOIN bucket_list_categories blc ON bli.category_id = blc.id
+      WHERE bli.id = ?`,
       [id],
     )
 
