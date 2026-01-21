@@ -11,7 +11,6 @@ interface YearSelectProps {
 
 export const YearSelect = ({
   selectedYear,
-  availableYears,
   onYearChange,
 }: YearSelectProps) => {
   const handlePrev = () => {

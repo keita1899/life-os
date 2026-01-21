@@ -52,6 +52,30 @@ export function SubscriptionItem({
           : 'border-stone-200 bg-stone-50 dark:border-stone-800 dark:bg-stone-950',
       )}
     >
+      {onToggleActive && (
+        <div className="mt-0.5 flex items-center">
+          <Button
+            type="button"
+            variant="ghost"
+            size="sm"
+            className="h-8 w-8 p-0"
+            onClick={() => onToggleActive(subscription)}
+            title={subscription.active ? '解約済にする' : '契約中にする'}
+          >
+            <Power
+              className={cn(
+                'h-4 w-4',
+                subscription.active
+                  ? 'text-green-500'
+                  : 'text-stone-400',
+              )}
+            />
+            <span className="sr-only">
+              {subscription.active ? '解約済にする' : '契約中にする'}
+            </span>
+          </Button>
+        </div>
+      )}
       <div className="flex-1">
         <div className="flex items-center gap-2">
           <div
@@ -74,16 +98,18 @@ export function SubscriptionItem({
           <span>
             {subscription.monthlyPrice.toLocaleString()}円 / {billingCycleLabel}
           </span>
-          <span
-            className={cn(
-              'rounded-md px-2.5 py-1 font-medium',
-              isUpcoming
-                ? 'bg-yellow-100 text-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-300'
-                : 'bg-stone-100 text-stone-700 dark:bg-stone-800 dark:text-stone-300',
-            )}
-          >
-            次回更新: {formattedNextBillingDate}
-          </span>
+          {subscription.active && (
+            <span
+              className={cn(
+                'rounded-md px-2.5 py-1 font-medium',
+                isUpcoming
+                  ? 'bg-yellow-100 text-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-300'
+                  : 'bg-stone-100 text-stone-700 dark:bg-stone-800 dark:text-stone-300',
+              )}
+            >
+              次回更新: {formattedNextBillingDate}
+            </span>
+          )}
           {subscription.cancellationUrl && (
             <a
               href={subscription.cancellationUrl}
@@ -98,61 +124,37 @@ export function SubscriptionItem({
           )}
         </div>
       </div>
-      <div className="mt-0.5 flex items-center gap-2">
-        {onToggleActive && (
-          <Button
-            type="button"
-            variant="ghost"
-            size="sm"
-            className="h-8 w-8 p-0"
-            onClick={() => onToggleActive(subscription)}
-            title={subscription.active ? '解約済にする' : '契約中にする'}
-          >
-            <Power
-              className={cn(
-                'h-4 w-4',
-                subscription.active
-                  ? 'text-green-500'
-                  : 'text-stone-400',
-              )}
-            />
-            <span className="sr-only">
-              {subscription.active ? '解約済にする' : '契約中にする'}
-            </span>
-          </Button>
-        )}
-        <div className="flex min-w-[40px] items-center justify-end">
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button
-                type="button"
-                variant="ghost"
-                size="sm"
-                className="h-8 w-8 p-0 opacity-0 transition-opacity group-hover:opacity-100"
+      <div className="mt-0.5 flex min-w-[40px] items-center justify-end">
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <Button
+              type="button"
+              variant="ghost"
+              size="sm"
+              className="h-8 w-8 p-0 opacity-0 transition-opacity group-hover:opacity-100"
+            >
+              <MoreVertical className="h-4 w-4" />
+              <span className="sr-only">メニュー</span>
+            </Button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="end">
+            {onEdit && (
+              <DropdownMenuItem onClick={() => onEdit(subscription)}>
+                <Pencil className="mr-2 h-4 w-4" />
+                <span>編集</span>
+              </DropdownMenuItem>
+            )}
+            {onDelete && (
+              <DropdownMenuItem
+                onClick={() => onDelete(subscription)}
+                className="text-destructive focus:text-destructive"
               >
-                <MoreVertical className="h-4 w-4" />
-                <span className="sr-only">メニュー</span>
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end">
-              {onEdit && (
-                <DropdownMenuItem onClick={() => onEdit(subscription)}>
-                  <Pencil className="mr-2 h-4 w-4" />
-                  <span>編集</span>
-                </DropdownMenuItem>
-              )}
-              {onDelete && (
-                <DropdownMenuItem
-                  onClick={() => onDelete(subscription)}
-                  className="text-destructive focus:text-destructive"
-                >
-                  <Trash2 className="mr-2 h-4 w-4" />
-                  <span>削除</span>
-                </DropdownMenuItem>
-              )}
-            </DropdownMenuContent>
-          </DropdownMenu>
-        </div>
+                <Trash2 className="mr-2 h-4 w-4" />
+                <span>削除</span>
+              </DropdownMenuItem>
+            )}
+          </DropdownMenuContent>
+        </DropdownMenu>
       </div>
     </div>
   )
