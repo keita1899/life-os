@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useMemo } from 'react'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import * as z from 'zod'
@@ -26,8 +26,6 @@ import {
   getTodayDateString,
   getTomorrowDateString,
   formatDateForInput,
-  getTodayDate,
-  getTomorrowDate,
 } from '@/lib/date/formats'
 
 const taskFormSchema = z.object({
@@ -52,17 +50,6 @@ export const TaskForm = ({
   submitLabel = '作成',
 }: TaskFormProps) => {
   const isEditMode = !!initialData
-  const [datePreset, setDatePreset] = useState<string>('none')
-
-  const getInitialDatePreset = (executionDate: string | null | undefined) => {
-    if (!executionDate) return 'none'
-    const dateOnly = formatDateForInput(executionDate)
-    const today = getTodayDateString()
-    const tomorrow = getTomorrowDateString()
-    if (dateOnly === today) return 'today'
-    if (dateOnly === tomorrow) return 'tomorrow'
-    return 'custom'
-  }
 
   const form = useForm<TaskFormValues>({
     resolver: zodResolver(taskFormSchema),
@@ -79,19 +66,24 @@ export const TaskForm = ({
         },
   })
 
-  useEffect(() => {
-    const preset = getInitialDatePreset(initialData?.executionDate)
-    setDatePreset(preset)
-  }, [initialData?.executionDate])
+  const executionDate = form.watch('executionDate')
+
+  const datePreset = useMemo(() => {
+    if (!executionDate) return 'none'
+    if (executionDate === getTodayDateString()) return 'today'
+    if (executionDate === getTomorrowDateString()) return 'tomorrow'
+    return 'custom'
+  }, [executionDate])
 
   const handleDatePresetChange = (value: string) => {
-    setDatePreset(value)
-    if (value === 'none') {
-      form.setValue('executionDate', '')
-    } else if (value === 'today') {
-      form.setValue('executionDate', getTodayDateString())
-    } else if (value === 'tomorrow') {
-      form.setValue('executionDate', getTomorrowDateString())
+    const presetToDate: Record<string, string> = {
+      none: '',
+      today: getTodayDateString(),
+      tomorrow: getTomorrowDateString(),
+    }
+    const date = presetToDate[value]
+    if (date !== undefined) {
+      form.setValue('executionDate', date)
     }
   }
 
@@ -106,7 +98,6 @@ export const TaskForm = ({
     })
     if (!isEditMode) {
       form.reset()
-      setDatePreset('none')
     }
   }
 
@@ -152,17 +143,7 @@ export const TaskForm = ({
                 </Select>
                 {datePreset === 'custom' && (
                   <FormControl>
-                    <Input
-                      type="date"
-                      {...field}
-                      value={field.value || ''}
-                      onChange={(e) => {
-                        field.onChange(e)
-                        if (e.target.value) {
-                          setDatePreset('custom')
-                        }
-                      }}
-                    />
+                    <Input type="date" {...field} value={field.value || ''} />
                   </FormControl>
                 )}
               </div>
