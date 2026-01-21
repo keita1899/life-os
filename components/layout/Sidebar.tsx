@@ -66,7 +66,7 @@ const otherItems = [
       'bg-green-100 text-green-600 dark:bg-green-900/30 dark:text-green-400',
   },
   {
-    href: '/wishlist',
+    href: '/bucket-list',
     icon: Heart,
     title: 'やりたいことリスト',
     color:

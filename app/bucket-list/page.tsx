@@ -16,15 +16,15 @@ import {
   AccordionItem,
   AccordionTrigger,
 } from '@/components/ui/accordion'
-import { WishlistList } from '@/components/wishlist/WishlistList'
-import { WishlistDialog } from '@/components/wishlist/WishlistDialog'
-import { WishlistCategoryManagement } from '@/components/wishlist/WishlistCategoryManagement'
+import { BucketListList } from '@/components/bucket-list/BucketListList'
+import { BucketListDialog } from '@/components/bucket-list/BucketListDialog'
+import { BucketListCategoryManagement } from '@/components/bucket-list/BucketListCategoryManagement'
 import { DeleteConfirmDialog } from '@/components/ui/delete-confirm-dialog'
 import { Loading } from '@/components/ui/loading'
 import { ErrorMessage } from '@/components/ui/error-message'
 import { MainLayout } from '@/components/layout/MainLayout'
-import { useWishlist } from '@/hooks/useWishlist'
-import { useWishlistCategories } from '@/hooks/useWishlistCategories'
+import { useBucketList } from '@/hooks/useBucketList'
+import { useBucketListCategories } from '@/hooks/useBucketListCategories'
 import { useMode } from '@/lib/contexts/ModeContext'
 import {
   Select,
@@ -34,31 +34,31 @@ import {
   SelectValue,
 } from '@/components/ui/select'
 import type {
-  CreateWishlistItemInput,
-  WishlistItem,
-  UpdateWishlistItemInput,
-} from '@/lib/types/wishlist-item'
+  CreateBucketListItemInput,
+  BucketListItem,
+  UpdateBucketListItemInput,
+} from '@/lib/types/bucket-list-item'
 
-export default function WishlistPage() {
+export default function BucketListPage() {
   const { mode } = useMode()
   const {
     items,
     isLoading,
     error,
-    createWishlistItem,
-    updateWishlistItem,
-    deleteWishlistItem,
-    toggleWishlistItemCompletion,
-    deleteCompletedWishlistItems,
-  } = useWishlist()
-  const { categories } = useWishlistCategories()
+    createBucketListItem,
+    updateBucketListItem,
+    deleteBucketListItem,
+    toggleBucketListItemCompletion,
+    deleteCompletedBucketListItems,
+  } = useBucketList()
+  const { categories } = useBucketListCategories()
   const [selectedCategoryId, setSelectedCategoryId] = useState<string>('all')
   const [selectedYear, setSelectedYear] = useState<string>('all')
   const [isDialogOpen, setIsDialogOpen] = useState(false)
-  const [editingItem, setEditingItem] = useState<WishlistItem | undefined>(
+  const [editingItem, setEditingItem] = useState<BucketListItem | undefined>(
     undefined,
   )
-  const [deletingItem, setDeletingItem] = useState<WishlistItem | undefined>(
+  const [deletingItem, setDeletingItem] = useState<BucketListItem | undefined>(
     undefined,
   )
   const [isCategoryManagementOpen, setIsCategoryManagementOpen] =
@@ -118,10 +118,10 @@ export default function WishlistPage() {
     return null
   }
 
-  const handleCreateItem = async (input: CreateWishlistItemInput) => {
+  const handleCreateItem = async (input: CreateBucketListItemInput) => {
     try {
       setOperationError(null)
-      await createWishlistItem(input)
+      await createBucketListItem(input)
       setIsDialogOpen(false)
     } catch (err) {
       setOperationError(
@@ -130,17 +130,17 @@ export default function WishlistPage() {
     }
   }
 
-  const handleUpdateItem = async (input: CreateWishlistItemInput) => {
+  const handleUpdateItem = async (input: CreateBucketListItemInput) => {
     if (!editingItem) return
 
     try {
       setOperationError(null)
-      const updateInput: UpdateWishlistItemInput = {
+      const updateInput: UpdateBucketListItemInput = {
         title: input.title,
         categoryId: input.categoryId,
         targetYear: input.targetYear,
       }
-      await updateWishlistItem(editingItem.id, updateInput)
+      await updateBucketListItem(editingItem.id, updateInput)
       setIsDialogOpen(false)
       setEditingItem(undefined)
     } catch (err) {
@@ -150,7 +150,7 @@ export default function WishlistPage() {
     }
   }
 
-  const handleEditItem = (item: WishlistItem) => {
+  const handleEditItem = (item: BucketListItem) => {
     setEditingItem(item)
     setIsDialogOpen(true)
   }
@@ -167,7 +167,7 @@ export default function WishlistPage() {
 
     try {
       setOperationError(null)
-      await deleteWishlistItem(deletingItem.id)
+      await deleteBucketListItem(deletingItem.id)
       setDeletingItem(undefined)
     } catch (err) {
       setOperationError(
@@ -176,14 +176,14 @@ export default function WishlistPage() {
     }
   }
 
-  const handleDeleteClick = (item: WishlistItem) => {
+  const handleDeleteClick = (item: BucketListItem) => {
     setDeletingItem(item)
   }
 
-  const handleToggleCompletion = async (item: WishlistItem) => {
+  const handleToggleCompletion = async (item: BucketListItem) => {
     try {
       setOperationError(null)
-      await toggleWishlistItemCompletion(item.id, !item.completed)
+      await toggleBucketListItemCompletion(item.id, !item.completed)
     } catch (err) {
       setOperationError(
         err instanceof Error
@@ -200,7 +200,7 @@ export default function WishlistPage() {
   const handleDeleteCompletedItems = async () => {
     try {
       setOperationError(null)
-      await deleteCompletedWishlistItems()
+      await deleteCompletedBucketListItems()
       setIsDeletingCompletedDialogOpen(false)
     } catch (err) {
       setOperationError(
@@ -291,7 +291,7 @@ export default function WishlistPage() {
                 </AccordionHeader>
                 <AccordionContent>
                   <div className="space-y-4">
-                    <WishlistList
+                    <BucketListList
                       items={group.items}
                       onEdit={handleEditItem}
                       onDelete={handleDeleteClick}
@@ -319,7 +319,7 @@ export default function WishlistPage() {
         </>
       )}
 
-      <WishlistDialog
+      <BucketListDialog
         open={isDialogOpen}
         onOpenChange={handleDialogClose}
         onSubmit={editingItem ? handleUpdateItem : handleCreateItem}
@@ -334,7 +334,7 @@ export default function WishlistPage() {
           <DialogHeader>
             <DialogTitle>カテゴリー管理</DialogTitle>
           </DialogHeader>
-          <WishlistCategoryManagement />
+          <BucketListCategoryManagement />
         </DialogContent>
       </Dialog>
 

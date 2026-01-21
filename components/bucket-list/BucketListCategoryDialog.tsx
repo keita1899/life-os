@@ -1,25 +1,25 @@
 'use client'
 
 import { FormDialog } from '@/components/ui/form-dialog'
-import { WishlistCategoryForm } from './WishlistCategoryForm'
+import { BucketListCategoryForm } from './BucketListCategoryForm'
 import type {
-  WishlistCategory,
-  CreateWishlistCategoryInput,
-} from '@/lib/types/wishlist-category'
+  BucketListCategory,
+  CreateBucketListCategoryInput,
+} from '@/lib/types/bucket-list-category'
 
-interface WishlistCategoryDialogProps {
+interface BucketListCategoryDialogProps {
   open: boolean
   onOpenChange: (open: boolean) => void
-  onSubmit: (input: CreateWishlistCategoryInput) => Promise<void>
-  category?: WishlistCategory
+  onSubmit: (input: CreateBucketListCategoryInput) => Promise<void>
+  category?: BucketListCategory
 }
 
-export const WishlistCategoryDialog = ({
+export const BucketListCategoryDialog = ({
   open,
   onOpenChange,
   onSubmit,
   category,
-}: WishlistCategoryDialogProps) => {
+}: BucketListCategoryDialogProps) => {
   return (
     <FormDialog
       open={open}
@@ -30,7 +30,7 @@ export const WishlistCategoryDialog = ({
         create: '新しいカテゴリーを作成',
         edit: 'カテゴリーを編集',
       }}
-      formComponent={WishlistCategoryForm}
+      formComponent={BucketListCategoryForm}
     />
   )
 }

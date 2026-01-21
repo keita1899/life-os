@@ -1,10 +1,10 @@
-import type { WishlistCategory } from './wishlist-category'
+import type { BucketListCategory } from './bucket-list-category'
 
-export interface WishlistItem {
+export interface BucketListItem {
   id: number
   title: string
   categoryId: number | null
-  category: WishlistCategory | null
+  category: BucketListCategory | null
   targetYear: number | null
   achievedDate: string | null
   completed: boolean
@@ -13,13 +13,13 @@ export interface WishlistItem {
   updatedAt: string
 }
 
-export interface CreateWishlistItemInput {
+export interface CreateBucketListItemInput {
   title: string
   categoryId?: number | null
   targetYear?: number | null
 }
 
-export interface UpdateWishlistItemInput {
+export interface UpdateBucketListItemInput {
   title?: string
   categoryId?: number | null
   targetYear?: number | null
