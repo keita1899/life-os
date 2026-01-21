@@ -1,22 +1,22 @@
 'use client'
 
 import { FormDialog } from '@/components/ui/form-dialog'
-import { WishlistItemForm } from './WishlistItemForm'
-import type { WishlistItem, CreateWishlistItemInput } from '@/lib/types/wishlist-item'
+import { BucketListItemForm } from './BucketListItemForm'
+import type { BucketListItem, CreateBucketListItemInput } from '@/lib/types/bucket-list-item'
 
-interface WishlistDialogProps {
+interface BucketListDialogProps {
   open: boolean
   onOpenChange: (open: boolean) => void
-  onSubmit: (input: CreateWishlistItemInput) => Promise<void>
-  item?: WishlistItem
+  onSubmit: (input: CreateBucketListItemInput) => Promise<void>
+  item?: BucketListItem
 }
 
-export const WishlistDialog = ({
+export const BucketListDialog = ({
   open,
   onOpenChange,
   onSubmit,
   item,
-}: WishlistDialogProps) => {
+}: BucketListDialogProps) => {
   return (
     <FormDialog
       open={open}
@@ -27,7 +27,7 @@ export const WishlistDialog = ({
         create: '新しいやりたいことを作成',
         edit: 'やりたいことを編集',
       }}
-      formComponent={WishlistItemForm}
+      formComponent={BucketListItemForm}
     />
   )
 }

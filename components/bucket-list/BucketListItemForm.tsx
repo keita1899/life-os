@@ -21,43 +21,43 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select'
-import { WishlistCategoryDialog } from './WishlistCategoryDialog'
-import { useWishlistCategories } from '@/hooks/useWishlistCategories'
+import { BucketListCategoryDialog } from './BucketListCategoryDialog'
+import { useBucketListCategories } from '@/hooks/useBucketListCategories'
 import type {
-  WishlistItem,
-  CreateWishlistItemInput,
-} from '@/lib/types/wishlist-item'
-import type { CreateWishlistCategoryInput } from '@/lib/types/wishlist-category'
+  BucketListItem,
+  CreateBucketListItemInput,
+} from '@/lib/types/bucket-list-item'
+import type { CreateBucketListCategoryInput } from '@/lib/types/bucket-list-category'
 
-const wishlistItemFormSchema = z.object({
+const bucketListItemFormSchema = z.object({
   title: z.string().min(1, 'タイトルは必須です'),
   categoryId: z.string().optional(),
   targetYear: z.string().optional(),
 })
 
-type WishlistItemFormValues = z.infer<typeof wishlistItemFormSchema>
+type BucketListItemFormValues = z.infer<typeof bucketListItemFormSchema>
 
-interface WishlistItemFormProps {
-  onSubmit: (data: CreateWishlistItemInput) => Promise<void>
+interface BucketListItemFormProps {
+  onSubmit: (data: CreateBucketListItemInput) => Promise<void>
   onCancel?: () => void
-  initialData?: WishlistItem
+  initialData?: BucketListItem
   submitLabel?: string
 }
 
-export const WishlistItemForm = ({
+export const BucketListItemForm = ({
   onSubmit,
   onCancel,
   initialData,
   submitLabel = '作成',
-}: WishlistItemFormProps) => {
-  const { categories, createWishlistCategory } = useWishlistCategories()
+}: BucketListItemFormProps) => {
+  const { categories, createBucketListCategory } = useBucketListCategories()
   const [isCategoryDialogOpen, setIsCategoryDialogOpen] = useState(false)
   const [selectedCategoryId, setSelectedCategoryId] = useState<string | null>(
     null,
   )
 
-  const form = useForm<WishlistItemFormValues>({
-    resolver: zodResolver(wishlistItemFormSchema),
+  const form = useForm<BucketListItemFormValues>({
+    resolver: zodResolver(bucketListItemFormSchema),
     values: initialData
       ? {
           title: initialData.title,
@@ -83,9 +83,9 @@ export const WishlistItemForm = ({
     }
   }
 
-  const handleCategoryCreate = async (input: CreateWishlistCategoryInput) => {
+  const handleCategoryCreate = async (input: CreateBucketListCategoryInput) => {
     try {
-      const newCategory = await createWishlistCategory(input)
+      const newCategory = await createBucketListCategory(input)
       const categoryIdStr = newCategory.id.toString()
       form.setValue('categoryId', categoryIdStr)
       setSelectedCategoryId(categoryIdStr)
@@ -98,7 +98,7 @@ export const WishlistItemForm = ({
     }
   }
 
-  const handleSubmit = async (data: WishlistItemFormValues) => {
+  const handleSubmit = async (data: BucketListItemFormValues) => {
     await onSubmit({
       title: data.title,
       categoryId:
@@ -195,7 +195,7 @@ export const WishlistItemForm = ({
         </form>
       </Form>
 
-      <WishlistCategoryDialog
+      <BucketListCategoryDialog
         open={isCategoryDialogOpen}
         onOpenChange={setIsCategoryDialogOpen}
         onSubmit={handleCategoryCreate}

@@ -16,23 +16,23 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
 import { cn } from '@/lib/utils'
-import { calculateAgeAtYear } from '@/lib/wishlist/age-calculation'
+import { calculateAgeAtYear } from '@/lib/bucket-list/age-calculation'
 import { useUserSettings } from '@/hooks/useUserSettings'
-import type { WishlistItem as WishlistItemType } from '@/lib/types/wishlist-item'
+import type { BucketListItem as BucketListItemType } from '@/lib/types/bucket-list-item'
 
-interface WishlistItemProps {
-  item: WishlistItemType
-  onEdit?: (item: WishlistItemType) => void
-  onDelete?: (item: WishlistItemType) => void
-  onToggleCompletion?: (item: WishlistItemType) => void
+interface BucketListItemProps {
+  item: BucketListItemType
+  onEdit?: (item: BucketListItemType) => void
+  onDelete?: (item: BucketListItemType) => void
+  onToggleCompletion?: (item: BucketListItemType) => void
 }
 
-export function WishlistItem({
+export function BucketListItem({
   item,
   onEdit,
   onDelete,
   onToggleCompletion,
-}: WishlistItemProps) {
+}: BucketListItemProps) {
   const { userSettings } = useUserSettings()
 
   const ageInfo = useMemo(() => {

@@ -7,29 +7,29 @@ import { Trash2, Pencil, Check, X } from 'lucide-react'
 import { DeleteConfirmDialog } from '@/components/ui/delete-confirm-dialog'
 import { Loading } from '@/components/ui/loading'
 import { ErrorMessage } from '@/components/ui/error-message'
-import { useWishlistCategories } from '@/hooks/useWishlistCategories'
+import { useBucketListCategories } from '@/hooks/useBucketListCategories'
 import type {
-  WishlistCategory,
-  CreateWishlistCategoryInput,
-  UpdateWishlistCategoryInput,
-} from '@/lib/types/wishlist-category'
+  BucketListCategory,
+  CreateBucketListCategoryInput,
+  UpdateBucketListCategoryInput,
+} from '@/lib/types/bucket-list-category'
 
-export function WishlistCategoryManagement() {
+export function BucketListCategoryManagement() {
   const {
     categories,
     isLoading,
     error,
-    createWishlistCategory,
-    updateWishlistCategory,
-    deleteWishlistCategory,
-  } = useWishlistCategories()
+    createBucketListCategory,
+    updateBucketListCategory,
+    deleteBucketListCategory,
+  } = useBucketListCategories()
   const [editingCategoryId, setEditingCategoryId] = useState<number | null>(
     null,
   )
   const [editingName, setEditingName] = useState<string>('')
   const [newCategoryName, setNewCategoryName] = useState<string>('')
   const [deletingCategory, setDeletingCategory] = useState<
-    WishlistCategory | undefined
+    BucketListCategory | undefined
   >(undefined)
   const [operationError, setOperationError] = useState<string | null>(null)
   const [isCreating, setIsCreating] = useState(false)
@@ -41,7 +41,7 @@ export function WishlistCategoryManagement() {
     try {
       setOperationError(null)
       setIsCreating(true)
-      await createWishlistCategory({ name: newCategoryName.trim() })
+      await createBucketListCategory({ name: newCategoryName.trim() })
       setNewCategoryName('')
     } catch (err) {
       setOperationError(
@@ -52,7 +52,7 @@ export function WishlistCategoryManagement() {
     }
   }
 
-  const handleStartEdit = (category: WishlistCategory) => {
+  const handleStartEdit = (category: BucketListCategory) => {
     setEditingCategoryId(category.id)
     setEditingName(category.name)
   }
@@ -67,10 +67,10 @@ export function WishlistCategoryManagement() {
 
     try {
       setOperationError(null)
-      const updateInput: UpdateWishlistCategoryInput = {
+      const updateInput: UpdateBucketListCategoryInput = {
         name: editingName.trim(),
       }
-      await updateWishlistCategory(id, updateInput)
+      await updateBucketListCategory(id, updateInput)
       setEditingCategoryId(null)
       setEditingName('')
     } catch (err) {
@@ -85,7 +85,7 @@ export function WishlistCategoryManagement() {
 
     try {
       setOperationError(null)
-      await deleteWishlistCategory(deletingCategory.id)
+      await deleteBucketListCategory(deletingCategory.id)
       setDeletingCategory(undefined)
     } catch (err) {
       setOperationError(
@@ -94,7 +94,7 @@ export function WishlistCategoryManagement() {
     }
   }
 
-  const handleDeleteClick = (category: WishlistCategory) => {
+  const handleDeleteClick = (category: BucketListCategory) => {
     setDeletingCategory(category)
   }
 

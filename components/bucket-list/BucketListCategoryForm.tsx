@@ -15,41 +15,41 @@ import {
 import { Input } from '@/components/ui/input'
 import { Button } from '@/components/ui/button'
 import type {
-  WishlistCategory,
-  CreateWishlistCategoryInput,
-} from '@/lib/types/wishlist-category'
+  BucketListCategory,
+  CreateBucketListCategoryInput,
+} from '@/lib/types/bucket-list-category'
 
-const wishlistCategoryFormSchema = z.object({
+const bucketListCategoryFormSchema = z.object({
   name: z.string().min(1, 'カテゴリー名は必須です'),
 })
 
-type WishlistCategoryFormValues = z.infer<typeof wishlistCategoryFormSchema>
+type BucketListCategoryFormValues = z.infer<typeof bucketListCategoryFormSchema>
 
-interface WishlistCategoryFormProps {
-  onSubmit: (data: CreateWishlistCategoryInput) => Promise<void>
+interface BucketListCategoryFormProps {
+  onSubmit: (data: CreateBucketListCategoryInput) => Promise<void>
   onCancel?: () => void
-  initialData?: WishlistCategory
+  initialData?: BucketListCategory
   submitLabel?: string
 }
 
-export const WishlistCategoryForm = ({
+export const BucketListCategoryForm = ({
   onSubmit,
   onCancel,
   initialData,
   submitLabel = '作成',
-}: WishlistCategoryFormProps) => {
-  const formValues = useMemo<WishlistCategoryFormValues>(() => {
+}: BucketListCategoryFormProps) => {
+  const formValues = useMemo<BucketListCategoryFormValues>(() => {
     return {
       name: initialData?.name || '',
     }
   }, [initialData])
 
-  const form = useForm<WishlistCategoryFormValues>({
-    resolver: zodResolver(wishlistCategoryFormSchema),
+  const form = useForm<BucketListCategoryFormValues>({
+    resolver: zodResolver(bucketListCategoryFormSchema),
     values: formValues,
   })
 
-  const handleSubmit = async (data: WishlistCategoryFormValues) => {
+  const handleSubmit = async (data: BucketListCategoryFormValues) => {
     await onSubmit({
       name: data.name,
     })
