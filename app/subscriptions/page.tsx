@@ -1,7 +1,6 @@
 'use client'
 
 import { useState, useMemo } from 'react'
-import Link from 'next/link'
 import { Button } from '@/components/ui/button'
 import {
   Accordion,
@@ -15,6 +14,7 @@ import { SubscriptionDialog } from '@/components/subscriptions/SubscriptionDialo
 import { DeleteConfirmDialog } from '@/components/ui/delete-confirm-dialog'
 import { Loading } from '@/components/ui/loading'
 import { ErrorMessage } from '@/components/ui/error-message'
+import { MainLayout } from '@/components/layout/MainLayout'
 import { useSubscriptions } from '@/hooks/useSubscriptions'
 import { useMode } from '@/lib/contexts/ModeContext'
 import {
@@ -157,23 +157,16 @@ export default function SubscriptionsPage() {
   }
 
   return (
-    <div className="container mx-auto max-w-4xl py-8 px-4">
-      <div className="mb-6">
-        <div className="mb-2 flex items-center justify-between">
-          <Link
-            href="/"
-            className="text-sm text-muted-foreground hover:text-foreground"
-          >
-            ← ホームに戻る
-          </Link>
+    <MainLayout>
+      <div className="container mx-auto max-w-4xl py-8 px-4">
+        <div className="mb-6">
+          <div className="flex items-center justify-between">
+            <h1 className="text-3xl font-bold">サブスク管理</h1>
+            <Button onClick={() => setIsDialogOpen(true)}>
+              サブスクを追加
+            </Button>
+          </div>
         </div>
-        <div className="flex items-center justify-between">
-          <h1 className="text-3xl font-bold">サブスク管理</h1>
-          <Button onClick={() => setIsDialogOpen(true)}>
-            サブスクを追加
-          </Button>
-        </div>
-      </div>
 
       {monthlyTotal > 0 && (
         <div className="mb-6 rounded-lg border border-stone-200 bg-white p-4 dark:border-stone-800 dark:bg-stone-900">
@@ -254,6 +247,7 @@ export default function SubscriptionsPage() {
         onConfirm={handleDeleteSubscription}
         onCancel={() => setDeletingSubscription(undefined)}
       />
-    </div>
+      </div>
+    </MainLayout>
   )
 }

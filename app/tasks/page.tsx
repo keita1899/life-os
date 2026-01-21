@@ -1,7 +1,6 @@
 'use client'
 
 import { useState, useMemo } from 'react'
-import Link from 'next/link'
 import { Trash2 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import {
@@ -16,6 +15,7 @@ import { TaskDialog } from '@/components/tasks/TaskDialog'
 import { DeleteConfirmDialog } from '@/components/ui/delete-confirm-dialog'
 import { Loading } from '@/components/ui/loading'
 import { ErrorMessage } from '@/components/ui/error-message'
+import { MainLayout } from '@/components/layout/MainLayout'
 import { useTasks } from '@/hooks/useTasks'
 import { useMode } from '@/lib/contexts/ModeContext'
 import { groupTasks } from '@/lib/tasks/grouping'
@@ -142,23 +142,16 @@ export default function TasksPage() {
   }
 
   return (
-    <div className="container mx-auto max-w-4xl py-8 px-4">
-      <div className="mb-6">
-        <div className="mb-2 flex items-center justify-between">
-          <Link
-            href="/"
-            className="text-sm text-muted-foreground hover:text-foreground"
-          >
-            ← ホームに戻る
-          </Link>
-        </div>
-        <div className="flex items-center justify-between">
-          <div>
-            <h1 className="text-3xl font-bold">タスク管理</h1>
+    <MainLayout>
+      <div className="container mx-auto max-w-4xl py-8 px-4">
+        <div className="mb-6">
+          <div className="flex items-center justify-between">
+            <div>
+              <h1 className="text-3xl font-bold">タスク管理</h1>
+            </div>
+            <Button onClick={() => setIsDialogOpen(true)}>タスクを作成</Button>
           </div>
-          <Button onClick={() => setIsDialogOpen(true)}>タスクを作成</Button>
         </div>
-      </div>
 
       <ErrorMessage
         message={operationError || error || ''}
@@ -238,6 +231,7 @@ export default function TasksPage() {
         onConfirm={handleDeleteCompletedTasks}
         onCancel={() => setIsDeletingCompletedDialogOpen(false)}
       />
-    </div>
+      </div>
+    </MainLayout>
   )
 }

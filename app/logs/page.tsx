@@ -5,7 +5,6 @@ import { useSearchParams } from 'next/navigation'
 import { format, getYear } from 'date-fns'
 import { ja } from 'date-fns/locale/ja'
 import { parseISO, isValid, addDays, subDays } from 'date-fns'
-import Link from 'next/link'
 import { useMode } from '@/lib/contexts/ModeContext'
 import { useRouter } from 'next/navigation'
 import { Button } from '@/components/ui/button'
@@ -17,6 +16,7 @@ import { useUserSettings } from '@/hooks/useUserSettings'
 import { useDailyLog } from '@/hooks/useDailyLog'
 import { Loading } from '@/components/ui/loading'
 import { ErrorMessage } from '@/components/ui/error-message'
+import { MainLayout } from '@/components/layout/MainLayout'
 import { LogGoalsSection } from '@/components/logs/LogGoalsSection'
 import { LogTasksSection } from '@/components/logs/LogTasksSection'
 import { LogEventsSection } from '@/components/logs/LogEventsSection'
@@ -178,18 +178,11 @@ function LogPageView({ logDate, date }: LogPageViewProps) {
   const error = goalsError || tasksError || eventsError
 
   return (
-    <div className="container mx-auto max-w-4xl py-8 px-4">
-      <div className="mb-6">
-        <div className="mb-2 flex items-center justify-between">
-          <Link
-            href="/"
-            className="text-sm text-muted-foreground hover:text-foreground"
-          >
-            ← ホームに戻る
-          </Link>
-        </div>
-        <div className="flex items-center justify-between">
-          <h1 className="text-3xl font-bold">{formattedDate}のログ</h1>
+    <MainLayout>
+      <div className="container mx-auto max-w-4xl py-8 px-4">
+        <div className="mb-6">
+          <div className="flex items-center justify-between">
+            <h1 className="text-3xl font-bold">{formattedDate}のログ</h1>
           <div className="flex items-center gap-2">
             <Button
               variant="outline"
@@ -259,7 +252,8 @@ function LogPageView({ logDate, date }: LogPageViewProps) {
         onConfirm={handleDeleteTask}
         onCancel={() => setDeletingTask(undefined)}
       />
-    </div>
+      </div>
+    </MainLayout>
   )
 }
 

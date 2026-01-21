@@ -1,10 +1,10 @@
 'use client'
 
 import { useState } from 'react'
-import Link from 'next/link'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Loading } from '@/components/ui/loading'
 import { ErrorMessage } from '@/components/ui/error-message'
+import { MainLayout } from '@/components/layout/MainLayout'
 import { UserSettingsForm } from '@/components/settings/UserSettingsForm'
 import { useUserSettings } from '@/hooks/useUserSettings'
 import type { UpdateUserSettingsInput } from '@/lib/types/user-settings'
@@ -38,18 +38,11 @@ export default function SettingsPage() {
   }
 
   return (
-    <div className="container mx-auto max-w-4xl py-8 px-4">
-      <div className="mb-6">
-        <div className="mb-2 flex items-center justify-between">
-          <Link
-            href="/"
-            className="text-sm text-muted-foreground hover:text-foreground"
-          >
-            ← ホームに戻る
-          </Link>
+    <MainLayout>
+      <div className="container mx-auto max-w-4xl py-8 px-4">
+        <div className="mb-6">
+          <h1 className="text-3xl font-bold">設定</h1>
         </div>
-        <h1 className="text-3xl font-bold">設定</h1>
-      </div>
 
       <ErrorMessage
         message={operationError || error || ''}
@@ -78,6 +71,7 @@ export default function SettingsPage() {
           </CardContent>
         </Card>
       )}
-    </div>
+      </div>
+    </MainLayout>
   )
 }

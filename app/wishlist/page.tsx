@@ -1,7 +1,6 @@
 'use client'
 
 import { useState, useMemo } from 'react'
-import Link from 'next/link'
 import { Trash2 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import {
@@ -23,6 +22,7 @@ import { WishlistCategoryManagement } from '@/components/wishlist/WishlistCatego
 import { DeleteConfirmDialog } from '@/components/ui/delete-confirm-dialog'
 import { Loading } from '@/components/ui/loading'
 import { ErrorMessage } from '@/components/ui/error-message'
+import { MainLayout } from '@/components/layout/MainLayout'
 import { useWishlist } from '@/hooks/useWishlist'
 import { useMode } from '@/lib/contexts/ModeContext'
 import type {
@@ -171,31 +171,24 @@ export default function WishlistPage() {
   }
 
   return (
-    <div className="container mx-auto max-w-4xl py-8 px-4">
-      <div className="mb-6">
-        <div className="mb-2 flex items-center justify-between">
-          <Link
-            href="/"
-            className="text-sm text-muted-foreground hover:text-foreground"
-          >
-            ← ホームに戻る
-          </Link>
-        </div>
-        <div className="flex items-center justify-between">
-          <h1 className="text-3xl font-bold">やりたいことリスト</h1>
-          <div className="flex items-center gap-2">
-            <Button
-              variant="outline"
-              onClick={() => setIsCategoryManagementOpen(true)}
-            >
-              カテゴリー管理
-            </Button>
-            <Button onClick={() => setIsDialogOpen(true)}>
-              やりたいことを作成
-            </Button>
+    <MainLayout>
+      <div className="container mx-auto max-w-4xl py-8 px-4">
+        <div className="mb-6">
+          <div className="flex items-center justify-between">
+            <h1 className="text-3xl font-bold">やりたいことリスト</h1>
+            <div className="flex items-center gap-2">
+              <Button
+                variant="outline"
+                onClick={() => setIsCategoryManagementOpen(true)}
+              >
+                カテゴリー管理
+              </Button>
+              <Button onClick={() => setIsDialogOpen(true)}>
+                やりたいことを作成
+              </Button>
+            </div>
           </div>
         </div>
-      </div>
 
       <ErrorMessage
         message={operationError || error || ''}
@@ -287,6 +280,7 @@ export default function WishlistPage() {
         onConfirm={handleDeleteCompletedItems}
         onCancel={() => setIsDeletingCompletedDialogOpen(false)}
       />
-    </div>
+      </div>
+    </MainLayout>
   )
 }
