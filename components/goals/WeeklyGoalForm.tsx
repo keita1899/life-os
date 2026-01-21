@@ -202,11 +202,17 @@ export function WeeklyGoalForm({
           <div className="group relative flex h-10 flex-1 items-center gap-2 rounded-lg border border-purple-200 bg-purple-50 px-3 py-2 text-sm font-medium text-purple-900 transition-colors hover:bg-purple-100 dark:border-purple-800 dark:bg-purple-950/50 dark:text-purple-100 dark:hover:bg-purple-900/50">
             <button
               type="button"
-              onClick={() =>
-                currentWeeklyGoal &&
-                toggleWeeklyGoalAchievement(currentWeeklyGoal.id)
-              }
-              className="focus:outline-none"
+              onClick={async () => {
+                if (!currentWeeklyGoal) return
+                try {
+                  await toggleWeeklyGoalAchievement(currentWeeklyGoal.id)
+                } catch (err) {
+                  console.error('週間目標の達成状態の更新に失敗しました:', err)
+                }
+              }}
+              aria-label={currentWeeklyGoal.achieved ? '未達成にする' : '達成にする'}
+              aria-pressed={currentWeeklyGoal.achieved}
+              className="focus-visible:ring-2 focus-visible:ring-offset-1 focus-visible:ring-indigo-500 focus:outline-none"
             >
               {currentWeeklyGoal.achieved ? (
                 <CheckCircle2 className="h-5 w-5 text-green-500" />

@@ -10,13 +10,29 @@ interface MainLayoutProps {
 
 const SIDEBAR_STORAGE_KEY = 'sidebar-open'
 
-export function MainLayout({ children }: MainLayoutProps) {
-  const [isSidebarOpen, setIsSidebarOpen] = useState(true)
-
-  useEffect(() => {
+function getInitialSidebarState(): boolean {
+  try {
     const saved = localStorage.getItem(SIDEBAR_STORAGE_KEY)
     if (saved !== null) {
-      setIsSidebarOpen(saved === 'true')
+      return saved === 'true'
+    }
+  } catch {
+    // localStorage access failed, use default
+  }
+  return false
+}
+
+export function MainLayout({ children }: MainLayoutProps) {
+  const [isSidebarOpen, setIsSidebarOpen] = useState(getInitialSidebarState)
+
+  useEffect(() => {
+    try {
+      const saved = localStorage.getItem(SIDEBAR_STORAGE_KEY)
+      if (saved !== null) {
+        setIsSidebarOpen(saved === 'true')
+      }
+    } catch {
+      // localStorage access failed, keep current state
     }
   }, [])
 

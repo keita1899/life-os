@@ -110,7 +110,9 @@ export const MonthlyGoalsSection = ({
                               <button
                                 type="button"
                                 onClick={() => onToggleAchievement(goal)}
-                                className="mt-0.5 focus:outline-none"
+                                aria-label={goal.achieved ? '未達成にする' : '達成にする'}
+                                aria-pressed={goal.achieved}
+                                className="mt-0.5 focus-visible:ring-2 focus-visible:ring-offset-1 focus-visible:ring-indigo-500 focus:outline-none"
                               >
                                 {goal.achieved ? (
                                   <CheckCircle2 className="h-5 w-5 text-green-500" />
