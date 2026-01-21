@@ -22,8 +22,11 @@ import {
   PopoverTrigger,
 } from '@/components/ui/popover'
 import { EventPopoverContent } from './EventPopover'
+import { TaskPopoverContent } from './TaskPopover'
 import type { MonthlyGoal } from '@/lib/types/monthly-goal'
 import type { Event } from '@/lib/types/event'
+import type { Task } from '@/lib/types/task'
+import { getTasksForDate } from '@/lib/logs/utils'
 
 function EventPopoverWrapper({
   event,
@@ -69,12 +72,52 @@ function EventPopoverWrapper({
   )
 }
 
+function TaskPopoverWrapper({
+  task,
+  onOpenChange,
+}: {
+  task: Task
+  onOpenChange?: (open: boolean) => void
+}) {
+  const [isOpen, setIsOpen] = useState(false)
+
+  const handleOpenChange = (open: boolean) => {
+    setIsOpen(open)
+    onOpenChange?.(open)
+  }
+
+  return (
+    <Popover open={isOpen} onOpenChange={handleOpenChange}>
+      <PopoverTrigger asChild>
+        <button
+          className={cn(
+            'w-full truncate rounded px-1 text-left text-xs hover:opacity-80',
+            task.completed
+              ? 'bg-stone-100 text-stone-600 dark:bg-stone-800 dark:text-stone-400'
+              : 'bg-orange-100 text-orange-900 dark:bg-orange-900/30 dark:text-orange-300',
+          )}
+          title={task.title}
+          onClick={(e) => {
+            e.stopPropagation()
+          }}
+        >
+          {task.title}
+        </button>
+      </PopoverTrigger>
+      <PopoverContent>
+        <TaskPopoverContent task={task} />
+      </PopoverContent>
+    </Popover>
+  )
+}
+
 function DateCell({
   date,
   isCurrentMonthDay,
   isTodayDate,
   allItems,
   dayEvents,
+  dayTasks,
 }: {
   date: Date
   isCurrentMonthDay: boolean
@@ -84,6 +127,7 @@ function DateCell({
     | { type: 'event'; id: number; title: string; time?: string; data: Event }
   >
   dayEvents: Event[]
+  dayTasks: Task[]
 }) {
   const router = useRouter()
   const [hasOpenPopover, setHasOpenPopover] = useState(false)
@@ -162,6 +206,24 @@ function DateCell({
             +{dayEvents.length - 1}
           </div>
         )}
+        {dayTasks.length > 0 && (
+          <>
+            <div className="mt-1.5 space-y-0.5">
+              {dayTasks.slice(0, 2).map((task) => (
+                <TaskPopoverWrapper
+                  key={task.id}
+                  task={task}
+                  onOpenChange={(open) => setHasOpenPopover(open)}
+                />
+              ))}
+              {dayTasks.length > 2 && (
+                <div className="text-xs text-muted-foreground">
+                  +{dayTasks.length - 2}
+                </div>
+              )}
+            </div>
+          </>
+        )}
       </div>
     </div>
   )
@@ -171,6 +233,7 @@ interface MonthViewProps {
   currentDate: Date
   monthlyGoals: MonthlyGoal[]
   events?: Event[]
+  tasks?: Task[]
   weekStartDay?: number
 }
 
@@ -178,6 +241,7 @@ export function MonthView({
   currentDate,
   monthlyGoals,
   events = [],
+  tasks = [],
   weekStartDay = 0,
 }: MonthViewProps) {
   const calendarDays = useMemo(
@@ -212,6 +276,7 @@ export function MonthView({
             const isTodayDate = isToday(date)
             const dayGoals = getGoalsForDate(monthlyGoals, date)
             const dayEvents = sortEventsByTime(getEventsForDate(events, date))
+            const dayTasks = getTasksForDate(tasks, date)
             const allItems = [
               ...dayGoals.map((goal) => ({
                 type: 'goal' as const,
@@ -236,6 +301,7 @@ export function MonthView({
                 isTodayDate={isTodayDate}
                 allItems={allItems}
                 dayEvents={dayEvents}
+                dayTasks={dayTasks}
               />
             )
           }),
