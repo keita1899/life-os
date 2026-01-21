@@ -1,11 +1,11 @@
 'use client'
 
 import { useState, useMemo } from 'react'
-import Link from 'next/link'
 import { Button } from '@/components/ui/button'
 import {
   Accordion,
   AccordionContent,
+  AccordionHeader,
   AccordionItem,
   AccordionTrigger,
 } from '@/components/ui/accordion'
@@ -14,6 +14,7 @@ import { EventDialog } from '@/components/events/EventDialog'
 import { DeleteConfirmDialog } from '@/components/ui/delete-confirm-dialog'
 import { Loading } from '@/components/ui/loading'
 import { ErrorMessage } from '@/components/ui/error-message'
+import { MainLayout } from '@/components/layout/MainLayout'
 import { useEvents } from '@/hooks/useEvents'
 import { useMode } from '@/lib/contexts/ModeContext'
 import { groupEvents } from '@/lib/events/grouping'
@@ -106,23 +107,16 @@ export default function EventsPage() {
   }
 
   return (
-    <div className="container mx-auto max-w-4xl py-8 px-4">
-      <div className="mb-6">
-        <div className="mb-2 flex items-center justify-between">
-          <Link
-            href="/"
-            className="text-sm text-muted-foreground hover:text-foreground"
-          >
-            ← ホームに戻る
-          </Link>
-        </div>
-        <div className="flex items-center justify-between">
-          <div>
-            <h1 className="text-3xl font-bold">予定管理</h1>
+    <MainLayout>
+      <div className="container mx-auto max-w-4xl py-8 px-4">
+        <div className="mb-6">
+          <div className="flex items-center justify-between">
+            <div>
+              <h1 className="text-3xl font-bold">予定</h1>
+            </div>
+            <Button onClick={() => setIsDialogOpen(true)}>予定を作成</Button>
           </div>
-          <Button onClick={() => setIsDialogOpen(true)}>予定を作成</Button>
         </div>
-      </div>
 
       <ErrorMessage
         message={operationError || error || ''}
@@ -132,11 +126,15 @@ export default function EventsPage() {
       {isLoading ? (
         <Loading />
       ) : (
-        <Accordion type="multiple" className="w-full">
+        <Accordion
+          type="multiple"
+          className="w-full"
+          defaultValue={groupedEvents.map((group) => group.key)}
+        >
           {groupedEvents.map((group) => (
             <AccordionItem key={group.key} value={group.key}>
-              <AccordionTrigger className="hover:no-underline">
-                <div className="flex w-full items-center justify-between pr-4">
+              <AccordionHeader>
+                <AccordionTrigger className="hover:no-underline">
                   <div className="flex items-center gap-2">
                     <h2 className="text-lg font-semibold text-stone-900 dark:text-stone-100">
                       {group.title}
@@ -145,8 +143,8 @@ export default function EventsPage() {
                       ({group.events.length})
                     </span>
                   </div>
-                </div>
-              </AccordionTrigger>
+                </AccordionTrigger>
+              </AccordionHeader>
               <AccordionContent>
                 <EventList
                   events={group.events}
@@ -172,6 +170,7 @@ export default function EventsPage() {
         onConfirm={handleDeleteEvent}
         onCancel={() => setDeletingEvent(undefined)}
       />
-    </div>
+      </div>
+    </MainLayout>
   )
 }

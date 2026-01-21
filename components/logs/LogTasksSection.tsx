@@ -9,6 +9,7 @@ interface LogTasksSectionProps {
   onToggleCompletion?: (task: Task) => void
   onEdit?: (task: Task) => void
   onDelete?: (task: Task) => void
+  onUpdateExecutionDate?: (task: Task, executionDate: string | null) => void
 }
 
 export function LogTasksSection({
@@ -16,6 +17,7 @@ export function LogTasksSection({
   onToggleCompletion,
   onEdit,
   onDelete,
+  onUpdateExecutionDate,
 }: LogTasksSectionProps) {
   return (
     <Card>
@@ -28,6 +30,7 @@ export function LogTasksSection({
           onToggleCompletion={onToggleCompletion}
           onEdit={onEdit}
           onDelete={onDelete}
+          onUpdateExecutionDate={onUpdateExecutionDate}
         />
       </CardContent>
     </Card>

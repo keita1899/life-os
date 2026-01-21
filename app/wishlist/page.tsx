@@ -1,7 +1,6 @@
 'use client'
 
 import { useState, useMemo } from 'react'
-import Link from 'next/link'
 import { Trash2 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import {
@@ -23,8 +22,17 @@ import { WishlistCategoryManagement } from '@/components/wishlist/WishlistCatego
 import { DeleteConfirmDialog } from '@/components/ui/delete-confirm-dialog'
 import { Loading } from '@/components/ui/loading'
 import { ErrorMessage } from '@/components/ui/error-message'
+import { MainLayout } from '@/components/layout/MainLayout'
 import { useWishlist } from '@/hooks/useWishlist'
+import { useWishlistCategories } from '@/hooks/useWishlistCategories'
 import { useMode } from '@/lib/contexts/ModeContext'
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select'
 import type {
   CreateWishlistItemInput,
   WishlistItem,
@@ -43,6 +51,9 @@ export default function WishlistPage() {
     toggleWishlistItemCompletion,
     deleteCompletedWishlistItems,
   } = useWishlist()
+  const { categories } = useWishlistCategories()
+  const [selectedCategoryId, setSelectedCategoryId] = useState<string>('all')
+  const [selectedYear, setSelectedYear] = useState<string>('all')
   const [isDialogOpen, setIsDialogOpen] = useState(false)
   const [editingItem, setEditingItem] = useState<WishlistItem | undefined>(
     undefined,
@@ -56,9 +67,39 @@ export default function WishlistPage() {
     useState(false)
   const [operationError, setOperationError] = useState<string | null>(null)
 
+  const availableYears = useMemo(() => {
+    const years = new Set<number>()
+    items.forEach((item) => {
+      if (item.targetYear !== null) {
+        years.add(item.targetYear)
+      }
+    })
+    return Array.from(years).sort((a, b) => b - a)
+  }, [items])
+
+  const filteredItems = useMemo(() => {
+    let filtered = items
+
+    if (selectedCategoryId === 'none') {
+      filtered = filtered.filter((item) => item.categoryId === null)
+    } else if (selectedCategoryId !== 'all') {
+      const categoryId = Number(selectedCategoryId)
+      filtered = filtered.filter((item) => item.categoryId === categoryId)
+    }
+
+    if (selectedYear === 'none') {
+      filtered = filtered.filter((item) => item.targetYear === null)
+    } else if (selectedYear !== 'all') {
+      const year = Number(selectedYear)
+      filtered = filtered.filter((item) => item.targetYear === year)
+    }
+
+    return filtered
+  }, [items, selectedCategoryId, selectedYear])
+
   const groupedItems = useMemo(() => {
-    const incomplete = items.filter((item) => !item.completed)
-    const completed = items.filter((item) => item.completed)
+    const incomplete = filteredItems.filter((item) => !item.completed)
+    const completed = filteredItems.filter((item) => item.completed)
     return [
       {
         key: 'incomplete',
@@ -71,7 +112,7 @@ export default function WishlistPage() {
         items: completed,
       },
     ]
-  }, [items])
+  }, [filteredItems])
 
   if (mode !== 'life') {
     return null
@@ -171,31 +212,24 @@ export default function WishlistPage() {
   }
 
   return (
-    <div className="container mx-auto max-w-4xl py-8 px-4">
-      <div className="mb-6">
-        <div className="mb-2 flex items-center justify-between">
-          <Link
-            href="/"
-            className="text-sm text-muted-foreground hover:text-foreground"
-          >
-            ← ホームに戻る
-          </Link>
-        </div>
-        <div className="flex items-center justify-between">
-          <h1 className="text-3xl font-bold">やりたいことリスト</h1>
-          <div className="flex items-center gap-2">
-            <Button
-              variant="outline"
-              onClick={() => setIsCategoryManagementOpen(true)}
-            >
-              カテゴリー管理
-            </Button>
-            <Button onClick={() => setIsDialogOpen(true)}>
-              やりたいことを作成
-            </Button>
+    <MainLayout>
+      <div className="container mx-auto max-w-4xl py-8 px-4">
+        <div className="mb-6">
+          <div className="flex items-center justify-between">
+            <h1 className="text-3xl font-bold">やりたいことリスト</h1>
+            <div className="flex items-center gap-2">
+              <Button
+                variant="outline"
+                onClick={() => setIsCategoryManagementOpen(true)}
+              >
+                カテゴリー管理
+              </Button>
+              <Button onClick={() => setIsDialogOpen(true)}>
+                やりたいことを作成
+              </Button>
+            </div>
           </div>
         </div>
-      </div>
 
       <ErrorMessage
         message={operationError || error || ''}
@@ -205,48 +239,84 @@ export default function WishlistPage() {
       {isLoading ? (
         <Loading />
       ) : (
-        <Accordion type="multiple" className="w-full">
-          {groupedItems.map((group) => (
-            <AccordionItem key={group.key} value={group.key}>
-              <AccordionHeader>
-                <AccordionTrigger className="hover:no-underline">
-                  <div className="flex items-center gap-2">
-                    <h2 className="text-lg font-semibold text-stone-900 dark:text-stone-100">
-                      {group.title}
-                    </h2>
-                    <span className="text-sm text-muted-foreground">
-                      ({group.items.length})
-                    </span>
-                  </div>
-                </AccordionTrigger>
-              </AccordionHeader>
-              <AccordionContent>
-                <div className="space-y-4">
-                  <WishlistList
-                    items={group.items}
-                    onEdit={handleEditItem}
-                    onDelete={handleDeleteClick}
-                    onToggleCompletion={handleToggleCompletion}
-                  />
-                  {group.key === 'completed' && group.items.length > 0 && (
-                    <div className="flex justify-end">
-                      <Button
-                        type="button"
-                        variant="outline"
-                        size="sm"
-                        className="text-destructive hover:text-destructive hover:bg-destructive/10"
-                        onClick={handleDeleteCompletedItemsClick}
-                      >
-                        <Trash2 className="mr-2 h-4 w-4" />
-                        完了済みを一括削除
-                      </Button>
+        <>
+          <div className="mb-4 flex justify-end gap-2">
+            <Select value={selectedCategoryId} onValueChange={setSelectedCategoryId}>
+              <SelectTrigger className="w-[200px]">
+                <SelectValue placeholder="カテゴリーを選択" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">すべてのカテゴリー</SelectItem>
+                <SelectItem value="none">未分類</SelectItem>
+                {categories.map((category) => (
+                  <SelectItem key={category.id} value={category.id.toString()}>
+                    {category.name}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            <Select value={selectedYear} onValueChange={setSelectedYear}>
+              <SelectTrigger className="w-[200px]">
+                <SelectValue placeholder="年を選択" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">全期間</SelectItem>
+                <SelectItem value="none">未設定</SelectItem>
+                {availableYears.map((year) => (
+                  <SelectItem key={year} value={year.toString()}>
+                    {year}年
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+          <Accordion
+            type="multiple"
+            className="w-full"
+            defaultValue={groupedItems.map((group) => group.key)}
+          >
+            {groupedItems.map((group) => (
+              <AccordionItem key={group.key} value={group.key}>
+                <AccordionHeader>
+                  <AccordionTrigger className="hover:no-underline">
+                    <div className="flex items-center gap-2">
+                      <h2 className="text-lg font-semibold text-stone-900 dark:text-stone-100">
+                        {group.title}
+                      </h2>
+                      <span className="text-sm text-muted-foreground">
+                        ({group.items.length})
+                      </span>
                     </div>
-                  )}
-                </div>
-              </AccordionContent>
-            </AccordionItem>
-          ))}
-        </Accordion>
+                  </AccordionTrigger>
+                </AccordionHeader>
+                <AccordionContent>
+                  <div className="space-y-4">
+                    <WishlistList
+                      items={group.items}
+                      onEdit={handleEditItem}
+                      onDelete={handleDeleteClick}
+                      onToggleCompletion={handleToggleCompletion}
+                    />
+                    {group.key === 'completed' && group.items.length > 0 && (
+                      <div className="flex justify-end">
+                        <Button
+                          type="button"
+                          variant="outline"
+                          size="sm"
+                          className="text-destructive hover:text-destructive hover:bg-destructive/10"
+                          onClick={handleDeleteCompletedItemsClick}
+                        >
+                          <Trash2 className="mr-2 h-4 w-4" />
+                          完了済みを一括削除
+                        </Button>
+                      </div>
+                    )}
+                  </div>
+                </AccordionContent>
+              </AccordionItem>
+            ))}
+          </Accordion>
+        </>
       )}
 
       <WishlistDialog
@@ -283,6 +353,7 @@ export default function WishlistPage() {
         onConfirm={handleDeleteCompletedItems}
         onCancel={() => setIsDeletingCompletedDialogOpen(false)}
       />
-    </div>
+      </div>
+    </MainLayout>
   )
 }

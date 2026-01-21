@@ -13,6 +13,7 @@ interface DbMonthlyGoal {
   target_date: string | null
   year: number
   month: number
+  achieved: number
   created_at: string
   updated_at: string
 }
@@ -24,6 +25,7 @@ function mapDbMonthlyGoalToMonthlyGoal(dbGoal: DbMonthlyGoal): MonthlyGoal {
     targetDate: dbGoal.target_date,
     year: dbGoal.year,
     month: dbGoal.month,
+    achieved: dbGoal.achieved === 1,
     createdAt: dbGoal.created_at,
     updatedAt: dbGoal.updated_at,
   }
@@ -127,6 +129,28 @@ export async function getMonthlyGoalsByYear(
   )
 
   return result.map(mapDbMonthlyGoalToMonthlyGoal)
+}
+
+export async function toggleMonthlyGoalAchievement(
+  id: number,
+): Promise<MonthlyGoal> {
+  const db = await getDatabase()
+  const currentGoal = await getMonthlyGoal(id)
+  if (!currentGoal) {
+    throw new Error('Monthly goal not found')
+  }
+
+  await db.execute(
+    `UPDATE monthly_goals SET achieved = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?`,
+    [currentGoal.achieved ? 0 : 1, id],
+  )
+
+  const updatedGoal = await getMonthlyGoal(id)
+  if (!updatedGoal) {
+    throw new Error('Monthly goal not found')
+  }
+
+  return updatedGoal
 }
 
 export async function updateMonthlyGoal(

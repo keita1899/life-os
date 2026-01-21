@@ -14,10 +14,11 @@ import {
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Button } from '@/components/ui/button'
-import { Trash2 } from 'lucide-react'
+import { Trash2, CheckCircle2, Circle } from 'lucide-react'
 import { useGoals } from '@/hooks/useGoals'
 import { getWeekStartDate } from '@/lib/calendar/utils'
 import { formatDateISO } from '@/lib/date/formats'
+import { cn } from '@/lib/utils'
 import type { WeeklyGoal } from '@/lib/types/weekly-goal'
 
 const weeklyGoalFormSchema = z.object({
@@ -53,9 +54,12 @@ export function WeeklyGoalForm({
     [weeklyGoals, weekStartDateString],
   )
 
-  const { createWeeklyGoal, updateWeeklyGoal, deleteWeeklyGoal } = useGoals(
-    currentDate.getFullYear(),
-  )
+  const {
+    createWeeklyGoal,
+    updateWeeklyGoal,
+    deleteWeeklyGoal,
+    toggleWeeklyGoalAchievement,
+  } = useGoals(currentDate.getFullYear())
 
   const [isEditing, setIsEditing] = useState(false)
 
@@ -159,7 +163,7 @@ export function WeeklyGoalForm({
                       {...field}
                       id="weekly-goal-title"
                       ref={field.ref}
-                      autoFocus
+                      autoFocus={isEditing && !!currentWeeklyGoal}
                       placeholder="週間目標を入力"
                       disabled={form.formState.isSubmitting}
                       className="bg-white text-stone-900 border-stone-200 dark:bg-stone-50 dark:text-stone-900 dark:border-stone-800"
@@ -195,19 +199,49 @@ export function WeeklyGoalForm({
             </form>
           </Form>
         ) : (
-          <div
-            role="button"
-            tabIndex={0}
-            onDoubleClick={handleDoubleClick}
-            onKeyDown={(e) => {
-              if (e.key === 'Enter' || e.key === ' ') {
-                e.preventDefault()
-                handleDoubleClick()
-              }
-            }}
-            className="group relative flex h-10 flex-1 cursor-pointer items-center gap-2 rounded-lg border border-purple-200 bg-purple-50 px-3 py-2 text-sm font-medium text-purple-900 transition-colors hover:bg-purple-100 dark:border-purple-800 dark:bg-purple-950/50 dark:text-purple-100 dark:hover:bg-purple-900/50"
-          >
-            <span className="flex-1 truncate">{currentWeeklyGoal.title}</span>
+          <div className="group relative flex h-10 flex-1 items-center gap-2 rounded-lg border border-purple-200 bg-purple-50 px-3 py-2 text-sm font-medium text-purple-900 transition-colors hover:bg-purple-100 dark:border-purple-800 dark:bg-purple-950/50 dark:text-purple-100 dark:hover:bg-purple-900/50">
+            <button
+              type="button"
+              onClick={async () => {
+                if (!currentWeeklyGoal) return
+                try {
+                  await toggleWeeklyGoalAchievement(currentWeeklyGoal.id)
+                } catch (err) {
+                  console.error('週間目標の達成状態の更新に失敗しました:', err)
+                }
+              }}
+              aria-label={currentWeeklyGoal.achieved ? '未達成にする' : '達成にする'}
+              aria-pressed={currentWeeklyGoal.achieved}
+              className="focus-visible:ring-2 focus-visible:ring-offset-1 focus-visible:ring-indigo-500 focus:outline-none"
+            >
+              {currentWeeklyGoal.achieved ? (
+                <CheckCircle2 className="h-5 w-5 text-green-500" />
+              ) : (
+                <Circle className="h-5 w-5 text-stone-400" />
+              )}
+            </button>
+            <div
+              role="button"
+              tabIndex={0}
+              onDoubleClick={handleDoubleClick}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter' || e.key === ' ') {
+                  e.preventDefault()
+                  handleDoubleClick()
+                }
+              }}
+              className="flex-1 cursor-pointer"
+            >
+              <span
+                className={cn(
+                  'truncate',
+                  currentWeeklyGoal.achieved &&
+                    'line-through text-stone-500 dark:text-stone-400',
+                )}
+              >
+                {currentWeeklyGoal.title}
+              </span>
+            </div>
           <div className="absolute right-2 flex gap-1 opacity-0 transition-opacity group-hover:opacity-100 group-focus-within:opacity-100">
             <Button
               variant="ghost"

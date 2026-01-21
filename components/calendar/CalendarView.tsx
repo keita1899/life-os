@@ -16,6 +16,7 @@ import { WeekView } from './WeekView'
 import { MonthlyGoalCalendarForm } from '@/components/goals/MonthlyGoalCalendarForm'
 import { useGoals } from '@/hooks/useGoals'
 import { useEvents } from '@/hooks/useEvents'
+import { useTasks } from '@/hooks/useTasks'
 import { useUserSettings } from '@/hooks/useUserSettings'
 import {
   formatMonthYear,
@@ -42,8 +43,9 @@ export function CalendarView({ initialDate }: CalendarViewProps) {
     isLoading: isLoadingGoals,
   } = useGoals(currentYear)
   const { events, isLoading: isLoadingEvents } = useEvents()
+  const { tasks, isLoading: isLoadingTasks } = useTasks()
 
-  const isLoading = isLoadingGoals || isLoadingEvents || isLoadingSettings
+  const isLoading = isLoadingGoals || isLoadingEvents || isLoadingTasks || isLoadingSettings
 
   const weekStartDay = userSettings?.weekStartDay ?? 0
 
@@ -178,6 +180,7 @@ export function CalendarView({ initialDate }: CalendarViewProps) {
                   currentDate={currentDate}
                   monthlyGoals={monthlyGoals}
                   events={events}
+                  tasks={tasks}
                   weekStartDay={weekStartDay}
                 />
               ) : (
@@ -186,6 +189,7 @@ export function CalendarView({ initialDate }: CalendarViewProps) {
                   monthlyGoals={monthlyGoals}
                   weeklyGoals={weeklyGoals}
                   events={events}
+                  tasks={tasks}
                   weekStartDay={weekStartDay}
                 />
               )}

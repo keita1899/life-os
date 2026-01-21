@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useMemo } from 'react'
-import Link from 'next/link'
+import { CheckCircle2 } from 'lucide-react'
 import { useGoals } from '@/hooks/useGoals'
 import { YearlyGoalDialog } from '@/components/goals/YearlyGoalDialog'
 import { MonthlyGoalDialog } from '@/components/goals/MonthlyGoalDialog'
@@ -11,7 +11,7 @@ import { YearlyGoalsSection } from '@/components/goals/YearlyGoalsSection'
 import { MonthlyGoalsSection } from '@/components/goals/MonthlyGoalsSection'
 import { Loading } from '@/components/ui/loading'
 import { ErrorMessage } from '@/components/ui/error-message'
-import { ModeSwitch } from '@/components/mode/ModeSwitch'
+import { MainLayout } from '@/components/layout/MainLayout'
 import { useMode } from '@/lib/contexts/ModeContext'
 import type { YearlyGoal, CreateYearlyGoalInput } from '@/lib/types/yearly-goal'
 import type {
@@ -33,6 +33,9 @@ const GoalsPage = () => {
     createMonthlyGoal,
     deleteYearlyGoal,
     deleteMonthlyGoal,
+    toggleYearlyGoalAchievement,
+    toggleMonthlyGoalAchievement,
+    toggleWeeklyGoalAchievement,
     refreshGoals,
   } = useGoals(selectedYear)
   const [isYearlyDialogOpen, setIsYearlyDialogOpen] = useState(false)
@@ -170,6 +173,32 @@ const GoalsPage = () => {
     })
   }
 
+  const handleToggleYearlyGoalAchievement = async (goal: YearlyGoal) => {
+    try {
+      setOperationError(null)
+      await toggleYearlyGoalAchievement(goal.id)
+    } catch (err) {
+      setOperationError(
+        err instanceof Error
+          ? err.message
+          : '年間目標の達成状態の更新に失敗しました',
+      )
+    }
+  }
+
+  const handleToggleMonthlyGoalAchievement = async (goal: MonthlyGoal) => {
+    try {
+      setOperationError(null)
+      await toggleMonthlyGoalAchievement(goal.id)
+    } catch (err) {
+      setOperationError(
+        err instanceof Error
+          ? err.message
+          : '月間目標の達成状態の更新に失敗しました',
+      )
+    }
+  }
+
   const handleYearlyDialogClose = (open: boolean) => {
     setIsYearlyDialogOpen(open)
     if (!open) {
@@ -186,33 +215,44 @@ const GoalsPage = () => {
 
   const { mode } = useMode()
 
+  const activeYearlyGoals = useMemo(
+    () => yearlyGoals.filter((goal) => !goal.achieved),
+    [yearlyGoals],
+  )
+
+  const activeMonthlyGoals = useMemo(
+    () => allMonthlyGoals.filter((goal) => !goal.achieved),
+    [allMonthlyGoals],
+  )
+
+  const achievedYearlyGoals = useMemo(
+    () => yearlyGoals.filter((goal) => goal.achieved),
+    [yearlyGoals],
+  )
+
+  const achievedMonthlyGoals = useMemo(
+    () => allMonthlyGoals.filter((goal) => goal.achieved),
+    [allMonthlyGoals],
+  )
+
+  const hasAchievedGoals =
+    achievedYearlyGoals.length > 0 || achievedMonthlyGoals.length > 0
+
   if (mode !== 'life') {
     return null
   }
 
   return (
-    <div className="container mx-auto max-w-4xl py-8 px-4">
-      <div className="mb-6">
-        <div className="mb-2 flex items-center justify-between">
-          <Link
-            href="/"
-            className="text-sm text-muted-foreground hover:text-foreground"
-          >
-            ← ホームに戻る
-          </Link>
-          <ModeSwitch />
+    <MainLayout>
+      <div className="container mx-auto max-w-4xl py-8 px-4">
+        <div className="mb-6 flex items-center justify-between">
+          <h1 className="text-3xl font-bold">目標</h1>
+          <YearSelect
+            selectedYear={selectedYear}
+            availableYears={availableYears}
+            onYearChange={setSelectedYear}
+          />
         </div>
-        <h1 className="text-3xl font-bold">目標管理</h1>
-        <p className="text-muted-foreground mt-2">
-          あなたの目標を管理しましょう
-        </p>
-      </div>
-
-      <YearSelect
-        selectedYear={selectedYear}
-        availableYears={availableYears}
-        onYearChange={setSelectedYear}
-      />
 
       <ErrorMessage
         message={operationError || error || ''}
@@ -224,17 +264,18 @@ const GoalsPage = () => {
       ) : (
         <div className="space-y-6">
           <YearlyGoalsSection
-            goals={yearlyGoals}
+            goals={activeYearlyGoals}
             onCreateClick={() => {
               setEditingYearlyGoal(undefined)
               setIsYearlyDialogOpen(true)
             }}
             onEditClick={handleEditClick}
             onDeleteClick={handleDeleteClick}
+            onToggleAchievement={handleToggleYearlyGoalAchievement}
           />
 
           <MonthlyGoalsSection
-            goals={allMonthlyGoals}
+            goals={activeMonthlyGoals}
             selectedYear={selectedYear}
             onCreateClick={() => {
               setEditingMonthlyGoal(undefined)
@@ -242,7 +283,100 @@ const GoalsPage = () => {
             }}
             onEditClick={handleEditClick}
             onDeleteClick={handleDeleteClick}
+            onToggleAchievement={handleToggleMonthlyGoalAchievement}
           />
+
+          {hasAchievedGoals && (
+            <div className="rounded-lg border border-stone-200 bg-stone-50/30 p-6 dark:border-stone-800 dark:bg-stone-950/30">
+              <h2 className="mb-4 text-xl font-semibold text-stone-900 dark:text-stone-100">
+                達成した目標
+              </h2>
+              <div className="space-y-6">
+                {achievedYearlyGoals.length > 0 && (
+                  <div>
+                    <h3 className="mb-3 text-sm font-semibold text-muted-foreground uppercase tracking-wide">
+                      年間目標
+                    </h3>
+                    <div className="flex flex-col gap-4">
+                      {achievedYearlyGoals.map((goal) => (
+                        <div
+                          key={goal.id}
+                          className="rounded-lg border border-stone-200 bg-white p-4 dark:border-stone-800 dark:bg-stone-900"
+                        >
+                          <div className="flex items-start gap-3">
+                            <button
+                              type="button"
+                              onClick={() => handleToggleYearlyGoalAchievement(goal)}
+                              aria-label={`${goal.achieved ? '未達成にする' : '達成にする'}: ${goal.title}`}
+                              aria-pressed={goal.achieved}
+                              className="mt-0.5 focus-visible:ring-2 focus-visible:ring-offset-1 focus-visible:ring-indigo-500 focus:outline-none"
+                            >
+                              <CheckCircle2 className="h-5 w-5 text-green-500" />
+                            </button>
+                            <div className="flex-1">
+                              <h4 className="line-through text-stone-500 dark:text-stone-400">
+                                {goal.title}
+                              </h4>
+                              <p className="mt-1 text-xs text-muted-foreground">
+                                {goal.year}年
+                              </p>
+                              {goal.targetDate && (
+                                <p className="mt-1 text-xs text-muted-foreground">
+                                  期限: {new Date(goal.targetDate).toLocaleDateString('ja-JP')}
+                                </p>
+                              )}
+                            </div>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {achievedMonthlyGoals.length > 0 && (
+                  <div>
+                    <h3 className="mb-3 text-sm font-semibold text-muted-foreground uppercase tracking-wide">
+                      月間目標
+                    </h3>
+                    <div className="flex flex-col gap-4">
+                      {achievedMonthlyGoals.map((goal) => (
+                        <div
+                          key={goal.id}
+                          className="rounded-lg border border-stone-200 bg-white p-4 dark:border-stone-800 dark:bg-stone-900"
+                        >
+                          <div className="flex items-start gap-3">
+                            <button
+                              type="button"
+                              onClick={() => handleToggleMonthlyGoalAchievement(goal)}
+                              aria-label={`${goal.achieved ? '未達成にする' : '達成にする'}: ${goal.title}`}
+                              aria-pressed={goal.achieved}
+                              className="mt-0.5 focus-visible:ring-2 focus-visible:ring-offset-1 focus-visible:ring-indigo-500 focus:outline-none"
+                            >
+                              <CheckCircle2 className="h-5 w-5 text-green-500" />
+                            </button>
+                            <div className="flex-1">
+                              <h4 className="line-through text-stone-500 dark:text-stone-400">
+                                {goal.title}
+                              </h4>
+                              <p className="mt-1 text-xs text-muted-foreground">
+                                {goal.year}年{goal.month}月
+                              </p>
+                              {goal.targetDate && (
+                                <p className="mt-1 text-xs text-muted-foreground">
+                                  達成予定日:{' '}
+                                  {new Date(goal.targetDate).toLocaleDateString('ja-JP')}
+                                </p>
+                              )}
+                            </div>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+              </div>
+            </div>
+          )}
         </div>
       )}
 
@@ -272,7 +406,8 @@ const GoalsPage = () => {
         onConfirm={deleteConfirmDialog.onConfirm}
         onCancel={handleDeleteCancel}
       />
-    </div>
+      </div>
+    </MainLayout>
   )
 }
 

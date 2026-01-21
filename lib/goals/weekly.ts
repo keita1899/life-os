@@ -12,6 +12,7 @@ interface DbWeeklyGoal {
   title: string
   year: number
   week_start_date: string
+  achieved: number
   created_at: string
   updated_at: string
 }
@@ -22,6 +23,7 @@ function mapDbWeeklyGoalToWeeklyGoal(dbGoal: DbWeeklyGoal): WeeklyGoal {
     title: dbGoal.title,
     year: dbGoal.year,
     weekStartDate: dbGoal.week_start_date,
+    achieved: dbGoal.achieved === 1,
     createdAt: dbGoal.created_at,
     updatedAt: dbGoal.updated_at,
   }
@@ -150,6 +152,28 @@ export async function getWeeklyGoalByWeekStart(
   }
 
   return mapDbWeeklyGoalToWeeklyGoal(result[0])
+}
+
+export async function toggleWeeklyGoalAchievement(
+  id: number,
+): Promise<WeeklyGoal> {
+  const db = await getDatabase()
+  const currentGoal = await getWeeklyGoal(id)
+  if (!currentGoal) {
+    throw new Error('Weekly goal not found')
+  }
+
+  await db.execute(
+    `UPDATE weekly_goals SET achieved = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?`,
+    [currentGoal.achieved ? 0 : 1, id],
+  )
+
+  const updatedGoal = await getWeeklyGoal(id)
+  if (!updatedGoal) {
+    throw new Error('Weekly goal not found')
+  }
+
+  return updatedGoal
 }
 
 export async function updateWeeklyGoal(

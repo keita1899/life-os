@@ -149,7 +149,7 @@ export function MonthlyGoalCalendarForm({
                         {...field}
                         id="monthly-goal-title"
                         ref={field.ref}
-                        autoFocus
+                        autoFocus={isEditing && !!currentMonthlyGoal}
                         placeholder="月間目標を入力"
                         disabled={form.formState.isSubmitting}
                         className="bg-white text-stone-900 border-stone-200 dark:bg-stone-50 dark:text-stone-900 dark:border-stone-800"

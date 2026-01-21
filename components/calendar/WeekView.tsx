@@ -18,10 +18,13 @@ import {
 import { ChevronDown, ChevronUp } from 'lucide-react'
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover'
 import { EventPopoverContent } from './EventPopover'
+import { TaskPopoverContent } from './TaskPopover'
 import { WeeklyGoalForm } from '@/components/goals/WeeklyGoalForm'
 import type { MonthlyGoal } from '@/lib/types/monthly-goal'
 import type { WeeklyGoal } from '@/lib/types/weekly-goal'
 import type { Event } from '@/lib/types/event'
+import type { Task } from '@/lib/types/task'
+import { getTasksForDate } from '@/lib/logs/utils'
 
 function EventPopoverWrapper({
   event,
@@ -64,11 +67,51 @@ function EventPopoverWrapper({
   )
 }
 
+function TaskPopoverWrapper({
+  task,
+  onOpenChange,
+}: {
+  task: Task
+  onOpenChange?: (open: boolean) => void
+}) {
+  const [isOpen, setIsOpen] = useState(false)
+
+  const handleOpenChange = (open: boolean) => {
+    setIsOpen(open)
+    onOpenChange?.(open)
+  }
+
+  return (
+    <Popover open={isOpen} onOpenChange={handleOpenChange}>
+      <PopoverTrigger asChild>
+        <button
+          className={cn(
+            'w-full rounded px-2 py-1.5 text-left text-xs hover:opacity-80',
+            task.completed
+              ? 'bg-stone-100 text-stone-600 dark:bg-stone-800 dark:text-stone-400'
+              : 'bg-orange-100 text-orange-900 dark:bg-orange-900/30 dark:text-orange-300',
+          )}
+          title={task.title}
+          onClick={(e) => {
+            e.stopPropagation()
+          }}
+        >
+          <div className="font-medium line-clamp-2">{task.title}</div>
+        </button>
+      </PopoverTrigger>
+      <PopoverContent>
+        <TaskPopoverContent task={task} />
+      </PopoverContent>
+    </Popover>
+  )
+}
+
 function WeekDateCell({
   date,
   isTodayDate,
   dayGoals,
   dayEvents,
+  dayTasks,
   isExpanded,
   onToggleExpand,
 }: {
@@ -76,16 +119,18 @@ function WeekDateCell({
   isTodayDate: boolean
   dayGoals: MonthlyGoal[]
   dayEvents: Event[]
+  dayTasks: Task[]
   isExpanded: boolean
   onToggleExpand: () => void
 }) {
   const router = useRouter()
   const [hasOpenPopover, setHasOpenPopover] = useState(false)
+  const [hasOpenTaskPopover, setHasOpenTaskPopover] = useState(false)
   const visibleEvents = isExpanded ? dayEvents : dayEvents.slice(0, 3)
   const hasMoreEvents = dayEvents.length > 3
 
   const navigateToDay = () => {
-    if (!hasOpenPopover) {
+    if (!hasOpenPopover && !hasOpenTaskPopover) {
       router.push(`/logs?date=${format(date, 'yyyy-MM-dd')}`)
     }
   }
@@ -142,6 +187,17 @@ function WeekDateCell({
             onOpenChange={(open) => setHasOpenPopover(open)}
           />
         ))}
+        {dayTasks.length > 0 && (
+          <div className="mt-2 space-y-1.5">
+            {dayTasks.map((task) => (
+              <TaskPopoverWrapper
+                key={task.id}
+                task={task}
+                onOpenChange={(open) => setHasOpenTaskPopover(open)}
+              />
+            ))}
+          </div>
+        )}
         {hasMoreEvents && (
           <button
             onClick={(e) => {
@@ -173,6 +229,7 @@ interface WeekViewProps {
   monthlyGoals: MonthlyGoal[]
   weeklyGoals: WeeklyGoal[]
   events?: Event[]
+  tasks?: Task[]
   weekStartDay?: number
 }
 
@@ -181,6 +238,7 @@ export function WeekView({
   monthlyGoals,
   weeklyGoals,
   events = [],
+  tasks = [],
   weekStartDay = 0,
 }: WeekViewProps) {
   const weekDays = useMemo(
@@ -224,6 +282,7 @@ export function WeekView({
           const isTodayDate = isToday(date)
           const dayGoals = getGoalsForDate(monthlyGoals, date)
           const dayEvents = sortEventsByTime(getEventsForDate(events, date))
+          const dayTasks = getTasksForDate(tasks, date)
           const dateStr = date.toISOString()
           const isExpanded = expandedDates.has(dateStr)
 
@@ -234,6 +293,7 @@ export function WeekView({
               isTodayDate={isTodayDate}
               dayGoals={dayGoals}
               dayEvents={dayEvents}
+              dayTasks={dayTasks}
               isExpanded={isExpanded}
               onToggleExpand={() => toggleDate(dateStr)}
             />

@@ -3,6 +3,34 @@ import Database from '@tauri-apps/plugin-sql'
 let db: Database | null = null
 let dbPromise: Promise<Database> | null = null
 
+async function migrateTables(): Promise<void> {
+  if (!db) return
+
+  try {
+    await db.execute(`
+      ALTER TABLE yearly_goals ADD COLUMN achieved INTEGER NOT NULL DEFAULT 0
+    `)
+  } catch (err) {
+    // Column may already exist, ignore error
+  }
+
+  try {
+    await db.execute(`
+      ALTER TABLE monthly_goals ADD COLUMN achieved INTEGER NOT NULL DEFAULT 0
+    `)
+  } catch (err) {
+    // Column may already exist, ignore error
+  }
+
+  try {
+    await db.execute(`
+      ALTER TABLE weekly_goals ADD COLUMN achieved INTEGER NOT NULL DEFAULT 0
+    `)
+  } catch (err) {
+    // Column may already exist, ignore error
+  }
+}
+
 async function initializeAllTables(): Promise<void> {
   if (!db) return
 
@@ -12,6 +40,7 @@ async function initializeAllTables(): Promise<void> {
       title TEXT NOT NULL,
       target_date DATE,
       year INTEGER NOT NULL,
+      achieved INTEGER NOT NULL DEFAULT 0,
       created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
       updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
     )
@@ -24,6 +53,7 @@ async function initializeAllTables(): Promise<void> {
       target_date DATE,
       year INTEGER NOT NULL,
       month INTEGER NOT NULL,
+      achieved INTEGER NOT NULL DEFAULT 0,
       created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
       updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
     )
@@ -35,6 +65,7 @@ async function initializeAllTables(): Promise<void> {
       title TEXT NOT NULL,
       year INTEGER NOT NULL,
       week_start_date DATE NOT NULL,
+      achieved INTEGER NOT NULL DEFAULT 0,
       created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
       updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,
       UNIQUE(year, week_start_date)
@@ -140,6 +171,7 @@ export async function getDatabase(): Promise<Database> {
       const database = await Database.load('sqlite:life-os.db')
       db = database
       await initializeAllTables()
+      await migrateTables()
       return database
     })()
   }

@@ -12,6 +12,7 @@ interface DbYearlyGoal {
   title: string
   target_date: string | null
   year: number
+  achieved: number
   created_at: string
   updated_at: string
 }
@@ -22,6 +23,7 @@ function mapDbYearlyGoalToYearlyGoal(dbGoal: DbYearlyGoal): YearlyGoal {
     title: dbGoal.title,
     targetDate: dbGoal.target_date,
     year: dbGoal.year,
+    achieved: dbGoal.achieved === 1,
     createdAt: dbGoal.created_at,
     updatedAt: dbGoal.updated_at,
   }
@@ -53,8 +55,8 @@ async function validateYearlyLimit(
   excludeId?: number,
 ): Promise<void> {
   const count = await countYearlyGoalsByYear(year, excludeId)
-  if (count >= 3) {
-    throw new Error(`${year}年の年間目標は3つまで設定できます`)
+  if (count >= 1) {
+    throw new Error(`${year}年の年間目標は1つまで設定できます`)
   }
 }
 
@@ -118,6 +120,28 @@ export async function getYearlyGoalsByYear(
   )
 
   return result.map(mapDbYearlyGoalToYearlyGoal)
+}
+
+export async function toggleYearlyGoalAchievement(
+  id: number,
+): Promise<YearlyGoal> {
+  const db = await getDatabase()
+  const currentGoal = await getYearlyGoal(id)
+  if (!currentGoal) {
+    throw new Error('Yearly goal not found')
+  }
+
+  await db.execute(
+    `UPDATE yearly_goals SET achieved = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?`,
+    [currentGoal.achieved ? 0 : 1, id],
+  )
+
+  const updatedGoal = await getYearlyGoal(id)
+  if (!updatedGoal) {
+    throw new Error('Yearly goal not found')
+  }
+
+  return updatedGoal
 }
 
 export async function updateYearlyGoal(

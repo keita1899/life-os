@@ -8,6 +8,7 @@ interface TaskListProps {
   onEdit?: (task: Task) => void
   onDelete?: (task: Task) => void
   onToggleCompletion?: (task: Task) => void
+  onUpdateExecutionDate?: (task: Task, executionDate: string | null) => void
 }
 
 export function TaskList({
@@ -15,6 +16,7 @@ export function TaskList({
   onEdit,
   onDelete,
   onToggleCompletion,
+  onUpdateExecutionDate,
 }: TaskListProps) {
   if (tasks.length === 0) {
     return (
@@ -33,6 +35,7 @@ export function TaskList({
           onEdit={onEdit}
           onDelete={onDelete}
           onToggleCompletion={onToggleCompletion}
+          onUpdateExecutionDate={onUpdateExecutionDate}
         />
       ))}
     </div>

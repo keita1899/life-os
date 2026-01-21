@@ -1,138 +1,61 @@
 'use client'
 
-import Link from 'next/link'
-import { Target, CheckSquare, Calendar, Heart, CreditCard } from 'lucide-react'
-import { ModeSwitch } from '@/components/mode/ModeSwitch'
-import { CalendarView } from '@/components/calendar/CalendarView'
-import { SettingsIcon } from '@/components/settings/SettingsIcon'
+import { useMemo } from 'react'
 import { useMode } from '@/lib/contexts/ModeContext'
-import { cn } from '@/lib/utils'
+import { CalendarView } from '@/components/calendar/CalendarView'
+import { MainLayout } from '@/components/layout/MainLayout'
+import { useGoals } from '@/hooks/useGoals'
+import { Card } from '@/components/ui/card'
+import { Target } from 'lucide-react'
+import { formatDateDisplay } from '@/lib/date/formats'
 
 export default function Home() {
   const { mode } = useMode()
+  const currentYear = new Date().getFullYear()
+  const { yearlyGoals, isLoading } = useGoals(currentYear)
+
+  const yearlyGoal = useMemo(() => {
+    return yearlyGoals.length > 0 ? yearlyGoals[0] : null
+  }, [yearlyGoals])
 
   return (
-    <div className="flex min-h-screen items-center justify-center bg-zinc-50 font-sans dark:bg-black">
-      <main className="flex min-h-screen w-full max-w-7xl flex-col items-center justify-between py-8 px-4 md:py-12 md:px-8 lg:px-16 bg-white dark:bg-black sm:items-start">
-        <div className="w-full">
-          <div className="mb-6 flex items-start justify-between">
-            <h1 className="text-3xl font-semibold text-black dark:text-zinc-50">
-              Life OS
-            </h1>
-            <div className="flex items-center gap-2">
-              <SettingsIcon />
-              <ModeSwitch />
+    <MainLayout>
+      <div className="container mx-auto max-w-7xl py-8 px-4 md:py-12 md:px-8 lg:px-16">
+        {mode === 'life' && (
+          <div className="flex flex-col gap-6">
+            {!isLoading && yearlyGoal && (
+              <Card className="border-stone-200 bg-stone-50/50 p-4 dark:border-stone-800 dark:bg-stone-900/50">
+                <div className="flex items-center gap-3">
+                  <div className="flex h-10 w-10 items-center justify-center rounded-md bg-blue-100 text-blue-600 dark:bg-blue-900/30 dark:text-blue-400">
+                    <Target className="h-5 w-5" />
+                  </div>
+                  <div className="flex-1">
+                    <div className="text-sm text-muted-foreground">
+                      {currentYear}年の年間目標
+                    </div>
+                    <div className="text-lg font-semibold">
+                      {yearlyGoal.title}
+                    </div>
+                    {yearlyGoal.targetDate && (
+                      <div className="text-sm text-muted-foreground">
+                        目標日: {formatDateDisplay(yearlyGoal.targetDate)}
+                      </div>
+                    )}
+                  </div>
+                </div>
+              </Card>
+            )}
+            <div className="flex-1">
+              <CalendarView />
             </div>
           </div>
-
-          {mode === 'life' && (
-            <div className="flex flex-col gap-6 lg:flex-row">
-              <div className="flex-1">
-                <CalendarView />
-              </div>
-              <aside className="w-full lg:w-72 lg:flex-shrink-0">
-                <nav className="space-y-2">
-                  <Link
-                    href="/goals"
-                    className={cn(
-                      'flex items-center gap-3 rounded-lg border border-border bg-card p-4 transition-colors',
-                      'hover:bg-accent hover:text-accent-foreground',
-                      'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring',
-                    )}
-                  >
-                    <div className="flex h-10 w-10 items-center justify-center rounded-md bg-blue-100 dark:bg-blue-900/30">
-                      <Target className="h-5 w-5 text-blue-600 dark:text-blue-400" />
-                    </div>
-                    <div className="flex-1">
-                      <div className="font-semibold">目標管理</div>
-                      <div className="text-sm text-muted-foreground">
-                        年間・月間の目標を設定
-                      </div>
-                    </div>
-                  </Link>
-                  <Link
-                    href="/tasks"
-                    className={cn(
-                      'flex items-center gap-3 rounded-lg border border-border bg-card p-4 transition-colors',
-                      'hover:bg-accent hover:text-accent-foreground',
-                      'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring',
-                    )}
-                  >
-                    <div className="flex h-10 w-10 items-center justify-center rounded-md bg-green-100 dark:bg-green-900/30">
-                      <CheckSquare className="h-5 w-5 text-green-600 dark:text-green-400" />
-                    </div>
-                    <div className="flex-1">
-                      <div className="font-semibold">タスク管理</div>
-                      <div className="text-sm text-muted-foreground">
-                        タスクを作成して管理
-                      </div>
-                    </div>
-                  </Link>
-                  <Link
-                    href="/events"
-                    className={cn(
-                      'flex items-center gap-3 rounded-lg border border-border bg-card p-4 transition-colors',
-                      'hover:bg-accent hover:text-accent-foreground',
-                      'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring',
-                    )}
-                  >
-                    <div className="flex h-10 w-10 items-center justify-center rounded-md bg-purple-100 dark:bg-purple-900/30">
-                      <Calendar className="h-5 w-5 text-purple-600 dark:text-purple-400" />
-                    </div>
-                    <div className="flex-1">
-                      <div className="font-semibold">予定管理</div>
-                      <div className="text-sm text-muted-foreground">
-                        予定を作成して管理
-                      </div>
-                    </div>
-                  </Link>
-                  <Link
-                    href="/wishlist"
-                    className={cn(
-                      'flex items-center gap-3 rounded-lg border border-border bg-card p-4 transition-colors',
-                      'hover:bg-accent hover:text-accent-foreground',
-                      'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring',
-                    )}
-                  >
-                    <div className="flex h-10 w-10 items-center justify-center rounded-md bg-orange-100 dark:bg-orange-900/30">
-                      <Heart className="h-5 w-5 text-orange-600 dark:text-orange-400" />
-                    </div>
-                    <div className="flex-1">
-                      <div className="font-semibold">やりたいことリスト</div>
-                      <div className="text-sm text-muted-foreground">
-                        やりたいことをリスト化
-                      </div>
-                    </div>
-                  </Link>
-                  <Link
-                    href="/subscriptions"
-                    className={cn(
-                      'flex items-center gap-3 rounded-lg border border-border bg-card p-4 transition-colors',
-                      'hover:bg-accent hover:text-accent-foreground',
-                      'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring',
-                    )}
-                  >
-                    <div className="flex h-10 w-10 items-center justify-center rounded-md bg-green-100 dark:bg-green-900/30">
-                      <CreditCard className="h-5 w-5 text-green-600 dark:text-green-400" />
-                    </div>
-                    <div className="flex-1">
-                      <div className="font-semibold">サブスク管理</div>
-                      <div className="text-sm text-muted-foreground">
-                        サブスクリプションを管理
-                      </div>
-                    </div>
-                  </Link>
-                </nav>
-              </aside>
-            </div>
-          )}
-          {mode === 'development' && (
-            <div className="text-center py-8 text-muted-foreground">
-              開発モードの機能は今後追加予定です
-            </div>
-          )}
-        </div>
-      </main>
-    </div>
+        )}
+        {mode === 'development' && (
+          <div className="text-center py-8 text-muted-foreground">
+            開発モードの機能は今後追加予定です
+          </div>
+        )}
+      </div>
+    </MainLayout>
   )
 }
