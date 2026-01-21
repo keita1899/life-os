@@ -5,6 +5,7 @@ import { Button } from '@/components/ui/button'
 import {
   Accordion,
   AccordionContent,
+  AccordionHeader,
   AccordionItem,
   AccordionTrigger,
 } from '@/components/ui/accordion'
@@ -132,8 +133,8 @@ export default function EventsPage() {
         >
           {groupedEvents.map((group) => (
             <AccordionItem key={group.key} value={group.key}>
-              <AccordionTrigger className="hover:no-underline">
-                <div className="flex w-full items-center justify-between pr-4">
+              <AccordionHeader>
+                <AccordionTrigger className="hover:no-underline">
                   <div className="flex items-center gap-2">
                     <h2 className="text-lg font-semibold text-stone-900 dark:text-stone-100">
                       {group.title}
@@ -142,8 +143,8 @@ export default function EventsPage() {
                       ({group.events.length})
                     </span>
                   </div>
-                </div>
-              </AccordionTrigger>
+                </AccordionTrigger>
+              </AccordionHeader>
               <AccordionContent>
                 <EventList
                   events={group.events}
