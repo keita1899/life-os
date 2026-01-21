@@ -53,6 +53,7 @@ export default function WishlistPage() {
   } = useWishlist()
   const { categories } = useWishlistCategories()
   const [selectedCategoryId, setSelectedCategoryId] = useState<string>('all')
+  const [selectedYear, setSelectedYear] = useState<string>('all')
   const [isDialogOpen, setIsDialogOpen] = useState(false)
   const [editingItem, setEditingItem] = useState<WishlistItem | undefined>(
     undefined,
@@ -66,16 +67,35 @@ export default function WishlistPage() {
     useState(false)
   const [operationError, setOperationError] = useState<string | null>(null)
 
+  const availableYears = useMemo(() => {
+    const years = new Set<number>()
+    items.forEach((item) => {
+      if (item.targetYear !== null) {
+        years.add(item.targetYear)
+      }
+    })
+    return Array.from(years).sort((a, b) => b - a)
+  }, [items])
+
   const filteredItems = useMemo(() => {
-    if (selectedCategoryId === 'all') {
-      return items
-    }
+    let filtered = items
+
     if (selectedCategoryId === 'none') {
-      return items.filter((item) => item.categoryId === null)
+      filtered = filtered.filter((item) => item.categoryId === null)
+    } else if (selectedCategoryId !== 'all') {
+      const categoryId = Number(selectedCategoryId)
+      filtered = filtered.filter((item) => item.categoryId === categoryId)
     }
-    const categoryId = Number(selectedCategoryId)
-    return items.filter((item) => item.categoryId === categoryId)
-  }, [items, selectedCategoryId])
+
+    if (selectedYear === 'none') {
+      filtered = filtered.filter((item) => item.targetYear === null)
+    } else if (selectedYear !== 'all') {
+      const year = Number(selectedYear)
+      filtered = filtered.filter((item) => item.targetYear === year)
+    }
+
+    return filtered
+  }, [items, selectedCategoryId, selectedYear])
 
   const groupedItems = useMemo(() => {
     const incomplete = filteredItems.filter((item) => !item.completed)
@@ -220,17 +240,31 @@ export default function WishlistPage() {
         <Loading />
       ) : (
         <>
-          <div className="mb-4">
+          <div className="mb-4 flex justify-end gap-2">
             <Select value={selectedCategoryId} onValueChange={setSelectedCategoryId}>
               <SelectTrigger className="w-[200px]">
                 <SelectValue placeholder="カテゴリーを選択" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="all">すべて</SelectItem>
-                <SelectItem value="none">カテゴリーなし</SelectItem>
+                <SelectItem value="all">すべてのカテゴリー</SelectItem>
+                <SelectItem value="none">未分類</SelectItem>
                 {categories.map((category) => (
                   <SelectItem key={category.id} value={category.id.toString()}>
                     {category.name}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            <Select value={selectedYear} onValueChange={setSelectedYear}>
+              <SelectTrigger className="w-[200px]">
+                <SelectValue placeholder="年を選択" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">全期間</SelectItem>
+                <SelectItem value="none">未設定</SelectItem>
+                {availableYears.map((year) => (
+                  <SelectItem key={year} value={year.toString()}>
+                    {year}年
                   </SelectItem>
                 ))}
               </SelectContent>
