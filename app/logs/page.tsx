@@ -32,6 +32,7 @@ import {
 } from '@/lib/logs/utils'
 import type { Task, CreateTaskInput, UpdateTaskInput } from '@/lib/types/task'
 import type { UpdateDailyLogInput } from '@/lib/types/daily-log'
+import Link from 'next/link'
 
 interface LogPageViewProps {
   logDate: Date
