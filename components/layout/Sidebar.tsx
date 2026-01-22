@@ -21,6 +21,7 @@ import {
   SheetHeader,
   SheetTitle,
 } from '@/components/ui/sheet'
+import { useMode } from '@/lib/contexts/ModeContext'
 
 interface SidebarProps {
   open: boolean
@@ -83,6 +84,7 @@ const otherItems = [
 
 function SidebarContent() {
   const pathname = usePathname()
+  const { mode } = useMode()
 
   const renderLink = (item: typeof homeItem) => {
     const Icon = item.icon
@@ -108,6 +110,16 @@ function SidebarContent() {
         </div>
         <div className="font-semibold">{item.title}</div>
       </Link>
+    )
+  }
+
+  if (mode === 'development') {
+    return (
+      <nav className="space-y-4">
+        <div>
+          {renderLink(homeItem)}
+        </div>
+      </nav>
     )
   }
 
