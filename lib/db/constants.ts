@@ -76,6 +76,23 @@ export const DB_COLUMNS = {
     'created_at',
     'updated_at',
   ],
+  WISHLIST_CATEGORIES: [
+    'id',
+    'name',
+    'created_at',
+    'updated_at',
+  ],
+  WISHLIST_ITEMS: [
+    'id',
+    'name',
+    'category_id',
+    'target_year',
+    'price',
+    'purchased',
+    'order',
+    'created_at',
+    'updated_at',
+  ],
   SUBSCRIPTIONS: [
     'id',
     'name',

@@ -3,82 +3,6 @@ import Database from '@tauri-apps/plugin-sql'
 let db: Database | null = null
 let dbPromise: Promise<Database> | null = null
 
-async function migrateTables(): Promise<void> {
-  if (!db) return
-
-  try {
-    await db.execute(`
-      ALTER TABLE yearly_goals ADD COLUMN achieved INTEGER NOT NULL DEFAULT 0
-    `)
-  } catch (err) {
-    // Column may already exist, ignore error
-  }
-
-  try {
-    await db.execute(`
-      ALTER TABLE monthly_goals ADD COLUMN achieved INTEGER NOT NULL DEFAULT 0
-    `)
-  } catch (err) {
-    // Column may already exist, ignore error
-  }
-
-  try {
-    await db.execute(`
-      ALTER TABLE weekly_goals ADD COLUMN achieved INTEGER NOT NULL DEFAULT 0
-    `)
-  } catch (err) {
-    // Column may already exist, ignore error
-  }
-
-  try {
-    await db.execute(`
-      ALTER TABLE wishlist_categories RENAME TO bucket_list_categories
-    `)
-  } catch (err) {
-    // Table may not exist or already renamed, ignore error
-  }
-
-  try {
-    await db.execute(`
-      ALTER TABLE wishlist_items RENAME TO bucket_list_items
-    `)
-  } catch (err) {
-    // Table may not exist or already renamed, ignore error
-  }
-
-  try {
-    await db.execute(`
-      CREATE TABLE IF NOT EXISTS bucket_list_categories (
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
-        name TEXT NOT NULL UNIQUE,
-        created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-        updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
-      )
-    `)
-  } catch (err) {
-    // Table may already exist, ignore error
-  }
-
-  try {
-    await db.execute(`
-      CREATE TABLE IF NOT EXISTS bucket_list_items (
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
-        title TEXT NOT NULL,
-        category_id INTEGER,
-        target_year INTEGER,
-        achieved_date DATE,
-        completed INTEGER NOT NULL DEFAULT 0,
-        "order" INTEGER NOT NULL DEFAULT 0,
-        created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-        updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-        FOREIGN KEY (category_id) REFERENCES bucket_list_categories(id) ON DELETE SET NULL
-      )
-    `)
-  } catch (err) {
-    // Table may already exist, ignore error
-  }
-}
-
 async function initializeAllTables(): Promise<void> {
   if (!db) return
 
@@ -186,6 +110,30 @@ async function initializeAllTables(): Promise<void> {
   `)
 
   await db.execute(`
+    CREATE TABLE IF NOT EXISTS wishlist_categories (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      name TEXT NOT NULL UNIQUE,
+      created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+      updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
+    )
+  `)
+
+  await db.execute(`
+    CREATE TABLE IF NOT EXISTS wishlist_items (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      name TEXT NOT NULL,
+      category_id INTEGER,
+      target_year INTEGER,
+      price INTEGER,
+      purchased INTEGER NOT NULL DEFAULT 0,
+      "order" INTEGER NOT NULL DEFAULT 0,
+      created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+      updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+      FOREIGN KEY (category_id) REFERENCES wishlist_categories(id) ON DELETE SET NULL
+    )
+  `)
+
+  await db.execute(`
     CREATE TABLE IF NOT EXISTS subscriptions (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
       name TEXT NOT NULL,
@@ -219,7 +167,6 @@ export async function getDatabase(): Promise<Database> {
       const database = await Database.load('sqlite:life-os.db')
       db = database
       await initializeAllTables()
-      await migrateTables()
       return database
     })()
   }
