@@ -72,6 +72,13 @@ const otherItems = [
     color:
       'bg-orange-100 text-orange-600 dark:bg-orange-900/30 dark:text-orange-400',
   },
+  {
+    href: '/wishlist',
+    icon: Heart,
+    title: '欲しいものリスト',
+    color:
+      'bg-pink-100 text-pink-600 dark:bg-pink-900/30 dark:text-pink-400',
+  },
 ]
 
 function SidebarContent() {
