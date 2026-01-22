@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import * as z from 'zod'
@@ -60,22 +60,34 @@ export const WishlistItemForm = ({
 
   const form = useForm<WishlistItemFormValues>({
     resolver: zodResolver(wishlistItemFormSchema),
-    values: initialData
-      ? {
-          name: initialData.name,
-          categoryId: initialData.categoryId?.toString() || '',
-          targetYear: initialData.targetYear?.toString() || '',
-          price: initialData.price?.toString() || '',
-          purchased: initialData.purchased || false,
-        }
-      : {
-          name: '',
-          categoryId: '',
-          targetYear: '',
-          price: '',
-          purchased: false,
-        },
+    defaultValues: {
+      name: '',
+      categoryId: '',
+      targetYear: '',
+      price: '',
+      purchased: false,
+    },
   })
+
+  useEffect(() => {
+    if (initialData) {
+      form.reset({
+        name: initialData.name,
+        categoryId: initialData.categoryId?.toString() || '',
+        targetYear: initialData.targetYear?.toString() || '',
+        price: initialData.price?.toString() || '',
+        purchased: initialData.purchased || false,
+      })
+    } else {
+      form.reset({
+        name: '',
+        categoryId: '',
+        targetYear: '',
+        price: '',
+        purchased: false,
+      })
+    }
+  }, [initialData, form])
 
   const handleCategoryChange = (value: string) => {
     if (value === 'add-new') {

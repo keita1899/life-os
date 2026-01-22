@@ -50,7 +50,13 @@ export function WishlistItem({
           <button
             type="button"
             onClick={() => onTogglePurchased(item)}
-            className="focus:outline-none"
+            className="focus-visible:ring-2 focus-visible:ring-offset-1 focus-visible:ring-indigo-500 rounded"
+            aria-label={
+              item.purchased
+                ? `${item.name}の購入済みを解除`
+                : `${item.name}を購入済みにする`
+            }
+            aria-pressed={item.purchased}
           >
             {item.purchased ? (
               <CheckCircle2 className="h-5 w-5 text-green-500" />
@@ -100,7 +106,7 @@ export function WishlistItem({
               type="button"
               variant="ghost"
               size="sm"
-              className="h-8 w-8 p-0 opacity-0 transition-opacity group-hover:opacity-100"
+              className="h-8 w-8 p-0 opacity-0 transition-opacity group-hover:opacity-100 focus-visible:opacity-100"
             >
               <MoreVertical className="h-4 w-4" />
               <span className="sr-only">メニュー</span>

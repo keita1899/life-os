@@ -109,9 +109,9 @@ export async function createWishlistItem(
        VALUES (?, ?, ?, ?, ?, ?)`,
       [
         input.name,
-        input.categoryId || null,
-        input.targetYear || null,
-        input.price || null,
+        input.categoryId ?? null,
+        input.targetYear ?? null,
+        input.price ?? null,
         input.purchased ? 1 : 0,
         newOrder,
       ],
@@ -168,17 +168,17 @@ export async function updateWishlistItem(
 
   if (input.categoryId !== undefined) {
     updateFields.push('category_id = ?')
-    updateValues.push(input.categoryId || null)
+    updateValues.push(input.categoryId ?? null)
   }
 
   if (input.targetYear !== undefined) {
     updateFields.push('target_year = ?')
-    updateValues.push(input.targetYear || null)
+    updateValues.push(input.targetYear ?? null)
   }
 
   if (input.price !== undefined) {
     updateFields.push('price = ?')
-    updateValues.push(input.price || null)
+    updateValues.push(input.price ?? null)
   }
 
   if (input.purchased !== undefined) {
