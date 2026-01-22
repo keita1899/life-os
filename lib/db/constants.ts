@@ -112,4 +112,13 @@ export const DB_COLUMNS = {
     'created_at',
     'updated_at',
   ],
+  DEV_YEARLY_GOALS: [
+    'id',
+    'title',
+    'target_date',
+    'year',
+    'achieved',
+    'created_at',
+    'updated_at',
+  ],
 } as const
