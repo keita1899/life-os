@@ -14,6 +14,10 @@ import {
 
 type ViewMode = 'month' | 'week'
 
+function isValidViewMode(value: string): value is ViewMode {
+  return value === 'month' || value === 'week'
+}
+
 interface CalendarViewBaseProps {
   displayTitle: string
   viewMode: ViewMode
@@ -42,7 +46,11 @@ export function CalendarViewBase({
             <div className="flex items-center gap-2">
               <Select
                 value={viewMode}
-                onValueChange={(value) => onViewModeChange(value as ViewMode)}
+                onValueChange={(value) => {
+                  if (isValidViewMode(value)) {
+                    onViewModeChange(value)
+                  }
+                }}
               >
                 <SelectTrigger className="w-24">
                   <SelectValue />

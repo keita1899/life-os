@@ -21,8 +21,9 @@ export function useCalendarView({ initialDate }: UseCalendarViewOptions = {}) {
   const weekStartDay = userSettings?.weekStartDay ?? 0
 
   useEffect(() => {
-    if (userSettings?.defaultCalendarView) {
-      setViewMode(userSettings.defaultCalendarView)
+    const defaultView = userSettings?.defaultCalendarView
+    if (defaultView === 'month' || defaultView === 'week') {
+      setViewMode(defaultView)
     }
   }, [userSettings?.defaultCalendarView])
 
