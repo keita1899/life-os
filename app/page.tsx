@@ -3,6 +3,7 @@
 import { useMemo } from 'react'
 import { useMode } from '@/lib/contexts/ModeContext'
 import { CalendarView } from '@/components/calendar/CalendarView'
+import { DevCalendarView } from '@/components/calendar/DevCalendarView'
 import { MainLayout } from '@/components/layout/MainLayout'
 import { useGoals } from '@/hooks/useGoals'
 import { Card } from '@/components/ui/card'
@@ -51,8 +52,8 @@ export default function Home() {
           </div>
         )}
         {mode === 'development' && (
-          <div className="text-center py-8 text-muted-foreground">
-            開発モードの機能は今後追加予定です
+          <div className="flex-1">
+            <DevCalendarView />
           </div>
         )}
       </div>
