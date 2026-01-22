@@ -119,6 +119,21 @@ async function initializeAllTables(): Promise<void> {
   `)
 
   await db.execute(`
+    CREATE TABLE IF NOT EXISTS wishlist_items (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      name TEXT NOT NULL,
+      category_id INTEGER,
+      target_year INTEGER,
+      price INTEGER,
+      purchased INTEGER NOT NULL DEFAULT 0,
+      "order" INTEGER NOT NULL DEFAULT 0,
+      created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+      updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+      FOREIGN KEY (category_id) REFERENCES wishlist_categories(id) ON DELETE SET NULL
+    )
+  `)
+
+  await db.execute(`
     CREATE TABLE IF NOT EXISTS subscriptions (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
       name TEXT NOT NULL,
