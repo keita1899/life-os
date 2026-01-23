@@ -131,4 +131,13 @@ export const DB_COLUMNS = {
     'created_at',
     'updated_at',
   ],
+  DEV_WEEKLY_GOALS: [
+    'id',
+    'title',
+    'year',
+    'week_start_date',
+    'achieved',
+    'created_at',
+    'updated_at',
+  ],
 } as const

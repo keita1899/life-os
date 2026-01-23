@@ -3,6 +3,9 @@
 import { MonthView } from './MonthView'
 import { WeekView } from './WeekView'
 import { CalendarViewBase } from './CalendarViewBase'
+import { MonthlyGoalCalendarForm } from '@/components/dev/goals/MonthlyGoalCalendarForm'
+import { WeeklyGoalForm } from '@/components/dev/goals/WeeklyGoalForm'
+import { useDevGoals } from '@/hooks/useDevGoals'
 import { useCalendarView } from '@/hooks/useCalendarView'
 
 interface DevCalendarViewProps {
@@ -21,6 +24,15 @@ export function DevCalendarView({ initialDate }: DevCalendarViewProps) {
     displayTitle,
   } = useCalendarView({ initialDate })
 
+  const currentYear = currentDate.getFullYear()
+  const {
+    monthlyGoals,
+    weeklyGoals,
+    isLoading: isLoadingGoals,
+  } = useDevGoals(currentYear)
+
+  const isLoading = isLoadingGoals || isLoadingSettings
+
   return (
     <CalendarViewBase
       displayTitle={displayTitle}
@@ -28,12 +40,25 @@ export function DevCalendarView({ initialDate }: DevCalendarViewProps) {
       onViewModeChange={setViewMode}
       onPrev={handlePrev}
       onNext={handleNext}
-      isLoading={isLoadingSettings}
+      isLoading={isLoading}
     >
+      {viewMode === 'month' && (
+        <MonthlyGoalCalendarForm
+          currentDate={currentDate}
+          monthlyGoals={monthlyGoals}
+        />
+      )}
+      {viewMode === 'week' && (
+        <WeeklyGoalForm
+          currentDate={currentDate}
+          weeklyGoals={weeklyGoals}
+          weekStartDay={weekStartDay}
+        />
+      )}
       {viewMode === 'month' ? (
         <MonthView
           currentDate={currentDate}
-          monthlyGoals={[]}
+          monthlyGoals={monthlyGoals}
           events={[]}
           tasks={[]}
           weekStartDay={weekStartDay}
@@ -41,8 +66,8 @@ export function DevCalendarView({ initialDate }: DevCalendarViewProps) {
       ) : (
         <WeekView
           currentDate={currentDate}
-          monthlyGoals={[]}
-          weeklyGoals={[]}
+          monthlyGoals={monthlyGoals}
+          weeklyGoals={weeklyGoals}
           events={[]}
           tasks={[]}
           weekStartDay={weekStartDay}
