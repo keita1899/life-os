@@ -114,10 +114,23 @@ function SidebarContent() {
   }
 
   if (mode === 'development') {
+    const devTaskItems = [
+      {
+        href: '/dev/goals',
+        icon: Target,
+        title: '目標',
+        color:
+          'bg-blue-100 text-blue-600 dark:bg-blue-900/30 dark:text-blue-400',
+      },
+    ]
+
     return (
       <nav className="space-y-4">
         <div>
           {renderLink(homeItem)}
+        </div>
+        <div className="space-y-2">
+          {devTaskItems.map((item) => renderLink(item))}
         </div>
       </nav>
     )

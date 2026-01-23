@@ -5,7 +5,6 @@ import { Button } from '@/components/ui/button'
 
 interface YearSelectProps {
   selectedYear: number
-  availableYears: number[]
   onYearChange: (year: number) => void
 }
 

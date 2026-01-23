@@ -157,6 +157,46 @@ async function initializeAllTables(): Promise<void> {
       updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
     )
   `)
+
+  await db.execute(`
+    CREATE TABLE IF NOT EXISTS dev_yearly_goals (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      title TEXT NOT NULL,
+      target_date DATE,
+      year INTEGER NOT NULL,
+      achieved INTEGER NOT NULL DEFAULT 0,
+      created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+      updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+      UNIQUE(year)
+    )
+  `)
+
+  await db.execute(`
+    CREATE TABLE IF NOT EXISTS dev_monthly_goals (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      title TEXT NOT NULL,
+      target_date DATE,
+      year INTEGER NOT NULL,
+      month INTEGER NOT NULL,
+      achieved INTEGER NOT NULL DEFAULT 0,
+      created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+      updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+      UNIQUE(year, month)
+    )
+  `)
+
+  await db.execute(`
+    CREATE TABLE IF NOT EXISTS dev_weekly_goals (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      title TEXT NOT NULL,
+      year INTEGER NOT NULL,
+      week_start_date DATE NOT NULL,
+      achieved INTEGER NOT NULL DEFAULT 0,
+      created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+      updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+      UNIQUE(year, week_start_date)
+    )
+  `)
 }
 
 export async function getDatabase(): Promise<Database> {
