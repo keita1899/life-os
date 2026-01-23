@@ -1,5 +1,6 @@
 'use client'
 
+import type { ReactElement } from 'react'
 import { FormDialog } from '@/components/ui/form-dialog'
 import { MonthlyGoalForm } from './MonthlyGoalForm'
 import type {
@@ -21,7 +22,7 @@ export const MonthlyGoalDialog = ({
   onSubmit,
   goal,
   selectedYear,
-}: MonthlyGoalDialogProps) => {
+}: MonthlyGoalDialogProps): ReactElement => {
   return (
     <FormDialog<
       CreateDevMonthlyGoalInput,

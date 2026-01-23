@@ -98,6 +98,12 @@ export async function createDevYearlyGoal(
 
     return mapDbDevYearlyGoalToDevYearlyGoal(result[0])
   } catch (err) {
+    if (
+      err instanceof Error &&
+      err.message.includes('UNIQUE constraint failed')
+    ) {
+      throw new Error(`${year}年の年間目標は1つまで設定できます`)
+    }
     handleDbError(err, 'create dev yearly goal')
   }
 }

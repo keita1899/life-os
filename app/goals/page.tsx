@@ -26,7 +26,6 @@ const GoalsPage = () => {
   const {
     yearlyGoals,
     monthlyGoals: allMonthlyGoals,
-    availableYears,
     isLoading,
     error,
     createYearlyGoal,
@@ -35,7 +34,6 @@ const GoalsPage = () => {
     deleteMonthlyGoal,
     toggleYearlyGoalAchievement,
     toggleMonthlyGoalAchievement,
-    toggleWeeklyGoalAchievement,
     refreshGoals,
   } = useGoals(selectedYear)
   const [isYearlyDialogOpen, setIsYearlyDialogOpen] = useState(false)
@@ -249,7 +247,6 @@ const GoalsPage = () => {
           <h1 className="text-3xl font-bold">目標</h1>
           <YearSelect
             selectedYear={selectedYear}
-            availableYears={availableYears}
             onYearChange={setSelectedYear}
           />
         </div>

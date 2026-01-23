@@ -166,7 +166,8 @@ async function initializeAllTables(): Promise<void> {
       year INTEGER NOT NULL,
       achieved INTEGER NOT NULL DEFAULT 0,
       created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-      updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
+      updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+      UNIQUE(year)
     )
   `)
 
@@ -179,7 +180,8 @@ async function initializeAllTables(): Promise<void> {
       month INTEGER NOT NULL,
       achieved INTEGER NOT NULL DEFAULT 0,
       created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-      updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
+      updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+      UNIQUE(year, month)
     )
   `)
 

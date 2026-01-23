@@ -1,4 +1,3 @@
-import { getDatabase } from '../../db'
 import { getDevYearlyGoalsByYear } from './yearly'
 import { getDevMonthlyGoalsByYear } from './monthly'
 import { getDevWeeklyGoalsByYear } from './weekly'
@@ -33,34 +32,6 @@ export async function getDevYearlyAndMonthlyGoalsByYear(year: number): Promise<{
     yearlyGoals,
     monthlyGoals,
     weeklyGoals,
-  }
-}
-
-export async function getAllAvailableDevYears(): Promise<number[]> {
-  const db = await getDatabase()
-
-  try {
-    const yearlyYears = await db.select<{ year: number }[]>(
-      'SELECT DISTINCT year FROM dev_yearly_goals',
-    )
-
-    const monthlyYears = await db.select<{ year: number }[]>(
-      'SELECT DISTINCT year FROM dev_monthly_goals',
-    )
-
-    const weeklyYears = await db.select<{ year: number }[]>(
-      'SELECT DISTINCT year FROM dev_weekly_goals',
-    )
-
-    const years = new Set([
-      ...yearlyYears.map((r) => r.year),
-      ...monthlyYears.map((r) => r.year),
-      ...weeklyYears.map((r) => r.year),
-    ])
-
-    return Array.from(years).sort((a, b) => b - a)
-  } catch (err) {
-    throw new Error('Failed to get available dev years')
   }
 }
 

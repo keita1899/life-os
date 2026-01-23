@@ -212,7 +212,15 @@ export async function updateDevWeeklyGoal(
   }
 
   const newWeekStartDate = input.weekStartDate ?? currentGoal.weekStartDate
-  const newYear = input.year ?? getYearFromDate(newWeekStartDate)
+  const derivedYear = getYearFromDate(newWeekStartDate)
+
+  if (input.year !== undefined && input.year !== derivedYear) {
+    throw new Error(
+      `指定された年(${input.year}年)は週開始日(${newWeekStartDate})の年(${derivedYear}年)と一致しません`,
+    )
+  }
+
+  const newYear = derivedYear
 
   if (
     newYear !== currentGoal.year ||
@@ -228,10 +236,7 @@ export async function updateDevWeeklyGoal(
     updates.push('title = ?')
     values.push(input.title)
   }
-  if (input.year !== undefined) {
-    updates.push('year = ?')
-    values.push(input.year)
-  } else if (newYear !== currentGoal.year) {
+  if (newYear !== currentGoal.year) {
     updates.push('year = ?')
     values.push(newYear)
   }

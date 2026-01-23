@@ -54,12 +54,16 @@ export function WeeklyGoalForm({
     [weeklyGoals, weekStartDateString],
   )
 
+  const weekYear = useMemo(() => {
+    return new Date(weekStartDateString).getFullYear()
+  }, [weekStartDateString])
+
   const {
     createWeeklyGoal,
     updateWeeklyGoal,
     deleteWeeklyGoal,
     toggleWeeklyGoalAchievement,
-  } = useDevGoals(currentDate.getFullYear())
+  } = useDevGoals(weekYear)
 
   const [isEditing, setIsEditing] = useState(false)
 

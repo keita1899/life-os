@@ -103,6 +103,12 @@ export async function createDevMonthlyGoal(
 
     return mapDbDevMonthlyGoalToDevMonthlyGoal(result[0])
   } catch (err) {
+    if (
+      err instanceof Error &&
+      err.message.includes('UNIQUE constraint failed')
+    ) {
+      throw new Error(`${year}年${month}月の月間目標は1つまで設定できます`)
+    }
     handleDbError(err, 'create dev monthly goal')
   }
 }

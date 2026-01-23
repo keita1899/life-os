@@ -13,7 +13,6 @@ import { MonthlyGoalDialog } from '@/components/dev/goals/MonthlyGoalDialog'
 import { DeleteConfirmDialog } from '@/components/ui/delete-confirm-dialog'
 import { YearlyGoalsSection } from '@/components/dev/goals/YearlyGoalsSection'
 import { MonthlyGoalsSection } from '@/components/dev/goals/MonthlyGoalsSection'
-import { updateDevYearlyGoal } from '@/lib/dev/goals/yearly'
 import { updateDevMonthlyGoal } from '@/lib/dev/goals/monthly'
 import type {
   DevYearlyGoal,
@@ -30,11 +29,11 @@ export default function DevGoalsPage() {
   const {
     yearlyGoals,
     monthlyGoals,
-    availableYears,
     isLoading,
     error,
     createYearlyGoal,
     createMonthlyGoal,
+    updateYearlyGoal,
     updateMonthlyGoal,
     deleteYearlyGoal,
     deleteMonthlyGoal,
@@ -73,12 +72,11 @@ export default function DevGoalsPage() {
     if (!editingYearlyGoal) return
     try {
       setOperationError(null)
-      await updateDevYearlyGoal(editingYearlyGoal.id, {
+      await updateYearlyGoal(editingYearlyGoal.id, {
         title: input.title,
         targetDate: input.targetDate,
         year: input.year,
       })
-      await refreshGoals()
       setIsYearlyDialogOpen(false)
       setEditingYearlyGoal(undefined)
     } catch (err) {
@@ -252,7 +250,6 @@ export default function DevGoalsPage() {
           <h1 className="text-3xl font-bold">目標</h1>
           <YearSelect
             selectedYear={selectedYear}
-            availableYears={availableYears}
             onYearChange={setSelectedYear}
           />
         </div>
