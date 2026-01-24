@@ -1,11 +1,13 @@
 'use client'
 
+import { useEffect, useState } from 'react'
 import {
   Dialog,
   DialogContent,
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog'
+import { ErrorMessage } from '@/components/ui/error-message'
 
 interface FormDialogProps<
   TData,
@@ -46,10 +48,25 @@ export function FormDialog<
   contentClassName,
   closeOnSubmit = false,
 }: FormDialogProps<TData, TInitialData, TFormProps>) {
+  const [submitError, setSubmitError] = useState<string | null>(null)
+
+  useEffect(() => {
+    if (open) {
+      setSubmitError(null)
+    }
+  }, [open])
+
   const handleSubmit = async (input: TData) => {
-    await onSubmit(input)
-    if (closeOnSubmit) {
-      onOpenChange(false)
+    try {
+      setSubmitError(null)
+      await onSubmit(input)
+      if (closeOnSubmit) {
+        onOpenChange(false)
+      }
+    } catch (error) {
+      setSubmitError(
+        error instanceof Error ? error.message : '送信に失敗しました',
+      )
     }
   }
 
@@ -63,6 +80,10 @@ export function FormDialog<
             {isEditMode ? title.edit : title.create}
           </DialogTitle>
         </DialogHeader>
+        <ErrorMessage
+          message={submitError || ''}
+          onDismiss={submitError ? () => setSubmitError(null) : undefined}
+        />
         <FormComponent
           {...({
             onSubmit: handleSubmit,
