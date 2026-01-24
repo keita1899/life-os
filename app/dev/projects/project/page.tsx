@@ -1,5 +1,6 @@
 'use client'
 
+import type { ReactElement } from 'react'
 import Link from 'next/link'
 import { useRouter, useSearchParams } from 'next/navigation'
 import useSWR from 'swr'
@@ -38,7 +39,7 @@ function formatDate(date: string | null): string | null {
   })
 }
 
-export default function DevProjectPage() {
+export default function DevProjectPage(): ReactElement | null {
   const { mode } = useMode()
   const router = useRouter()
   const searchParams = useSearchParams()

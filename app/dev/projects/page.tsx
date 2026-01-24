@@ -41,7 +41,9 @@ export default function DevProjectsPage() {
     return null
   }
 
-  const handleCreateProject = async (input: CreateDevProjectInput) => {
+  const handleCreateProject = async (
+    input: CreateDevProjectInput,
+  ): Promise<void> => {
     await createProject(input)
     setIsDialogOpen(false)
   }

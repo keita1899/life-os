@@ -15,7 +15,17 @@ import { fetcher } from '@/lib/swr'
 
 const devProjectsKey = 'dev-projects'
 
-export function useDevProjects() {
+interface UseDevProjectsResult {
+  projects: DevProject[]
+  isLoading: boolean
+  error: string | null
+  createProject: (input: CreateDevProjectInput) => Promise<void>
+  updateProject: (id: number, input: UpdateDevProjectInput) => Promise<void>
+  deleteProject: (id: number) => Promise<void>
+  refreshProjects: () => Promise<DevProject[] | undefined>
+}
+
+export function useDevProjects(): UseDevProjectsResult {
   const {
     data = [],
     error,
@@ -24,7 +34,9 @@ export function useDevProjects() {
     fetcher(() => getAllDevProjects()),
   )
 
-  const handleCreateProject = async (input: CreateDevProjectInput) => {
+  const handleCreateProject = async (
+    input: CreateDevProjectInput,
+  ): Promise<void> => {
     await createDevProject(input)
     await mutate(devProjectsKey)
   }
@@ -32,14 +44,18 @@ export function useDevProjects() {
   const handleUpdateProject = async (
     id: number,
     input: UpdateDevProjectInput,
-  ) => {
+  ): Promise<void> => {
     await updateDevProject(id, input)
     await mutate(devProjectsKey)
   }
 
-  const handleDeleteProject = async (id: number) => {
+  const handleDeleteProject = async (id: number): Promise<void> => {
     await deleteDevProject(id)
     await mutate(devProjectsKey)
+  }
+
+  const refreshProjects = async (): Promise<DevProject[] | undefined> => {
+    return await mutate(devProjectsKey)
   }
 
   return {
@@ -53,6 +69,6 @@ export function useDevProjects() {
     createProject: handleCreateProject,
     updateProject: handleUpdateProject,
     deleteProject: handleDeleteProject,
-    refreshProjects: () => mutate(devProjectsKey),
+    refreshProjects,
   }
 }

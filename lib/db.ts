@@ -205,7 +205,6 @@ async function initializeAllTables(): Promise<void> {
       start_date DATE,
       end_date DATE,
       status TEXT NOT NULL DEFAULT 'draft',
-      requirements TEXT,
       created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
       updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
     )

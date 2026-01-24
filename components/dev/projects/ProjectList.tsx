@@ -1,5 +1,6 @@
 'use client'
 
+import type { ReactElement } from 'react'
 import { useMemo } from 'react'
 import { ProjectCard } from './ProjectCard'
 import type { DevProject } from '@/lib/types/dev-project'
@@ -12,7 +13,7 @@ interface ProjectListProps {
 export function ProjectList({
   projects,
   statusFilter = 'all',
-}: ProjectListProps) {
+}: ProjectListProps): ReactElement {
   const filteredProjects = useMemo(() => {
     if (statusFilter === 'all') {
       return projects

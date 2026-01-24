@@ -1,5 +1,6 @@
 'use client'
 
+import type { ReactElement } from 'react'
 import { FormDialog } from '@/components/ui/form-dialog'
 import { ProjectForm } from './ProjectForm'
 import type { DevProject, CreateDevProjectInput } from '@/lib/types/dev-project'
@@ -16,7 +17,7 @@ export function ProjectDialog({
   onOpenChange,
   onSubmit,
   project,
-}: ProjectDialogProps) {
+}: ProjectDialogProps): ReactElement {
   return (
     <FormDialog
       open={open}

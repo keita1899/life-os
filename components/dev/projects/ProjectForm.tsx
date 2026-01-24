@@ -1,5 +1,6 @@
 'use client'
 
+import type { ReactElement } from 'react'
 import { useEffect } from 'react'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
@@ -47,7 +48,7 @@ export function ProjectForm({
   onCancel,
   initialData,
   submitLabel = '作成',
-}: ProjectFormProps) {
+}: ProjectFormProps): ReactElement {
   const form = useForm<ProjectFormValues>({
     resolver: zodResolver(projectFormSchema),
     defaultValues: {
@@ -77,7 +78,7 @@ export function ProjectForm({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [initialData])
 
-  const handleSubmit = async (data: ProjectFormValues) => {
+  const handleSubmit = async (data: ProjectFormValues): Promise<void> => {
     const name = data.name || ''
     if (!name || name.trim() === '') {
       form.setError('name', { message: 'プロジェクト名は必須です' })
