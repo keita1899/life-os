@@ -197,6 +197,18 @@ async function initializeAllTables(): Promise<void> {
       UNIQUE(year, week_start_date)
     )
   `)
+
+  await db.execute(`
+    CREATE TABLE IF NOT EXISTS dev_projects (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      name TEXT NOT NULL,
+      start_date DATE,
+      end_date DATE,
+      status TEXT NOT NULL DEFAULT 'draft',
+      created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+      updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
+    )
+  `)
 }
 
 export async function getDatabase(): Promise<Database> {

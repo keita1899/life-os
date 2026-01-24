@@ -12,6 +12,7 @@ import {
   CreditCard,
   Menu,
   ChevronLeft,
+  FolderKanban,
 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { cn } from '@/lib/utils'
@@ -121,6 +122,13 @@ function SidebarContent() {
         title: '目標',
         color:
           'bg-blue-100 text-blue-600 dark:bg-blue-900/30 dark:text-blue-400',
+      },
+      {
+        href: '/dev/projects',
+        icon: FolderKanban,
+        title: 'プロジェクト',
+        color:
+          'bg-purple-100 text-purple-600 dark:bg-purple-900/30 dark:text-purple-400',
       },
     ]
 
