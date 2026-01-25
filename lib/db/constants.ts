@@ -140,4 +140,17 @@ export const DB_COLUMNS = {
     'created_at',
     'updated_at',
   ],
+  DEV_TASKS: [
+    'id',
+    'title',
+    'project_id',
+    'type',
+    'execution_date',
+    'completed',
+    'order',
+    'actual_time',
+    'estimated_time',
+    'created_at',
+    'updated_at',
+  ],
 } as const

@@ -209,6 +209,87 @@ async function initializeAllTables(): Promise<void> {
       updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
     )
   `)
+
+  await db.execute(`
+    CREATE TABLE IF NOT EXISTS dev_tasks (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      title TEXT NOT NULL,
+      project_id INTEGER,
+      type TEXT NOT NULL DEFAULT 'inbox',
+      execution_date DATE,
+      completed INTEGER NOT NULL DEFAULT 0,
+      "order" INTEGER NOT NULL DEFAULT 0,
+      actual_time INTEGER NOT NULL DEFAULT 0,
+      estimated_time INTEGER,
+      created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+      updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+      FOREIGN KEY (project_id) REFERENCES dev_projects(id) ON DELETE SET NULL
+    )
+  `)
+
+  const devTaskColumnRows = await db.select<{ name: string }[]>(
+    "SELECT name FROM pragma_table_info('dev_tasks')",
+  )
+  const devTaskColumns = new Set(devTaskColumnRows.map((r) => r.name))
+
+  if (devTaskColumns.has('category_id')) {
+    await db.execute('ALTER TABLE dev_tasks RENAME TO dev_tasks_old')
+
+    await db.execute(`
+      CREATE TABLE dev_tasks (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        title TEXT NOT NULL,
+        project_id INTEGER,
+        type TEXT NOT NULL DEFAULT 'inbox',
+        execution_date DATE,
+        completed INTEGER NOT NULL DEFAULT 0,
+        "order" INTEGER NOT NULL DEFAULT 0,
+        actual_time INTEGER NOT NULL DEFAULT 0,
+        estimated_time INTEGER,
+        created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+        updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+        FOREIGN KEY (project_id) REFERENCES dev_projects(id) ON DELETE SET NULL
+      )
+    `)
+
+    await db.execute(
+      `INSERT INTO dev_tasks (
+        id,
+        title,
+        project_id,
+        type,
+        execution_date,
+        completed,
+        "order",
+        actual_time,
+        estimated_time,
+        created_at,
+        updated_at
+      )
+      SELECT
+        id,
+        title,
+        project_id,
+        'inbox' as type,
+        execution_date,
+        completed,
+        "order",
+        actual_time,
+        estimated_time,
+        created_at,
+        updated_at
+      FROM dev_tasks_old`,
+    )
+
+    await db.execute('DROP TABLE dev_tasks_old')
+    return
+  }
+
+  if (!devTaskColumns.has('type')) {
+    await db.execute(
+      "ALTER TABLE dev_tasks ADD COLUMN type TEXT NOT NULL DEFAULT 'inbox'",
+    )
+  }
 }
 
 export async function getDatabase(): Promise<Database> {
@@ -233,5 +314,5 @@ export function handleDbError(err: unknown, operation: string): never {
     }
     throw new Error(`Failed to ${operation}: ${err.message}`)
   }
-  throw new Error(`Failed to ${operation}: unknown error`)
+  throw new Error(`Failed to ${operation}: ${String(err)}`)
 }
