@@ -1,6 +1,6 @@
 'use client'
 
-import { useMemo } from 'react'
+import { useMemo, useState } from 'react'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import * as z from 'zod'
@@ -65,15 +65,24 @@ export const TaskForm = ({
   })
 
   const executionDate = form.watch('executionDate')
+  const [datePresetOverride, setDatePresetOverride] = useState<
+    'none' | 'today' | 'tomorrow' | 'custom' | null
+  >(null)
 
   const datePreset = useMemo(() => {
+    if (datePresetOverride) return datePresetOverride
     if (!executionDate) return 'none'
     if (executionDate === getTodayDateString()) return 'today'
     if (executionDate === getTomorrowDateString()) return 'tomorrow'
     return 'custom'
-  }, [executionDate])
+  }, [executionDate, datePresetOverride])
 
   const handleDatePresetChange = (value: string) => {
+    if (value === 'custom') {
+      setDatePresetOverride('custom')
+      return
+    }
+    setDatePresetOverride(null)
     const presetToDate: Record<string, string> = {
       none: '',
       today: getTodayDateString(),
