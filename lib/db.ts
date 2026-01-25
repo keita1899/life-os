@@ -227,6 +227,13 @@ async function initializeAllTables(): Promise<void> {
     )
   `)
 
+  await db.execute(
+    'CREATE UNIQUE INDEX IF NOT EXISTS dev_tasks_order_unique_null ON dev_tasks (type, "order") WHERE project_id IS NULL',
+  )
+  await db.execute(
+    'CREATE UNIQUE INDEX IF NOT EXISTS dev_tasks_order_unique_notnull ON dev_tasks (project_id, type, "order") WHERE project_id IS NOT NULL',
+  )
+
   const devTaskColumnRows = await db.select<{ name: string }[]>(
     "SELECT name FROM pragma_table_info('dev_tasks')",
   )
@@ -251,6 +258,13 @@ async function initializeAllTables(): Promise<void> {
         FOREIGN KEY (project_id) REFERENCES dev_projects(id) ON DELETE SET NULL
       )
     `)
+
+    await db.execute(
+      'CREATE UNIQUE INDEX IF NOT EXISTS dev_tasks_order_unique_null ON dev_tasks (type, "order") WHERE project_id IS NULL',
+    )
+    await db.execute(
+      'CREATE UNIQUE INDEX IF NOT EXISTS dev_tasks_order_unique_notnull ON dev_tasks (project_id, type, "order") WHERE project_id IS NOT NULL',
+    )
 
     await db.execute(
       `INSERT INTO dev_tasks (
