@@ -6,7 +6,11 @@ import { CalendarViewBase } from './CalendarViewBase'
 import { MonthlyGoalCalendarForm } from '@/components/dev/goals/MonthlyGoalCalendarForm'
 import { WeeklyGoalForm } from '@/components/dev/goals/WeeklyGoalForm'
 import { useDevGoals } from '@/hooks/useDevGoals'
+import { useDevCalendarTasks } from '@/hooks/useDevCalendarTasks'
+import { useDevProjects } from '@/hooks/useDevProjects'
 import { useCalendarView } from '@/hooks/useCalendarView'
+import { useMemo } from 'react'
+import type { Task } from '@/lib/types/task'
 
 interface DevCalendarViewProps {
   initialDate?: Date
@@ -31,7 +35,49 @@ export function DevCalendarView({ initialDate }: DevCalendarViewProps) {
     isLoading: isLoadingGoals,
   } = useDevGoals(currentYear)
 
-  const isLoading = isLoadingGoals || isLoadingSettings
+  const {
+    tasks: devTasks,
+    isLoading: isLoadingTasks,
+    error: tasksError,
+  } = useDevCalendarTasks()
+  const {
+    projects,
+    isLoading: isLoadingProjects,
+    error: projectsError,
+  } = useDevProjects()
+
+  const projectNameById = useMemo(() => {
+    const map = new Map<number, string>()
+    projects.forEach((p) => map.set(p.id, p.name))
+    return map
+  }, [projects])
+
+  const calendarTasks: Task[] = useMemo(() => {
+    return devTasks
+      .filter((t) => t.executionDate !== null)
+      .map((t) => {
+        const prefix = t.projectId
+          ? projectNameById.get(t.projectId) ?? `プロジェクト#${t.projectId}`
+          : t.type === 'learning'
+            ? '学習'
+            : 'Inbox'
+
+        return {
+          id: t.id,
+          title: `${prefix}: ${t.title}`,
+          executionDate: t.executionDate,
+          completed: t.completed,
+          order: t.order,
+          actualTime: t.actualTime,
+          estimatedTime: t.estimatedTime,
+          createdAt: t.createdAt,
+          updatedAt: t.updatedAt,
+        }
+      })
+  }, [devTasks, projectNameById])
+
+  const isLoading =
+    isLoadingGoals || isLoadingTasks || isLoadingProjects || isLoadingSettings
 
   return (
     <CalendarViewBase
@@ -42,6 +88,11 @@ export function DevCalendarView({ initialDate }: DevCalendarViewProps) {
       onNext={handleNext}
       isLoading={isLoading}
     >
+      {(tasksError || projectsError) && (
+        <div className="rounded-md border border-destructive/30 bg-destructive/5 p-3 text-sm text-destructive">
+          {tasksError || projectsError}
+        </div>
+      )}
       {viewMode === 'month' && (
         <MonthlyGoalCalendarForm
           currentDate={currentDate}
@@ -60,7 +111,7 @@ export function DevCalendarView({ initialDate }: DevCalendarViewProps) {
           currentDate={currentDate}
           monthlyGoals={monthlyGoals}
           events={[]}
-          tasks={[]}
+          tasks={calendarTasks}
           weekStartDay={weekStartDay}
         />
       ) : (
@@ -69,7 +120,7 @@ export function DevCalendarView({ initialDate }: DevCalendarViewProps) {
           monthlyGoals={monthlyGoals}
           weeklyGoals={weeklyGoals}
           events={[]}
-          tasks={[]}
+          tasks={calendarTasks}
           weekStartDay={weekStartDay}
         />
       )}

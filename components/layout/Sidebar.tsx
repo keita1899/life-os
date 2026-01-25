@@ -128,7 +128,14 @@ function SidebarContent() {
         icon: FolderKanban,
         title: 'プロジェクト',
         color:
-          'bg-purple-100 text-purple-600 dark:bg-purple-900/30 dark:text-purple-400',
+        'bg-purple-100 text-purple-600 dark:bg-purple-900/30 dark:text-purple-400',
+      },
+      {
+        href: '/dev/tasks',
+        icon: CheckSquare,
+        title: 'タスク',
+        color:
+          'bg-green-100 text-green-600 dark:bg-green-900/30 dark:text-green-400',
       },
     ]
 
