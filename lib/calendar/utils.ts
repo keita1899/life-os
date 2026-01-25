@@ -215,9 +215,15 @@ export function formatEventTime(event: Event): string {
   if (event.endDatetime) {
     const endDate = parseISO(event.endDatetime)
     const endTime = format(endDate, 'HH:mm')
+    if (startTime === '00:00' && endTime === '00:00') {
+      return ''
+    }
     return `${startTime} - ${endTime}`
   }
 
+  if (startTime === '00:00') {
+    return ''
+  }
   return startTime
 }
 

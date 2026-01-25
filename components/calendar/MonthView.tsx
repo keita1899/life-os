@@ -59,7 +59,7 @@ function EventPopoverWrapper({
             e.stopPropagation()
           }}
         >
-          {!event.allDay && (
+          {!event.allDay && time && (
             <span className="mr-1 text-[10px] opacity-70">{time}</span>
           )}
           {title}

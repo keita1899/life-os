@@ -51,7 +51,7 @@ function EventPopoverWrapper({
           }}
         >
           <div className="flex items-center gap-1.5">
-            {!event.allDay && (
+            {!event.allDay && formatEventTime(event) && (
               <span className="text-[10px] opacity-70">
                 {formatEventTime(event)}
               </span>
