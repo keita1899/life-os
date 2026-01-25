@@ -231,6 +231,7 @@ interface WeekViewProps {
   events?: Event[]
   tasks?: Task[]
   weekStartDay?: number
+  showWeeklyGoalForm?: boolean
 }
 
 export function WeekView({
@@ -240,6 +241,7 @@ export function WeekView({
   events = [],
   tasks = [],
   weekStartDay = 0,
+  showWeeklyGoalForm = true,
 }: WeekViewProps) {
   const weekDays = useMemo(
     () => getWeekDays(currentDate, weekStartDay),
@@ -262,11 +264,13 @@ export function WeekView({
 
   return (
     <div className="w-full">
-      <WeeklyGoalForm
-        currentDate={currentDate}
-        weeklyGoals={weeklyGoals}
-        weekStartDay={weekStartDay}
-      />
+      {showWeeklyGoalForm && (
+        <WeeklyGoalForm
+          currentDate={currentDate}
+          weeklyGoals={weeklyGoals}
+          weekStartDay={weekStartDay}
+        />
+      )}
       <div className="grid grid-cols-7 gap-px border border-stone-200 bg-stone-200 dark:border-stone-800 dark:bg-stone-800">
         {weekdaysList.map((day) => (
           <div

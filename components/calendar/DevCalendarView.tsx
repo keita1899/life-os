@@ -121,6 +121,7 @@ export function DevCalendarView({ initialDate }: DevCalendarViewProps) {
           events={[]}
           tasks={calendarTasks}
           weekStartDay={weekStartDay}
+          showWeeklyGoalForm={false}
         />
       )}
     </CalendarViewBase>
