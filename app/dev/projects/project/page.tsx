@@ -3,6 +3,7 @@
 import type { ReactElement } from 'react'
 import Link from 'next/link'
 import { useRouter, useSearchParams } from 'next/navigation'
+import { useMemo } from 'react'
 import useSWR from 'swr'
 import { mutate } from 'swr'
 import { MainLayout } from '@/components/layout/MainLayout'
@@ -17,6 +18,19 @@ import { Button } from '@/components/ui/button'
 import { ProjectDialog } from '@/components/dev/projects/ProjectDialog'
 import { DeleteConfirmDialog } from '@/components/ui/delete-confirm-dialog'
 import { useState } from 'react'
+import { TaskDialog } from '@/components/tasks/TaskDialog'
+import { TaskList } from '@/components/tasks/TaskList'
+import type { CreateTaskInput, Task } from '@/lib/types/task'
+import { useDevTasks } from '@/hooks/useDevTasks'
+import { groupTasks } from '@/lib/tasks/grouping'
+import {
+  Accordion,
+  AccordionContent,
+  AccordionHeader,
+  AccordionItem,
+  AccordionTrigger,
+} from '@/components/ui/accordion'
+import { Trash2 } from 'lucide-react'
 
 const statusLabels: Record<ProjectStatus, string> = {
   draft: '下書き',
@@ -57,6 +71,29 @@ export default function DevProjectPage(): ReactElement | null {
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false)
   const [deleteError, setDeleteError] = useState<string | null>(null)
 
+  const {
+    tasks,
+    isLoading: isTasksLoading,
+    error: tasksError,
+    createTask,
+    updateTask,
+    deleteTask,
+    toggleTaskCompletion,
+    deleteCompletedTasks,
+  } = useDevTasks({
+    projectId: Number.isFinite(projectId) ? projectId : undefined,
+    type: undefined,
+  })
+
+  const [isTaskDialogOpen, setIsTaskDialogOpen] = useState(false)
+  const [editingTask, setEditingTask] = useState<Task | undefined>(undefined)
+  const [deletingTask, setDeletingTask] = useState<Task | undefined>(undefined)
+  const [isDeletingCompletedDialogOpen, setIsDeletingCompletedDialogOpen] =
+    useState(false)
+  const [taskOperationError, setTaskOperationError] = useState<string | null>(null)
+
+  const groupedTasks = useMemo(() => groupTasks(tasks), [tasks])
+
   if (mode !== 'development') {
     return null
   }
@@ -86,6 +123,120 @@ export default function DevProjectPage(): ReactElement | null {
     } catch (err) {
       setDeleteError(err instanceof Error ? err.message : '削除に失敗しました')
       setIsDeleteDialogOpen(false)
+    }
+  }
+
+  const handleCreateTask = async (input: CreateTaskInput): Promise<void> => {
+    if (!Number.isFinite(projectId)) return
+
+    try {
+      setTaskOperationError(null)
+      await createTask({
+        title: input.title,
+        projectId,
+        type: 'inbox',
+        executionDate: input.executionDate,
+        estimatedTime: input.estimatedTime,
+      })
+      setIsTaskDialogOpen(false)
+    } catch (err) {
+      setTaskOperationError(
+        err instanceof Error ? err.message : 'タスクの作成に失敗しました',
+      )
+    }
+  }
+
+  const handleUpdateTask = async (input: CreateTaskInput): Promise<void> => {
+    if (!editingTask) return
+
+    try {
+      setTaskOperationError(null)
+      await updateTask(editingTask.id, {
+        title: input.title,
+        executionDate: input.executionDate,
+        estimatedTime: input.estimatedTime,
+      })
+      setIsTaskDialogOpen(false)
+      setEditingTask(undefined)
+    } catch (err) {
+      setTaskOperationError(
+        err instanceof Error ? err.message : 'タスクの更新に失敗しました',
+      )
+    }
+  }
+
+  const handleEditTask = (task: Task) => {
+    setEditingTask(task)
+    setIsTaskDialogOpen(true)
+  }
+
+  const handleTaskDialogClose = (open: boolean) => {
+    setIsTaskDialogOpen(open)
+    if (!open) {
+      setEditingTask(undefined)
+    }
+  }
+
+  const handleDeleteTask = async (): Promise<void> => {
+    if (!deletingTask) return
+
+    try {
+      setTaskOperationError(null)
+      await deleteTask(deletingTask.id)
+      setDeletingTask(undefined)
+    } catch (err) {
+      setTaskOperationError(
+        err instanceof Error ? err.message : 'タスクの削除に失敗しました',
+      )
+    }
+  }
+
+  const handleDeleteClick = (task: Task) => {
+    setDeletingTask(task)
+  }
+
+  const handleToggleCompletion = async (task: Task): Promise<void> => {
+    try {
+      setTaskOperationError(null)
+      await toggleTaskCompletion(task.id, !task.completed)
+    } catch (err) {
+      setTaskOperationError(
+        err instanceof Error
+          ? err.message
+          : 'タスクの完了状態の更新に失敗しました',
+      )
+    }
+  }
+
+  const handleUpdateExecutionDate = async (
+    task: Task,
+    executionDate: string | null,
+  ): Promise<void> => {
+    try {
+      setTaskOperationError(null)
+      await updateTask(task.id, { executionDate })
+    } catch (err) {
+      setTaskOperationError(
+        err instanceof Error ? err.message : 'タスクの実行日の更新に失敗しました',
+      )
+    }
+  }
+
+  const handleDeleteCompletedTasksClick = () => {
+    setIsDeletingCompletedDialogOpen(true)
+  }
+
+  const handleDeleteCompletedTasks = async (): Promise<void> => {
+    try {
+      setTaskOperationError(null)
+      await deleteCompletedTasks()
+      setIsDeletingCompletedDialogOpen(false)
+    } catch (err) {
+      setTaskOperationError(
+        err instanceof Error
+          ? err.message
+          : '完了済みタスクの削除に失敗しました',
+      )
     }
   }
 
@@ -125,6 +276,11 @@ export default function DevProjectPage(): ReactElement | null {
         <ErrorMessage
           message={deleteError || ''}
           onDismiss={deleteError ? () => setDeleteError(null) : undefined}
+        />
+
+        <ErrorMessage
+          message={taskOperationError || tasksError || ''}
+          onDismiss={taskOperationError ? () => setTaskOperationError(null) : undefined}
         />
 
         {!Number.isFinite(projectId) && (
@@ -173,6 +329,70 @@ export default function DevProjectPage(): ReactElement | null {
                 </dl>
               </div>
             </section>
+
+            <section className="space-y-4">
+              <div className="flex items-center justify-between">
+                <h2 className="text-xl font-semibold">タスク</h2>
+                <Button
+                  onClick={() => setIsTaskDialogOpen(true)}
+                  disabled={!Number.isFinite(projectId)}
+                >
+                  タスクを作成
+                </Button>
+              </div>
+
+              {isTasksLoading ? (
+                <Loading />
+              ) : (
+                <Accordion
+                  type="multiple"
+                  className="w-full"
+                  defaultValue={groupedTasks.map((group) => group.key)}
+                >
+                  {groupedTasks.map((group) => (
+                    <AccordionItem key={group.key} value={group.key}>
+                      <AccordionHeader>
+                        <AccordionTrigger className="hover:no-underline">
+                          <div className="flex items-center gap-2">
+                            <h3 className="text-lg font-semibold text-stone-900 dark:text-stone-100">
+                              {group.title}
+                            </h3>
+                            <span className="text-sm text-muted-foreground">
+                              ({group.tasks.length})
+                            </span>
+                          </div>
+                        </AccordionTrigger>
+                      </AccordionHeader>
+                      <AccordionContent>
+                        <div className="space-y-4">
+                          <TaskList
+                            tasks={group.tasks}
+                            onEdit={handleEditTask}
+                            onDelete={handleDeleteClick}
+                            onToggleCompletion={handleToggleCompletion}
+                            onUpdateExecutionDate={handleUpdateExecutionDate}
+                          />
+                          {group.key === 'completed' && group.tasks.length > 0 && (
+                            <div className="flex justify-end">
+                              <Button
+                                type="button"
+                                variant="outline"
+                                size="sm"
+                                className="text-destructive hover:text-destructive hover:bg-destructive/10"
+                                onClick={handleDeleteCompletedTasksClick}
+                              >
+                                <Trash2 className="mr-2 h-4 w-4" />
+                                完了済みを一括削除
+                              </Button>
+                            </div>
+                          )}
+                        </div>
+                      </AccordionContent>
+                    </AccordionItem>
+                  ))}
+                </Accordion>
+              )}
+            </section>
           </div>
         )}
 
@@ -188,6 +408,29 @@ export default function DevProjectPage(): ReactElement | null {
           message={data ? `「${data.name}」を削除してもよろしいですか？` : ''}
           onConfirm={handleDelete}
           onCancel={() => setIsDeleteDialogOpen(false)}
+        />
+
+        <TaskDialog
+          open={isTaskDialogOpen}
+          onOpenChange={handleTaskDialogClose}
+          onSubmit={editingTask ? handleUpdateTask : handleCreateTask}
+          task={editingTask}
+        />
+
+        <DeleteConfirmDialog
+          open={!!deletingTask}
+          message={`「${deletingTask?.title}」を削除しますか？この操作は取り消せません。`}
+          onConfirm={handleDeleteTask}
+          onCancel={() => setDeletingTask(undefined)}
+        />
+
+        <DeleteConfirmDialog
+          open={isDeletingCompletedDialogOpen}
+          message={`完了済みのタスク（${
+            groupedTasks.find((g) => g.key === 'completed')?.tasks.length ?? 0
+          }件）をすべて削除しますか？この操作は取り消せません。`}
+          onConfirm={handleDeleteCompletedTasks}
+          onCancel={() => setIsDeletingCompletedDialogOpen(false)}
         />
       </div>
     </MainLayout>
