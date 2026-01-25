@@ -52,7 +52,6 @@ async function initializeAllTables(): Promise<void> {
       completed INTEGER NOT NULL DEFAULT 0,
       "order" INTEGER NOT NULL DEFAULT 0,
       actual_time INTEGER NOT NULL DEFAULT 0,
-      estimated_time INTEGER,
       created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
       updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
     )
@@ -125,7 +124,6 @@ async function initializeAllTables(): Promise<void> {
       category_id INTEGER,
       target_year INTEGER,
       price INTEGER,
-      purchased INTEGER NOT NULL DEFAULT 0,
       "order" INTEGER NOT NULL DEFAULT 0,
       created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
       updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,
@@ -220,7 +218,6 @@ async function initializeAllTables(): Promise<void> {
       completed INTEGER NOT NULL DEFAULT 0,
       "order" INTEGER NOT NULL DEFAULT 0,
       actual_time INTEGER NOT NULL DEFAULT 0,
-      estimated_time INTEGER,
       created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
       updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,
       FOREIGN KEY (project_id) REFERENCES dev_projects(id) ON DELETE SET NULL
@@ -234,12 +231,107 @@ async function initializeAllTables(): Promise<void> {
     'CREATE UNIQUE INDEX IF NOT EXISTS dev_tasks_order_unique_notnull ON dev_tasks (project_id, type, "order") WHERE project_id IS NOT NULL',
   )
 
+  const taskColumnRows = await db.select<{ name: string }[]>(
+    "SELECT name FROM pragma_table_info('tasks')",
+  )
+  const taskColumns = new Set(taskColumnRows.map((r) => r.name))
+
+  if (taskColumns.has('estimated_time')) {
+    await db.execute('ALTER TABLE tasks RENAME TO tasks_old')
+
+    await db.execute(`
+      CREATE TABLE tasks (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        title TEXT NOT NULL,
+        execution_date DATE,
+        completed INTEGER NOT NULL DEFAULT 0,
+        "order" INTEGER NOT NULL DEFAULT 0,
+        actual_time INTEGER NOT NULL DEFAULT 0,
+        created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+        updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
+      )
+    `)
+
+    await db.execute(
+      `INSERT INTO tasks (
+        id,
+        title,
+        execution_date,
+        completed,
+        "order",
+        actual_time,
+        created_at,
+        updated_at
+      )
+      SELECT
+        id,
+        title,
+        execution_date,
+        completed,
+        "order",
+        actual_time,
+        created_at,
+        updated_at
+      FROM tasks_old`,
+    )
+
+    await db.execute('DROP TABLE tasks_old')
+  }
+
+  const wishlistItemColumnRows = await db.select<{ name: string }[]>(
+    "SELECT name FROM pragma_table_info('wishlist_items')",
+  )
+  const wishlistItemColumns = new Set(wishlistItemColumnRows.map((r) => r.name))
+
+  if (wishlistItemColumns.has('purchased')) {
+    await db.execute('ALTER TABLE wishlist_items RENAME TO wishlist_items_old')
+
+    await db.execute(`
+      CREATE TABLE wishlist_items (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        name TEXT NOT NULL,
+        category_id INTEGER,
+        target_year INTEGER,
+        price INTEGER,
+        "order" INTEGER NOT NULL DEFAULT 0,
+        created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+        updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+        FOREIGN KEY (category_id) REFERENCES wishlist_categories(id) ON DELETE SET NULL
+      )
+    `)
+
+    await db.execute(
+      `INSERT INTO wishlist_items (
+        id,
+        name,
+        category_id,
+        target_year,
+        price,
+        "order",
+        created_at,
+        updated_at
+      )
+      SELECT
+        id,
+        name,
+        category_id,
+        target_year,
+        price,
+        "order",
+        created_at,
+        updated_at
+      FROM wishlist_items_old`,
+    )
+
+    await db.execute('DROP TABLE wishlist_items_old')
+  }
+
   const devTaskColumnRows = await db.select<{ name: string }[]>(
     "SELECT name FROM pragma_table_info('dev_tasks')",
   )
   const devTaskColumns = new Set(devTaskColumnRows.map((r) => r.name))
 
-  if (devTaskColumns.has('category_id')) {
+  if (devTaskColumns.has('category_id') || devTaskColumns.has('estimated_time')) {
     await db.execute('ALTER TABLE dev_tasks RENAME TO dev_tasks_old')
 
     await db.execute(`
@@ -252,7 +344,6 @@ async function initializeAllTables(): Promise<void> {
         completed INTEGER NOT NULL DEFAULT 0,
         "order" INTEGER NOT NULL DEFAULT 0,
         actual_time INTEGER NOT NULL DEFAULT 0,
-        estimated_time INTEGER,
         created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
         updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,
         FOREIGN KEY (project_id) REFERENCES dev_projects(id) ON DELETE SET NULL
@@ -266,6 +357,9 @@ async function initializeAllTables(): Promise<void> {
       'CREATE UNIQUE INDEX IF NOT EXISTS dev_tasks_order_unique_notnull ON dev_tasks (project_id, type, "order") WHERE project_id IS NOT NULL',
     )
 
+    const hasTypeInOld = devTaskColumns.has('type')
+    const typeSelect = hasTypeInOld ? 'type' : "'inbox' as type"
+
     await db.execute(
       `INSERT INTO dev_tasks (
         id,
@@ -276,7 +370,6 @@ async function initializeAllTables(): Promise<void> {
         completed,
         "order",
         actual_time,
-        estimated_time,
         created_at,
         updated_at
       )
@@ -284,19 +377,17 @@ async function initializeAllTables(): Promise<void> {
         id,
         title,
         project_id,
-        'inbox' as type,
+        ${typeSelect},
         execution_date,
         completed,
         "order",
         actual_time,
-        estimated_time,
         created_at,
         updated_at
       FROM dev_tasks_old`,
     )
 
     await db.execute('DROP TABLE dev_tasks_old')
-    return
   }
 
   if (!devTaskColumns.has('type')) {

@@ -7,7 +7,6 @@ export interface WishlistItem {
   category: WishlistCategory | null
   targetYear: number | null
   price: number | null
-  purchased: boolean
   order: number
   createdAt: string
   updatedAt: string
@@ -18,7 +17,6 @@ export interface CreateWishlistItemInput {
   categoryId?: number | null
   targetYear?: number | null
   price?: number | null
-  purchased?: boolean
 }
 
 export interface UpdateWishlistItemInput {
@@ -26,6 +24,5 @@ export interface UpdateWishlistItemInput {
   categoryId?: number | null
   targetYear?: number | null
   price?: number | null
-  purchased?: boolean
   order?: number
 }

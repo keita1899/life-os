@@ -87,7 +87,6 @@ export const DB_COLUMNS = {
     'category_id',
     'target_year',
     'price',
-    'purchased',
     'order',
     'created_at',
     'updated_at',

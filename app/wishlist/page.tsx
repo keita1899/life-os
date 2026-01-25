@@ -1,7 +1,6 @@
 'use client'
 
 import { useState, useMemo } from 'react'
-import { Trash2 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import {
   Dialog,
@@ -49,8 +48,6 @@ export default function WishlistPage() {
     createWishlistItem,
     updateWishlistItem,
     deleteWishlistItem,
-    toggleWishlistItemPurchased,
-    deletePurchasedWishlistItems,
   } = useWishlist()
   const { categories } = useWishlistCategories()
   const [selectedCategoryId, setSelectedCategoryId] = useState<string>('all')
@@ -63,8 +60,6 @@ export default function WishlistPage() {
     undefined,
   )
   const [isCategoryManagementOpen, setIsCategoryManagementOpen] =
-    useState(false)
-  const [isDeletingPurchasedDialogOpen, setIsDeletingPurchasedDialogOpen] =
     useState(false)
   const [operationError, setOperationError] = useState<string | null>(null)
 
@@ -98,23 +93,6 @@ export default function WishlistPage() {
     return filtered
   }, [items, selectedCategoryId, selectedYear])
 
-  const groupedItems = useMemo(() => {
-    const unpurchased = filteredItems.filter((item) => !item.purchased)
-    const purchased = filteredItems.filter((item) => item.purchased)
-    return [
-      {
-        key: 'unpurchased',
-        title: '未購入',
-        items: unpurchased,
-      },
-      {
-        key: 'purchased',
-        title: '購入済み',
-        items: purchased,
-      },
-    ]
-  }, [filteredItems])
-
   const totalPrice = useMemo(() => {
     return calculateTotalPrice(filteredItems)
   }, [filteredItems])
@@ -145,7 +123,6 @@ export default function WishlistPage() {
         categoryId: input.categoryId,
         targetYear: input.targetYear,
         price: input.price,
-        purchased: input.purchased,
       }
       await updateWishlistItem(editingItem.id, updateInput)
       setIsDialogOpen(false)
@@ -185,37 +162,6 @@ export default function WishlistPage() {
 
   const handleDeleteClick = (item: WishlistItem) => {
     setDeletingItem(item)
-  }
-
-  const handleTogglePurchased = async (item: WishlistItem) => {
-    try {
-      setOperationError(null)
-      await toggleWishlistItemPurchased(item.id, !item.purchased)
-    } catch (err) {
-      setOperationError(
-        err instanceof Error
-          ? err.message
-          : '欲しいものの購入状態の更新に失敗しました',
-      )
-    }
-  }
-
-  const handleDeletePurchasedItemsClick = () => {
-    setIsDeletingPurchasedDialogOpen(true)
-  }
-
-  const handleDeletePurchasedItems = async () => {
-    try {
-      setOperationError(null)
-      await deletePurchasedWishlistItems()
-      setIsDeletingPurchasedDialogOpen(false)
-    } catch (err) {
-      setOperationError(
-        err instanceof Error
-          ? err.message
-          : '購入済み欲しいものの削除に失敗しました',
-      )
-    }
   }
 
   return (
@@ -289,18 +235,17 @@ export default function WishlistPage() {
             <Accordion
             type="multiple"
             className="w-full"
-            defaultValue={groupedItems.map((group) => group.key)}
+            defaultValue={['items']}
           >
-            {groupedItems.map((group) => (
-              <AccordionItem key={group.key} value={group.key}>
+              <AccordionItem value="items">
                 <AccordionHeader>
                   <AccordionTrigger className="hover:no-underline">
                     <div className="flex items-center gap-2">
                       <h2 className="text-lg font-semibold text-stone-900 dark:text-stone-100">
-                        {group.title}
+                        欲しいもの
                       </h2>
                       <span className="text-sm text-muted-foreground">
-                        ({group.items.length})
+                        ({filteredItems.length})
                       </span>
                     </div>
                   </AccordionTrigger>
@@ -308,29 +253,13 @@ export default function WishlistPage() {
                 <AccordionContent>
                   <div className="space-y-4">
                     <WishlistList
-                      items={group.items}
+                      items={filteredItems}
                       onEdit={handleEditItem}
                       onDelete={handleDeleteClick}
-                      onTogglePurchased={handleTogglePurchased}
                     />
-                    {group.key === 'purchased' && group.items.length > 0 && (
-                      <div className="flex justify-end">
-                        <Button
-                          type="button"
-                          variant="outline"
-                          size="sm"
-                          className="text-destructive hover:text-destructive hover:bg-destructive/10"
-                          onClick={handleDeletePurchasedItemsClick}
-                        >
-                          <Trash2 className="mr-2 h-4 w-4" />
-                          購入済みを一括削除
-                        </Button>
-                      </div>
-                    )}
                   </div>
                 </AccordionContent>
               </AccordionItem>
-            ))}
           </Accordion>
           </>
         )}
@@ -361,14 +290,6 @@ export default function WishlistPage() {
           onCancel={() => setDeletingItem(undefined)}
         />
 
-        <DeleteConfirmDialog
-          open={isDeletingPurchasedDialogOpen}
-          message={`購入済みの欲しいもの（${
-            groupedItems.find((g) => g.key === 'purchased')?.items.length ?? 0
-          }件）をすべて削除しますか？この操作は取り消せません。`}
-          onConfirm={handleDeletePurchasedItems}
-          onCancel={() => setIsDeletingPurchasedDialogOpen(false)}
-        />
       </div>
     </MainLayout>
   )
