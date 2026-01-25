@@ -7,7 +7,6 @@ export interface DevTask {
   completed: boolean
   order: number
   actualTime: number
-  estimatedTime: number | null
   createdAt: string
   updatedAt: string
 }
@@ -17,7 +16,6 @@ export interface CreateDevTaskInput {
   projectId: number | null
   type: 'inbox' | 'learning'
   executionDate?: string | null
-  estimatedTime?: number | null
 }
 
 export interface UpdateDevTaskInput {
@@ -28,6 +26,5 @@ export interface UpdateDevTaskInput {
   completed?: boolean
   order?: number
   actualTime?: number
-  estimatedTime?: number | null
 }
 

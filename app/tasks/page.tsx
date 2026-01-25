@@ -68,7 +68,6 @@ export default function TasksPage() {
       const updateInput: UpdateTaskInput = {
         title: input.title,
         executionDate: input.executionDate,
-        estimatedTime: input.estimatedTime,
       }
       await updateTask(editingTask.id, updateInput)
       setIsDialogOpen(false)

@@ -9,7 +9,6 @@ interface DbTask {
   completed: number
   order: number
   actual_time: number
-  estimated_time: number | null
   created_at: string
   updated_at: string
 }
@@ -22,7 +21,6 @@ function mapDbTaskToTask(dbTask: DbTask): Task {
     completed: dbTask.completed === 1,
     order: dbTask.order,
     actualTime: dbTask.actual_time,
-    estimatedTime: dbTask.estimated_time,
     createdAt: dbTask.created_at,
     updatedAt: dbTask.updated_at,
   }
@@ -44,14 +42,9 @@ export async function createTask(input: CreateTaskInput): Promise<Task> {
 
   try {
     await db.execute(
-      `INSERT INTO tasks (title, execution_date, estimated_time, "order")
-       VALUES (?, ?, ?, ?)`,
-      [
-        input.title,
-        input.executionDate || null,
-        input.estimatedTime || null,
-        newOrder,
-      ],
+      `INSERT INTO tasks (title, execution_date, "order")
+       VALUES (?, ?, ?)`,
+      [input.title, input.executionDate || null, newOrder],
     )
 
     const result = await db.select<DbTask[]>(
@@ -122,11 +115,6 @@ export async function updateTask(
   if (input.actualTime !== undefined) {
     updateFields.push('actual_time = ?')
     updateValues.push(input.actualTime)
-  }
-
-  if (input.estimatedTime !== undefined) {
-    updateFields.push('estimated_time = ?')
-    updateValues.push(input.estimatedTime || null)
   }
 
   if (updateFields.length === 0) {

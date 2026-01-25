@@ -136,7 +136,6 @@ export default function DevProjectPage(): ReactElement | null {
         projectId,
         type: 'inbox',
         executionDate: input.executionDate,
-        estimatedTime: input.estimatedTime,
       })
       setIsTaskDialogOpen(false)
     } catch (err) {
@@ -154,7 +153,6 @@ export default function DevProjectPage(): ReactElement | null {
       await updateTask(editingTask.id, {
         title: input.title,
         executionDate: input.executionDate,
-        estimatedTime: input.estimatedTime,
       })
       setIsTaskDialogOpen(false)
       setEditingTask(undefined)

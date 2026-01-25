@@ -129,7 +129,6 @@ function LogPageView({ logDate, date }: LogPageViewProps) {
       const updateInput: UpdateTaskInput = {
         title: input.title,
         executionDate: input.executionDate,
-        estimatedTime: input.estimatedTime,
       }
       await updateTask(editingTask.id, updateInput)
       setIsTaskDialogOpen(false)

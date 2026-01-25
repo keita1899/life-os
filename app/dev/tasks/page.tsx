@@ -69,7 +69,6 @@ export default function DevTasksPage() {
         projectId: null,
         type: activeType,
         executionDate: input.executionDate,
-        estimatedTime: input.estimatedTime,
       })
       setIsDialogOpen(false)
     } catch (err) {
@@ -87,7 +86,6 @@ export default function DevTasksPage() {
       await updateTask(editingTask.id, {
         title: input.title,
         executionDate: input.executionDate,
-        estimatedTime: input.estimatedTime,
       })
       setIsDialogOpen(false)
       setEditingTask(undefined)

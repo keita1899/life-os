@@ -5,7 +5,6 @@ export interface Task {
   completed: boolean
   order: number
   actualTime: number
-  estimatedTime: number | null
   createdAt: string
   updatedAt: string
 }
@@ -13,7 +12,6 @@ export interface Task {
 export interface CreateTaskInput {
   title: string
   executionDate?: string | null
-  estimatedTime?: number | null
 }
 
 export interface UpdateTaskInput {
@@ -22,5 +20,4 @@ export interface UpdateTaskInput {
   completed?: boolean
   order?: number
   actualTime?: number
-  estimatedTime?: number | null
 }

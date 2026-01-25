@@ -31,7 +31,6 @@ import {
 const taskFormSchema = z.object({
   title: z.string().min(1, 'タイトルは必須です'),
   executionDate: z.string().optional(),
-  estimatedTime: z.string().optional(),
 })
 
 type TaskFormValues = z.infer<typeof taskFormSchema>
@@ -57,7 +56,6 @@ export const TaskForm = ({
       ? {
           title: initialData.title,
           executionDate: formatDateForInput(initialData.executionDate),
-          estimatedTime: initialData.estimatedTime?.toString() || '',
         }
       : {
           title: '',
@@ -91,10 +89,6 @@ export const TaskForm = ({
     await onSubmit({
       title: data.title,
       executionDate: data.executionDate || null,
-      estimatedTime:
-        data.estimatedTime === '' || data.estimatedTime === undefined
-          ? null
-          : Number(data.estimatedTime),
     })
     if (!isEditMode) {
       form.reset()
@@ -147,26 +141,6 @@ export const TaskForm = ({
                   </FormControl>
                 )}
               </div>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
-
-        <FormField
-          control={form.control}
-          name="estimatedTime"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>見積もり時間（分）</FormLabel>
-              <FormControl>
-                <Input
-                  type="number"
-                  placeholder="見積もり時間を入力（任意）"
-                  {...field}
-                  value={field.value || ''}
-                  onChange={(e) => field.onChange(e.target.value)}
-                />
-              </FormControl>
               <FormMessage />
             </FormItem>
           )}

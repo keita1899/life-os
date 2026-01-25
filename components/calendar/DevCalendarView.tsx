@@ -69,7 +69,6 @@ export function DevCalendarView({ initialDate }: DevCalendarViewProps) {
           completed: t.completed,
           order: t.order,
           actualTime: t.actualTime,
-          estimatedTime: t.estimatedTime,
           createdAt: t.createdAt,
           updatedAt: t.updatedAt,
         }

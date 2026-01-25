@@ -133,7 +133,6 @@ export function TaskItem({
           {task.title}
         </div>
         <div className="mt-2 flex gap-4 text-xs text-muted-foreground">
-          {task.estimatedTime && <div>見積もり: {task.estimatedTime}分</div>}
           {task.actualTime > 0 && <div>実績: {task.actualTime}分</div>}
         </div>
       </div>
