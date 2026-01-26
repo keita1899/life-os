@@ -84,6 +84,8 @@ export function MonthlyGoalCalendarForm({
       if (currentMonthlyGoal) {
         await updateMonthlyGoal(currentMonthlyGoal.id, {
           title: trimmedValue,
+          year,
+          month,
         })
       } else {
         await createMonthlyGoal({
