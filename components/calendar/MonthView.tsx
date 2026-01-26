@@ -23,6 +23,7 @@ import {
 } from '@/components/ui/popover'
 import { EventPopoverContent } from './EventPopover'
 import { TaskPopoverContent } from './TaskPopover'
+import { CheckCircle2, Circle } from 'lucide-react'
 import type { MonthlyGoal } from '@/lib/types/monthly-goal'
 import type { Event } from '@/lib/types/event'
 import type { Task } from '@/lib/types/task'
@@ -96,9 +97,15 @@ function EventPopoverWrapper({
 
 function TaskPopoverWrapper({
   task,
+  onEdit,
+  onDelete,
+  onToggleCompletion,
   onOpenChange,
 }: {
   task: Task
+  onEdit?: (task: Task) => void
+  onDelete?: (task: Task) => void
+  onToggleCompletion?: (task: Task) => void
   onOpenChange?: (open: boolean) => void
 }) {
   const [isOpen, setIsOpen] = useState(false)
@@ -113,7 +120,7 @@ function TaskPopoverWrapper({
       <PopoverTrigger asChild>
         <button
           className={cn(
-            'w-full truncate rounded px-1 text-left text-xs hover:opacity-80',
+            'flex w-full items-center gap-1 truncate rounded px-1 text-left text-xs hover:opacity-80',
             task.completed
               ? 'bg-stone-100 text-stone-600 dark:bg-stone-800 dark:text-stone-400'
               : 'bg-orange-100 text-orange-900 dark:bg-orange-900/30 dark:text-orange-300',
@@ -123,11 +130,61 @@ function TaskPopoverWrapper({
             e.stopPropagation()
           }}
         >
-          {task.title}
+          {onToggleCompletion && (
+            <span
+              role="button"
+              tabIndex={0}
+              className="inline-flex h-4 w-4 items-center justify-center"
+              onClick={(e) => {
+                e.preventDefault()
+                e.stopPropagation()
+                onToggleCompletion(task)
+              }}
+              onKeyDown={(e) => {
+                if (e.key !== 'Enter' && e.key !== ' ') return
+                e.preventDefault()
+                e.stopPropagation()
+                onToggleCompletion(task)
+              }}
+              aria-label={task.completed ? '未完了にする' : '完了にする'}
+            >
+              {task.completed ? (
+                <CheckCircle2 className="h-4 w-4 text-green-600 dark:text-green-400" />
+              ) : (
+                <Circle className="h-4 w-4 text-stone-400" />
+              )}
+            </span>
+          )}
+          <span
+            className={cn(
+              'min-w-0 flex-1 truncate',
+              task.completed && 'line-through',
+            )}
+          >
+            {task.title}
+          </span>
         </button>
       </PopoverTrigger>
       <PopoverContent>
-        <TaskPopoverContent task={task} />
+        <TaskPopoverContent
+          task={task}
+          onEdit={
+            onEdit
+              ? (t) => {
+                  handleOpenChange(false)
+                  onEdit(t)
+                }
+              : undefined
+          }
+          onDelete={
+            onDelete
+              ? (t) => {
+                  handleOpenChange(false)
+                  onDelete(t)
+                }
+              : undefined
+          }
+        />
       </PopoverContent>
     </Popover>
   )
@@ -142,6 +199,9 @@ function DateCell({
   dayTasks,
   onEditEvent,
   onDeleteEvent,
+  onEditTask,
+  onDeleteTask,
+  onToggleTaskCompletion,
 }: {
   date: Date
   isCurrentMonthDay: boolean
@@ -154,6 +214,9 @@ function DateCell({
   dayTasks: Task[]
   onEditEvent?: (event: Event) => void
   onDeleteEvent?: (event: Event) => void
+  onEditTask?: (task: Task) => void
+  onDeleteTask?: (task: Task) => void
+  onToggleTaskCompletion?: (task: Task) => void
 }) {
   const router = useRouter()
   const [hasOpenPopover, setHasOpenPopover] = useState(false)
@@ -241,6 +304,9 @@ function DateCell({
                 <TaskPopoverWrapper
                   key={task.id}
                   task={task}
+                  onEdit={onEditTask}
+                  onDelete={onDeleteTask}
+                  onToggleCompletion={onToggleTaskCompletion}
                   onOpenChange={(open) => setHasOpenPopover(open)}
                 />
               ))}
@@ -265,6 +331,9 @@ interface MonthViewProps {
   weekStartDay?: number
   onEditEvent?: (event: Event) => void
   onDeleteEvent?: (event: Event) => void
+  onEditTask?: (task: Task) => void
+  onDeleteTask?: (task: Task) => void
+  onToggleTaskCompletion?: (task: Task) => void
 }
 
 export function MonthView({
@@ -275,6 +344,9 @@ export function MonthView({
   weekStartDay = 0,
   onEditEvent,
   onDeleteEvent,
+  onEditTask,
+  onDeleteTask,
+  onToggleTaskCompletion,
 }: MonthViewProps) {
   const calendarDays = useMemo(
     () => getCalendarDays(currentDate, weekStartDay),
@@ -336,6 +408,9 @@ export function MonthView({
                 dayTasks={dayTasks}
                 onEditEvent={onEditEvent}
                 onDeleteEvent={onDeleteEvent}
+                onEditTask={onEditTask}
+                onDeleteTask={onDeleteTask}
+                onToggleTaskCompletion={onToggleTaskCompletion}
               />
             )
           }),

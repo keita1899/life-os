@@ -10,9 +10,11 @@ import { useEvents } from '@/hooks/useEvents'
 import { useTasks } from '@/hooks/useTasks'
 import { useCalendarView } from '@/hooks/useCalendarView'
 import { EventDialog } from '@/components/events/EventDialog'
+import { TaskDialog } from '@/components/tasks/TaskDialog'
 import { DeleteConfirmDialog } from '@/components/ui/delete-confirm-dialog'
 import { ErrorMessage } from '@/components/ui/error-message'
 import type { CreateEventInput, Event, UpdateEventInput } from '@/lib/types/event'
+import type { CreateTaskInput, Task, UpdateTaskInput } from '@/lib/types/task'
 
 interface CalendarViewProps {
   initialDate?: Date
@@ -43,11 +45,21 @@ export function CalendarView({ initialDate }: CalendarViewProps) {
     updateEvent,
     deleteEvent,
   } = useEvents()
-  const { tasks, isLoading: isLoadingTasks } = useTasks()
+  const {
+    tasks,
+    isLoading: isLoadingTasks,
+    error: tasksError,
+    updateTask,
+    deleteTask,
+    toggleTaskCompletion,
+  } = useTasks()
   const [operationError, setOperationError] = useState<string | null>(null)
   const [isEventDialogOpen, setIsEventDialogOpen] = useState(false)
   const [editingEvent, setEditingEvent] = useState<Event | undefined>(undefined)
   const [deletingEvent, setDeletingEvent] = useState<Event | undefined>(undefined)
+  const [isTaskDialogOpen, setIsTaskDialogOpen] = useState(false)
+  const [editingTask, setEditingTask] = useState<Task | undefined>(undefined)
+  const [deletingTask, setDeletingTask] = useState<Task | undefined>(undefined)
 
   const isLoading =
     isLoadingGoals || isLoadingEvents || isLoadingTasks || isLoadingSettings
@@ -98,10 +110,63 @@ export function CalendarView({ initialDate }: CalendarViewProps) {
     }
   }
 
+  const handleEditTask = (task: Task) => {
+    setEditingTask(task)
+    setIsTaskDialogOpen(true)
+  }
+
+  const handleUpdateTask = async (input: CreateTaskInput) => {
+    if (!editingTask) return
+
+    try {
+      setOperationError(null)
+      const updateInput: UpdateTaskInput = {
+        title: input.title,
+        executionDate: input.executionDate,
+      }
+      await updateTask(editingTask.id, updateInput)
+      setIsTaskDialogOpen(false)
+      setEditingTask(undefined)
+    } catch (err) {
+      setOperationError(
+        err instanceof Error ? err.message : 'タスクの更新に失敗しました',
+      )
+    }
+  }
+
+  const handleDeleteTaskClick = (task: Task) => {
+    setDeletingTask(task)
+  }
+
+  const handleDeleteTask = async () => {
+    if (!deletingTask) return
+
+    try {
+      setOperationError(null)
+      await deleteTask(deletingTask.id)
+      setDeletingTask(undefined)
+    } catch (err) {
+      setOperationError(
+        err instanceof Error ? err.message : 'タスクの削除に失敗しました',
+      )
+    }
+  }
+
+  const handleToggleTaskCompletion = async (task: Task) => {
+    try {
+      setOperationError(null)
+      await toggleTaskCompletion(task.id, !task.completed)
+    } catch (err) {
+      setOperationError(
+        err instanceof Error ? err.message : 'タスクの完了状態の更新に失敗しました',
+      )
+    }
+  }
+
   return (
     <>
       <ErrorMessage
-        message={operationError || eventsError || ''}
+        message={operationError || eventsError || tasksError || ''}
         onDismiss={operationError ? () => setOperationError(null) : undefined}
       />
       <CalendarViewBase
@@ -127,6 +192,9 @@ export function CalendarView({ initialDate }: CalendarViewProps) {
             weekStartDay={weekStartDay}
             onEditEvent={handleEditEvent}
             onDeleteEvent={handleDeleteEventClick}
+            onEditTask={handleEditTask}
+            onDeleteTask={handleDeleteTaskClick}
+            onToggleTaskCompletion={handleToggleTaskCompletion}
           />
         ) : (
           <WeekView
@@ -138,6 +206,9 @@ export function CalendarView({ initialDate }: CalendarViewProps) {
             weekStartDay={weekStartDay}
             onEditEvent={handleEditEvent}
             onDeleteEvent={handleDeleteEventClick}
+            onEditTask={handleEditTask}
+            onDeleteTask={handleDeleteTaskClick}
+            onToggleTaskCompletion={handleToggleTaskCompletion}
           />
         )}
       </CalendarViewBase>
@@ -159,6 +230,25 @@ export function CalendarView({ initialDate }: CalendarViewProps) {
         message={`「${deletingEvent?.title}」を削除しますか？この操作は取り消せません。`}
         onConfirm={handleDeleteEvent}
         onCancel={() => setDeletingEvent(undefined)}
+      />
+
+      <TaskDialog
+        open={isTaskDialogOpen}
+        onOpenChange={(open) => {
+          setIsTaskDialogOpen(open)
+          if (!open) {
+            setEditingTask(undefined)
+          }
+        }}
+        onSubmit={handleUpdateTask}
+        task={editingTask}
+      />
+
+      <DeleteConfirmDialog
+        open={!!deletingTask}
+        message={`「${deletingTask?.title}」を削除しますか？この操作は取り消せません。`}
+        onConfirm={handleDeleteTask}
+        onCancel={() => setDeletingTask(undefined)}
       />
     </>
   )
