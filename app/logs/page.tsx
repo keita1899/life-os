@@ -8,7 +8,7 @@ import { parseISO, isValid, addDays, subDays } from 'date-fns'
 import { useMode } from '@/lib/contexts/ModeContext'
 import { useRouter } from 'next/navigation'
 import { Button } from '@/components/ui/button'
-import { ChevronLeft, ChevronRight } from 'lucide-react'
+import { CalendarPlus, CheckSquare, ChevronLeft, ChevronRight } from 'lucide-react'
 import { useGoals } from '@/hooks/useGoals'
 import { useTasks } from '@/hooks/useTasks'
 import { useEvents } from '@/hooks/useEvents'
@@ -35,6 +35,7 @@ import type { Task, CreateTaskInput, UpdateTaskInput } from '@/lib/types/task'
 import type { UpdateDailyLogInput } from '@/lib/types/daily-log'
 import Link from 'next/link'
 import type { CreateEventInput, Event, UpdateEventInput } from '@/lib/types/event'
+import { FloatingActionButtons } from '@/components/floating/FloatingActionButtons'
 
 interface LogPageViewProps {
   logDate: Date
@@ -55,6 +56,7 @@ function LogPageView({ logDate, date }: LogPageViewProps) {
     tasks: allTasks,
     isLoading: isLoadingTasks,
     error: tasksError,
+    createTask,
     toggleTaskCompletion,
     updateTask,
     deleteTask,
@@ -70,6 +72,7 @@ function LogPageView({ logDate, date }: LogPageViewProps) {
     events: allEvents,
     isLoading: isLoadingEvents,
     error: eventsError,
+    createEvent,
     updateEvent,
     deleteEvent,
   } = useEvents()
@@ -121,10 +124,27 @@ function LogPageView({ logDate, date }: LogPageViewProps) {
     setIsTaskDialogOpen(true)
   }
 
+  const handleOpenCreateTask = () => {
+    setEditingTask(undefined)
+    setIsTaskDialogOpen(true)
+  }
+
   const handleDialogClose = (open: boolean) => {
     setIsTaskDialogOpen(open)
     if (!open) {
       setEditingTask(undefined)
+    }
+  }
+
+  const handleCreateTask = async (input: CreateTaskInput) => {
+    try {
+      setOperationError(null)
+      await createTask(input)
+      setIsTaskDialogOpen(false)
+    } catch (err) {
+      setOperationError(
+        err instanceof Error ? err.message : 'タスクの作成に失敗しました',
+      )
     }
   }
 
@@ -143,6 +163,23 @@ function LogPageView({ logDate, date }: LogPageViewProps) {
     } catch (err) {
       setOperationError(
         err instanceof Error ? err.message : 'タスクの更新に失敗しました',
+      )
+    }
+  }
+
+  const handleOpenCreateEvent = () => {
+    setEditingEvent(undefined)
+    setIsEventDialogOpen(true)
+  }
+
+  const handleCreateEvent = async (input: CreateEventInput) => {
+    try {
+      setOperationError(null)
+      await createEvent(input)
+      setIsEventDialogOpen(false)
+    } catch (err) {
+      setOperationError(
+        err instanceof Error ? err.message : '予定の作成に失敗しました',
       )
     }
   }
@@ -311,6 +348,23 @@ function LogPageView({ logDate, date }: LogPageViewProps) {
         </div>
       )}
 
+      <FloatingActionButtons
+        actions={[
+          {
+            id: 'create-event',
+            label: '予定を作成',
+            icon: <CalendarPlus className="h-5 w-5" />,
+            onClick: handleOpenCreateEvent,
+          },
+          {
+            id: 'create-task',
+            label: 'タスクを作成',
+            icon: <CheckSquare className="h-5 w-5" />,
+            onClick: handleOpenCreateTask,
+          },
+        ]}
+      />
+
       <EventDialog
         open={isEventDialogOpen}
         onOpenChange={(open) => {
@@ -319,14 +373,14 @@ function LogPageView({ logDate, date }: LogPageViewProps) {
             setEditingEvent(undefined)
           }
         }}
-        onSubmit={handleUpdateEvent}
+        onSubmit={editingEvent ? handleUpdateEvent : handleCreateEvent}
         event={editingEvent}
       />
 
       <TaskDialog
         open={isTaskDialogOpen}
         onOpenChange={handleDialogClose}
-        onSubmit={handleUpdateTask}
+        onSubmit={editingTask ? handleUpdateTask : handleCreateTask}
         task={editingTask}
       />
 
