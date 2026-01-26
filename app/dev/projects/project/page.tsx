@@ -67,10 +67,6 @@ export default function DevProjectPage(): ReactElement | null {
     () => fetcher(() => getDevProjectById(projectId)),
   )
 
-  if (mode !== 'development') {
-    return null
-  }
-
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false)
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false)
   const [deleteError, setDeleteError] = useState<string | null>(null)
@@ -97,6 +93,10 @@ export default function DevProjectPage(): ReactElement | null {
   const [taskOperationError, setTaskOperationError] = useState<string | null>(null)
 
   const groupedTasks = useMemo(() => groupTasks(tasks), [tasks])
+
+  if (mode !== 'development') {
+    return null
+  }
 
   const handleUpdate = async (input: {
     name: string
