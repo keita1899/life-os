@@ -6,6 +6,7 @@ import {
   updateDevTask,
   deleteDevTask,
   deleteCompletedDevTasks,
+  updateOverdueDevTasksToToday,
 } from '@/lib/dev/tasks'
 import type {
   DevTask,
@@ -27,6 +28,7 @@ interface UseDevTasksResult {
   deleteTask: (id: number) => Promise<void>
   toggleTaskCompletion: (id: number, completed: boolean) => Promise<void>
   deleteCompletedTasks: () => Promise<void>
+  updateOverdueTasksToToday: () => Promise<void>
   refreshTasks: () => Promise<DevTask[] | undefined>
 }
 
@@ -92,6 +94,15 @@ export function useDevTasks(input: {
     await Promise.all([refreshTasks(), mutate(devCalendarTasksKey)])
   }
 
+  const handleUpdateOverdueTasksToToday = async (): Promise<void> => {
+    if (projectId === undefined) return
+    await updateOverdueDevTasksToToday({
+      projectId,
+      type,
+    })
+    await Promise.all([refreshTasks(), mutate(devCalendarTasksKey)])
+  }
+
   return {
     tasks: data,
     isLoading,
@@ -105,6 +116,7 @@ export function useDevTasks(input: {
     deleteTask: handleDeleteTask,
     toggleTaskCompletion: handleToggleTaskCompletion,
     deleteCompletedTasks: handleDeleteCompletedTasks,
+    updateOverdueTasksToToday: handleUpdateOverdueTasksToToday,
     refreshTasks,
   }
 }

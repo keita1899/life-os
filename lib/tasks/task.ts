@@ -180,3 +180,22 @@ export async function deleteCompletedTasks(): Promise<number> {
     handleDbError(err, 'delete completed tasks')
   }
 }
+
+export async function updateOverdueTasksToToday(): Promise<number> {
+  const db = await getDatabase()
+  const today = new Date().toISOString().split('T')[0]
+
+  try {
+    const result = await db.execute(
+      `UPDATE tasks 
+       SET execution_date = ?, updated_at = CURRENT_TIMESTAMP 
+       WHERE completed = 0 
+       AND execution_date IS NOT NULL 
+       AND execution_date < ?`,
+      [today, today],
+    )
+    return result.rowsAffected
+  } catch (err) {
+    handleDbError(err, 'update overdue tasks to today')
+  }
+}

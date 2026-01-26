@@ -5,5 +5,6 @@ export {
   updateDevTask,
   deleteDevTask,
   deleteCompletedDevTasks,
+  updateOverdueDevTasksToToday,
 } from './task'
 

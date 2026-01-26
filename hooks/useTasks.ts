@@ -6,6 +6,7 @@ import {
   updateTask,
   deleteTask,
   deleteCompletedTasks,
+  updateOverdueTasksToToday,
 } from '@/lib/tasks'
 import type { Task, CreateTaskInput, UpdateTaskInput } from '@/lib/types/task'
 import { fetcher } from '@/lib/swr'
@@ -44,6 +45,11 @@ export function useTasks() {
     await mutate(tasksKey)
   }
 
+  const handleUpdateOverdueTasksToToday = async () => {
+    await updateOverdueTasksToToday()
+    await mutate(tasksKey)
+  }
+
   return {
     tasks: data,
     isLoading,
@@ -57,6 +63,7 @@ export function useTasks() {
     deleteTask: handleDeleteTask,
     toggleTaskCompletion: handleToggleTaskCompletion,
     deleteCompletedTasks: handleDeleteCompletedTasks,
+    updateOverdueTasksToToday: handleUpdateOverdueTasksToToday,
     refreshTasks: () => mutate(tasksKey),
   }
 }

@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useMemo } from 'react'
-import { Trash2 } from 'lucide-react'
+import { Trash2, Calendar } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import {
   Accordion,
@@ -32,6 +32,7 @@ export default function TasksPage() {
     deleteTask,
     toggleTaskCompletion,
     deleteCompletedTasks,
+    updateOverdueTasksToToday,
   } = useTasks()
   const [isDialogOpen, setIsDialogOpen] = useState(false)
   const [editingTask, setEditingTask] = useState<Task | undefined>(undefined)
@@ -152,6 +153,19 @@ export default function TasksPage() {
     }
   }
 
+  const handleUpdateOverdueTasksToToday = async () => {
+    try {
+      setOperationError(null)
+      await updateOverdueTasksToToday()
+    } catch (err) {
+      setOperationError(
+        err instanceof Error
+          ? err.message
+          : '期限切れタスクの更新に失敗しました',
+      )
+    }
+  }
+
   return (
     <MainLayout>
       <div className="container mx-auto max-w-4xl py-8 px-4">
@@ -181,13 +195,30 @@ export default function TasksPage() {
             <AccordionItem key={group.key} value={group.key}>
               <AccordionHeader>
                 <AccordionTrigger className="hover:no-underline">
-                  <div className="flex items-center gap-2">
-                    <h2 className="text-lg font-semibold text-stone-900 dark:text-stone-100">
-                      {group.title}
-                    </h2>
-                    <span className="text-sm text-muted-foreground">
-                      ({group.tasks.length})
-                    </span>
+                  <div className="flex w-full items-center justify-between">
+                    <div className="flex items-center gap-2">
+                      <h2 className="text-lg font-semibold text-stone-900 dark:text-stone-100">
+                        {group.title}
+                      </h2>
+                      <span className="text-sm text-muted-foreground">
+                        ({group.tasks.length})
+                      </span>
+                    </div>
+                    {group.key === 'overdue' && group.tasks.length > 0 && (
+                      <Button
+                        type="button"
+                        variant="outline"
+                        size="sm"
+                        className="mr-2"
+                        onClick={(e) => {
+                          e.stopPropagation()
+                          handleUpdateOverdueTasksToToday()
+                        }}
+                      >
+                        <Calendar className="mr-2 h-4 w-4" />
+                        今日に戻す
+                      </Button>
+                    )}
                   </div>
                 </AccordionTrigger>
               </AccordionHeader>

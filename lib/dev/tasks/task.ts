@@ -281,3 +281,36 @@ export async function deleteCompletedDevTasks(input: {
   }
 }
 
+export async function updateOverdueDevTasksToToday(input: {
+  projectId: number | null
+  type?: DbDevTask['type']
+}): Promise<number> {
+  const db = await getDatabase()
+  const today = new Date().toISOString().split('T')[0]
+
+  const whereProject = input.projectId === null ? 'project_id IS NULL' : 'project_id = ?'
+  const whereType = input.type ? ' AND type = ?' : ''
+  const values: unknown[] = [today, today]
+  if (input.projectId !== null) {
+    values.push(input.projectId)
+  }
+  if (input.type) {
+    values.push(input.type)
+  }
+
+  try {
+    const result = await db.execute(
+      `UPDATE dev_tasks 
+       SET execution_date = ?, updated_at = CURRENT_TIMESTAMP 
+       WHERE completed = 0 
+       AND execution_date IS NOT NULL 
+       AND execution_date < ? 
+       AND ${whereProject}${whereType}`,
+      values,
+    )
+    return result.rowsAffected
+  } catch (err) {
+    handleDbError(err, 'update overdue dev tasks to today')
+  }
+}
+
