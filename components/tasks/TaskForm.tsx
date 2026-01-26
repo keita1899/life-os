@@ -137,9 +137,9 @@ export const TaskForm = ({
                     </SelectTrigger>
                   </FormControl>
                   <SelectContent>
-                    <SelectItem value="none">日付なし</SelectItem>
                     <SelectItem value="today">今日</SelectItem>
                     <SelectItem value="tomorrow">明日</SelectItem>
+                    <SelectItem value="none">日付なし</SelectItem>
                     <SelectItem value="custom">日付を選択</SelectItem>
                   </SelectContent>
                 </Select>
