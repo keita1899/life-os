@@ -28,9 +28,13 @@ import { getTasksForDate } from '@/lib/logs/utils'
 
 function EventPopoverWrapper({
   event,
+  onEdit,
+  onDelete,
   onOpenChange,
 }: {
   event: Event
+  onEdit?: (event: Event) => void
+  onDelete?: (event: Event) => void
   onOpenChange?: (open: boolean) => void
 }) {
   const [isOpen, setIsOpen] = useState(false)
@@ -61,7 +65,25 @@ function EventPopoverWrapper({
         </button>
       </PopoverTrigger>
       <PopoverContent>
-        <EventPopoverContent event={event} />
+        <EventPopoverContent
+          event={event}
+          onEdit={
+            onEdit
+              ? (e) => {
+                  handleOpenChange(false)
+                  onEdit(e)
+                }
+              : undefined
+          }
+          onDelete={
+            onDelete
+              ? (e) => {
+                  handleOpenChange(false)
+                  onDelete(e)
+                }
+              : undefined
+          }
+        />
       </PopoverContent>
     </Popover>
   )
@@ -114,6 +136,8 @@ function WeekDateCell({
   dayTasks,
   isExpanded,
   onToggleExpand,
+  onEditEvent,
+  onDeleteEvent,
 }: {
   date: Date
   isTodayDate: boolean
@@ -122,6 +146,8 @@ function WeekDateCell({
   dayTasks: Task[]
   isExpanded: boolean
   onToggleExpand: () => void
+  onEditEvent?: (event: Event) => void
+  onDeleteEvent?: (event: Event) => void
 }) {
   const router = useRouter()
   const [hasOpenPopover, setHasOpenPopover] = useState(false)
@@ -184,6 +210,8 @@ function WeekDateCell({
           <EventPopoverWrapper
             key={event.id}
             event={event}
+            onEdit={onEditEvent}
+            onDelete={onDeleteEvent}
             onOpenChange={(open) => setHasOpenPopover(open)}
           />
         ))}
@@ -232,6 +260,8 @@ interface WeekViewProps {
   tasks?: Task[]
   weekStartDay?: number
   showWeeklyGoalForm?: boolean
+  onEditEvent?: (event: Event) => void
+  onDeleteEvent?: (event: Event) => void
 }
 
 export function WeekView({
@@ -242,6 +272,8 @@ export function WeekView({
   tasks = [],
   weekStartDay = 0,
   showWeeklyGoalForm = true,
+  onEditEvent,
+  onDeleteEvent,
 }: WeekViewProps) {
   const weekDays = useMemo(
     () => getWeekDays(currentDate, weekStartDay),
@@ -300,6 +332,8 @@ export function WeekView({
               dayTasks={dayTasks}
               isExpanded={isExpanded}
               onToggleExpand={() => toggleDate(dateStr)}
+              onEditEvent={onEditEvent}
+              onDeleteEvent={onDeleteEvent}
             />
           )
         })}

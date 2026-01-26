@@ -32,11 +32,15 @@ function EventPopoverWrapper({
   event,
   time,
   title,
+  onEdit,
+  onDelete,
   onOpenChange,
 }: {
   event: Event
   time?: string
   title: string
+  onEdit?: (event: Event) => void
+  onDelete?: (event: Event) => void
   onOpenChange?: (open: boolean) => void
 }) {
   const [isOpen, setIsOpen] = useState(false)
@@ -66,7 +70,25 @@ function EventPopoverWrapper({
         </button>
       </PopoverTrigger>
       <PopoverContent>
-        <EventPopoverContent event={event} />
+        <EventPopoverContent
+          event={event}
+          onEdit={
+            onEdit
+              ? (e) => {
+                  handleOpenChange(false)
+                  onEdit(e)
+                }
+              : undefined
+          }
+          onDelete={
+            onDelete
+              ? (e) => {
+                  handleOpenChange(false)
+                  onDelete(e)
+                }
+              : undefined
+          }
+        />
       </PopoverContent>
     </Popover>
   )
@@ -118,6 +140,8 @@ function DateCell({
   allItems,
   dayEvents,
   dayTasks,
+  onEditEvent,
+  onDeleteEvent,
 }: {
   date: Date
   isCurrentMonthDay: boolean
@@ -128,6 +152,8 @@ function DateCell({
   >
   dayEvents: Event[]
   dayTasks: Task[]
+  onEditEvent?: (event: Event) => void
+  onDeleteEvent?: (event: Event) => void
 }) {
   const router = useRouter()
   const [hasOpenPopover, setHasOpenPopover] = useState(false)
@@ -184,6 +210,8 @@ function DateCell({
                 event={item.data}
                 time={item.time}
                 title={item.title}
+                onEdit={onEditEvent}
+                onDelete={onDeleteEvent}
                 onOpenChange={(open) => setHasOpenPopover(open)}
               />
             )
@@ -235,6 +263,8 @@ interface MonthViewProps {
   events?: Event[]
   tasks?: Task[]
   weekStartDay?: number
+  onEditEvent?: (event: Event) => void
+  onDeleteEvent?: (event: Event) => void
 }
 
 export function MonthView({
@@ -243,6 +273,8 @@ export function MonthView({
   events = [],
   tasks = [],
   weekStartDay = 0,
+  onEditEvent,
+  onDeleteEvent,
 }: MonthViewProps) {
   const calendarDays = useMemo(
     () => getCalendarDays(currentDate, weekStartDay),
@@ -302,6 +334,8 @@ export function MonthView({
                 allItems={allItems}
                 dayEvents={dayEvents}
                 dayTasks={dayTasks}
+                onEditEvent={onEditEvent}
+                onDeleteEvent={onDeleteEvent}
               />
             )
           }),
