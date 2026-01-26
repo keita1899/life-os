@@ -129,7 +129,7 @@ export default function EventsPage() {
         <Accordion
           type="multiple"
           className="w-full"
-          defaultValue={groupedEvents.map((group) => group.key)}
+          defaultValue={groupedEvents[0] ? [groupedEvents[0].key] : []}
         >
           {groupedEvents.map((group) => (
             <AccordionItem key={group.key} value={group.key}>
