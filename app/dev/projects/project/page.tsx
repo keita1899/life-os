@@ -23,6 +23,7 @@ import { TaskList } from '@/components/tasks/TaskList'
 import type { CreateTaskInput, Task } from '@/lib/types/task'
 import { useDevTasks } from '@/hooks/useDevTasks'
 import { groupTasks } from '@/lib/tasks/grouping'
+import { FloatingActionButtons } from '@/components/floating/FloatingActionButtons'
 import {
   Accordion,
   AccordionContent,
@@ -30,7 +31,7 @@ import {
   AccordionItem,
   AccordionTrigger,
 } from '@/components/ui/accordion'
-import { Trash2, Calendar } from 'lucide-react'
+import { Trash2, Calendar, Focus } from 'lucide-react'
 
 const statusLabels: Record<ProjectStatus, string> = {
   draft: '下書き',
@@ -459,6 +460,19 @@ export default function DevProjectPage(): ReactElement | null {
           onConfirm={handleDeleteCompletedTasks}
           onCancel={() => setIsDeletingCompletedDialogOpen(false)}
         />
+
+        {Number.isFinite(projectId) && (
+          <FloatingActionButtons
+            actions={[
+              {
+                id: 'focus',
+                label: 'フォーカスモード',
+                icon: <Focus className="h-5 w-5" />,
+                onClick: () => router.push(`/dev/focus?projectId=${projectId}`),
+              },
+            ]}
+          />
+        )}
       </div>
     </MainLayout>
   )
