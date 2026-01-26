@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useCallback, useEffect, useState } from 'react'
 import { Header } from './Header'
 import { Sidebar } from './Sidebar'
 
@@ -25,15 +25,9 @@ function getInitialSidebarState(): boolean {
 export function MainLayout({ children }: MainLayoutProps) {
   const [isSidebarOpen, setIsSidebarOpen] = useState(getInitialSidebarState)
 
-  useEffect(() => {
-    try {
-      const saved = localStorage.getItem(SIDEBAR_STORAGE_KEY)
-      if (saved !== null) {
-        setIsSidebarOpen(saved === 'true')
-      }
-    } catch {
-      // localStorage access failed, keep current state
-    }
+  const handleOpenChange = useCallback((open: boolean) => {
+    setIsSidebarOpen(open)
+    localStorage.setItem(SIDEBAR_STORAGE_KEY, String(open))
   }, [])
 
   useEffect(() => {
@@ -59,16 +53,11 @@ export function MainLayout({ children }: MainLayoutProps) {
     return () => {
       window.removeEventListener('keydown', handleKeyDown)
     }
-  }, [isSidebarOpen])
+  }, [handleOpenChange, isSidebarOpen])
 
-  const handleOpenChange = (open: boolean) => {
-    setIsSidebarOpen(open)
-    localStorage.setItem(SIDEBAR_STORAGE_KEY, String(open))
-  }
-
-  const handleMenuClick = () => {
+  const handleMenuClick = useCallback(() => {
     handleOpenChange(!isSidebarOpen)
-  }
+  }, [handleOpenChange, isSidebarOpen])
 
   return (
     <div className="flex min-h-screen flex-col">
