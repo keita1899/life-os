@@ -59,8 +59,7 @@ export const TaskForm = ({
         }
       : {
           title: '',
-          executionDate: '',
-          estimatedTime: '',
+          executionDate: getTodayDateString(),
         },
   })
 
