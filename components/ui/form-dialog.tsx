@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useState } from 'react'
 import {
   Dialog,
   DialogContent,
@@ -50,11 +50,12 @@ export function FormDialog<
 }: FormDialogProps<TData, TInitialData, TFormProps>) {
   const [submitError, setSubmitError] = useState<string | null>(null)
 
-  useEffect(() => {
-    if (open) {
+  const handleOpenChange = (nextOpen: boolean) => {
+    if (nextOpen) {
       setSubmitError(null)
     }
-  }, [open])
+    onOpenChange(nextOpen)
+  }
 
   const handleSubmit = async (input: TData) => {
     try {
@@ -73,7 +74,7 @@ export function FormDialog<
   const isEditMode = !!initialData
 
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
+    <Dialog open={open} onOpenChange={handleOpenChange}>
       <DialogContent className={contentClassName}>
         <DialogHeader>
           <DialogTitle>
@@ -87,7 +88,7 @@ export function FormDialog<
         <FormComponent
           {...({
             onSubmit: handleSubmit,
-            onCancel: () => onOpenChange(false),
+            onCancel: () => handleOpenChange(false),
             initialData,
             submitLabel: isEditMode ? '更新' : '作成',
             ...formProps,
