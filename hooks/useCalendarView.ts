@@ -16,16 +16,14 @@ interface UseCalendarViewOptions {
 export function useCalendarView({ initialDate }: UseCalendarViewOptions = {}) {
   const { userSettings, isLoading: isLoadingSettings } = useUserSettings()
   const [currentDate, setCurrentDate] = useState(initialDate || new Date())
-  const [viewMode, setViewMode] = useState<ViewMode>('month')
+  const [viewModeOverride, setViewModeOverride] = useState<ViewMode | null>(null)
 
   const weekStartDay = userSettings?.weekStartDay ?? 0
 
-  useEffect(() => {
-    const defaultView = userSettings?.defaultCalendarView
-    if (defaultView === 'month' || defaultView === 'week') {
-      setViewMode(defaultView)
-    }
-  }, [userSettings?.defaultCalendarView])
+  const defaultView = userSettings?.defaultCalendarView
+  const resolvedDefaultView: ViewMode = defaultView === 'week' ? 'week' : 'month'
+  const viewMode: ViewMode = viewModeOverride ?? resolvedDefaultView
+  const setViewMode = (next: ViewMode) => setViewModeOverride(next)
 
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
