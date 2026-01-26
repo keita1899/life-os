@@ -10,6 +10,8 @@ import { useDevGoals } from '@/hooks/useDevGoals'
 import { Card } from '@/components/ui/card'
 import { Target } from 'lucide-react'
 import { formatDateDisplay } from '@/lib/date/formats'
+import { LifeHomeCreateButtons } from '@/components/floating/LifeHomeCreateButtons'
+import { DevHomeTaskCreateButton } from '@/components/floating/DevHomeTaskCreateButton'
 
 export default function Home() {
   const { mode } = useMode()
@@ -87,9 +89,11 @@ export default function Home() {
             <div className="flex-1">
               <DevCalendarView />
             </div>
+            <DevHomeTaskCreateButton />
           </div>
         )}
       </div>
+      {mode === 'life' && <LifeHomeCreateButtons />}
     </MainLayout>
   )
 }
