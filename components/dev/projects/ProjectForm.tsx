@@ -65,7 +65,7 @@ export function ProjectForm({
         name: initialData.name,
         startDate: initialData.startDate || '',
         endDate: initialData.endDate || '',
-        status: initialData.status || 'draft',
+        status: initialData.status,
       })
     } else {
       form.reset({
@@ -146,7 +146,7 @@ export function ProjectForm({
               <FormItem>
                 <FormLabel>ステータス</FormLabel>
                 <Select
-                  value={field.value || 'draft'}
+                  value={field.value}
                   onValueChange={field.onChange}
                 >
                   <FormControl>
