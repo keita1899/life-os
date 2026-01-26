@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useMemo } from 'react'
+import { useState, useMemo, useEffect } from 'react'
 import { Trash2, Calendar } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import {
@@ -19,6 +19,7 @@ import { MainLayout } from '@/components/layout/MainLayout'
 import { useTasks } from '@/hooks/useTasks'
 import { useMode } from '@/lib/contexts/ModeContext'
 import { groupTasks } from '@/lib/tasks/grouping'
+import { getTodayDateString } from '@/lib/date/formats'
 import type { CreateTaskInput, Task, UpdateTaskInput } from '@/lib/types/task'
 
 export default function TasksPage() {
@@ -40,8 +41,20 @@ export default function TasksPage() {
   const [isDeletingCompletedDialogOpen, setIsDeletingCompletedDialogOpen] =
     useState(false)
   const [operationError, setOperationError] = useState<string | null>(null)
+  const [todayStr, setTodayStr] = useState(getTodayDateString())
 
-  const groupedTasks = useMemo(() => groupTasks(tasks), [tasks])
+  useEffect(() => {
+    const interval = setInterval(() => {
+      const newTodayStr = getTodayDateString()
+      if (newTodayStr !== todayStr) {
+        setTodayStr(newTodayStr)
+      }
+    }, 60000)
+
+    return () => clearInterval(interval)
+  }, [todayStr])
+
+  const groupedTasks = useMemo(() => groupTasks(tasks), [tasks, todayStr])
 
   if (mode !== 'life') {
     return null

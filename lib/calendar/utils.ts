@@ -72,16 +72,6 @@ export function getMonthlyGoalsForDate(
   return goals.filter((goal) => goal.year === year && goal.month === month)
 }
 
-export function getGoalsForDate(
-  goals: MonthlyGoal[],
-  date: Date,
-): MonthlyGoal[] {
-  const year = getYear(date)
-  const month = getMonth(date) + 1
-
-  return goals.filter((goal) => goal.year === year && goal.month === month)
-}
-
 export function navigateMonth(date: Date, direction: 'prev' | 'next'): Date {
   return direction === 'next' ? addMonths(date, 1) : subMonths(date, 1)
 }
@@ -130,28 +120,6 @@ export function formatWeekRange(date: Date, weekStartDay: number = 0): string {
 
 export function navigateWeek(date: Date, direction: 'prev' | 'next'): Date {
   return direction === 'next' ? addWeeks(date, 1) : subWeeks(date, 1)
-}
-
-export function getGoalsForWeek(
-  goals: MonthlyGoal[],
-  weekStart: Date,
-  weekStartDay: number = 0,
-): MonthlyGoal[] {
-  const weekDays = getWeekDays(weekStart, weekStartDay)
-  const weekYear = getYear(weekStart)
-  const weekMonth = getMonth(weekStart) + 1
-
-  return goals.filter((goal) => {
-    if (goal.year !== weekYear || goal.month !== weekMonth) {
-      return false
-    }
-
-    return weekDays.some(
-      (day) =>
-        day.getFullYear() === goal.year &&
-        day.getMonth() + 1 === goal.month,
-    )
-  })
 }
 
 export function getEventsForDate(events: Event[], date: Date): Event[] {

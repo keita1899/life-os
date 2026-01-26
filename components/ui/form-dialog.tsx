@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import {
   Dialog,
   DialogContent,
@@ -50,10 +50,13 @@ export function FormDialog<
 }: FormDialogProps<TData, TInitialData, TFormProps>) {
   const [submitError, setSubmitError] = useState<string | null>(null)
 
-  const handleOpenChange = (nextOpen: boolean) => {
-    if (nextOpen) {
+  useEffect(() => {
+    if (open) {
       setSubmitError(null)
     }
+  }, [open])
+
+  const handleOpenChange = (nextOpen: boolean) => {
     onOpenChange(nextOpen)
   }
 
