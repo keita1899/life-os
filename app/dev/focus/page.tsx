@@ -2,7 +2,7 @@
 
 import { useMemo, useState, useEffect } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
-import { ArrowLeft, X, CheckCircle2, Play } from 'lucide-react'
+import { ArrowLeft, X, CheckCircle2, Play, GripVertical } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Loading } from '@/components/ui/loading'
 import { ErrorMessage } from '@/components/ui/error-message'
@@ -12,12 +12,94 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog'
+import {
+  DndContext,
+  closestCenter,
+  KeyboardSensor,
+  PointerSensor,
+  useSensor,
+  useSensors,
+  DragEndEvent,
+} from '@dnd-kit/core'
+import {
+  arrayMove,
+  SortableContext,
+  sortableKeyboardCoordinates,
+  useSortable,
+  verticalListSortingStrategy,
+} from '@dnd-kit/sortable'
+import { CSS } from '@dnd-kit/utilities'
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { useDevTasks } from '@/hooks/useDevTasks'
 import { useMode } from '@/lib/contexts/ModeContext'
 import { getTodayDevTasks } from '@/lib/tasks/utils'
 import { useStopwatch } from '@/components/focus/Stopwatch'
 import type { DevTask } from '@/lib/types/dev-task'
+
+interface SortableDevTaskItemProps {
+  task: DevTask
+  index: number
+  onToggle: () => void
+  onRemove: () => void
+}
+
+function SortableDevTaskItem({
+  task,
+  index,
+  onToggle,
+  onRemove,
+}: SortableDevTaskItemProps) {
+  const {
+    attributes,
+    listeners,
+    setNodeRef,
+    transform,
+    transition,
+    isDragging,
+  } = useSortable({ id: task.id })
+
+  const style = {
+    transform: CSS.Transform.toString(transform),
+    transition,
+    opacity: isDragging ? 0.5 : 1,
+  }
+
+  return (
+    <div
+      ref={setNodeRef}
+      style={style}
+      className="flex items-center gap-3 rounded-lg border border-primary bg-primary/5 p-4 dark:border-primary dark:bg-primary/10"
+    >
+      <div
+        {...attributes}
+        {...listeners}
+        className="cursor-grab active:cursor-grabbing touch-none"
+      >
+        <GripVertical className="h-5 w-5 text-muted-foreground" />
+      </div>
+      <input
+        type="checkbox"
+        checked={true}
+        onChange={onToggle}
+        className="h-4 w-4 rounded border-stone-300 text-primary focus:ring-2 focus:ring-primary"
+      />
+      <div className="flex items-center gap-2 flex-1">
+        <span className="text-sm font-medium text-muted-foreground">
+          {index + 1}.
+        </span>
+        <div className="flex-1 font-medium">{task.title}</div>
+      </div>
+      <Button
+        variant="ghost"
+        size="icon"
+        onClick={onRemove}
+        className="h-8 w-8"
+      >
+        <X className="h-4 w-4" />
+      </Button>
+    </div>
+  )
+}
 
 export default function DevFocusPage() {
   const { mode } = useMode()
@@ -26,7 +108,14 @@ export default function DevFocusPage() {
   const projectIdParam = searchParams.get('projectId')
   const projectId = projectIdParam ? Number(projectIdParam) : null
   const [activeType, setActiveType] = useState<'inbox' | 'learning'>('inbox')
-  const [focusTaskIds, setFocusTaskIds] = useState<Set<number>>(new Set())
+  const [focusTaskIds, setFocusTaskIds] = useState<number[]>([])
+
+  const sensors = useSensors(
+    useSensor(PointerSensor),
+    useSensor(KeyboardSensor, {
+      coordinateGetter: sortableKeyboardCoordinates,
+    }),
+  )
 
   const {
     tasks,
@@ -80,22 +169,28 @@ export default function DevFocusPage() {
 
   const handleToggleTask = (taskId: number) => {
     setFocusTaskIds((prev) => {
-      const next = new Set(prev)
-      if (next.has(taskId)) {
-        next.delete(taskId)
+      if (prev.includes(taskId)) {
+        return prev.filter((id) => id !== taskId)
       } else {
-        next.add(taskId)
+        return [...prev, taskId]
       }
-      return next
     })
   }
 
   const handleRemoveFromFocus = (taskId: number) => {
-    setFocusTaskIds((prev) => {
-      const next = new Set(prev)
-      next.delete(taskId)
-      return next
-    })
+    setFocusTaskIds((prev) => prev.filter((id) => id !== taskId))
+  }
+
+  const handleDragEnd = (event: DragEndEvent) => {
+    const { active, over } = event
+
+    if (over && active.id !== over.id) {
+      setFocusTaskIds((items) => {
+        const oldIndex = items.indexOf(active.id as number)
+        const newIndex = items.indexOf(over.id as number)
+        return arrayMove(items, oldIndex, newIndex)
+      })
+    }
   }
 
   const handleStartSession = () => {
@@ -165,11 +260,15 @@ export default function DevFocusPage() {
   }, [completedTasks])
 
   const focusTasks = useMemo(() => {
-    return todayTasks.filter((task) => focusTaskIds.has(task.id))
+    const taskMap = new Map(todayTasks.map((task) => [task.id, task]))
+    return focusTaskIds
+      .map((id) => taskMap.get(id))
+      .filter((task): task is DevTask => task !== undefined)
   }, [todayTasks, focusTaskIds])
 
   const availableTasks = useMemo(() => {
-    return todayTasks.filter((task) => !focusTaskIds.has(task.id))
+    const focusTaskIdSet = new Set(focusTaskIds)
+    return todayTasks.filter((task) => !focusTaskIdSet.has(task.id))
   }, [todayTasks, focusTaskIds])
 
   return (
@@ -282,35 +381,28 @@ export default function DevFocusPage() {
                     フォーカスタスクが選択されていません
                   </div>
                 ) : (
-                  <div className="space-y-2">
-                    {focusTasks.map((task: DevTask, index: number) => (
-                      <div
-                        key={task.id}
-                        className="flex items-center gap-3 rounded-lg border border-primary bg-primary/5 p-4 dark:border-primary dark:bg-primary/10"
-                      >
-                        <input
-                          type="checkbox"
-                          checked={true}
-                          onChange={() => handleToggleTask(task.id)}
-                          className="h-4 w-4 rounded border-stone-300 text-primary focus:ring-2 focus:ring-primary"
-                        />
-                        <div className="flex items-center gap-2 flex-1">
-                          <span className="text-sm font-medium text-muted-foreground">
-                            {index + 1}.
-                          </span>
-                          <div className="flex-1 font-medium">{task.title}</div>
-                        </div>
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          onClick={() => handleRemoveFromFocus(task.id)}
-                          className="h-8 w-8"
-                        >
-                          <X className="h-4 w-4" />
-                        </Button>
+                  <DndContext
+                    sensors={sensors}
+                    collisionDetection={closestCenter}
+                    onDragEnd={handleDragEnd}
+                  >
+                    <SortableContext
+                      items={focusTaskIds}
+                      strategy={verticalListSortingStrategy}
+                    >
+                      <div className="space-y-2">
+                        {focusTasks.map((task: DevTask, index: number) => (
+                          <SortableDevTaskItem
+                            key={task.id}
+                            task={task}
+                            index={index}
+                            onToggle={() => handleToggleTask(task.id)}
+                            onRemove={() => handleRemoveFromFocus(task.id)}
+                          />
+                        ))}
                       </div>
-                    ))}
-                  </div>
+                    </SortableContext>
+                  </DndContext>
                 )}
               </div>
             </div>
