@@ -1,6 +1,5 @@
 import { getDatabase, handleDbError } from '../db'
 import { DB_COLUMNS } from '../db/constants'
-import { getYearFromDate } from './base'
 import type {
   YearlyGoal,
   CreateYearlyGoalInput,
@@ -10,7 +9,6 @@ import type {
 interface DbYearlyGoal {
   id: number
   title: string
-  target_date: string | null
   year: number
   achieved: number
   created_at: string
@@ -21,7 +19,6 @@ function mapDbYearlyGoalToYearlyGoal(dbGoal: DbYearlyGoal): YearlyGoal {
   return {
     id: dbGoal.id,
     title: dbGoal.title,
-    targetDate: dbGoal.target_date,
     year: dbGoal.year,
     achieved: dbGoal.achieved === 1,
     createdAt: dbGoal.created_at,
@@ -65,15 +62,15 @@ export async function createYearlyGoal(
 ): Promise<YearlyGoal> {
   const db = await getDatabase()
 
-  const year = input.year ?? getYearFromDate(input.targetDate)
+  const year = input.year ?? new Date().getFullYear()
 
   await validateYearlyLimit(year)
 
   try {
     await db.execute(
-      `INSERT INTO yearly_goals (title, target_date, year)
-       VALUES (?, ?, ?)`,
-      [input.title, input.targetDate || null, year],
+      `INSERT INTO yearly_goals (title, year)
+       VALUES (?, ?)`,
+      [input.title, year],
     )
 
     const result = await db.select<DbYearlyGoal[]>(
@@ -155,10 +152,7 @@ export async function updateYearlyGoal(
     throw new Error('Yearly goal not found')
   }
 
-  const newYear =
-    input.year ?? getYearFromDate(input.targetDate) ?? currentGoal.year
-  const newTargetDate =
-    input.targetDate !== undefined ? input.targetDate : currentGoal.targetDate
+  const newYear = input.year ?? currentGoal.year
 
   if (newYear !== currentGoal.year) {
     await validateYearlyLimit(newYear, id)
@@ -171,16 +165,9 @@ export async function updateYearlyGoal(
     updates.push('title = ?')
     values.push(input.title)
   }
-  if (input.targetDate !== undefined) {
-    updates.push('target_date = ?')
-    values.push(input.targetDate)
-  }
   if (input.year !== undefined) {
     updates.push('year = ?')
     values.push(input.year)
-  } else if (newYear !== currentGoal.year) {
-    updates.push('year = ?')
-    values.push(newYear)
   }
 
   if (updates.length === 0) {

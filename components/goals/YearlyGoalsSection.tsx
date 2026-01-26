@@ -67,14 +67,6 @@ export const YearlyGoalsSection = ({
               </CardHeader>
               <CardContent>
                 <div className="space-y-2 text-sm">
-                  {goal.targetDate && (
-                    <div className="flex items-center gap-4">
-                      <span className="text-muted-foreground min-w-[3rem]">期限</span>
-                      <span className="text-black dark:text-black">
-                        {new Date(goal.targetDate).toLocaleDateString('ja-JP')}
-                      </span>
-                    </div>
-                  )}
                 </div>
               </CardContent>
               <div className="absolute right-4 top-4 z-10 flex gap-1 opacity-0 transition-opacity group-hover:opacity-100">

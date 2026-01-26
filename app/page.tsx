@@ -48,11 +48,6 @@ export default function Home() {
                     <div className="text-lg font-semibold">
                       {yearlyGoal.title}
                     </div>
-                    {yearlyGoal.targetDate && (
-                      <div className="text-sm text-muted-foreground">
-                        目標日: {formatDateDisplay(yearlyGoal.targetDate)}
-                      </div>
-                    )}
                   </div>
                 </div>
               </Card>
@@ -77,11 +72,6 @@ export default function Home() {
                     <div className="text-lg font-semibold">
                       {devYearlyGoal.title}
                     </div>
-                    {devYearlyGoal.targetDate && (
-                      <div className="text-sm text-muted-foreground">
-                        目標日: {formatDateDisplay(devYearlyGoal.targetDate)}
-                      </div>
-                    )}
                   </div>
                 </div>
               </Card>

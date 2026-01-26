@@ -78,24 +78,8 @@ export function getGoalsForDate(
 ): MonthlyGoal[] {
   const year = getYear(date)
   const month = getMonth(date) + 1
-  const day = date.getDate()
 
-  return goals.filter((goal) => {
-    if (goal.year !== year || goal.month !== month) {
-      return false
-    }
-
-    if (!goal.targetDate) {
-      return false
-    }
-
-    const targetDate = new Date(goal.targetDate)
-    return (
-      targetDate.getFullYear() === year &&
-      targetDate.getMonth() + 1 === month &&
-      targetDate.getDate() === day
-    )
-  })
+  return goals.filter((goal) => goal.year === year && goal.month === month)
 }
 
 export function navigateMonth(date: Date, direction: 'prev' | 'next'): Date {
@@ -154,18 +138,18 @@ export function getGoalsForWeek(
   weekStartDay: number = 0,
 ): MonthlyGoal[] {
   const weekDays = getWeekDays(weekStart, weekStartDay)
+  const weekYear = getYear(weekStart)
+  const weekMonth = getMonth(weekStart) + 1
 
   return goals.filter((goal) => {
-    if (!goal.targetDate) {
+    if (goal.year !== weekYear || goal.month !== weekMonth) {
       return false
     }
 
-    const targetDate = new Date(goal.targetDate)
     return weekDays.some(
       (day) =>
-        day.getFullYear() === targetDate.getFullYear() &&
-        day.getMonth() === targetDate.getMonth() &&
-        day.getDate() === targetDate.getDate(),
+        day.getFullYear() === goal.year &&
+        day.getMonth() + 1 === goal.month,
     )
   })
 }

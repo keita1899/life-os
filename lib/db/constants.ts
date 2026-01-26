@@ -23,7 +23,6 @@ export const DB_COLUMNS = {
   MONTHLY_GOALS: [
     'id',
     'title',
-    'target_date',
     'year',
     'month',
     'achieved',
@@ -33,7 +32,6 @@ export const DB_COLUMNS = {
   YEARLY_GOALS: [
     'id',
     'title',
-    'target_date',
     'year',
     'achieved',
     'created_at',
@@ -113,7 +111,6 @@ export const DB_COLUMNS = {
   DEV_YEARLY_GOALS: [
     'id',
     'title',
-    'target_date',
     'year',
     'achieved',
     'created_at',
@@ -122,7 +119,6 @@ export const DB_COLUMNS = {
   DEV_MONTHLY_GOALS: [
     'id',
     'title',
-    'target_date',
     'year',
     'month',
     'achieved',

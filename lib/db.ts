@@ -10,7 +10,6 @@ async function initializeAllTables(): Promise<void> {
     CREATE TABLE IF NOT EXISTS yearly_goals (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
       title TEXT NOT NULL,
-      target_date DATE,
       year INTEGER NOT NULL,
       achieved INTEGER NOT NULL DEFAULT 0,
       created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
@@ -22,7 +21,6 @@ async function initializeAllTables(): Promise<void> {
     CREATE TABLE IF NOT EXISTS monthly_goals (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
       title TEXT NOT NULL,
-      target_date DATE,
       year INTEGER NOT NULL,
       month INTEGER NOT NULL,
       achieved INTEGER NOT NULL DEFAULT 0,
@@ -160,7 +158,6 @@ async function initializeAllTables(): Promise<void> {
     CREATE TABLE IF NOT EXISTS dev_yearly_goals (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
       title TEXT NOT NULL,
-      target_date DATE,
       year INTEGER NOT NULL,
       achieved INTEGER NOT NULL DEFAULT 0,
       created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
@@ -173,7 +170,6 @@ async function initializeAllTables(): Promise<void> {
     CREATE TABLE IF NOT EXISTS dev_monthly_goals (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
       title TEXT NOT NULL,
-      target_date DATE,
       year INTEGER NOT NULL,
       month INTEGER NOT NULL,
       achieved INTEGER NOT NULL DEFAULT 0,
@@ -394,6 +390,178 @@ async function initializeAllTables(): Promise<void> {
     await db.execute(
       "ALTER TABLE dev_tasks ADD COLUMN type TEXT NOT NULL DEFAULT 'inbox'",
     )
+  }
+
+  const yearlyGoalColumnRows = await db.select<{ name: string }[]>(
+    "SELECT name FROM pragma_table_info('yearly_goals')",
+  )
+  const yearlyGoalColumns = new Set(yearlyGoalColumnRows.map((r) => r.name))
+
+  if (yearlyGoalColumns.has('target_date')) {
+    await db.execute('ALTER TABLE yearly_goals RENAME TO yearly_goals_old')
+
+    await db.execute(`
+      CREATE TABLE yearly_goals (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        title TEXT NOT NULL,
+        year INTEGER NOT NULL,
+        achieved INTEGER NOT NULL DEFAULT 0,
+        created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+        updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
+      )
+    `)
+
+    await db.execute(
+      `INSERT INTO yearly_goals (
+        id,
+        title,
+        year,
+        achieved,
+        created_at,
+        updated_at
+      )
+      SELECT
+        id,
+        title,
+        year,
+        achieved,
+        created_at,
+        updated_at
+      FROM yearly_goals_old`,
+    )
+
+    await db.execute('DROP TABLE yearly_goals_old')
+  }
+
+  const monthlyGoalColumnRows = await db.select<{ name: string }[]>(
+    "SELECT name FROM pragma_table_info('monthly_goals')",
+  )
+  const monthlyGoalColumns = new Set(monthlyGoalColumnRows.map((r) => r.name))
+
+  if (monthlyGoalColumns.has('target_date')) {
+    await db.execute('ALTER TABLE monthly_goals RENAME TO monthly_goals_old')
+
+    await db.execute(`
+      CREATE TABLE monthly_goals (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        title TEXT NOT NULL,
+        year INTEGER NOT NULL,
+        month INTEGER NOT NULL,
+        achieved INTEGER NOT NULL DEFAULT 0,
+        created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+        updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
+      )
+    `)
+
+    await db.execute(
+      `INSERT INTO monthly_goals (
+        id,
+        title,
+        year,
+        month,
+        achieved,
+        created_at,
+        updated_at
+      )
+      SELECT
+        id,
+        title,
+        year,
+        month,
+        achieved,
+        created_at,
+        updated_at
+      FROM monthly_goals_old`,
+    )
+
+    await db.execute('DROP TABLE monthly_goals_old')
+  }
+
+  const devYearlyGoalColumnRows = await db.select<{ name: string }[]>(
+    "SELECT name FROM pragma_table_info('dev_yearly_goals')",
+  )
+  const devYearlyGoalColumns = new Set(devYearlyGoalColumnRows.map((r) => r.name))
+
+  if (devYearlyGoalColumns.has('target_date')) {
+    await db.execute('ALTER TABLE dev_yearly_goals RENAME TO dev_yearly_goals_old')
+
+    await db.execute(`
+      CREATE TABLE dev_yearly_goals (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        title TEXT NOT NULL,
+        year INTEGER NOT NULL,
+        achieved INTEGER NOT NULL DEFAULT 0,
+        created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+        updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+        UNIQUE(year)
+      )
+    `)
+
+    await db.execute(
+      `INSERT INTO dev_yearly_goals (
+        id,
+        title,
+        year,
+        achieved,
+        created_at,
+        updated_at
+      )
+      SELECT
+        id,
+        title,
+        year,
+        achieved,
+        created_at,
+        updated_at
+      FROM dev_yearly_goals_old`,
+    )
+
+    await db.execute('DROP TABLE dev_yearly_goals_old')
+  }
+
+  const devMonthlyGoalColumnRows = await db.select<{ name: string }[]>(
+    "SELECT name FROM pragma_table_info('dev_monthly_goals')",
+  )
+  const devMonthlyGoalColumns = new Set(devMonthlyGoalColumnRows.map((r) => r.name))
+
+  if (devMonthlyGoalColumns.has('target_date')) {
+    await db.execute('ALTER TABLE dev_monthly_goals RENAME TO dev_monthly_goals_old')
+
+    await db.execute(`
+      CREATE TABLE dev_monthly_goals (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        title TEXT NOT NULL,
+        year INTEGER NOT NULL,
+        month INTEGER NOT NULL,
+        achieved INTEGER NOT NULL DEFAULT 0,
+        created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+        updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+        UNIQUE(year, month)
+      )
+    `)
+
+    await db.execute(
+      `INSERT INTO dev_monthly_goals (
+        id,
+        title,
+        year,
+        month,
+        achieved,
+        created_at,
+        updated_at
+      )
+      SELECT
+        id,
+        title,
+        year,
+        month,
+        achieved,
+        created_at,
+        updated_at
+      FROM dev_monthly_goals_old`,
+    )
+
+    await db.execute('DROP TABLE dev_monthly_goals_old')
   }
 }
 

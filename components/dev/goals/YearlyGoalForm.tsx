@@ -20,7 +20,6 @@ import type {
 
 const yearlyGoalFormSchema = z.object({
   title: z.string().min(1, 'タイトルは必須です'),
-  targetDate: z.string().optional(),
   year: z
     .number()
     .int()
@@ -52,12 +51,10 @@ export const YearlyGoalForm = ({
     values: initialData
       ? {
           title: initialData.title,
-          targetDate: initialData.targetDate ?? '',
           year: initialData.year,
         }
       : {
           title: '',
-          targetDate: '',
           year: selectedYear ?? new Date().getFullYear(),
         },
   })
@@ -65,13 +62,11 @@ export const YearlyGoalForm = ({
   const handleSubmit = async (data: YearlyGoalFormValues) => {
     await onSubmit({
       title: data.title,
-      targetDate: data.targetDate || null,
       year: data.year ?? selectedYear ?? new Date().getFullYear(),
     })
     if (!isEditMode) {
       form.reset({
         title: '',
-        targetDate: '',
         year: selectedYear ?? new Date().getFullYear(),
       })
     }
@@ -111,20 +106,6 @@ export const YearlyGoalForm = ({
                   }}
                   value={field.value ?? ''}
                 />
-              </FormControl>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
-
-        <FormField
-          control={form.control}
-          name="targetDate"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>期限</FormLabel>
-              <FormControl>
-                <Input type="date" {...field} />
               </FormControl>
               <FormMessage />
             </FormItem>

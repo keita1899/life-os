@@ -81,7 +81,6 @@ const GoalsPage = () => {
       setOperationError(null)
       await updateYearlyGoal(editingYearlyGoal.id, {
         title: input.title,
-        targetDate: input.targetDate,
         year: input.year,
       })
       await refreshGoals()
@@ -100,7 +99,6 @@ const GoalsPage = () => {
       setOperationError(null)
       await updateMonthlyGoal(editingMonthlyGoal.id, {
         title: input.title,
-        targetDate: input.targetDate,
         year: input.year,
         month: input.month,
       })
@@ -317,11 +315,6 @@ const GoalsPage = () => {
                               <p className="mt-1 text-xs text-muted-foreground">
                                 {goal.year}年
                               </p>
-                              {goal.targetDate && (
-                                <p className="mt-1 text-xs text-muted-foreground">
-                                  期限: {new Date(goal.targetDate).toLocaleDateString('ja-JP')}
-                                </p>
-                              )}
                             </div>
                           </div>
                         </div>
@@ -358,12 +351,6 @@ const GoalsPage = () => {
                               <p className="mt-1 text-xs text-muted-foreground">
                                 {goal.year}年{goal.month}月
                               </p>
-                              {goal.targetDate && (
-                                <p className="mt-1 text-xs text-muted-foreground">
-                                  達成予定日:{' '}
-                                  {new Date(goal.targetDate).toLocaleDateString('ja-JP')}
-                                </p>
-                              )}
                             </div>
                           </div>
                         </div>
