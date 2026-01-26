@@ -6,16 +6,22 @@ import type { Event } from '@/lib/types/event'
 
 interface LogEventsSectionProps {
   events: Event[]
+  onEdit?: (event: Event) => void
+  onDelete?: (event: Event) => void
 }
 
-export function LogEventsSection({ events }: LogEventsSectionProps) {
+export function LogEventsSection({
+  events,
+  onEdit,
+  onDelete,
+}: LogEventsSectionProps) {
   return (
     <Card>
       <CardHeader>
         <CardTitle className="text-lg">予定</CardTitle>
       </CardHeader>
       <CardContent>
-        <EventList events={events} />
+        <EventList events={events} onEdit={onEdit} onDelete={onDelete} />
       </CardContent>
     </Card>
   )
