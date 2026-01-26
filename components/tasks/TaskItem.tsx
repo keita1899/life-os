@@ -1,6 +1,6 @@
 'use client'
 
-import { useMemo, useState, useEffect } from 'react'
+import { useMemo, useState } from 'react'
 import {
   CheckCircle2,
   Circle,
@@ -63,19 +63,20 @@ export function TaskItem({
 
   const [isDateMenuOpen, setIsDateMenuOpen] = useState(false)
   const [showCalendar, setShowCalendar] = useState(false)
-  const [customDate, setCustomDate] = useState(
-    formatDateForInput(task.executionDate),
+  const [customDateDraft, setCustomDateDraft] = useState<string | null>(null)
+
+  const initialCustomDate = useMemo(
+    () => formatDateForInput(task.executionDate),
+    [task.executionDate],
   )
 
-  useEffect(() => {
-    setCustomDate(formatDateForInput(task.executionDate))
-  }, [task.executionDate])
-
-  useEffect(() => {
-    if (!isDateMenuOpen) {
+  const handleDateMenuOpenChange = (open: boolean) => {
+    setIsDateMenuOpen(open)
+    if (!open) {
       setShowCalendar(false)
+      setCustomDateDraft(null)
     }
-  }, [isDateMenuOpen])
+  }
 
   const handleDateSelect = (date: string | null) => {
     onUpdateExecutionDate?.(task, date)
@@ -84,8 +85,9 @@ export function TaskItem({
 
   const handleCustomDateSubmit = (e: React.FormEvent) => {
     e.preventDefault()
-    if (customDate) {
-      handleDateSelect(customDate)
+    const date = customDateDraft ?? initialCustomDate
+    if (date) {
+      handleDateSelect(date)
     }
   }
 
@@ -132,13 +134,15 @@ export function TaskItem({
         >
           {task.title}
         </div>
-        <div className="mt-2 flex gap-4 text-xs text-muted-foreground">
-          {task.actualTime > 0 && <div>実績: {task.actualTime}分</div>}
-        </div>
+        {task.actualTime > 0 && (
+          <div className="mt-2 flex gap-4 text-xs text-muted-foreground">
+            <div>実績: {task.actualTime}分</div>
+          </div>
+        )}
       </div>
       <div className="mt-0.5 flex items-center gap-2">
         {!task.completed && onUpdateExecutionDate && (
-          <Popover open={isDateMenuOpen} onOpenChange={setIsDateMenuOpen}>
+          <Popover open={isDateMenuOpen} onOpenChange={handleDateMenuOpenChange}>
             <PopoverTrigger asChild>
               <button
                 type="button"
@@ -178,7 +182,10 @@ export function TaskItem({
                   <button
                     type="button"
                     className="flex w-full items-center rounded-sm px-2 py-1.5 text-sm hover:bg-stone-100 dark:hover:bg-stone-800"
-                    onClick={() => setShowCalendar(true)}
+                    onClick={() => {
+                      setCustomDateDraft(initialCustomDate)
+                      setShowCalendar(true)
+                    }}
                   >
                     <Calendar className="mr-2 h-4 w-4" />
                     カレンダー
@@ -188,8 +195,8 @@ export function TaskItem({
                 <form onSubmit={handleCustomDateSubmit} className="space-y-2 p-2">
                   <Input
                     type="date"
-                    value={customDate}
-                    onChange={(e) => setCustomDate(e.target.value)}
+                    value={customDateDraft ?? initialCustomDate}
+                    onChange={(e) => setCustomDateDraft(e.target.value)}
                     className="w-full"
                   />
                   <div className="flex gap-2">
@@ -198,7 +205,10 @@ export function TaskItem({
                       variant="outline"
                       size="sm"
                       className="flex-1"
-                      onClick={() => setShowCalendar(false)}
+                      onClick={() => {
+                        setShowCalendar(false)
+                        setCustomDateDraft(null)
+                      }}
                     >
                       戻る
                     </Button>
