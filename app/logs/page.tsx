@@ -8,7 +8,7 @@ import { parseISO, isValid, addDays, subDays } from 'date-fns'
 import { useMode } from '@/lib/contexts/ModeContext'
 import { useRouter } from 'next/navigation'
 import { Button } from '@/components/ui/button'
-import { ChevronLeft, ChevronRight } from 'lucide-react'
+import { CalendarPlus, CheckSquare, ChevronLeft, ChevronRight } from 'lucide-react'
 import { useGoals } from '@/hooks/useGoals'
 import { useTasks } from '@/hooks/useTasks'
 import { useEvents } from '@/hooks/useEvents'
@@ -22,6 +22,7 @@ import { LogTasksSection } from '@/components/logs/LogTasksSection'
 import { LogEventsSection } from '@/components/logs/LogEventsSection'
 import { LogDiarySection } from '@/components/logs/LogDiarySection'
 import { TaskDialog } from '@/components/tasks/TaskDialog'
+import { EventDialog } from '@/components/events/EventDialog'
 import { DeleteConfirmDialog } from '@/components/ui/delete-confirm-dialog'
 import {
   getYearlyGoalsForDate,
@@ -33,6 +34,8 @@ import {
 import type { Task, CreateTaskInput, UpdateTaskInput } from '@/lib/types/task'
 import type { UpdateDailyLogInput } from '@/lib/types/daily-log'
 import Link from 'next/link'
+import type { CreateEventInput, Event, UpdateEventInput } from '@/lib/types/event'
+import { FloatingActionButtons } from '@/components/floating/FloatingActionButtons'
 
 interface LogPageViewProps {
   logDate: Date
@@ -53,11 +56,15 @@ function LogPageView({ logDate, date }: LogPageViewProps) {
     tasks: allTasks,
     isLoading: isLoadingTasks,
     error: tasksError,
+    createTask,
     toggleTaskCompletion,
     updateTask,
     deleteTask,
   } = useTasks()
   const [isTaskDialogOpen, setIsTaskDialogOpen] = useState(false)
+  const [isEventDialogOpen, setIsEventDialogOpen] = useState(false)
+  const [editingEvent, setEditingEvent] = useState<Event | undefined>(undefined)
+  const [deletingEvent, setDeletingEvent] = useState<Event | undefined>(undefined)
   const [editingTask, setEditingTask] = useState<Task | undefined>(undefined)
   const [deletingTask, setDeletingTask] = useState<Task | undefined>(undefined)
   const [operationError, setOperationError] = useState<string | null>(null)
@@ -65,6 +72,9 @@ function LogPageView({ logDate, date }: LogPageViewProps) {
     events: allEvents,
     isLoading: isLoadingEvents,
     error: eventsError,
+    createEvent,
+    updateEvent,
+    deleteEvent,
   } = useEvents()
   const { userSettings } = useUserSettings()
   const {
@@ -114,10 +124,27 @@ function LogPageView({ logDate, date }: LogPageViewProps) {
     setIsTaskDialogOpen(true)
   }
 
+  const handleOpenCreateTask = () => {
+    setEditingTask(undefined)
+    setIsTaskDialogOpen(true)
+  }
+
   const handleDialogClose = (open: boolean) => {
     setIsTaskDialogOpen(open)
     if (!open) {
       setEditingTask(undefined)
+    }
+  }
+
+  const handleCreateTask = async (input: CreateTaskInput) => {
+    try {
+      setOperationError(null)
+      await createTask(input)
+      setIsTaskDialogOpen(false)
+    } catch (err) {
+      setOperationError(
+        err instanceof Error ? err.message : 'タスクの作成に失敗しました',
+      )
     }
   }
 
@@ -129,7 +156,6 @@ function LogPageView({ logDate, date }: LogPageViewProps) {
       const updateInput: UpdateTaskInput = {
         title: input.title,
         executionDate: input.executionDate,
-        estimatedTime: input.estimatedTime,
       }
       await updateTask(editingTask.id, updateInput)
       setIsTaskDialogOpen(false)
@@ -137,6 +163,69 @@ function LogPageView({ logDate, date }: LogPageViewProps) {
     } catch (err) {
       setOperationError(
         err instanceof Error ? err.message : 'タスクの更新に失敗しました',
+      )
+    }
+  }
+
+  const handleOpenCreateEvent = () => {
+    setEditingEvent(undefined)
+    setIsEventDialogOpen(true)
+  }
+
+  const handleCreateEvent = async (input: CreateEventInput) => {
+    try {
+      setOperationError(null)
+      await createEvent(input)
+      setIsEventDialogOpen(false)
+    } catch (err) {
+      setOperationError(
+        err instanceof Error ? err.message : '予定の作成に失敗しました',
+      )
+    }
+  }
+
+  const handleEditEvent = (event: Event) => {
+    setEditingEvent(event)
+    setIsEventDialogOpen(true)
+  }
+
+  const handleUpdateEvent = async (input: CreateEventInput) => {
+    if (!editingEvent) return
+
+    try {
+      setOperationError(null)
+      const updateInput: UpdateEventInput = {
+        title: input.title,
+        startDatetime: input.startDatetime,
+        endDatetime: input.endDatetime,
+        allDay: input.allDay,
+        category: input.category,
+        description: input.description,
+      }
+      await updateEvent(editingEvent.id, updateInput)
+      setIsEventDialogOpen(false)
+      setEditingEvent(undefined)
+    } catch (err) {
+      setOperationError(
+        err instanceof Error ? err.message : '予定の更新に失敗しました',
+      )
+    }
+  }
+
+  const handleDeleteEventClick = (event: Event) => {
+    setDeletingEvent(event)
+  }
+
+  const handleDeleteEvent = async () => {
+    if (!deletingEvent) return
+
+    try {
+      setOperationError(null)
+      await deleteEvent(deletingEvent.id)
+      setDeletingEvent(undefined)
+    } catch (err) {
+      setOperationError(
+        err instanceof Error ? err.message : '予定の削除に失敗しました',
       )
     }
   }
@@ -236,7 +325,11 @@ function LogPageView({ logDate, date }: LogPageViewProps) {
             weeklyGoals={weeklyGoals}
           />
           <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
-            <LogEventsSection events={events} />
+            <LogEventsSection
+              events={events}
+              onEdit={handleEditEvent}
+              onDelete={handleDeleteEventClick}
+            />
             <LogTasksSection
               tasks={tasks}
               onToggleCompletion={(task) =>
@@ -255,10 +348,39 @@ function LogPageView({ logDate, date }: LogPageViewProps) {
         </div>
       )}
 
+      <FloatingActionButtons
+        actions={[
+          {
+            id: 'create-event',
+            label: '予定を作成',
+            icon: <CalendarPlus className="h-5 w-5" />,
+            onClick: handleOpenCreateEvent,
+          },
+          {
+            id: 'create-task',
+            label: 'タスクを作成',
+            icon: <CheckSquare className="h-5 w-5" />,
+            onClick: handleOpenCreateTask,
+          },
+        ]}
+      />
+
+      <EventDialog
+        open={isEventDialogOpen}
+        onOpenChange={(open) => {
+          setIsEventDialogOpen(open)
+          if (!open) {
+            setEditingEvent(undefined)
+          }
+        }}
+        onSubmit={editingEvent ? handleUpdateEvent : handleCreateEvent}
+        event={editingEvent}
+      />
+
       <TaskDialog
         open={isTaskDialogOpen}
         onOpenChange={handleDialogClose}
-        onSubmit={handleUpdateTask}
+        onSubmit={editingTask ? handleUpdateTask : handleCreateTask}
         task={editingTask}
       />
 
@@ -267,6 +389,13 @@ function LogPageView({ logDate, date }: LogPageViewProps) {
         message={`「${deletingTask?.title}」を削除しますか？この操作は取り消せません。`}
         onConfirm={handleDeleteTask}
         onCancel={() => setDeletingTask(undefined)}
+      />
+
+      <DeleteConfirmDialog
+        open={!!deletingEvent}
+        message={`「${deletingEvent?.title}」を削除しますか？この操作は取り消せません。`}
+        onConfirm={handleDeleteEvent}
+        onCancel={() => setDeletingEvent(undefined)}
       />
       </div>
     </MainLayout>

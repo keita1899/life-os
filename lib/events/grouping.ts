@@ -113,7 +113,16 @@ export function groupEvents(events: Event[]): EventGroup[] {
       events: groupEvents,
     }))
 
-  return [todayGroup, tomorrowGroup, overdueGroup, ...sortedDateGroups].filter(
-    (group) => group.events.length > 0,
-  )
+  const result: EventGroup[] = []
+
+  result.push(todayGroup)
+  result.push(tomorrowGroup)
+
+  if (overdueGroup.events.length > 0) {
+    result.push(overdueGroup)
+  }
+
+  result.push(...sortedDateGroups)
+
+  return result
 }

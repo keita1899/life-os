@@ -59,14 +59,14 @@ export function ProjectForm({
     },
   })
 
+  const statusValue = form.watch('status')
+
   useEffect(() => {
     if (initialData) {
-      form.reset({
-        name: initialData.name,
-        startDate: initialData.startDate || '',
-        endDate: initialData.endDate || '',
-        status: initialData.status,
-      })
+      form.setValue('name', initialData.name)
+      form.setValue('startDate', initialData.startDate || '')
+      form.setValue('endDate', initialData.endDate || '')
+      form.setValue('status', initialData.status ?? 'draft')
     } else {
       form.reset({
         name: '',
@@ -146,6 +146,7 @@ export function ProjectForm({
               <FormItem>
                 <FormLabel>ステータス</FormLabel>
                 <Select
+                  key={`${initialData?.id || 'new'}-${statusValue}`}
                   value={field.value}
                   onValueChange={field.onChange}
                 >

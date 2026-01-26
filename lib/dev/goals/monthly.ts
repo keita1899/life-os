@@ -1,6 +1,5 @@
 import { getDatabase, handleDbError } from '../../db'
 import { DB_COLUMNS } from '../../db/constants'
-import { getYearFromDate, getMonthFromDate } from '../../goals/base'
 import type {
   DevMonthlyGoal,
   CreateDevMonthlyGoalInput,
@@ -10,7 +9,6 @@ import type {
 interface DbDevMonthlyGoal {
   id: number
   title: string
-  target_date: string | null
   year: number
   month: number
   achieved: number
@@ -24,7 +22,6 @@ function mapDbDevMonthlyGoalToDevMonthlyGoal(
   return {
     id: dbGoal.id,
     title: dbGoal.title,
-    targetDate: dbGoal.target_date,
     year: dbGoal.year,
     month: dbGoal.month,
     achieved: dbGoal.achieved === 1,
@@ -75,16 +72,16 @@ export async function createDevMonthlyGoal(
 ): Promise<DevMonthlyGoal> {
   const db = await getDatabase()
 
-  const year = input.year ?? getYearFromDate(input.targetDate)
-  const month = input.month ?? getMonthFromDate(input.targetDate)
+  const year = input.year ?? new Date().getFullYear()
+  const month = input.month ?? new Date().getMonth() + 1
 
   await validateDevMonthlyLimit(year, month)
 
   try {
     await db.execute(
-      `INSERT INTO dev_monthly_goals (title, target_date, year, month)
-       VALUES (?, ?, ?, ?)`,
-      [input.title, input.targetDate || null, year, month],
+      `INSERT INTO dev_monthly_goals (title, year, month)
+       VALUES (?, ?, ?)`,
+      [input.title, year, month],
     )
 
     const result = await db.select<DbDevMonthlyGoal[]>(
@@ -190,12 +187,8 @@ export async function updateDevMonthlyGoal(
     throw new Error('Dev monthly goal not found')
   }
 
-  const newYear =
-    input.year ?? getYearFromDate(input.targetDate) ?? currentGoal.year
-  const newMonth =
-    input.month ?? getMonthFromDate(input.targetDate) ?? currentGoal.month
-  const newTargetDate =
-    input.targetDate !== undefined ? input.targetDate : currentGoal.targetDate
+  const newYear = input.year ?? currentGoal.year
+  const newMonth = input.month ?? currentGoal.month
 
   if (newYear !== currentGoal.year || newMonth !== currentGoal.month) {
     await validateDevMonthlyLimit(newYear, newMonth, id)
@@ -208,23 +201,13 @@ export async function updateDevMonthlyGoal(
     updates.push('title = ?')
     values.push(input.title)
   }
-  if (input.targetDate !== undefined) {
-    updates.push('target_date = ?')
-    values.push(input.targetDate)
-  }
   if (input.year !== undefined) {
     updates.push('year = ?')
     values.push(input.year)
-  } else if (newYear !== currentGoal.year) {
-    updates.push('year = ?')
-    values.push(newYear)
   }
   if (input.month !== undefined) {
     updates.push('month = ?')
     values.push(input.month)
-  } else if (newMonth !== currentGoal.month) {
-    updates.push('month = ?')
-    values.push(newMonth)
   }
 
   if (updates.length === 0) {

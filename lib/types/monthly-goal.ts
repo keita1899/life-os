@@ -1,7 +1,6 @@
 export interface MonthlyGoal {
   id: number
   title: string
-  targetDate: string | null
   year: number
   month: number
   achieved: boolean
@@ -11,14 +10,12 @@ export interface MonthlyGoal {
 
 export interface CreateMonthlyGoalInput {
   title: string
-  targetDate?: string | null
   year?: number
   month: number
 }
 
 export interface UpdateMonthlyGoalInput {
   title?: string
-  targetDate?: string | null
   year?: number
   month?: number
 }

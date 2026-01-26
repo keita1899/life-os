@@ -15,7 +15,6 @@ interface DbDevTask {
   completed: number
   order: number
   actual_time: number
-  estimated_time: number | null
   created_at: string
   updated_at: string
 }
@@ -44,7 +43,6 @@ function mapDbDevTaskToDevTask(dbTask: DbDevTask): DevTask {
     completed: dbTask.completed === 1,
     order: dbTask.order,
     actualTime: dbTask.actual_time,
-    estimatedTime: dbTask.estimated_time,
     createdAt: dbTask.created_at,
     updatedAt: dbTask.updated_at,
   }
@@ -90,14 +88,13 @@ export async function createDevTask(input: CreateDevTaskInput): Promise<DevTask>
 
     try {
       await db.execute(
-        `INSERT INTO dev_tasks (title, project_id, type, execution_date, estimated_time, "order")
-         VALUES (?, ?, ?, ?, ?, ?)`,
+        `INSERT INTO dev_tasks (title, project_id, type, execution_date, "order")
+         VALUES (?, ?, ?, ?, ?)`,
         [
           input.title,
           input.projectId,
           input.type,
           input.executionDate || null,
-          input.estimatedTime ?? null,
           newOrder,
         ],
       )
@@ -211,11 +208,6 @@ export async function updateDevTask(
     updateValues.push(input.actualTime)
   }
 
-  if (input.estimatedTime !== undefined) {
-    updateFields.push('estimated_time = ?')
-    updateValues.push(input.estimatedTime)
-  }
-
   if (updateFields.length === 0) {
     const result = await db.select<DbDevTask[]>(
       `SELECT ${getSelectColumns()} FROM dev_tasks WHERE id = ?`,
@@ -286,6 +278,39 @@ export async function deleteCompletedDevTasks(input: {
     return result.rowsAffected
   } catch (err) {
     handleDbError(err, 'delete completed dev tasks')
+  }
+}
+
+export async function updateOverdueDevTasksToToday(input: {
+  projectId: number | null
+  type?: DbDevTask['type']
+}): Promise<number> {
+  const db = await getDatabase()
+  const today = new Date().toISOString().split('T')[0]
+
+  const whereProject = input.projectId === null ? 'project_id IS NULL' : 'project_id = ?'
+  const whereType = input.type ? ' AND type = ?' : ''
+  const values: unknown[] = [today, today]
+  if (input.projectId !== null) {
+    values.push(input.projectId)
+  }
+  if (input.type) {
+    values.push(input.type)
+  }
+
+  try {
+    const result = await db.execute(
+      `UPDATE dev_tasks 
+       SET execution_date = ?, updated_at = CURRENT_TIMESTAMP 
+       WHERE completed = 0 
+       AND execution_date IS NOT NULL 
+       AND execution_date < ? 
+       AND ${whereProject}${whereType}`,
+      values,
+    )
+    return result.rowsAffected
+  } catch (err) {
+    handleDbError(err, 'update overdue dev tasks to today')
   }
 }
 

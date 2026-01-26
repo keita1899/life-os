@@ -1,11 +1,11 @@
-import { formatDateTimeForInput } from '@/lib/date/formats'
+import { formatDateTimeForInput, getTodayDateString } from '@/lib/date/formats'
 import type { Event } from '@/lib/types/event'
 
 export function getEventFormValues(data?: Event) {
   if (!data) {
     return {
       title: '',
-      startDate: '',
+      startDate: getTodayDateString(),
       startTime: '',
       endDate: '',
       endTime: '',

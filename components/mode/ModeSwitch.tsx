@@ -3,18 +3,62 @@
 import { useEffect } from 'react'
 import { useMode } from '@/lib/contexts/ModeContext'
 import { Button } from '@/components/ui/button'
-import { useRouter } from 'next/navigation'
+import { usePathname, useRouter, useSearchParams } from 'next/navigation'
 import { cn } from '@/lib/utils'
+
+const LAST_PATH_LIFE_KEY = 'life-os-last-path-life'
+const LAST_PATH_DEV_KEY = 'life-os-last-path-development'
+
+function isValidPathForMode(mode: 'life' | 'development', pathname: string): boolean {
+  if (!pathname) return false
+  // Extract pathname without query string for validation
+  const pathOnly = pathname.split('?')[0]
+  if (mode === 'life') return !pathOnly.startsWith('/dev')
+  return pathOnly === '/' || pathOnly.startsWith('/dev')
+}
+
+function getLastPathKey(mode: 'life' | 'development'): string {
+  return mode === 'life' ? LAST_PATH_LIFE_KEY : LAST_PATH_DEV_KEY
+}
+
+function safeGetLocalStorage(key: string, fallback: string): string {
+  try {
+    return localStorage.getItem(key) || fallback
+  } catch {
+    return fallback
+  }
+}
+
+function safeSetLocalStorage(key: string, value: string): void {
+  try {
+    localStorage.setItem(key, value)
+  } catch {
+    // localStorage access failed, ignore safely
+  }
+}
 
 export function ModeSwitch() {
   const { mode, setMode } = useMode()
   const router = useRouter()
+  const pathname = usePathname()
+  const searchParams = useSearchParams()
+
+  useEffect(() => {
+    if (!pathname) return
+    if (!isValidPathForMode(mode, pathname)) return
+    // Include query parameters in the saved path
+    const queryString = searchParams.toString()
+    const fullPath = queryString ? `${pathname}?${queryString}` : pathname
+    safeSetLocalStorage(getLastPathKey(mode), fullPath)
+  }, [mode, pathname, searchParams])
 
   const handleModeChange = (newMode: 'life' | 'development') => {
     if (newMode === mode) return
 
-    router.push('/')
     setMode(newMode)
+
+    const lastPath = safeGetLocalStorage(getLastPathKey(newMode), '/')
+    router.push(isValidPathForMode(newMode, lastPath) ? lastPath : '/')
   }
 
   useEffect(() => {
@@ -33,14 +77,16 @@ export function ModeSwitch() {
       if (e.key === 'l' || e.key === 'L') {
         e.preventDefault()
         if (mode !== 'life') {
-          router.push('/')
           setMode('life')
+          const lastPath = safeGetLocalStorage(LAST_PATH_LIFE_KEY, '/')
+          router.push(isValidPathForMode('life', lastPath) ? lastPath : '/')
         }
       } else if (e.key === 'd' || e.key === 'D') {
         e.preventDefault()
         if (mode !== 'development') {
-          router.push('/')
           setMode('development')
+          const lastPath = safeGetLocalStorage(LAST_PATH_DEV_KEY, '/')
+          router.push(isValidPathForMode('development', lastPath) ? lastPath : '/')
         }
       }
     }

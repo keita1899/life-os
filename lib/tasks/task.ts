@@ -9,7 +9,6 @@ interface DbTask {
   completed: number
   order: number
   actual_time: number
-  estimated_time: number | null
   created_at: string
   updated_at: string
 }
@@ -22,7 +21,6 @@ function mapDbTaskToTask(dbTask: DbTask): Task {
     completed: dbTask.completed === 1,
     order: dbTask.order,
     actualTime: dbTask.actual_time,
-    estimatedTime: dbTask.estimated_time,
     createdAt: dbTask.created_at,
     updatedAt: dbTask.updated_at,
   }
@@ -44,14 +42,9 @@ export async function createTask(input: CreateTaskInput): Promise<Task> {
 
   try {
     await db.execute(
-      `INSERT INTO tasks (title, execution_date, estimated_time, "order")
-       VALUES (?, ?, ?, ?)`,
-      [
-        input.title,
-        input.executionDate || null,
-        input.estimatedTime || null,
-        newOrder,
-      ],
+      `INSERT INTO tasks (title, execution_date, "order")
+       VALUES (?, ?, ?)`,
+      [input.title, input.executionDate || null, newOrder],
     )
 
     const result = await db.select<DbTask[]>(
@@ -124,11 +117,6 @@ export async function updateTask(
     updateValues.push(input.actualTime)
   }
 
-  if (input.estimatedTime !== undefined) {
-    updateFields.push('estimated_time = ?')
-    updateValues.push(input.estimatedTime || null)
-  }
-
   if (updateFields.length === 0) {
     const result = await db.select<DbTask[]>(
       `SELECT ${DB_COLUMNS.TASKS.map((col) =>
@@ -190,5 +178,24 @@ export async function deleteCompletedTasks(): Promise<number> {
     return result.rowsAffected
   } catch (err) {
     handleDbError(err, 'delete completed tasks')
+  }
+}
+
+export async function updateOverdueTasksToToday(): Promise<number> {
+  const db = await getDatabase()
+  const today = new Date().toISOString().split('T')[0]
+
+  try {
+    const result = await db.execute(
+      `UPDATE tasks 
+       SET execution_date = ?, updated_at = CURRENT_TIMESTAMP 
+       WHERE completed = 0 
+       AND execution_date IS NOT NULL 
+       AND execution_date < ?`,
+      [today, today],
+    )
+    return result.rowsAffected
+  } catch (err) {
+    handleDbError(err, 'update overdue tasks to today')
   }
 }

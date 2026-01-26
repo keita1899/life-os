@@ -10,7 +10,6 @@ import {
   formatDay,
   isCurrentMonth,
   isToday,
-  getGoalsForDate,
   getEventsForDate,
   formatEventTime,
   sortEventsByTime,
@@ -23,6 +22,7 @@ import {
 } from '@/components/ui/popover'
 import { EventPopoverContent } from './EventPopover'
 import { TaskPopoverContent } from './TaskPopover'
+import { CheckCircle2, Circle } from 'lucide-react'
 import type { MonthlyGoal } from '@/lib/types/monthly-goal'
 import type { Event } from '@/lib/types/event'
 import type { Task } from '@/lib/types/task'
@@ -32,11 +32,15 @@ function EventPopoverWrapper({
   event,
   time,
   title,
+  onEdit,
+  onDelete,
   onOpenChange,
 }: {
   event: Event
   time?: string
   title: string
+  onEdit?: (event: Event) => void
+  onDelete?: (event: Event) => void
   onOpenChange?: (open: boolean) => void
 }) {
   const [isOpen, setIsOpen] = useState(false)
@@ -59,14 +63,32 @@ function EventPopoverWrapper({
             e.stopPropagation()
           }}
         >
-          {!event.allDay && (
+          {!event.allDay && time && (
             <span className="mr-1 text-[10px] opacity-70">{time}</span>
           )}
           {title}
         </button>
       </PopoverTrigger>
       <PopoverContent>
-        <EventPopoverContent event={event} />
+        <EventPopoverContent
+          event={event}
+          onEdit={
+            onEdit
+              ? (e) => {
+                  handleOpenChange(false)
+                  onEdit(e)
+                }
+              : undefined
+          }
+          onDelete={
+            onDelete
+              ? (e) => {
+                  handleOpenChange(false)
+                  onDelete(e)
+                }
+              : undefined
+          }
+        />
       </PopoverContent>
     </Popover>
   )
@@ -74,9 +96,15 @@ function EventPopoverWrapper({
 
 function TaskPopoverWrapper({
   task,
+  onEdit,
+  onDelete,
+  onToggleCompletion,
   onOpenChange,
 }: {
   task: Task
+  onEdit?: (task: Task) => void
+  onDelete?: (task: Task) => void
+  onToggleCompletion?: (task: Task) => void
   onOpenChange?: (open: boolean) => void
 }) {
   const [isOpen, setIsOpen] = useState(false)
@@ -91,7 +119,7 @@ function TaskPopoverWrapper({
       <PopoverTrigger asChild>
         <button
           className={cn(
-            'w-full truncate rounded px-1 text-left text-xs hover:opacity-80',
+            'flex w-full items-center gap-1 truncate rounded px-1 text-left text-xs hover:opacity-80',
             task.completed
               ? 'bg-stone-100 text-stone-600 dark:bg-stone-800 dark:text-stone-400'
               : 'bg-orange-100 text-orange-900 dark:bg-orange-900/30 dark:text-orange-300',
@@ -101,11 +129,61 @@ function TaskPopoverWrapper({
             e.stopPropagation()
           }}
         >
-          {task.title}
+          {onToggleCompletion && (
+            <span
+              role="button"
+              tabIndex={0}
+              className="inline-flex h-4 w-4 items-center justify-center"
+              onClick={(e) => {
+                e.preventDefault()
+                e.stopPropagation()
+                onToggleCompletion(task)
+              }}
+              onKeyDown={(e) => {
+                if (e.key !== 'Enter' && e.key !== ' ') return
+                e.preventDefault()
+                e.stopPropagation()
+                onToggleCompletion(task)
+              }}
+              aria-label={task.completed ? '未完了にする' : '完了にする'}
+            >
+              {task.completed ? (
+                <CheckCircle2 className="h-4 w-4 text-green-600 dark:text-green-400" />
+              ) : (
+                <Circle className="h-4 w-4 text-stone-400" />
+              )}
+            </span>
+          )}
+          <span
+            className={cn(
+              'min-w-0 flex-1 truncate',
+              task.completed && 'line-through',
+            )}
+          >
+            {task.title}
+          </span>
         </button>
       </PopoverTrigger>
       <PopoverContent>
-        <TaskPopoverContent task={task} />
+        <TaskPopoverContent
+          task={task}
+          onEdit={
+            onEdit
+              ? (t) => {
+                  handleOpenChange(false)
+                  onEdit(t)
+                }
+              : undefined
+          }
+          onDelete={
+            onDelete
+              ? (t) => {
+                  handleOpenChange(false)
+                  onDelete(t)
+                }
+              : undefined
+          }
+        />
       </PopoverContent>
     </Popover>
   )
@@ -118,16 +196,29 @@ function DateCell({
   allItems,
   dayEvents,
   dayTasks,
+  onEditEvent,
+  onDeleteEvent,
+  onEditTask,
+  onDeleteTask,
+  onToggleTaskCompletion,
 }: {
   date: Date
   isCurrentMonthDay: boolean
   isTodayDate: boolean
-  allItems: Array<
-    | { type: 'goal'; id: number; title: string; data: MonthlyGoal }
-    | { type: 'event'; id: number; title: string; time?: string; data: Event }
-  >
+  allItems: Array<{
+    type: 'event'
+    id: number
+    title: string
+    time?: string
+    data: Event
+  }>
   dayEvents: Event[]
   dayTasks: Task[]
+  onEditEvent?: (event: Event) => void
+  onDeleteEvent?: (event: Event) => void
+  onEditTask?: (task: Task) => void
+  onDeleteTask?: (task: Task) => void
+  onToggleTaskCompletion?: (task: Task) => void
 }) {
   const router = useRouter()
   const [hasOpenPopover, setHasOpenPopover] = useState(false)
@@ -176,31 +267,17 @@ function DateCell({
         )}
       </div>
       <div className="space-y-0.5">
-        {allItems.map((item) => {
-          if (item.type === 'event') {
-            return (
-              <EventPopoverWrapper
-                key={`${item.type}-${item.id}`}
-                event={item.data}
-                time={item.time}
-                title={item.title}
-                onOpenChange={(open) => setHasOpenPopover(open)}
-              />
-            )
-          }
-          return (
-            <div
-              key={`${item.type}-${item.id}`}
-              className={cn(
-                'truncate rounded px-1 text-xs',
-                'bg-blue-100 text-blue-900 dark:bg-blue-900/30 dark:text-blue-300',
-              )}
-              title={item.title}
-            >
-              {item.title}
-            </div>
-          )
-        })}
+        {allItems.map((item) => (
+          <EventPopoverWrapper
+            key={`${item.type}-${item.id}`}
+            event={item.data}
+            time={item.time}
+            title={item.title}
+            onEdit={onEditEvent}
+            onDelete={onDeleteEvent}
+            onOpenChange={(open) => setHasOpenPopover(open)}
+          />
+        ))}
         {dayEvents.length > 1 && (
           <div className="text-xs text-muted-foreground">
             +{dayEvents.length - 1}
@@ -213,6 +290,9 @@ function DateCell({
                 <TaskPopoverWrapper
                   key={task.id}
                   task={task}
+                  onEdit={onEditTask}
+                  onDelete={onDeleteTask}
+                  onToggleCompletion={onToggleTaskCompletion}
                   onOpenChange={(open) => setHasOpenPopover(open)}
                 />
               ))}
@@ -235,14 +315,24 @@ interface MonthViewProps {
   events?: Event[]
   tasks?: Task[]
   weekStartDay?: number
+  onEditEvent?: (event: Event) => void
+  onDeleteEvent?: (event: Event) => void
+  onEditTask?: (task: Task) => void
+  onDeleteTask?: (task: Task) => void
+  onToggleTaskCompletion?: (task: Task) => void
 }
 
 export function MonthView({
   currentDate,
-  monthlyGoals,
+  monthlyGoals: _monthlyGoals,
   events = [],
   tasks = [],
   weekStartDay = 0,
+  onEditEvent,
+  onDeleteEvent,
+  onEditTask,
+  onDeleteTask,
+  onToggleTaskCompletion,
 }: MonthViewProps) {
   const calendarDays = useMemo(
     () => getCalendarDays(currentDate, weekStartDay),
@@ -274,24 +364,15 @@ export function MonthView({
           week.map((date, dayIndex) => {
             const isCurrentMonthDay = isCurrentMonth(date, currentDate)
             const isTodayDate = isToday(date)
-            const dayGoals = getGoalsForDate(monthlyGoals, date)
             const dayEvents = sortEventsByTime(getEventsForDate(events, date))
             const dayTasks = getTasksForDate(tasks, date)
-            const allItems = [
-              ...dayGoals.map((goal) => ({
-                type: 'goal' as const,
-                id: goal.id,
-                title: goal.title,
-                data: goal,
-              })),
-              ...dayEvents.slice(0, 1).map((event) => ({
-                type: 'event' as const,
-                id: event.id,
-                title: event.title,
-                time: formatEventTime(event),
-                data: event,
-              })),
-            ]
+            const allItems = dayEvents.slice(0, 1).map((event) => ({
+              type: 'event' as const,
+              id: event.id,
+              title: event.title,
+              time: formatEventTime(event),
+              data: event,
+            }))
 
             return (
               <DateCell
@@ -302,6 +383,11 @@ export function MonthView({
                 allItems={allItems}
                 dayEvents={dayEvents}
                 dayTasks={dayTasks}
+                onEditEvent={onEditEvent}
+                onDeleteEvent={onDeleteEvent}
+                onEditTask={onEditTask}
+                onDeleteTask={onDeleteTask}
+                onToggleTaskCompletion={onToggleTaskCompletion}
               />
             )
           }),

@@ -9,13 +9,12 @@ import {
   getWeekDays,
   formatDay,
   isToday,
-  getGoalsForDate,
   getEventsForDate,
   formatEventTime,
   sortEventsByTime,
   getWeekdays,
 } from '@/lib/calendar/utils'
-import { ChevronDown, ChevronUp } from 'lucide-react'
+import { CheckCircle2, ChevronDown, ChevronUp, Circle } from 'lucide-react'
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover'
 import { EventPopoverContent } from './EventPopover'
 import { TaskPopoverContent } from './TaskPopover'
@@ -28,9 +27,13 @@ import { getTasksForDate } from '@/lib/logs/utils'
 
 function EventPopoverWrapper({
   event,
+  onEdit,
+  onDelete,
   onOpenChange,
 }: {
   event: Event
+  onEdit?: (event: Event) => void
+  onDelete?: (event: Event) => void
   onOpenChange?: (open: boolean) => void
 }) {
   const [isOpen, setIsOpen] = useState(false)
@@ -51,7 +54,7 @@ function EventPopoverWrapper({
           }}
         >
           <div className="flex items-center gap-1.5">
-            {!event.allDay && (
+            {!event.allDay && formatEventTime(event) && (
               <span className="text-[10px] opacity-70">
                 {formatEventTime(event)}
               </span>
@@ -61,7 +64,25 @@ function EventPopoverWrapper({
         </button>
       </PopoverTrigger>
       <PopoverContent>
-        <EventPopoverContent event={event} />
+        <EventPopoverContent
+          event={event}
+          onEdit={
+            onEdit
+              ? (e) => {
+                  handleOpenChange(false)
+                  onEdit(e)
+                }
+              : undefined
+          }
+          onDelete={
+            onDelete
+              ? (e) => {
+                  handleOpenChange(false)
+                  onDelete(e)
+                }
+              : undefined
+          }
+        />
       </PopoverContent>
     </Popover>
   )
@@ -69,9 +90,15 @@ function EventPopoverWrapper({
 
 function TaskPopoverWrapper({
   task,
+  onEdit,
+  onDelete,
+  onToggleCompletion,
   onOpenChange,
 }: {
   task: Task
+  onEdit?: (task: Task) => void
+  onDelete?: (task: Task) => void
+  onToggleCompletion?: (task: Task) => void
   onOpenChange?: (open: boolean) => void
 }) {
   const [isOpen, setIsOpen] = useState(false)
@@ -86,7 +113,7 @@ function TaskPopoverWrapper({
       <PopoverTrigger asChild>
         <button
           className={cn(
-            'w-full rounded px-2 py-1.5 text-left text-xs hover:opacity-80',
+            'flex w-full items-center gap-1 rounded px-2 py-1.5 text-left text-xs hover:opacity-80',
             task.completed
               ? 'bg-stone-100 text-stone-600 dark:bg-stone-800 dark:text-stone-400'
               : 'bg-orange-100 text-orange-900 dark:bg-orange-900/30 dark:text-orange-300',
@@ -96,11 +123,61 @@ function TaskPopoverWrapper({
             e.stopPropagation()
           }}
         >
-          <div className="font-medium line-clamp-2">{task.title}</div>
+          {onToggleCompletion && (
+            <span
+              role="button"
+              tabIndex={0}
+              className="inline-flex h-4 w-4 items-center justify-center"
+              onClick={(e) => {
+                e.preventDefault()
+                e.stopPropagation()
+                onToggleCompletion(task)
+              }}
+              onKeyDown={(e) => {
+                if (e.key !== 'Enter' && e.key !== ' ') return
+                e.preventDefault()
+                e.stopPropagation()
+                onToggleCompletion(task)
+              }}
+              aria-label={task.completed ? '未完了にする' : '完了にする'}
+            >
+              {task.completed ? (
+                <CheckCircle2 className="h-4 w-4 text-green-600 dark:text-green-400" />
+              ) : (
+                <Circle className="h-4 w-4 text-stone-400" />
+              )}
+            </span>
+          )}
+          <span
+            className={cn(
+              'min-w-0 flex-1 font-medium line-clamp-2',
+              task.completed && 'line-through',
+            )}
+          >
+            {task.title}
+          </span>
         </button>
       </PopoverTrigger>
       <PopoverContent>
-        <TaskPopoverContent task={task} />
+        <TaskPopoverContent
+          task={task}
+          onEdit={
+            onEdit
+              ? (t) => {
+                  handleOpenChange(false)
+                  onEdit(t)
+                }
+              : undefined
+          }
+          onDelete={
+            onDelete
+              ? (t) => {
+                  handleOpenChange(false)
+                  onDelete(t)
+                }
+              : undefined
+          }
+        />
       </PopoverContent>
     </Popover>
   )
@@ -109,19 +186,27 @@ function TaskPopoverWrapper({
 function WeekDateCell({
   date,
   isTodayDate,
-  dayGoals,
   dayEvents,
   dayTasks,
   isExpanded,
   onToggleExpand,
+  onEditEvent,
+  onDeleteEvent,
+  onEditTask,
+  onDeleteTask,
+  onToggleTaskCompletion,
 }: {
   date: Date
   isTodayDate: boolean
-  dayGoals: MonthlyGoal[]
   dayEvents: Event[]
   dayTasks: Task[]
   isExpanded: boolean
   onToggleExpand: () => void
+  onEditEvent?: (event: Event) => void
+  onDeleteEvent?: (event: Event) => void
+  onEditTask?: (task: Task) => void
+  onDeleteTask?: (task: Task) => void
+  onToggleTaskCompletion?: (task: Task) => void
 }) {
   const router = useRouter()
   const [hasOpenPopover, setHasOpenPopover] = useState(false)
@@ -171,19 +256,12 @@ function WeekDateCell({
         )}
       </div>
       <div className="space-y-1.5">
-        {dayGoals.map((goal) => (
-          <div
-            key={goal.id}
-            className="rounded bg-blue-100 px-2 py-1.5 text-xs text-blue-900 dark:bg-blue-900/30 dark:text-blue-300"
-            title={goal.title}
-          >
-            <div className="font-medium line-clamp-2">{goal.title}</div>
-          </div>
-        ))}
         {visibleEvents.map((event) => (
           <EventPopoverWrapper
             key={event.id}
             event={event}
+            onEdit={onEditEvent}
+            onDelete={onDeleteEvent}
             onOpenChange={(open) => setHasOpenPopover(open)}
           />
         ))}
@@ -193,6 +271,9 @@ function WeekDateCell({
               <TaskPopoverWrapper
                 key={task.id}
                 task={task}
+                onEdit={onEditTask}
+                onDelete={onDeleteTask}
+                onToggleCompletion={onToggleTaskCompletion}
                 onOpenChange={(open) => setHasOpenTaskPopover(open)}
               />
             ))}
@@ -231,15 +312,27 @@ interface WeekViewProps {
   events?: Event[]
   tasks?: Task[]
   weekStartDay?: number
+  showWeeklyGoalForm?: boolean
+  onEditEvent?: (event: Event) => void
+  onDeleteEvent?: (event: Event) => void
+  onEditTask?: (task: Task) => void
+  onDeleteTask?: (task: Task) => void
+  onToggleTaskCompletion?: (task: Task) => void
 }
 
 export function WeekView({
   currentDate,
-  monthlyGoals,
+  monthlyGoals: _monthlyGoals,
   weeklyGoals,
   events = [],
   tasks = [],
   weekStartDay = 0,
+  showWeeklyGoalForm = true,
+  onEditEvent,
+  onDeleteEvent,
+  onEditTask,
+  onDeleteTask,
+  onToggleTaskCompletion,
 }: WeekViewProps) {
   const weekDays = useMemo(
     () => getWeekDays(currentDate, weekStartDay),
@@ -262,11 +355,13 @@ export function WeekView({
 
   return (
     <div className="w-full">
-      <WeeklyGoalForm
-        currentDate={currentDate}
-        weeklyGoals={weeklyGoals}
-        weekStartDay={weekStartDay}
-      />
+      {showWeeklyGoalForm && (
+        <WeeklyGoalForm
+          currentDate={currentDate}
+          weeklyGoals={weeklyGoals}
+          weekStartDay={weekStartDay}
+        />
+      )}
       <div className="grid grid-cols-7 gap-px border border-stone-200 bg-stone-200 dark:border-stone-800 dark:bg-stone-800">
         {weekdaysList.map((day) => (
           <div
@@ -280,7 +375,6 @@ export function WeekView({
       <div className="grid grid-cols-7 gap-px border-x border-b border-stone-200 bg-stone-200 dark:border-stone-800 dark:bg-stone-800">
         {weekDays.map((date) => {
           const isTodayDate = isToday(date)
-          const dayGoals = getGoalsForDate(monthlyGoals, date)
           const dayEvents = sortEventsByTime(getEventsForDate(events, date))
           const dayTasks = getTasksForDate(tasks, date)
           const dateStr = date.toISOString()
@@ -291,11 +385,15 @@ export function WeekView({
               key={date.toISOString()}
               date={date}
               isTodayDate={isTodayDate}
-              dayGoals={dayGoals}
               dayEvents={dayEvents}
               dayTasks={dayTasks}
               isExpanded={isExpanded}
               onToggleExpand={() => toggleDate(dateStr)}
+              onEditEvent={onEditEvent}
+              onDeleteEvent={onDeleteEvent}
+              onEditTask={onEditTask}
+              onDeleteTask={onDeleteTask}
+              onToggleTaskCompletion={onToggleTaskCompletion}
             />
           )
         })}

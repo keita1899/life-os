@@ -1,6 +1,6 @@
 'use client'
 
-import { useMemo } from 'react'
+import { useMemo, useState } from 'react'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import * as z from 'zod'
@@ -31,7 +31,6 @@ import {
 const taskFormSchema = z.object({
   title: z.string().min(1, 'タイトルは必須です'),
   executionDate: z.string().optional(),
-  estimatedTime: z.string().optional(),
 })
 
 type TaskFormValues = z.infer<typeof taskFormSchema>
@@ -57,25 +56,32 @@ export const TaskForm = ({
       ? {
           title: initialData.title,
           executionDate: formatDateForInput(initialData.executionDate),
-          estimatedTime: initialData.estimatedTime?.toString() || '',
         }
       : {
           title: '',
-          executionDate: '',
-          estimatedTime: '',
+          executionDate: getTodayDateString(),
         },
   })
 
   const executionDate = form.watch('executionDate')
+  const [datePresetOverride, setDatePresetOverride] = useState<
+    'none' | 'today' | 'tomorrow' | 'custom' | null
+  >(null)
 
   const datePreset = useMemo(() => {
+    if (datePresetOverride) return datePresetOverride
     if (!executionDate) return 'none'
     if (executionDate === getTodayDateString()) return 'today'
     if (executionDate === getTomorrowDateString()) return 'tomorrow'
     return 'custom'
-  }, [executionDate])
+  }, [executionDate, datePresetOverride])
 
   const handleDatePresetChange = (value: string) => {
+    if (value === 'custom') {
+      setDatePresetOverride('custom')
+      return
+    }
+    setDatePresetOverride(null)
     const presetToDate: Record<string, string> = {
       none: '',
       today: getTodayDateString(),
@@ -91,10 +97,6 @@ export const TaskForm = ({
     await onSubmit({
       title: data.title,
       executionDate: data.executionDate || null,
-      estimatedTime:
-        data.estimatedTime === '' || data.estimatedTime === undefined
-          ? null
-          : Number(data.estimatedTime),
     })
     if (!isEditMode) {
       form.reset()
@@ -135,9 +137,9 @@ export const TaskForm = ({
                     </SelectTrigger>
                   </FormControl>
                   <SelectContent>
-                    <SelectItem value="none">日付なし</SelectItem>
                     <SelectItem value="today">今日</SelectItem>
                     <SelectItem value="tomorrow">明日</SelectItem>
+                    <SelectItem value="none">日付なし</SelectItem>
                     <SelectItem value="custom">日付を選択</SelectItem>
                   </SelectContent>
                 </Select>
@@ -147,26 +149,6 @@ export const TaskForm = ({
                   </FormControl>
                 )}
               </div>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
-
-        <FormField
-          control={form.control}
-          name="estimatedTime"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>見積もり時間（分）</FormLabel>
-              <FormControl>
-                <Input
-                  type="number"
-                  placeholder="見積もり時間を入力（任意）"
-                  {...field}
-                  value={field.value || ''}
-                  onChange={(e) => field.onChange(e.target.value)}
-                />
-              </FormControl>
               <FormMessage />
             </FormItem>
           )}

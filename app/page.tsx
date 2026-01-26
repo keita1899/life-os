@@ -9,7 +9,8 @@ import { useGoals } from '@/hooks/useGoals'
 import { useDevGoals } from '@/hooks/useDevGoals'
 import { Card } from '@/components/ui/card'
 import { Target } from 'lucide-react'
-import { formatDateDisplay } from '@/lib/date/formats'
+import { LifeHomeCreateButtons } from '@/components/floating/LifeHomeCreateButtons'
+import { DevHomeTaskCreateButton } from '@/components/floating/DevHomeTaskCreateButton'
 
 export default function Home() {
   const { mode } = useMode()
@@ -46,11 +47,6 @@ export default function Home() {
                     <div className="text-lg font-semibold">
                       {yearlyGoal.title}
                     </div>
-                    {yearlyGoal.targetDate && (
-                      <div className="text-sm text-muted-foreground">
-                        目標日: {formatDateDisplay(yearlyGoal.targetDate)}
-                      </div>
-                    )}
                   </div>
                 </div>
               </Card>
@@ -75,11 +71,6 @@ export default function Home() {
                     <div className="text-lg font-semibold">
                       {devYearlyGoal.title}
                     </div>
-                    {devYearlyGoal.targetDate && (
-                      <div className="text-sm text-muted-foreground">
-                        目標日: {formatDateDisplay(devYearlyGoal.targetDate)}
-                      </div>
-                    )}
                   </div>
                 </div>
               </Card>
@@ -87,9 +78,11 @@ export default function Home() {
             <div className="flex-1">
               <DevCalendarView />
             </div>
+            <DevHomeTaskCreateButton />
           </div>
         )}
       </div>
+      {mode === 'life' && <LifeHomeCreateButtons />}
     </MainLayout>
   )
 }

@@ -72,32 +72,6 @@ export function getMonthlyGoalsForDate(
   return goals.filter((goal) => goal.year === year && goal.month === month)
 }
 
-export function getGoalsForDate(
-  goals: MonthlyGoal[],
-  date: Date,
-): MonthlyGoal[] {
-  const year = getYear(date)
-  const month = getMonth(date) + 1
-  const day = date.getDate()
-
-  return goals.filter((goal) => {
-    if (goal.year !== year || goal.month !== month) {
-      return false
-    }
-
-    if (!goal.targetDate) {
-      return false
-    }
-
-    const targetDate = new Date(goal.targetDate)
-    return (
-      targetDate.getFullYear() === year &&
-      targetDate.getMonth() + 1 === month &&
-      targetDate.getDate() === day
-    )
-  })
-}
-
 export function navigateMonth(date: Date, direction: 'prev' | 'next'): Date {
   return direction === 'next' ? addMonths(date, 1) : subMonths(date, 1)
 }
@@ -148,28 +122,6 @@ export function navigateWeek(date: Date, direction: 'prev' | 'next'): Date {
   return direction === 'next' ? addWeeks(date, 1) : subWeeks(date, 1)
 }
 
-export function getGoalsForWeek(
-  goals: MonthlyGoal[],
-  weekStart: Date,
-  weekStartDay: number = 0,
-): MonthlyGoal[] {
-  const weekDays = getWeekDays(weekStart, weekStartDay)
-
-  return goals.filter((goal) => {
-    if (!goal.targetDate) {
-      return false
-    }
-
-    const targetDate = new Date(goal.targetDate)
-    return weekDays.some(
-      (day) =>
-        day.getFullYear() === targetDate.getFullYear() &&
-        day.getMonth() === targetDate.getMonth() &&
-        day.getDate() === targetDate.getDate(),
-    )
-  })
-}
-
 export function getEventsForDate(events: Event[], date: Date): Event[] {
   const dateStr = format(date, 'yyyy-MM-dd')
   const dateStart = new Date(dateStr + 'T00:00:00')
@@ -215,9 +167,15 @@ export function formatEventTime(event: Event): string {
   if (event.endDatetime) {
     const endDate = parseISO(event.endDatetime)
     const endTime = format(endDate, 'HH:mm')
+    if (startTime === '00:00' && endTime === '00:00') {
+      return ''
+    }
     return `${startTime} - ${endTime}`
   }
 
+  if (startTime === '00:00') {
+    return ''
+  }
   return startTime
 }
 

@@ -1,5 +1,4 @@
 import { getDatabase, handleDbError } from '../db'
-import { DB_COLUMNS } from '../db/constants'
 import type {
   WishlistItem,
   CreateWishlistItemInput,
@@ -13,7 +12,6 @@ interface DbWishlistItem {
   category_id: number | null
   target_year: number | null
   price: number | null
-  purchased: number
   order: number
   created_at: string
   updated_at: string
@@ -46,7 +44,6 @@ function mapDbWishlistItemToWishlistItem(
     category,
     targetYear: dbItem.target_year,
     price: dbItem.price,
-    purchased: dbItem.purchased === 1,
     order: dbItem.order,
     createdAt: dbItem.created_at,
     updatedAt: dbItem.updated_at,
@@ -76,7 +73,6 @@ export async function getAllWishlistItems(): Promise<WishlistItem[]> {
         wi.category_id,
         wi.target_year,
         wi.price,
-        wi.purchased,
         wi."order",
         wi.created_at,
         wi.updated_at,
@@ -105,14 +101,13 @@ export async function createWishlistItem(
 
   try {
     await db.execute(
-      `INSERT INTO wishlist_items (name, category_id, target_year, price, purchased, "order")
-       VALUES (?, ?, ?, ?, ?, ?)`,
+      `INSERT INTO wishlist_items (name, category_id, target_year, price, "order")
+       VALUES (?, ?, ?, ?, ?)`,
       [
         input.name,
         input.categoryId ?? null,
         input.targetYear ?? null,
         input.price ?? null,
-        input.purchased ? 1 : 0,
         newOrder,
       ],
     )
@@ -124,7 +119,6 @@ export async function createWishlistItem(
         wi.category_id,
         wi.target_year,
         wi.price,
-        wi.purchased,
         wi."order",
         wi.created_at,
         wi.updated_at,
@@ -181,11 +175,6 @@ export async function updateWishlistItem(
     updateValues.push(input.price ?? null)
   }
 
-  if (input.purchased !== undefined) {
-    updateFields.push('purchased = ?')
-    updateValues.push(input.purchased ? 1 : 0)
-  }
-
   if (input.order !== undefined) {
     updateFields.push('"order" = ?')
     updateValues.push(input.order)
@@ -200,7 +189,6 @@ export async function updateWishlistItem(
           wi.category_id,
           wi.target_year,
           wi.price,
-          wi.purchased,
           wi."order",
           wi.created_at,
           wi.updated_at,
@@ -238,7 +226,6 @@ export async function updateWishlistItem(
         wi.category_id,
         wi.target_year,
         wi.price,
-        wi.purchased,
         wi."order",
         wi.created_at,
         wi.updated_at,
@@ -278,18 +265,5 @@ export async function deleteWishlistItem(id: number): Promise<void> {
     }
   } catch (err) {
     handleDbError(err, 'delete wishlist item')
-  }
-}
-
-export async function deletePurchasedWishlistItems(): Promise<number> {
-  const db = await getDatabase()
-
-  try {
-    const result = await db.execute(
-      'DELETE FROM wishlist_items WHERE purchased = 1',
-    )
-    return result.rowsAffected
-  } catch (err) {
-    handleDbError(err, 'delete purchased wishlist items')
   }
 }

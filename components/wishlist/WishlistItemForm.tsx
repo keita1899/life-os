@@ -34,7 +34,6 @@ const wishlistItemFormSchema = z.object({
   categoryId: z.string().optional(),
   targetYear: z.string().optional(),
   price: z.string().optional(),
-  purchased: z.boolean().optional(),
 })
 
 type WishlistItemFormValues = z.infer<typeof wishlistItemFormSchema>
@@ -65,7 +64,6 @@ export const WishlistItemForm = ({
       categoryId: '',
       targetYear: '',
       price: '',
-      purchased: false,
     },
   })
 
@@ -76,7 +74,6 @@ export const WishlistItemForm = ({
         categoryId: initialData.categoryId?.toString() || '',
         targetYear: initialData.targetYear?.toString() || '',
         price: initialData.price?.toString() || '',
-        purchased: initialData.purchased || false,
       })
     } else {
       form.reset({
@@ -84,7 +81,6 @@ export const WishlistItemForm = ({
         categoryId: '',
         targetYear: '',
         price: '',
-        purchased: false,
       })
     }
   }, [initialData, form])
@@ -131,7 +127,6 @@ export const WishlistItemForm = ({
         data.price === '' || data.price === undefined
           ? null
           : Number(data.price),
-      purchased: data.purchased || false,
     })
   }
 
@@ -222,28 +217,6 @@ export const WishlistItemForm = ({
               </FormItem>
             )}
           />
-
-          {initialData && (
-            <FormField
-              control={form.control}
-              name="purchased"
-              render={({ field }) => (
-                <FormItem className="flex flex-row items-center justify-between rounded-lg border p-4">
-                  <div className="space-y-0.5">
-                    <FormLabel className="text-base">購入済み</FormLabel>
-                  </div>
-                  <FormControl>
-                    <input
-                      type="checkbox"
-                      checked={field.value}
-                      onChange={(e) => field.onChange(e.target.checked)}
-                      className="h-4 w-4 rounded border-stone-300 text-blue-600 focus:ring-2 focus:ring-blue-500 dark:border-stone-700"
-                    />
-                  </FormControl>
-                </FormItem>
-              )}
-            />
-          )}
 
           <div className="flex justify-end gap-2">
             {onCancel && (
