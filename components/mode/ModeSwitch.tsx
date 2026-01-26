@@ -21,6 +21,22 @@ function getLastPathKey(mode: 'life' | 'development'): string {
   return mode === 'life' ? LAST_PATH_LIFE_KEY : LAST_PATH_DEV_KEY
 }
 
+function safeGetLocalStorage(key: string, fallback: string): string {
+  try {
+    return localStorage.getItem(key) || fallback
+  } catch {
+    return fallback
+  }
+}
+
+function safeSetLocalStorage(key: string, value: string): void {
+  try {
+    localStorage.setItem(key, value)
+  } catch {
+    // localStorage access failed, ignore safely
+  }
+}
+
 export function ModeSwitch() {
   const { mode, setMode } = useMode()
   const router = useRouter()
@@ -33,7 +49,7 @@ export function ModeSwitch() {
     // Include query parameters in the saved path
     const queryString = searchParams.toString()
     const fullPath = queryString ? `${pathname}?${queryString}` : pathname
-    localStorage.setItem(getLastPathKey(mode), fullPath)
+    safeSetLocalStorage(getLastPathKey(mode), fullPath)
   }, [mode, pathname, searchParams])
 
   const handleModeChange = (newMode: 'life' | 'development') => {
@@ -41,7 +57,7 @@ export function ModeSwitch() {
 
     setMode(newMode)
 
-    const lastPath = localStorage.getItem(getLastPathKey(newMode)) || '/'
+    const lastPath = safeGetLocalStorage(getLastPathKey(newMode), '/')
     router.push(isValidPathForMode(newMode, lastPath) ? lastPath : '/')
   }
 
@@ -62,14 +78,14 @@ export function ModeSwitch() {
         e.preventDefault()
         if (mode !== 'life') {
           setMode('life')
-          const lastPath = localStorage.getItem(LAST_PATH_LIFE_KEY) || '/'
+          const lastPath = safeGetLocalStorage(LAST_PATH_LIFE_KEY, '/')
           router.push(isValidPathForMode('life', lastPath) ? lastPath : '/')
         }
       } else if (e.key === 'd' || e.key === 'D') {
         e.preventDefault()
         if (mode !== 'development') {
           setMode('development')
-          const lastPath = localStorage.getItem(LAST_PATH_DEV_KEY) || '/'
+          const lastPath = safeGetLocalStorage(LAST_PATH_DEV_KEY, '/')
           router.push(isValidPathForMode('development', lastPath) ? lastPath : '/')
         }
       }

@@ -49,7 +49,10 @@ export function DevHomeTaskCreateButton() {
 
   const handleCreateTask = async (input: CreateTaskInput) => {
     try {
-      if (!target) return
+      if (!target) {
+        setOperationError('タスクの作成先が無効です')
+        return
+      }
 
       setOperationError(null)
       if (target.kind === 'type') {

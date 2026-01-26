@@ -25,9 +25,13 @@ function getInitialSidebarState(): boolean {
 export function MainLayout({ children }: MainLayoutProps) {
   const [isSidebarOpen, setIsSidebarOpen] = useState(getInitialSidebarState)
 
-  const handleOpenChange = useCallback((open: boolean) => {
+  const handleOpenChange = useCallback((open: boolean): void => {
     setIsSidebarOpen(open)
-    localStorage.setItem(SIDEBAR_STORAGE_KEY, String(open))
+    try {
+      localStorage.setItem(SIDEBAR_STORAGE_KEY, String(open))
+    } catch (e) {
+      // localStorage access failed, ignore safely
+    }
   }, [])
 
   useEffect(() => {
@@ -55,7 +59,7 @@ export function MainLayout({ children }: MainLayoutProps) {
     }
   }, [handleOpenChange, isSidebarOpen])
 
-  const handleMenuClick = useCallback(() => {
+  const handleMenuClick = useCallback((): void => {
     handleOpenChange(!isSidebarOpen)
   }, [handleOpenChange, isSidebarOpen])
 

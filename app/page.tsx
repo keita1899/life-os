@@ -9,7 +9,6 @@ import { useGoals } from '@/hooks/useGoals'
 import { useDevGoals } from '@/hooks/useDevGoals'
 import { Card } from '@/components/ui/card'
 import { Target } from 'lucide-react'
-import { formatDateDisplay } from '@/lib/date/formats'
 import { LifeHomeCreateButtons } from '@/components/floating/LifeHomeCreateButtons'
 import { DevHomeTaskCreateButton } from '@/components/floating/DevHomeTaskCreateButton'
 

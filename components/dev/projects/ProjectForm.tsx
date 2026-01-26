@@ -66,7 +66,7 @@ export function ProjectForm({
       form.setValue('name', initialData.name)
       form.setValue('startDate', initialData.startDate || '')
       form.setValue('endDate', initialData.endDate || '')
-      form.setValue('status', initialData.status)
+      form.setValue('status', initialData.status ?? 'draft')
     } else {
       form.reset({
         name: '',
