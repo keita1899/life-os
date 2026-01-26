@@ -10,7 +10,6 @@ import {
   formatDay,
   isCurrentMonth,
   isToday,
-  getGoalsForDate,
   getEventsForDate,
   formatEventTime,
   sortEventsByTime,
@@ -206,10 +205,13 @@ function DateCell({
   date: Date
   isCurrentMonthDay: boolean
   isTodayDate: boolean
-  allItems: Array<
-    | { type: 'goal'; id: number; title: string; data: MonthlyGoal }
-    | { type: 'event'; id: number; title: string; time?: string; data: Event }
-  >
+  allItems: Array<{
+    type: 'event'
+    id: number
+    title: string
+    time?: string
+    data: Event
+  }>
   dayEvents: Event[]
   dayTasks: Task[]
   onEditEvent?: (event: Event) => void
@@ -265,33 +267,17 @@ function DateCell({
         )}
       </div>
       <div className="space-y-0.5">
-        {allItems.map((item) => {
-          if (item.type === 'event') {
-            return (
-              <EventPopoverWrapper
-                key={`${item.type}-${item.id}`}
-                event={item.data}
-                time={item.time}
-                title={item.title}
-                onEdit={onEditEvent}
-                onDelete={onDeleteEvent}
-                onOpenChange={(open) => setHasOpenPopover(open)}
-              />
-            )
-          }
-          return (
-            <div
-              key={`${item.type}-${item.id}`}
-              className={cn(
-                'truncate rounded px-1 text-xs',
-                'bg-blue-100 text-blue-900 dark:bg-blue-900/30 dark:text-blue-300',
-              )}
-              title={item.title}
-            >
-              {item.title}
-            </div>
-          )
-        })}
+        {allItems.map((item) => (
+          <EventPopoverWrapper
+            key={`${item.type}-${item.id}`}
+            event={item.data}
+            time={item.time}
+            title={item.title}
+            onEdit={onEditEvent}
+            onDelete={onDeleteEvent}
+            onOpenChange={(open) => setHasOpenPopover(open)}
+          />
+        ))}
         {dayEvents.length > 1 && (
           <div className="text-xs text-muted-foreground">
             +{dayEvents.length - 1}
@@ -338,7 +324,7 @@ interface MonthViewProps {
 
 export function MonthView({
   currentDate,
-  monthlyGoals,
+  monthlyGoals: _monthlyGoals,
   events = [],
   tasks = [],
   weekStartDay = 0,
@@ -378,24 +364,15 @@ export function MonthView({
           week.map((date, dayIndex) => {
             const isCurrentMonthDay = isCurrentMonth(date, currentDate)
             const isTodayDate = isToday(date)
-            const dayGoals = getGoalsForDate(monthlyGoals, date)
             const dayEvents = sortEventsByTime(getEventsForDate(events, date))
             const dayTasks = getTasksForDate(tasks, date)
-            const allItems = [
-              ...dayGoals.map((goal) => ({
-                type: 'goal' as const,
-                id: goal.id,
-                title: goal.title,
-                data: goal,
-              })),
-              ...dayEvents.slice(0, 1).map((event) => ({
-                type: 'event' as const,
-                id: event.id,
-                title: event.title,
-                time: formatEventTime(event),
-                data: event,
-              })),
-            ]
+            const allItems = dayEvents.slice(0, 1).map((event) => ({
+              type: 'event' as const,
+              id: event.id,
+              title: event.title,
+              time: formatEventTime(event),
+              data: event,
+            }))
 
             return (
               <DateCell

@@ -9,7 +9,6 @@ import {
   getWeekDays,
   formatDay,
   isToday,
-  getGoalsForDate,
   getEventsForDate,
   formatEventTime,
   sortEventsByTime,
@@ -187,7 +186,6 @@ function TaskPopoverWrapper({
 function WeekDateCell({
   date,
   isTodayDate,
-  dayGoals,
   dayEvents,
   dayTasks,
   isExpanded,
@@ -200,7 +198,6 @@ function WeekDateCell({
 }: {
   date: Date
   isTodayDate: boolean
-  dayGoals: MonthlyGoal[]
   dayEvents: Event[]
   dayTasks: Task[]
   isExpanded: boolean
@@ -259,15 +256,6 @@ function WeekDateCell({
         )}
       </div>
       <div className="space-y-1.5">
-        {dayGoals.map((goal) => (
-          <div
-            key={goal.id}
-            className="rounded bg-blue-100 px-2 py-1.5 text-xs text-blue-900 dark:bg-blue-900/30 dark:text-blue-300"
-            title={goal.title}
-          >
-            <div className="font-medium line-clamp-2">{goal.title}</div>
-          </div>
-        ))}
         {visibleEvents.map((event) => (
           <EventPopoverWrapper
             key={event.id}
@@ -334,7 +322,7 @@ interface WeekViewProps {
 
 export function WeekView({
   currentDate,
-  monthlyGoals,
+  monthlyGoals: _monthlyGoals,
   weeklyGoals,
   events = [],
   tasks = [],
@@ -387,7 +375,6 @@ export function WeekView({
       <div className="grid grid-cols-7 gap-px border-x border-b border-stone-200 bg-stone-200 dark:border-stone-800 dark:bg-stone-800">
         {weekDays.map((date) => {
           const isTodayDate = isToday(date)
-          const dayGoals = getGoalsForDate(monthlyGoals, date)
           const dayEvents = sortEventsByTime(getEventsForDate(events, date))
           const dayTasks = getTasksForDate(tasks, date)
           const dateStr = date.toISOString()
@@ -398,7 +385,6 @@ export function WeekView({
               key={date.toISOString()}
               date={date}
               isTodayDate={isTodayDate}
-              dayGoals={dayGoals}
               dayEvents={dayEvents}
               dayTasks={dayTasks}
               isExpanded={isExpanded}
