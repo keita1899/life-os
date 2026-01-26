@@ -34,12 +34,13 @@ export function BucketListItem({
   onToggleCompletion,
 }: BucketListItemProps) {
   const { userSettings } = useUserSettings()
+  const birthday = userSettings?.birthday ?? null
 
   const ageInfo = useMemo(() => {
-    if (!item.targetYear || !userSettings?.birthday) return null
-    const age = calculateAgeAtYear(userSettings.birthday, item.targetYear)
+    if (!item.targetYear || !birthday) return null
+    const age = calculateAgeAtYear(birthday, item.targetYear)
     return age !== null ? `${item.targetYear}年（${age}歳）` : `${item.targetYear}年`
-  }, [item.targetYear, userSettings?.birthday])
+  }, [birthday, item.targetYear])
 
   const achievedDateLabel = useMemo(() => {
     if (!item.achievedDate) return null
