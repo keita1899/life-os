@@ -1,6 +1,7 @@
 'use client'
 
 import type { ReactElement } from 'react'
+import { useEffect } from 'react'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import * as z from 'zod'
@@ -50,14 +51,6 @@ export function ProjectForm({
 }: ProjectFormProps): ReactElement {
   const form = useForm<ProjectFormValues>({
     resolver: zodResolver(projectFormSchema),
-    values: initialData
-      ? {
-          name: initialData.name,
-          startDate: initialData.startDate || '',
-          endDate: initialData.endDate || '',
-          status: initialData.status,
-        }
-      : undefined,
     defaultValues: {
       name: '',
       startDate: '',
@@ -65,6 +58,25 @@ export function ProjectForm({
       status: 'draft',
     },
   })
+
+  const statusValue = form.watch('status')
+
+  useEffect(() => {
+    if (initialData) {
+      form.setValue('name', initialData.name)
+      form.setValue('startDate', initialData.startDate || '')
+      form.setValue('endDate', initialData.endDate || '')
+      form.setValue('status', initialData.status)
+    } else {
+      form.reset({
+        name: '',
+        startDate: '',
+        endDate: '',
+        status: 'draft',
+      })
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [initialData])
 
   const handleSubmit = async (data: ProjectFormValues): Promise<void> => {
     const name = data.name || ''
@@ -134,6 +146,7 @@ export function ProjectForm({
               <FormItem>
                 <FormLabel>ステータス</FormLabel>
                 <Select
+                  key={`${initialData?.id || 'new'}-${statusValue}`}
                   value={field.value}
                   onValueChange={field.onChange}
                 >
