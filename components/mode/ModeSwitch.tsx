@@ -3,7 +3,7 @@
 import { useEffect } from 'react'
 import { useMode } from '@/lib/contexts/ModeContext'
 import { Button } from '@/components/ui/button'
-import { usePathname, useRouter } from 'next/navigation'
+import { usePathname, useRouter, useSearchParams } from 'next/navigation'
 import { cn } from '@/lib/utils'
 
 const LAST_PATH_LIFE_KEY = 'life-os-last-path-life'
@@ -11,8 +11,10 @@ const LAST_PATH_DEV_KEY = 'life-os-last-path-development'
 
 function isValidPathForMode(mode: 'life' | 'development', pathname: string): boolean {
   if (!pathname) return false
-  if (mode === 'life') return !pathname.startsWith('/dev')
-  return pathname === '/' || pathname.startsWith('/dev')
+  // Extract pathname without query string for validation
+  const pathOnly = pathname.split('?')[0]
+  if (mode === 'life') return !pathOnly.startsWith('/dev')
+  return pathOnly === '/' || pathOnly.startsWith('/dev')
 }
 
 function getLastPathKey(mode: 'life' | 'development'): string {
@@ -23,12 +25,16 @@ export function ModeSwitch() {
   const { mode, setMode } = useMode()
   const router = useRouter()
   const pathname = usePathname()
+  const searchParams = useSearchParams()
 
   useEffect(() => {
     if (!pathname) return
     if (!isValidPathForMode(mode, pathname)) return
-    localStorage.setItem(getLastPathKey(mode), pathname)
-  }, [mode, pathname])
+    // Include query parameters in the saved path
+    const queryString = searchParams.toString()
+    const fullPath = queryString ? `${pathname}?${queryString}` : pathname
+    localStorage.setItem(getLastPathKey(mode), fullPath)
+  }, [mode, pathname, searchParams])
 
   const handleModeChange = (newMode: 'life' | 'development') => {
     if (newMode === mode) return
