@@ -128,31 +128,47 @@ export function getEventsForDate(events: Event[], date: Date): Event[] {
   const dateEnd = new Date(dateStr + 'T23:59:59')
 
   return events.filter((event) => {
-    const eventStart = parseISO(event.startDatetime)
-    const eventStartDate = format(eventStart, 'yyyy-MM-dd')
+    try {
+      const eventStart = parseISO(event.startDatetime)
+      if (isNaN(eventStart.getTime())) {
+        console.warn('Invalid startDatetime:', event.startDatetime, event)
+        return false
+      }
+      const eventStartDate = format(eventStart, 'yyyy-MM-dd')
 
-    if (event.allDay) {
+      if (event.allDay) {
+        if (event.endDatetime) {
+          const eventEnd = parseISO(event.endDatetime)
+          if (isNaN(eventEnd.getTime())) {
+            return eventStartDate === dateStr
+          }
+          const eventEndDate = format(eventEnd, 'yyyy-MM-dd')
+          return (
+            (dateStr >= eventStartDate && dateStr <= eventEndDate) ||
+            (dateStr >= eventEndDate && dateStr <= eventStartDate)
+          )
+        }
+        return eventStartDate === dateStr
+      }
+
       if (event.endDatetime) {
         const eventEnd = parseISO(event.endDatetime)
-        const eventEndDate = format(eventEnd, 'yyyy-MM-dd')
+        if (isNaN(eventEnd.getTime())) {
+          return eventStartDate === dateStr
+        }
         return (
-          (dateStr >= eventStartDate && dateStr <= eventEndDate) ||
-          (dateStr >= eventEndDate && dateStr <= eventStartDate)
+          isWithinInterval(dateStart, { start: eventStart, end: eventEnd }) ||
+          isWithinInterval(dateEnd, { start: eventStart, end: eventEnd }) ||
+          (eventStart <= dateStart && eventEnd >= dateEnd) ||
+          eventStartDate === dateStr
         )
       }
+
       return eventStartDate === dateStr
+    } catch (error) {
+      console.error('Error parsing event date:', error, event)
+      return false
     }
-
-    if (event.endDatetime) {
-      const eventEnd = parseISO(event.endDatetime)
-      return (
-        isWithinInterval(dateStart, { start: eventStart, end: eventEnd }) ||
-        isWithinInterval(dateEnd, { start: eventStart, end: eventEnd }) ||
-        (eventStart <= dateStart && eventEnd >= dateEnd)
-      )
-    }
-
-    return eventStartDate === dateStr
   })
 }
 

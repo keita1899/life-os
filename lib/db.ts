@@ -6,6 +6,8 @@ let dbPromise: Promise<Database> | null = null
 async function initializeAllTables(): Promise<void> {
   if (!db) return
 
+  try {
+
   await db.execute(`
     CREATE TABLE IF NOT EXISTS yearly_goals (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -77,6 +79,7 @@ async function initializeAllTables(): Promise<void> {
       week_start_day INTEGER DEFAULT 0,
       morning_review_time TIME,
       evening_review_time TIME,
+      barcelona_ical_url TEXT,
       created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
       updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
     )
@@ -542,7 +545,7 @@ async function initializeAllTables(): Promise<void> {
 
   const visionItemFkRows = await db.select<
     { id: number; seq: number; table: string; from: string; to: string; on_update: string; on_delete: string }[]
-  >("SELECT * FROM pragma_foreign_key_list('vision_items') WHERE from = 'category_id'")
+  >("SELECT * FROM pragma_foreign_key_list('vision_items') WHERE \"from\" = 'category_id'")
   
   const hasSetNullFk = visionItemFkRows.some(
     (fk) => fk.on_delete === 'SET NULL' || fk.on_delete === 'set null'
@@ -628,6 +631,21 @@ async function initializeAllTables(): Promise<void> {
     )
 
     await db.execute('DROP TABLE dev_monthly_goals_old')
+  }
+
+  const userSettingsColumnRows = await db.select<{ name: string }[]>(
+    "SELECT name FROM pragma_table_info('user_settings')",
+  )
+  const userSettingsColumns = new Set(userSettingsColumnRows.map((r) => r.name))
+
+  if (!userSettingsColumns.has('barcelona_ical_url')) {
+    await db.execute(
+      'ALTER TABLE user_settings ADD COLUMN barcelona_ical_url TEXT',
+    )
+  }
+  } catch (error) {
+    console.error('[DB] Migration error:', error)
+    throw error
   }
 }
 

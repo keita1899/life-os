@@ -1,5 +1,6 @@
 'use client'
 
+import { useEffect, useState } from 'react'
 import { Calendar, MoreVertical, Pencil, Trash2 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import {
@@ -13,6 +14,11 @@ import {
   EVENT_CATEGORY_LABELS,
   EVENT_CATEGORY_COLORS,
 } from '@/lib/events/constants'
+import {
+  isBarcelonaMatch,
+  getBarcelonaMatchBackground,
+  BARCELONA_MATCH_TEXT_COLOR,
+} from '@/lib/football'
 import { EventDateTime } from './EventDateTime'
 import type { Event } from '@/lib/types/event'
 
@@ -23,6 +29,38 @@ interface EventItemProps {
 }
 
 export function EventItem({ event, onEdit, onDelete }: EventItemProps) {
+  const [isDark, setIsDark] = useState(false)
+
+  useEffect(() => {
+    const checkDarkMode = () => {
+      setIsDark(
+        document.documentElement.classList.contains('dark') ||
+          window.matchMedia('(prefers-color-scheme: dark)').matches,
+      )
+    }
+    checkDarkMode()
+    const observer = new MutationObserver(checkDarkMode)
+    observer.observe(document.documentElement, {
+      attributes: true,
+      attributeFilter: ['class'],
+    })
+    const mediaQuery = window.matchMedia('(prefers-color-scheme: dark)')
+    const handleMediaChange = () => checkDarkMode()
+    if (mediaQuery.addEventListener) {
+      mediaQuery.addEventListener('change', handleMediaChange)
+    } else {
+      mediaQuery.addListener(handleMediaChange)
+    }
+    return () => {
+      observer.disconnect()
+      if (mediaQuery.removeEventListener) {
+        mediaQuery.removeEventListener('change', handleMediaChange)
+      } else {
+        mediaQuery.removeListener(handleMediaChange)
+      }
+    }
+  }, [])
+
   return (
     <div className="group flex items-start gap-3 rounded-lg border border-stone-200 bg-white p-4 dark:border-stone-800 dark:bg-stone-900">
       <div className="mt-0.5">
@@ -38,8 +76,17 @@ export function EventItem({ event, onEdit, onDelete }: EventItemProps) {
             <span
               className={cn(
                 'rounded-md px-2 py-0.5',
-                EVENT_CATEGORY_COLORS[event.category],
+                isBarcelonaMatch(event)
+                  ? BARCELONA_MATCH_TEXT_COLOR
+                  : EVENT_CATEGORY_COLORS[event.category],
               )}
+              style={
+                isBarcelonaMatch(event)
+                  ? {
+                      background: getBarcelonaMatchBackground(isDark),
+                    }
+                  : undefined
+              }
             >
               {EVENT_CATEGORY_LABELS[event.category]}
             </span>

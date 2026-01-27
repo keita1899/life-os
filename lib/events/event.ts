@@ -192,6 +192,47 @@ export async function updateEvent(
   }
 }
 
+export async function getEventsByCategory(
+  category: string,
+): Promise<Event[]> {
+  const db = await getDatabase()
+
+  try {
+    const result = await db.select<DbEvent[]>(
+      `SELECT ${DB_COLUMNS.EVENTS.join(
+        ', ',
+      )} FROM events WHERE category = ? ORDER BY start_datetime ASC, created_at ASC`,
+      [category],
+    )
+
+    return result.map(mapDbEventToEvent)
+  } catch (err) {
+    handleDbError(err, 'get events by category')
+  }
+}
+
+export async function deleteEventsByCategory(category: string): Promise<void> {
+  const db = await getDatabase()
+
+  try {
+    await db.execute('DELETE FROM events WHERE category = ?', [category])
+  } catch (err) {
+    handleDbError(err, 'delete events by category')
+  }
+}
+
+export async function deleteBarcelonaMatches(): Promise<void> {
+  const db = await getDatabase()
+
+  try {
+    await db.execute(
+      "DELETE FROM events WHERE category = 'sports' AND title LIKE '%FC Barcelona%'",
+    )
+  } catch (err) {
+    handleDbError(err, 'delete Barcelona matches')
+  }
+}
+
 export async function deleteEvent(id: number): Promise<void> {
   const db = await getDatabase()
 

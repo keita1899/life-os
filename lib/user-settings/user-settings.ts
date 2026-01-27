@@ -1,5 +1,4 @@
 import { getDatabase, handleDbError } from '../db'
-import { DB_COLUMNS } from '../db/constants'
 import type {
   UserSettings,
   UpdateUserSettingsInput,
@@ -12,6 +11,7 @@ interface DbUserSettings {
   week_start_day: number
   morning_review_time: string | null
   evening_review_time: string | null
+  barcelona_ical_url: string | null
   created_at: string
   updated_at: string
 }
@@ -32,6 +32,7 @@ function mapDbUserSettingsToUserSettings(
     weekStartDay: dbSettings.week_start_day,
     morningReviewTime: dbSettings.morning_review_time,
     eveningReviewTime: dbSettings.evening_review_time,
+    barcelonaIcalUrl: dbSettings.barcelona_ical_url ?? null,
     createdAt: dbSettings.created_at,
     updatedAt: dbSettings.updated_at,
   }
@@ -42,7 +43,7 @@ export async function getUserSettings(): Promise<UserSettings> {
 
   try {
     const result = await db.select<DbUserSettings[]>(
-      `SELECT ${DB_COLUMNS.USER_SETTINGS.join(', ')} FROM user_settings LIMIT 1`,
+      'SELECT * FROM user_settings LIMIT 1',
     )
 
     if (result.length === 0) {
@@ -53,7 +54,7 @@ export async function getUserSettings(): Promise<UserSettings> {
       )
 
       const newResult = await db.select<DbUserSettings[]>(
-        `SELECT ${DB_COLUMNS.USER_SETTINGS.join(', ')} FROM user_settings LIMIT 1`,
+        'SELECT * FROM user_settings LIMIT 1',
       )
 
       if (newResult.length === 0) {
@@ -77,7 +78,7 @@ export async function updateUserSettings(
   let currentSettings: UserSettings
   try {
     const result = await db.select<DbUserSettings[]>(
-      `SELECT ${DB_COLUMNS.USER_SETTINGS.join(', ')} FROM user_settings LIMIT 1`,
+      'SELECT * FROM user_settings LIMIT 1',
     )
     if (result.length === 0) {
       currentSettings = await getUserSettings()
@@ -116,6 +117,11 @@ export async function updateUserSettings(
     updateValues.push(input.eveningReviewTime || null)
   }
 
+  if (input.barcelonaIcalUrl !== undefined) {
+    updateFields.push('barcelona_ical_url = ?')
+    updateValues.push(input.barcelonaIcalUrl || null)
+  }
+
   if (updateFields.length === 0) {
     return currentSettings
   }
@@ -130,7 +136,7 @@ export async function updateUserSettings(
     )
 
     const result = await db.select<DbUserSettings[]>(
-      `SELECT ${DB_COLUMNS.USER_SETTINGS.join(', ')} FROM user_settings LIMIT 1`,
+      'SELECT * FROM user_settings LIMIT 1',
     )
 
     if (result.length === 0) {

@@ -9,6 +9,8 @@ import { useGoals } from '@/hooks/useGoals'
 import { useEvents } from '@/hooks/useEvents'
 import { useTasks } from '@/hooks/useTasks'
 import { useCalendarView } from '@/hooks/useCalendarView'
+import { useUserSettings } from '@/hooks/useUserSettings'
+import { useBarcelonaMatches } from '@/hooks/useBarcelonaMatches'
 import { EventDialog } from '@/components/events/EventDialog'
 import { TaskDialog } from '@/components/tasks/TaskDialog'
 import { DeleteConfirmDialog } from '@/components/ui/delete-confirm-dialog'
@@ -53,6 +55,8 @@ export function CalendarView({ initialDate }: CalendarViewProps) {
     deleteTask,
     toggleTaskCompletion,
   } = useTasks()
+  const { userSettings } = useUserSettings()
+  useBarcelonaMatches(userSettings?.barcelonaIcalUrl ?? null)
   const [operationError, setOperationError] = useState<string | null>(null)
   const [isEventDialogOpen, setIsEventDialogOpen] = useState(false)
   const [editingEvent, setEditingEvent] = useState<Event | undefined>(undefined)
