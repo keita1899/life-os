@@ -8,7 +8,7 @@ import { parseISO, isValid, addDays, subDays } from 'date-fns'
 import { useMode } from '@/lib/contexts/ModeContext'
 import { useRouter } from 'next/navigation'
 import { Button } from '@/components/ui/button'
-import { CalendarPlus, CheckSquare, ChevronLeft, ChevronRight } from 'lucide-react'
+import { CalendarPlus, CheckSquare, ChevronLeft, ChevronRight, Focus } from 'lucide-react'
 import { useGoals } from '@/hooks/useGoals'
 import { useTasks } from '@/hooks/useTasks'
 import { useEvents } from '@/hooks/useEvents'
@@ -350,6 +350,12 @@ function LogPageView({ logDate, date }: LogPageViewProps) {
 
       <FloatingActionButtons
         actions={[
+          {
+            id: 'focus',
+            label: 'フォーカスモード',
+            icon: <Focus className="h-5 w-5" />,
+            onClick: () => router.push('/focus'),
+          },
           {
             id: 'create-event',
             label: '予定を作成',
