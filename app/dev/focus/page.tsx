@@ -343,6 +343,9 @@ export default function DevFocusPage() {
       if (overId === 'available-tasks-list' && isActiveInFocus) {
         setFocusTaskIds((items) => items.filter((id) => id !== activeId))
         setAvailableTaskIds((items) => [...items, activeId])
+      } else if (overId === 'available-tasks-list-end' && isActiveInFocus) {
+        setFocusTaskIds((items) => items.filter((id) => id !== activeId))
+        setAvailableTaskIds((items) => [...items, activeId])
       } else if (overId === 'focus-tasks-list' && !isActiveInFocus) {
         setFocusTaskIds((items) => [...items, activeId])
         setAvailableTaskIds((items) => items.filter((id) => id !== activeId))
@@ -371,9 +374,14 @@ export default function DevFocusPage() {
         return newItems
       })
       setAvailableTaskIds((items) => items.filter((id) => id !== activeId))
-    } else if (isActiveInFocus && !isOverInFocus) {
+    } else if (isActiveInFocus && isOverInAvailable) {
       setFocusTaskIds((items) => items.filter((id) => id !== activeId))
-      setAvailableTaskIds((items) => [...items, activeId])
+      setAvailableTaskIds((items) => {
+        const overIndex = items.indexOf(overIdNum)
+        const newItems = [...items]
+        newItems.splice(overIndex, 0, activeId)
+        return newItems
+      })
     } else if (isActiveInAvailable && isOverInAvailable) {
       setAvailableTaskIds((items) => {
         const oldIndex = items.indexOf(activeId)
@@ -619,13 +627,36 @@ export default function DevFocusPage() {
                       strategy={verticalListSortingStrategy}
                     >
                       <div className="space-y-2">
-                        {availableTasks.map((task: DevTask) => (
-                          <DraggableAvailableDevTaskItem
-                            key={task.id}
-                            task={task}
-                            onToggle={() => handleToggleTask(task.id)}
-                          />
-                        ))}
+                        {availableTasks.map((task: DevTask) => {
+                          const showSpacerAbove =
+                            activeId !== null &&
+                            focusTaskIds.includes(activeId) &&
+                            overId === task.id
+                          return (
+                            <div key={task.id}>
+                              {showSpacerAbove && (
+                                <div className="mb-2 h-[72px] rounded-lg border-2 border-dashed border-primary bg-primary/5" />
+                              )}
+                              <DraggableAvailableDevTaskItem
+                                task={task}
+                                onToggle={() => handleToggleTask(task.id)}
+                              />
+                            </div>
+                          )
+                        })}
+                        {activeId !== null &&
+                          focusTaskIds.includes(activeId) &&
+                          overId === 'available-tasks-list' && (
+                            <div className="mb-2 h-[72px] rounded-lg border-2 border-dashed border-primary bg-primary/5" />
+                          )}
+                        {activeId !== null &&
+                          focusTaskIds.includes(activeId) &&
+                          overId === 'available-tasks-list-end' && (
+                            <div className="mb-2 h-[72px] rounded-lg border-2 border-dashed border-primary bg-primary/5" />
+                          )}
+                        <InvisibleDroppable id="available-tasks-list-end">
+                          <div className="h-8" />
+                        </InvisibleDroppable>
                       </div>
                     </SortableContext>
                   )}
