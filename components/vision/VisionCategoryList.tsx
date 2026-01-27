@@ -60,8 +60,13 @@ export function VisionCategoryList({
         {categories.map((category) => (
           <div
             key={category.id}
+            onClick={() => {
+              if (editingCategoryId !== category.id) {
+                onSelectCategory(category.id)
+              }
+            }}
             className={cn(
-              'group flex items-center gap-2 rounded-lg border border-stone-200 bg-card p-3 transition-colors hover:bg-accent dark:border-stone-800',
+              'group flex items-center gap-2 rounded-lg border border-stone-200 bg-card p-3 transition-colors hover:bg-accent cursor-pointer dark:border-stone-800',
               selectedCategoryId === category.id &&
                 'bg-accent text-accent-foreground',
             )}
@@ -74,17 +79,18 @@ export function VisionCategoryList({
               />
             ) : (
               <>
-                <button
-                  onClick={() => onSelectCategory(category.id)}
-                  className="flex-1 text-left"
+                <div className="flex-1 text-left">{category.name}</div>
+                <div
+                  className="flex items-center gap-1 opacity-0 transition-opacity group-hover:opacity-100"
+                  onClick={(e) => e.stopPropagation()}
                 >
-                  {category.name}
-                </button>
-                <div className="flex items-center gap-1 opacity-0 transition-opacity group-hover:opacity-100">
                   <Button
                     variant="ghost"
                     size="icon"
-                    onClick={() => onStartEdit(category)}
+                    onClick={(e) => {
+                      e.stopPropagation()
+                      onStartEdit(category)
+                    }}
                     className="h-8 w-8"
                     aria-label="編集"
                   >
@@ -93,7 +99,10 @@ export function VisionCategoryList({
                   <Button
                     variant="ghost"
                     size="icon"
-                    onClick={() => handleDeleteClick(category)}
+                    onClick={(e) => {
+                      e.stopPropagation()
+                      handleDeleteClick(category)
+                    }}
                     className="h-8 w-8"
                     aria-label="削除"
                   >

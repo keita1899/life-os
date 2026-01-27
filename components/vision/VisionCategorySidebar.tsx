@@ -33,7 +33,8 @@ export function VisionCategorySidebar({
   const handleCreateCategory = async (name: string) => {
     try {
       setOperationError(null)
-      await createVisionCategory({ name })
+      const newCategory = await createVisionCategory({ name })
+      onSelectCategory(newCategory.id)
     } catch (err) {
       setOperationError(
         err instanceof Error ? err.message : 'カテゴリーの作成に失敗しました',

@@ -152,4 +152,12 @@ export const DB_COLUMNS = {
     'created_at',
     'updated_at',
   ],
+  VISION_ITEMS: [
+    'id',
+    'title',
+    'category_id',
+    'order',
+    'created_at',
+    'updated_at',
+  ],
 } as const
