@@ -631,6 +631,11 @@ export default function FocusPage() {
                           overId === 'available-tasks-list' && (
                             <div className="mb-2 h-[72px] rounded-lg border-2 border-dashed border-primary bg-primary/5" />
                           )}
+                        {activeId !== null &&
+                          focusTaskIds.includes(activeId) &&
+                          overId === 'available-tasks-list-end' && (
+                            <div className="mb-2 h-[72px] rounded-lg border-2 border-dashed border-primary bg-primary/5" />
+                          )}
                         <InvisibleDroppable id="available-tasks-list-end">
                           <div className="h-8" />
                         </InvisibleDroppable>

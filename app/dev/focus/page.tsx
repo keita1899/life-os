@@ -248,14 +248,16 @@ export default function DevFocusPage() {
     }),
   )
 
+  const validProjectId = projectId !== null && Number.isFinite(projectId) ? projectId : null
+
   const {
     tasks,
     isLoading,
     error,
     updateTask,
   } = useDevTasks({
-    projectId: projectId !== null && Number.isFinite(projectId) ? projectId : null,
-    type: projectId !== null ? undefined : activeType,
+    projectId: validProjectId,
+    type: validProjectId !== null ? undefined : activeType,
   })
 
   const todayTasks = useMemo(
@@ -571,7 +573,7 @@ export default function DevFocusPage() {
           )}
         </div>
 
-        {projectId === null && (
+        {validProjectId === null && (
           <div className="mb-4">
             <Tabs value={activeType} onValueChange={(value) => {
               if (value === 'inbox' || value === 'learning') {
