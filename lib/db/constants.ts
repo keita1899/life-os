@@ -53,6 +53,7 @@ export const DB_COLUMNS = {
     'week_start_day',
     'morning_review_time',
     'evening_review_time',
+    'barcelona_ical_url',
     'created_at',
     'updated_at',
   ],

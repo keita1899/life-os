@@ -9,6 +9,7 @@ export type EventCategory =
   | 'procedure'
   | 'birthday'
   | 'anniversary'
+  | 'sports'
   | null
 
 export interface Event {

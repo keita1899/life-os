@@ -11,6 +11,7 @@ export const EVENT_CATEGORY_LABELS: Record<NonNullable<EventCategory>, string> =
   procedure: '手続き',
   birthday: '誕生日',
   anniversary: '記念日',
+  sports: 'スポーツ',
 }
 
 export const EVENT_CATEGORY_COLORS: Record<NonNullable<EventCategory>, string> = {
@@ -27,6 +28,7 @@ export const EVENT_CATEGORY_COLORS: Record<NonNullable<EventCategory>, string> =
   birthday: 'bg-rose-100 text-rose-700 dark:bg-rose-900/30 dark:text-rose-300',
   anniversary:
     'bg-indigo-100 text-indigo-700 dark:bg-indigo-900/30 dark:text-indigo-300',
+  sports: 'bg-sky-100 text-sky-700 dark:bg-sky-900/30 dark:text-sky-300',
 }
 
 export const EVENT_CATEGORIES: Array<{ value: EventCategory; label: string }> = [
@@ -41,4 +43,5 @@ export const EVENT_CATEGORIES: Array<{ value: EventCategory; label: string }> = 
   { value: 'procedure', label: EVENT_CATEGORY_LABELS.procedure },
   { value: 'birthday', label: EVENT_CATEGORY_LABELS.birthday },
   { value: 'anniversary', label: EVENT_CATEGORY_LABELS.anniversary },
+  { value: 'sports', label: EVENT_CATEGORY_LABELS.sports },
 ]
