@@ -176,6 +176,7 @@ function SortableTaskItem({
         size="icon"
         onClick={onRemove}
         className="h-8 w-8"
+        aria-label="フォーカスから削除"
       >
         <X className="h-4 w-4" />
       </Button>
@@ -247,6 +248,7 @@ export default function FocusPage() {
   const [isCompletionModalOpen, setIsCompletionModalOpen] = useState(false)
   const [activeId, setActiveId] = useState<number | null>(null)
   const [overId, setOverId] = useState<number | string | null>(null)
+  const [isCompleting, setIsCompleting] = useState(false)
 
   const sensors = useSensors(
     useSensor(PointerSensor),
@@ -471,7 +473,9 @@ export default function FocusPage() {
 
   const handleCompleteTask = async () => {
     if (sessionTasks.length === 0) return
+    if (isCompleting) return
 
+    setIsCompleting(true)
     const currentTask = sessionTasks[currentTaskIndex]
     const elapsedMinutes = Math.floor(stopwatch.elapsedSeconds / 60)
 
@@ -498,6 +502,8 @@ export default function FocusPage() {
       setSessionError(
         err instanceof Error ? err.message : 'タスクの完了に失敗しました',
       )
+    } finally {
+      setIsCompleting(false)
     }
   }
 
@@ -576,7 +582,7 @@ export default function FocusPage() {
               </div>
 
               <div className="flex justify-center">
-                <Button onClick={handleCompleteTask} size="lg">
+                <Button onClick={handleCompleteTask} size="lg" disabled={isCompleting}>
                   <CheckCircle2 className="mr-2 h-5 w-5" />
                   完了
                 </Button>
