@@ -7,6 +7,7 @@ export interface UserSettings {
   weekStartDay: number
   morningReviewTime: string | null
   eveningReviewTime: string | null
+  barcelonaIcalUrl: string | null
   createdAt: string
   updatedAt: string
 }
@@ -17,4 +18,5 @@ export interface UpdateUserSettingsInput {
   weekStartDay?: number
   morningReviewTime?: string | null
   eveningReviewTime?: string | null
+  barcelonaIcalUrl?: string | null
 }

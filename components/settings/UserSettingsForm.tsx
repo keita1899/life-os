@@ -31,6 +31,7 @@ const userSettingsFormSchema = z.object({
   weekStartDay: z.enum(['0', '1']),
   morningReviewTime: z.string().optional(),
   eveningReviewTime: z.string().optional(),
+  barcelonaIcalUrl: z.string().url().optional().or(z.literal('')),
 })
 
 type UserSettingsFormValues = z.infer<typeof userSettingsFormSchema>
@@ -54,6 +55,7 @@ export const UserSettingsForm = ({
       weekStartDay: (String(weekStartDayValue) === '0' ? '0' : '1') as '0' | '1',
       morningReviewTime: initialData?.morningReviewTime || '',
       eveningReviewTime: initialData?.eveningReviewTime || '',
+      barcelonaIcalUrl: initialData?.barcelonaIcalUrl || '',
     }
   }, [initialData])
 
@@ -69,6 +71,7 @@ export const UserSettingsForm = ({
       weekStartDay: Number(data.weekStartDay),
       morningReviewTime: data.morningReviewTime || null,
       eveningReviewTime: data.eveningReviewTime || null,
+      barcelonaIcalUrl: data.barcelonaIcalUrl || null,
     })
   }
 
@@ -176,6 +179,28 @@ export const UserSettingsForm = ({
               </FormControl>
               <FormDescription>
                 夜の振り返り・日記の確認時間を設定します（例: 21:00）
+              </FormDescription>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+
+        <FormField
+          control={form.control}
+          name="barcelonaIcalUrl"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>FCバルセロナ iCal URL</FormLabel>
+              <FormControl>
+                <Input
+                  type="url"
+                  placeholder="https://example.com/calendar.ics"
+                  {...field}
+                  value={field.value || ''}
+                />
+              </FormControl>
+              <FormDescription>
+                FCバルセロナの試合スケジュールをカレンダーに同期するためのiCal URLを設定します
               </FormDescription>
               <FormMessage />
             </FormItem>
