@@ -20,6 +20,10 @@ import {
   useSensor,
   useSensors,
   DragEndEvent,
+  DragOverEvent,
+  DragStartEvent,
+  useDroppable,
+  DragOverlay,
 } from '@dnd-kit/core'
 import {
   arrayMove,
@@ -35,6 +39,85 @@ import { useMode } from '@/lib/contexts/ModeContext'
 import { getTodayDevTasks } from '@/lib/tasks/utils'
 import { useStopwatch } from '@/components/focus/Stopwatch'
 import type { DevTask } from '@/lib/types/dev-task'
+
+interface EmptyListDroppableProps {
+  id: string
+  children: React.ReactNode
+}
+
+function EmptyListDroppable({ id, children }: EmptyListDroppableProps) {
+  const { setNodeRef, isOver } = useDroppable({
+    id,
+  })
+
+  return (
+    <div
+      ref={setNodeRef}
+      className={`min-h-[100px] rounded-lg border-2 border-dashed p-4 transition-colors ${
+        isOver
+          ? 'border-primary bg-primary/10'
+          : 'border-stone-300 dark:border-stone-700'
+      }`}
+    >
+      {children}
+    </div>
+  )
+}
+
+interface InvisibleDroppableProps {
+  id: string
+  children: React.ReactNode
+}
+
+function InvisibleDroppable({ id, children }: InvisibleDroppableProps) {
+  const { setNodeRef } = useDroppable({
+    id,
+  })
+
+  return (
+    <div ref={setNodeRef}>
+      {children}
+    </div>
+  )
+}
+
+interface FocusListContainerProps {
+  children: React.ReactNode
+  isOver: boolean
+  hasItems: boolean
+}
+
+function FocusListContainer({ children, isOver, hasItems }: FocusListContainerProps) {
+  const { setNodeRef } = useDroppable({
+    id: 'focus-tasks-list-container',
+  })
+
+  if (hasItems) {
+    return (
+      <div
+        ref={setNodeRef}
+        className={`rounded-lg transition-colors ${
+          isOver ? 'bg-primary/10' : ''
+        }`}
+      >
+        {children}
+      </div>
+    )
+  }
+
+  return (
+    <div
+      ref={setNodeRef}
+      className={`rounded-lg border-2 border-dashed p-4 transition-colors ${
+        isOver
+          ? 'border-primary bg-primary/10'
+          : 'border-stone-300 dark:border-stone-700'
+      }`}
+    >
+      {children}
+    </div>
+  )
+}
 
 interface SortableDevTaskItemProps {
   task: DevTask
@@ -101,6 +184,54 @@ function SortableDevTaskItem({
   )
 }
 
+interface DraggableAvailableDevTaskItemProps {
+  task: DevTask
+  onToggle: () => void
+}
+
+function DraggableAvailableDevTaskItem({
+  task,
+  onToggle,
+}: DraggableAvailableDevTaskItemProps) {
+  const {
+    attributes,
+    listeners,
+    setNodeRef,
+    transform,
+    transition,
+    isDragging,
+  } = useSortable({ id: task.id })
+
+  const style = {
+    transform: CSS.Transform.toString(transform),
+    transition,
+    opacity: isDragging ? 0.5 : 1,
+  }
+
+  return (
+    <div
+      ref={setNodeRef}
+      style={style}
+      className="flex items-center gap-3 rounded-lg border border-stone-200 bg-card p-4 dark:border-stone-800"
+    >
+      <div
+        {...attributes}
+        {...listeners}
+        className="cursor-grab active:cursor-grabbing touch-none"
+      >
+        <GripVertical className="h-5 w-5 text-muted-foreground" />
+      </div>
+      <input
+        type="checkbox"
+        checked={false}
+        onChange={onToggle}
+        className="h-4 w-4 rounded border-stone-300 text-primary focus:ring-2 focus:ring-primary"
+      />
+      <div className="flex-1 font-medium">{task.title}</div>
+    </div>
+  )
+}
+
 export default function DevFocusPage() {
   const { mode } = useMode()
   const router = useRouter()
@@ -138,6 +269,8 @@ export default function DevFocusPage() {
   const [sessionError, setSessionError] = useState<string | null>(null)
   const [completedTasks, setCompletedTasks] = useState<Array<{ task: DevTask; timeMinutes: number }>>([])
   const [isCompletionModalOpen, setIsCompletionModalOpen] = useState(false)
+  const [activeId, setActiveId] = useState<number | null>(null)
+  const [overId, setOverId] = useState<number | string | null>(null)
 
   const stopwatch = useStopwatch({
     onTimeUpdate: () => {},
@@ -181,15 +314,58 @@ export default function DevFocusPage() {
     setFocusTaskIds((prev) => prev.filter((id) => id !== taskId))
   }
 
+  const handleDragStart = (event: DragStartEvent) => {
+    setActiveId(event.active.id as number)
+  }
+
+  const handleDragOver = (event: DragOverEvent) => {
+    if (event.over) {
+      setOverId(event.over.id)
+    }
+  }
+
   const handleDragEnd = (event: DragEndEvent) => {
     const { active, over } = event
 
-    if (over && active.id !== over.id) {
+    setActiveId(null)
+    setOverId(null)
+
+    if (!over) return
+
+    const activeId = active.id as number
+    const overId = over.id
+
+    const isActiveInFocus = focusTaskIds.includes(activeId)
+
+    if (typeof overId === 'string') {
+      if (overId === 'available-tasks-list' && isActiveInFocus) {
+        setFocusTaskIds((items) => items.filter((id) => id !== activeId))
+      } else if (overId === 'focus-tasks-list' && !isActiveInFocus) {
+        setFocusTaskIds((items) => [...items, activeId])
+      } else if (overId === 'focus-tasks-list-end' && !isActiveInFocus) {
+        setFocusTaskIds((items) => [...items, activeId])
+      }
+      return
+    }
+
+    const overIdNum = overId as number
+    const isOverInFocus = focusTaskIds.includes(overIdNum)
+
+    if (isActiveInFocus && isOverInFocus) {
       setFocusTaskIds((items) => {
-        const oldIndex = items.indexOf(active.id as number)
-        const newIndex = items.indexOf(over.id as number)
+        const oldIndex = items.indexOf(activeId)
+        const newIndex = items.indexOf(overIdNum)
         return arrayMove(items, oldIndex, newIndex)
       })
+    } else if (!isActiveInFocus && isOverInFocus) {
+      setFocusTaskIds((items) => {
+        const overIndex = items.indexOf(overIdNum)
+        const newItems = [...items]
+        newItems.splice(overIndex, 0, activeId)
+        return newItems
+      })
+    } else if (isActiveInFocus && !isOverInFocus) {
+      setFocusTaskIds((items) => items.filter((id) => id !== activeId))
     }
   }
 
@@ -271,6 +447,11 @@ export default function DevFocusPage() {
     return todayTasks.filter((task) => !focusTaskIdSet.has(task.id))
   }, [todayTasks, focusTaskIds])
 
+  const activeTask = useMemo(() => {
+    if (activeId === null) return null
+    return todayTasks.find((task) => task.id === activeId) || null
+  }, [activeId, todayTasks])
+
   return (
     <div className="min-h-screen bg-background">
       <div className="container mx-auto max-w-7xl py-8 px-4">
@@ -342,71 +523,119 @@ export default function DevFocusPage() {
             </div>
           </div>
         ) : (
-          <div className="space-y-6">
-            <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
-              <div className="space-y-4">
-                <div className="text-lg font-semibold">
-                  今日のタスク ({availableTasks.length}件)
-                </div>
-                {availableTasks.length === 0 ? (
-                  <div className="text-muted-foreground">
-                    すべてのタスクがフォーカスリストに追加されています
+          <DndContext
+            sensors={sensors}
+            collisionDetection={closestCenter}
+            onDragStart={handleDragStart}
+            onDragOver={handleDragOver}
+            onDragEnd={handleDragEnd}
+          >
+            <div className="space-y-6">
+              <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
+                <div className="space-y-4">
+                  <div className="text-lg font-semibold">
+                    今日のタスク ({availableTasks.length}件)
                   </div>
-                ) : (
-                  <div className="space-y-2">
-                    {availableTasks.map((task: DevTask) => (
-                      <div
-                        key={task.id}
-                        className="flex items-center gap-3 rounded-lg border border-stone-200 bg-card p-4 dark:border-stone-800"
-                      >
-                        <input
-                          type="checkbox"
-                          checked={false}
-                          onChange={() => handleToggleTask(task.id)}
-                          className="h-4 w-4 rounded border-stone-300 text-primary focus:ring-2 focus:ring-primary"
-                        />
-                        <div className="flex-1 font-medium">{task.title}</div>
+                  {availableTasks.length === 0 ? (
+                    <EmptyListDroppable id="available-tasks-list">
+                      <div className="text-muted-foreground">
+                        すべてのタスクがフォーカスリストに追加されています
                       </div>
-                    ))}
-                  </div>
-                )}
-              </div>
-
-              <div className="space-y-4">
-                <div className="text-lg font-semibold">
-                  フォーカスタスク ({focusTasks.length}件)
-                </div>
-                {focusTasks.length === 0 ? (
-                  <div className="text-muted-foreground">
-                    フォーカスタスクが選択されていません
-                  </div>
-                ) : (
-                  <DndContext
-                    sensors={sensors}
-                    collisionDetection={closestCenter}
-                    onDragEnd={handleDragEnd}
-                  >
+                    </EmptyListDroppable>
+                  ) : (
                     <SortableContext
-                      items={focusTaskIds}
+                      items={availableTasks.map((task) => task.id)}
                       strategy={verticalListSortingStrategy}
                     >
                       <div className="space-y-2">
-                        {focusTasks.map((task: DevTask, index: number) => (
-                          <SortableDevTaskItem
+                        {availableTasks.map((task: DevTask) => (
+                          <DraggableAvailableDevTaskItem
                             key={task.id}
                             task={task}
-                            index={index}
                             onToggle={() => handleToggleTask(task.id)}
-                            onRemove={() => handleRemoveFromFocus(task.id)}
                           />
                         ))}
                       </div>
                     </SortableContext>
-                  </DndContext>
-                )}
+                  )}
+                </div>
+
+                <div className="space-y-4">
+                  <div className="text-lg font-semibold">
+                    フォーカスタスク ({focusTasks.length}件)
+                  </div>
+                  {focusTasks.length === 0 ? (
+                    <EmptyListDroppable id="focus-tasks-list">
+                      <div className="text-muted-foreground">
+                        フォーカスタスクが選択されていません
+                      </div>
+                    </EmptyListDroppable>
+                  ) : (
+                    <FocusListContainer
+                      isOver={
+                        activeId !== null &&
+                        !focusTaskIds.includes(activeId) &&
+                        (overId === 'focus-tasks-list-container' ||
+                          (typeof overId === 'number' &&
+                            focusTaskIds.includes(overId)) ||
+                          overId === 'focus-tasks-list-end')
+                      }
+                      hasItems={focusTasks.length > 0}
+                    >
+                      <SortableContext
+                        items={focusTaskIds}
+                        strategy={verticalListSortingStrategy}
+                      >
+                        <div className="space-y-2">
+                          {focusTasks.map((task: DevTask, index: number) => {
+                            const showSpacerAbove =
+                              activeId !== null &&
+                              !focusTaskIds.includes(activeId) &&
+                              overId === task.id
+                            return (
+                              <div key={task.id}>
+                                {showSpacerAbove && (
+                                  <div className="mb-2 h-[72px] rounded-lg border-2 border-dashed border-primary bg-primary/5" />
+                                )}
+                                <SortableDevTaskItem
+                                  task={task}
+                                  index={index}
+                                  onToggle={() => handleToggleTask(task.id)}
+                                  onRemove={() => handleRemoveFromFocus(task.id)}
+                                />
+                              </div>
+                            )
+                          })}
+                          {activeId !== null &&
+                            !focusTaskIds.includes(activeId) &&
+                            overId === 'focus-tasks-list-end' && (
+                              <div className="mb-2 h-[72px] rounded-lg border-2 border-dashed border-primary bg-primary/5" />
+                            )}
+                          <InvisibleDroppable id="focus-tasks-list-end">
+                            <div className="h-8" />
+                          </InvisibleDroppable>
+                        </div>
+                      </SortableContext>
+                    </FocusListContainer>
+                  )}
+                </div>
               </div>
             </div>
-          </div>
+            <DragOverlay>
+              {activeTask && (
+                <div className="flex items-center gap-3 rounded-lg border border-stone-200 bg-card p-4 shadow-lg dark:border-stone-800">
+                  <GripVertical className="h-5 w-5 text-muted-foreground" />
+                  <input
+                    type="checkbox"
+                    checked={focusTaskIds.includes(activeTask.id)}
+                    readOnly
+                    className="h-4 w-4 rounded border-stone-300 text-primary focus:ring-2 focus:ring-primary"
+                  />
+                  <div className="flex-1 font-medium">{activeTask.title}</div>
+                </div>
+              )}
+            </DragOverlay>
+          </DndContext>
         )}
       </div>
 
