@@ -1,11 +1,17 @@
 'use client'
 
+import { useEffect, useState } from 'react'
 import { Calendar } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import {
   EVENT_CATEGORY_LABELS,
   EVENT_CATEGORY_COLORS,
 } from '@/lib/events/constants'
+import {
+  isBarcelonaMatch,
+  getBarcelonaMatchBackground,
+  BARCELONA_MATCH_TEXT_COLOR,
+} from '@/lib/football'
 import { EventDateTime } from '@/components/events/EventDateTime'
 import type { Event } from '@/lib/types/event'
 import { Button } from '@/components/ui/button'
@@ -22,6 +28,24 @@ export function EventPopoverContent({
   onEdit,
   onDelete,
 }: EventPopoverContentProps) {
+  const [isDark, setIsDark] = useState(false)
+
+  useEffect(() => {
+    const checkDarkMode = () => {
+      setIsDark(
+        document.documentElement.classList.contains('dark') ||
+          window.matchMedia('(prefers-color-scheme: dark)').matches,
+      )
+    }
+    checkDarkMode()
+    const observer = new MutationObserver(checkDarkMode)
+    observer.observe(document.documentElement, {
+      attributes: true,
+      attributeFilter: ['class'],
+    })
+    return () => observer.disconnect()
+  }, [])
+
   return (
     <div className="space-y-3">
       <div className="flex items-start justify-between gap-2">
@@ -72,8 +96,17 @@ export function EventPopoverContent({
             <span
               className={cn(
                 'rounded-md px-2 py-0.5',
-                EVENT_CATEGORY_COLORS[event.category],
+                isBarcelonaMatch(event)
+                  ? BARCELONA_MATCH_TEXT_COLOR
+                  : EVENT_CATEGORY_COLORS[event.category],
               )}
+              style={
+                isBarcelonaMatch(event)
+                  ? {
+                      background: getBarcelonaMatchBackground(isDark),
+                    }
+                  : undefined
+              }
             >
               {EVENT_CATEGORY_LABELS[event.category]}
             </span>

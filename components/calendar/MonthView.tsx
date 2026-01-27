@@ -1,6 +1,6 @@
 'use client'
 
-import { useMemo, useState } from 'react'
+import { useMemo, useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { format } from 'date-fns'
 import type React from 'react'
@@ -27,6 +27,11 @@ import type { MonthlyGoal } from '@/lib/types/monthly-goal'
 import type { Event } from '@/lib/types/event'
 import type { Task } from '@/lib/types/task'
 import { getTasksForDate } from '@/lib/logs/utils'
+import {
+  isBarcelonaMatch,
+  getBarcelonaMatchBackground,
+  BARCELONA_MATCH_TEXT_COLOR,
+} from '@/lib/football'
 
 function EventPopoverWrapper({
   event,
@@ -44,6 +49,23 @@ function EventPopoverWrapper({
   onOpenChange?: (open: boolean) => void
 }) {
   const [isOpen, setIsOpen] = useState(false)
+  const [isDark, setIsDark] = useState(false)
+
+  useEffect(() => {
+    const checkDarkMode = () => {
+      setIsDark(
+        document.documentElement.classList.contains('dark') ||
+          window.matchMedia('(prefers-color-scheme: dark)').matches,
+      )
+    }
+    checkDarkMode()
+    const observer = new MutationObserver(checkDarkMode)
+    observer.observe(document.documentElement, {
+      attributes: true,
+      attributeFilter: ['class'],
+    })
+    return () => observer.disconnect()
+  }, [])
 
   const handleOpenChange = (open: boolean) => {
     setIsOpen(open)
@@ -56,8 +78,17 @@ function EventPopoverWrapper({
         <button
           className={cn(
             'w-full truncate rounded px-1 text-left text-xs hover:opacity-80',
-            'bg-green-100 text-green-900 dark:bg-green-900/30 dark:text-green-300',
+            isBarcelonaMatch(event)
+              ? BARCELONA_MATCH_TEXT_COLOR
+              : 'bg-green-100 text-green-900 dark:bg-green-900/30 dark:text-green-300',
           )}
+          style={
+            isBarcelonaMatch(event)
+              ? {
+                  background: getBarcelonaMatchBackground(isDark),
+                }
+              : undefined
+          }
           title={title}
           onClick={(e) => {
             e.stopPropagation()
