@@ -349,6 +349,10 @@ export default function FocusPage() {
     }
   }, [isSessionActive])
 
+  const totalTimeMinutes = useMemo(() => {
+    return completedTasks.reduce((sum, item) => sum + item.timeMinutes, 0)
+  }, [completedTasks])
+
   if (mode !== 'life') {
     return null
   }
@@ -374,6 +378,8 @@ export default function FocusPage() {
   const handleDragOver = (event: DragOverEvent) => {
     if (event.over) {
       setOverId(event.over.id)
+    } else {
+      setOverId(null)
     }
   }
 
@@ -402,6 +408,9 @@ export default function FocusPage() {
         setFocusTaskIds((items) => [...items, activeId])
         setAvailableTaskIds((items) => items.filter((id) => id !== activeId))
       } else if (overId === 'focus-tasks-list-end' && !isActiveInFocus) {
+        setFocusTaskIds((items) => [...items, activeId])
+        setAvailableTaskIds((items) => items.filter((id) => id !== activeId))
+      } else if (overId === 'focus-tasks-list-container' && !isActiveInFocus) {
         setFocusTaskIds((items) => [...items, activeId])
         setAvailableTaskIds((items) => items.filter((id) => id !== activeId))
       }
@@ -500,6 +509,16 @@ export default function FocusPage() {
     router.back()
   }
 
+  const handleCompletionModalChange = (open: boolean) => {
+    setIsCompletionModalOpen(open)
+    if (!open) {
+      setSessionTasks([])
+      setCurrentTaskIndex(0)
+      setCompletedTasks([])
+      router.back()
+    }
+  }
+
   const formatTime = (minutes: number): string => {
     const hours = Math.floor(minutes / 60)
     const mins = minutes % 60
@@ -508,10 +527,6 @@ export default function FocusPage() {
     }
     return `${mins}分`
   }
-
-  const totalTimeMinutes = useMemo(() => {
-    return completedTasks.reduce((sum, item) => sum + item.timeMinutes, 0)
-  }, [completedTasks])
 
   return (
     <div className="min-h-screen bg-background">
@@ -703,7 +718,7 @@ export default function FocusPage() {
         )}
       </div>
 
-      <Dialog open={isCompletionModalOpen} onOpenChange={setIsCompletionModalOpen}>
+      <Dialog open={isCompletionModalOpen} onOpenChange={handleCompletionModalChange}>
         <DialogContent>
           <DialogHeader>
             <DialogTitle>以下のタスクを完了しました</DialogTitle>
