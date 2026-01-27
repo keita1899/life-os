@@ -14,6 +14,7 @@ import type {
 import { fetcher } from '@/lib/swr'
 
 const visionCategoriesKey = 'vision-categories'
+const visionKey = 'vision'
 
 export function useVisionCategories() {
   const {
@@ -43,6 +44,7 @@ export function useVisionCategories() {
   const handleDeleteVisionCategory = async (id: number) => {
     await deleteVisionCategory(id)
     await mutate(visionCategoriesKey)
+    await mutate(visionKey)
   }
 
   return {

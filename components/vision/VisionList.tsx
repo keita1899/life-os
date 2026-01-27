@@ -13,6 +13,7 @@ interface VisionListProps {
   onDelete: (id: number) => Promise<void>
   onCreate: (title: string) => Promise<void>
   showCreateForm?: boolean
+  readOnly?: boolean
 }
 
 export function VisionList({
@@ -21,6 +22,7 @@ export function VisionList({
   onDelete,
   onCreate,
   showCreateForm = true,
+  readOnly = false,
 }: VisionListProps) {
   const [isCreating, setIsCreating] = useState(false)
 
@@ -29,25 +31,26 @@ export function VisionList({
     setIsCreating(false)
   }
 
-  if (items.length === 0 && !isCreating) {
+  if (items.length === 0) {
     return (
       <div className="space-y-4">
         <div className="rounded-lg bg-stone-50/30 p-8 text-center dark:bg-stone-950/30">
           <p className="text-muted-foreground">ビジョンがありません</p>
         </div>
-        <Button
-          variant="outline"
-          onClick={() => setIsCreating(true)}
-          className="w-full"
-        >
-          <Plus className="mr-2 h-4 w-4" />
-          ビジョンを追加
-        </Button>
-        {isCreating && (
+        {isCreating ? (
           <VisionForm
             onSubmit={handleCreate}
             onCancel={() => setIsCreating(false)}
           />
+        ) : (
+          <Button
+            variant="outline"
+            onClick={() => setIsCreating(true)}
+            className="w-full"
+          >
+            <Plus className="mr-2 h-4 w-4" />
+            ビジョンを追加
+          </Button>
         )}
       </div>
     )
@@ -62,6 +65,7 @@ export function VisionList({
             item={item}
             onUpdate={onUpdate}
             onDelete={onDelete}
+            readOnly={readOnly}
           />
         ))}
       </div>

@@ -60,8 +60,17 @@ export function VisionCategoryList({
         {categories.map((category) => (
           <div
             key={category.id}
+            role="button"
+            tabIndex={0}
             onClick={() => {
               if (editingCategoryId !== category.id) {
+                onSelectCategory(category.id)
+              }
+            }}
+            onKeyDown={(e) => {
+              if (editingCategoryId === category.id) return
+              if (e.key === 'Enter' || e.key === ' ') {
+                e.preventDefault()
                 onSelectCategory(category.id)
               }
             }}

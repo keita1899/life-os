@@ -98,11 +98,32 @@ export async function createVisionItem(
   const newOrder = maxOrder + 1
 
   try {
-    await db.execute(
+    const insertResult = await db.execute(
       `INSERT INTO vision_items (title, category_id, "order")
        VALUES (?, ?, ?)`,
       [input.title, input.categoryId || null, newOrder],
     )
+
+    let insertedId: number | undefined
+
+    if (
+      insertResult &&
+      typeof insertResult === 'object' &&
+      'lastInsertId' in insertResult
+    ) {
+      insertedId = (insertResult as { lastInsertId: number }).lastInsertId
+    }
+
+    if (!insertedId) {
+      const lastInsertIdResult = await db.select<
+        { last_insert_rowid: number }[]
+      >('SELECT last_insert_rowid() as last_insert_rowid')
+      insertedId = lastInsertIdResult[0]?.last_insert_rowid
+    }
+
+    if (!insertedId) {
+      throw new Error('Failed to get inserted vision item id')
+    }
 
     const result = await db.select<DbVisionItemWithCategory[]>(
       `SELECT 
@@ -118,10 +139,8 @@ export async function createVisionItem(
         vc.updated_at as category_updated_at
       FROM vision_items vi
       LEFT JOIN vision_categories vc ON vi.category_id = vc.id
-      WHERE vi.title = ? AND vi."order" = ?
-      ORDER BY vi.created_at DESC, vi.id DESC
-      LIMIT 1`,
-      [input.title, newOrder],
+      WHERE vi.id = ?`,
+      [insertedId],
     )
 
     if (result.length === 0) {

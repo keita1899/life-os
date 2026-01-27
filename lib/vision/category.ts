@@ -29,14 +29,18 @@ function isUniqueConstraintError(err: unknown): boolean {
   const errorMessage =
     err instanceof Error ? err.message.toLowerCase() : errorStr
 
-  return (
-    errorMessage.includes('unique') ||
-    errorMessage.includes('constraint') ||
-    errorStr.includes('unique') ||
-    errorStr.includes('constraint') ||
-    (err instanceof Error &&
-      (err.message.includes('19') || err.message.includes('2067')))
-  )
+  const hasUniqueConstraintFailed =
+    errorMessage.includes('unique constraint failed') ||
+    (errorMessage.includes('unique constraint') &&
+      errorMessage.includes('failed')) ||
+    errorStr.includes('unique constraint failed') ||
+    (errorStr.includes('unique constraint') && errorStr.includes('failed'))
+
+  const hasSqliteUniqueError =
+    err instanceof Error &&
+    (err.message.includes('2067') || errorMessage.includes('2067'))
+
+  return hasUniqueConstraintFailed || hasSqliteUniqueError
 }
 
 export async function getAllVisionCategories(): Promise<VisionCategory[]> {

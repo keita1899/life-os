@@ -16,7 +16,7 @@ import { Check, X } from 'lucide-react'
 import type { VisionCategory } from '@/lib/types/vision-category'
 
 const categoryFormSchema = z.object({
-  name: z.string().min(1, 'カテゴリー名は必須です'),
+  name: z.string().trim().min(1, 'カテゴリー名は必須です'),
 })
 
 type CategoryFormValues = z.infer<typeof categoryFormSchema>
@@ -39,8 +39,8 @@ export function VisionCategoryEditForm({
     },
   })
 
-  const handleSubmit = async (data: CategoryFormValues) => {
-    await onSubmit(data.name.trim())
+  const handleSubmit = async (formValues: CategoryFormValues): Promise<void> => {
+    await onSubmit(formValues.name)
   }
 
   return (

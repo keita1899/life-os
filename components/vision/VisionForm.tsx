@@ -15,7 +15,7 @@ import {
 import { Check, X } from 'lucide-react'
 
 const visionFormSchema = z.object({
-  title: z.string().min(1, 'タイトルは必須です'),
+  title: z.string().trim().min(1, 'タイトルは必須です'),
 })
 
 type VisionFormValues = z.infer<typeof visionFormSchema>
@@ -38,8 +38,8 @@ export function VisionForm({
     },
   })
 
-  const handleSubmit = async (data: VisionFormValues) => {
-    await onSubmit(data.title.trim())
+  const handleSubmit = async (formValues: VisionFormValues): Promise<void> => {
+    await onSubmit(formValues.title)
   }
 
   return (

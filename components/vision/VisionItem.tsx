@@ -11,9 +11,10 @@ interface VisionItemProps {
   item: VisionItemType
   onUpdate: (id: number, title: string) => Promise<void>
   onDelete: (id: number) => Promise<void>
+  readOnly?: boolean
 }
 
-export function VisionItem({ item, onUpdate, onDelete }: VisionItemProps) {
+export function VisionItem({ item, onUpdate, onDelete, readOnly = false }: VisionItemProps) {
   const [isEditing, setIsEditing] = useState(false)
   const [isDeleting, setIsDeleting] = useState(false)
 
@@ -39,36 +40,40 @@ export function VisionItem({ item, onUpdate, onDelete }: VisionItemProps) {
 
   return (
     <>
-      <div className="group flex items-center gap-3 rounded-md py-2 transition-colors hover:bg-accent/50">
+      <div className={`group flex items-center gap-3 rounded-md py-2 transition-colors ${readOnly ? '' : 'hover:bg-accent/50'}`}>
         <div className="flex-1 text-sm">{item.title}</div>
-        <div className="flex items-center gap-1 opacity-0 transition-opacity group-hover:opacity-100">
-          <Button
-            variant="ghost"
-            size="icon"
-            onClick={() => setIsEditing(true)}
-            className="h-7 w-7"
-            aria-label="編集"
-          >
-            <Pencil className="h-3.5 w-3.5" />
-          </Button>
-          <Button
-            variant="ghost"
-            size="icon"
-            onClick={() => setIsDeleting(true)}
-            className="h-7 w-7"
-            aria-label="削除"
-          >
-            <Trash2 className="h-3.5 w-3.5" />
-          </Button>
-        </div>
+        {!readOnly && (
+          <div className="flex items-center gap-1 opacity-0 transition-opacity group-hover:opacity-100">
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={() => setIsEditing(true)}
+              className="h-7 w-7"
+              aria-label="編集"
+            >
+              <Pencil className="h-3.5 w-3.5" />
+            </Button>
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={() => setIsDeleting(true)}
+              className="h-7 w-7"
+              aria-label="削除"
+            >
+              <Trash2 className="h-3.5 w-3.5" />
+            </Button>
+          </div>
+        )}
       </div>
 
-      <DeleteConfirmDialog
-        open={isDeleting}
-        onCancel={() => setIsDeleting(false)}
-        onConfirm={handleDelete}
-        message={`「${item.title}」を削除しますか？`}
-      />
+      {!readOnly && (
+        <DeleteConfirmDialog
+          open={isDeleting}
+          onCancel={() => setIsDeleting(false)}
+          onConfirm={handleDelete}
+          message={`「${item.title}」を削除しますか？`}
+        />
+      )}
     </>
   )
 }

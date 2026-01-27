@@ -179,6 +179,7 @@ export default function VisionPage() {
                               handleCreateItem(title).then(() => {})
                             }
                             showCreateForm={false}
+                            readOnly={true}
                           />
                         </AccordionContent>
                       </AccordionItem>
