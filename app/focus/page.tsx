@@ -238,6 +238,7 @@ export default function FocusPage() {
 
   const todayTasks = useMemo(() => getTodayTasks(tasks), [tasks])
   const [focusTaskIds, setFocusTaskIds] = useState<number[]>([])
+  const [availableTaskIds, setAvailableTaskIds] = useState<number[]>([])
   const [isSessionActive, setIsSessionActive] = useState(false)
   const [sessionTasks, setSessionTasks] = useState<Task[]>([])
   const [currentTaskIndex, setCurrentTaskIndex] = useState(0)
@@ -294,20 +295,25 @@ export default function FocusPage() {
     const overId = over.id
 
     const isActiveInFocus = focusTaskIds.includes(activeId)
+    const isActiveInAvailable = availableTaskIds.includes(activeId)
 
     if (typeof overId === 'string') {
       if (overId === 'available-tasks-list' && isActiveInFocus) {
         setFocusTaskIds((items) => items.filter((id) => id !== activeId))
+        setAvailableTaskIds((items) => [...items, activeId])
       } else if (overId === 'focus-tasks-list' && !isActiveInFocus) {
         setFocusTaskIds((items) => [...items, activeId])
+        setAvailableTaskIds((items) => items.filter((id) => id !== activeId))
       } else if (overId === 'focus-tasks-list-end' && !isActiveInFocus) {
         setFocusTaskIds((items) => [...items, activeId])
+        setAvailableTaskIds((items) => items.filter((id) => id !== activeId))
       }
       return
     }
 
     const overIdNum = overId as number
     const isOverInFocus = focusTaskIds.includes(overIdNum)
+    const isOverInAvailable = availableTaskIds.includes(overIdNum)
 
     if (isActiveInFocus && isOverInFocus) {
       setFocusTaskIds((items) => {
@@ -322,8 +328,16 @@ export default function FocusPage() {
         newItems.splice(overIndex, 0, activeId)
         return newItems
       })
+      setAvailableTaskIds((items) => items.filter((id) => id !== activeId))
     } else if (isActiveInFocus && !isOverInFocus) {
       setFocusTaskIds((items) => items.filter((id) => id !== activeId))
+      setAvailableTaskIds((items) => [...items, activeId])
+    } else if (isActiveInAvailable && isOverInAvailable) {
+      setAvailableTaskIds((items) => {
+        const oldIndex = items.indexOf(activeId)
+        const newIndex = items.indexOf(overIdNum)
+        return arrayMove(items, oldIndex, newIndex)
+      })
     }
   }
 
@@ -336,7 +350,64 @@ export default function FocusPage() {
 
   const availableTasks = useMemo(() => {
     const focusTaskIdSet = new Set(focusTaskIds)
-    return todayTasks.filter((task) => !focusTaskIdSet.has(task.id))
+    const filtered = todayTasks.filter((task) => !focusTaskIdSet.has(task.id))
+    
+    if (availableTaskIds.length === 0) {
+      return filtered
+    }
+    
+    const taskMap = new Map(filtered.map((task) => [task.id, task]))
+    const ordered: Task[] = []
+    const unordered: Task[] = []
+    
+    availableTaskIds.forEach((id) => {
+      const task = taskMap.get(id)
+      if (task) {
+        ordered.push(task)
+        taskMap.delete(id)
+      }
+    })
+    
+    filtered.forEach((task) => {
+      if (taskMap.has(task.id)) {
+        unordered.push(task)
+      }
+    })
+    
+    return [...ordered, ...unordered]
+  }, [todayTasks, focusTaskIds, availableTaskIds])
+
+  useEffect(() => {
+    const focusTaskIdSet = new Set(focusTaskIds)
+    const newAvailableTaskIds = todayTasks
+      .filter((task) => !focusTaskIdSet.has(task.id))
+      .map((task) => task.id)
+    
+    setAvailableTaskIds((prev) => {
+      const prevSet = new Set(prev)
+      const newSet = new Set(newAvailableTaskIds)
+      
+      if (prev.length === 0 || !prev.every((id) => newSet.has(id))) {
+        return newAvailableTaskIds
+      }
+      
+      const ordered: number[] = []
+      const unordered: number[] = []
+      
+      prev.forEach((id) => {
+        if (newSet.has(id)) {
+          ordered.push(id)
+        }
+      })
+      
+      newAvailableTaskIds.forEach((id) => {
+        if (!prevSet.has(id)) {
+          unordered.push(id)
+        }
+      })
+      
+      return [...ordered, ...unordered]
+    })
   }, [todayTasks, focusTaskIds])
 
   const activeTask = useMemo(() => {
@@ -511,7 +582,7 @@ export default function FocusPage() {
                     </EmptyListDroppable>
                   ) : (
                     <SortableContext
-                      items={availableTasks.map((task) => task.id)}
+                      items={availableTaskIds}
                       strategy={verticalListSortingStrategy}
                     >
                       <div className="space-y-2">
