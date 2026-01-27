@@ -221,6 +221,18 @@ export async function deleteEventsByCategory(category: string): Promise<void> {
   }
 }
 
+export async function deleteBarcelonaMatches(): Promise<void> {
+  const db = await getDatabase()
+
+  try {
+    await db.execute(
+      "DELETE FROM events WHERE category = 'sports' AND title LIKE '%FC Barcelona%'",
+    )
+  } catch (err) {
+    handleDbError(err, 'delete Barcelona matches')
+  }
+}
+
 export async function deleteEvent(id: number): Promise<void> {
   const db = await getDatabase()
 

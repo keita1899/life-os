@@ -32,6 +32,7 @@ import {
   getBarcelonaMatchBackground,
   BARCELONA_MATCH_TEXT_COLOR,
 } from '@/lib/football'
+import { EVENT_CATEGORY_COLORS } from '@/lib/events/constants'
 
 function EventPopoverWrapper({
   event,
@@ -64,7 +65,21 @@ function EventPopoverWrapper({
       attributes: true,
       attributeFilter: ['class'],
     })
-    return () => observer.disconnect()
+    const mediaQuery = window.matchMedia('(prefers-color-scheme: dark)')
+    const handleMediaChange = () => checkDarkMode()
+    if (mediaQuery.addEventListener) {
+      mediaQuery.addEventListener('change', handleMediaChange)
+    } else {
+      mediaQuery.addListener(handleMediaChange)
+    }
+    return () => {
+      observer.disconnect()
+      if (mediaQuery.removeEventListener) {
+        mediaQuery.removeEventListener('change', handleMediaChange)
+      } else {
+        mediaQuery.removeListener(handleMediaChange)
+      }
+    }
   }, [])
 
   const handleOpenChange = (open: boolean) => {
@@ -72,18 +87,22 @@ function EventPopoverWrapper({
     onOpenChange?.(open)
   }
 
+  const isBarca = isBarcelonaMatch(event)
+
   return (
     <Popover open={isOpen} onOpenChange={handleOpenChange}>
       <PopoverTrigger asChild>
         <button
           className={cn(
             'w-full truncate rounded px-1 text-left text-xs hover:opacity-80',
-            isBarcelonaMatch(event)
+            isBarca
               ? BARCELONA_MATCH_TEXT_COLOR
-              : 'bg-green-100 text-green-900 dark:bg-green-900/30 dark:text-green-300',
+              : event.category
+                ? EVENT_CATEGORY_COLORS[event.category]
+                : 'bg-green-100 text-green-900 dark:bg-green-900/30 dark:text-green-300',
           )}
           style={
-            isBarcelonaMatch(event)
+            isBarca
               ? {
                   background: getBarcelonaMatchBackground(isDark),
                 }

@@ -44,7 +44,21 @@ export function EventItem({ event, onEdit, onDelete }: EventItemProps) {
       attributes: true,
       attributeFilter: ['class'],
     })
-    return () => observer.disconnect()
+    const mediaQuery = window.matchMedia('(prefers-color-scheme: dark)')
+    const handleMediaChange = () => checkDarkMode()
+    if (mediaQuery.addEventListener) {
+      mediaQuery.addEventListener('change', handleMediaChange)
+    } else {
+      mediaQuery.addListener(handleMediaChange)
+    }
+    return () => {
+      observer.disconnect()
+      if (mediaQuery.removeEventListener) {
+        mediaQuery.removeEventListener('change', handleMediaChange)
+      } else {
+        mediaQuery.removeListener(handleMediaChange)
+      }
+    }
   }, [])
 
   return (

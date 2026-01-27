@@ -1,6 +1,6 @@
 import { invoke } from '@tauri-apps/api/core'
 import { parseICal, type ICalEvent } from '../ical/parser'
-import { createEvent, deleteEventsByCategory } from '../events/event'
+import { createEvent, deleteBarcelonaMatches } from '../events/event'
 
 function normalizeICalUrl(url: string): string {
   if (url.startsWith('webcal://')) {
@@ -31,7 +31,7 @@ export async function syncBarcelonaMatches(icalUrl: string): Promise<number> {
     return matchDate >= today
   })
 
-  await deleteEventsByCategory('sports')
+  await deleteBarcelonaMatches()
 
   for (const match of futureMatches) {
     await createEvent({

@@ -43,8 +43,24 @@ export function EventPopoverContent({
       attributes: true,
       attributeFilter: ['class'],
     })
-    return () => observer.disconnect()
+    const mediaQuery = window.matchMedia('(prefers-color-scheme: dark)')
+    const handleMediaChange = () => checkDarkMode()
+    if (mediaQuery.addEventListener) {
+      mediaQuery.addEventListener('change', handleMediaChange)
+    } else {
+      mediaQuery.addListener(handleMediaChange)
+    }
+    return () => {
+      observer.disconnect()
+      if (mediaQuery.removeEventListener) {
+        mediaQuery.removeEventListener('change', handleMediaChange)
+      } else {
+        mediaQuery.removeListener(handleMediaChange)
+      }
+    }
   }, [])
+
+  const isBarca = isBarcelonaMatch(event)
 
   return (
     <div className="space-y-3">
@@ -96,12 +112,12 @@ export function EventPopoverContent({
             <span
               className={cn(
                 'rounded-md px-2 py-0.5',
-                isBarcelonaMatch(event)
+                isBarca
                   ? BARCELONA_MATCH_TEXT_COLOR
                   : EVENT_CATEGORY_COLORS[event.category],
               )}
               style={
-                isBarcelonaMatch(event)
+                isBarca
                   ? {
                       background: getBarcelonaMatchBackground(isDark),
                     }

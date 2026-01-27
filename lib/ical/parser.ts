@@ -32,10 +32,11 @@ function parseDateTime(dateTimeStr: string): string {
 
 function unescapeICalText(text: string): string {
   return text
+    .replace(/\\\\/g, '\u0000')
     .replace(/\\n/g, '\n')
     .replace(/\\,/g, ',')
     .replace(/\\;/g, ';')
-    .replace(/\\\\/g, '\\')
+    .replace(/\u0000/g, '\\')
 }
 
 export function parseICal(icalContent: string): ICalEvent[] {
