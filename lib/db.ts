@@ -116,6 +116,27 @@ async function initializeAllTables(): Promise<void> {
   `)
 
   await db.execute(`
+    CREATE TABLE IF NOT EXISTS vision_categories (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      name TEXT NOT NULL UNIQUE,
+      created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+      updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
+    )
+  `)
+
+  await db.execute(`
+    CREATE TABLE IF NOT EXISTS vision_items (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      title TEXT NOT NULL,
+      category_id INTEGER,
+      "order" INTEGER NOT NULL DEFAULT 0,
+      created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+      updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+      FOREIGN KEY (category_id) REFERENCES vision_categories(id) ON DELETE CASCADE
+    )
+  `)
+
+  await db.execute(`
     CREATE TABLE IF NOT EXISTS wishlist_items (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
       name TEXT NOT NULL,
@@ -517,6 +538,51 @@ async function initializeAllTables(): Promise<void> {
     )
 
     await db.execute('DROP TABLE dev_yearly_goals_old')
+  }
+
+  const visionItemFkRows = await db.select<
+    { id: number; seq: number; table: string; from: string; to: string; on_update: string; on_delete: string }[]
+  >("SELECT * FROM pragma_foreign_key_list('vision_items') WHERE from = 'category_id'")
+  
+  const hasSetNullFk = visionItemFkRows.some(
+    (fk) => fk.on_delete === 'SET NULL' || fk.on_delete === 'set null'
+  )
+
+  if (hasSetNullFk) {
+    await db.execute('ALTER TABLE vision_items RENAME TO vision_items_old')
+
+    await db.execute(`
+      CREATE TABLE vision_items (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        title TEXT NOT NULL,
+        category_id INTEGER,
+        "order" INTEGER NOT NULL DEFAULT 0,
+        created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+        updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+        FOREIGN KEY (category_id) REFERENCES vision_categories(id) ON DELETE CASCADE
+      )
+    `)
+
+    await db.execute(
+      `INSERT INTO vision_items (
+        id,
+        title,
+        category_id,
+        "order",
+        created_at,
+        updated_at
+      )
+      SELECT
+        id,
+        title,
+        category_id,
+        "order",
+        created_at,
+        updated_at
+      FROM vision_items_old`,
+    )
+
+    await db.execute('DROP TABLE vision_items_old')
   }
 
   const devMonthlyGoalColumnRows = await db.select<{ name: string }[]>(

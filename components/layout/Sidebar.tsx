@@ -13,6 +13,7 @@ import {
   Menu,
   ChevronLeft,
   FolderKanban,
+  Eye,
 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { cn } from '@/lib/utils'
@@ -80,6 +81,13 @@ const otherItems = [
     title: '欲しいものリスト',
     color:
       'bg-pink-100 text-pink-600 dark:bg-pink-900/30 dark:text-pink-400',
+  },
+  {
+    href: '/vision',
+    icon: Eye,
+    title: 'ビジョン',
+    color:
+      'bg-indigo-100 text-indigo-600 dark:bg-indigo-900/30 dark:text-indigo-400',
   },
 ]
 
