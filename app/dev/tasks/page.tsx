@@ -1,7 +1,8 @@
 'use client'
 
 import { useMemo, useState } from 'react'
-import { Trash2, Calendar } from 'lucide-react'
+import { useRouter } from 'next/navigation'
+import { Trash2, Calendar, Focus } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import {
   Accordion,
@@ -17,6 +18,7 @@ import { DeleteConfirmDialog } from '@/components/ui/delete-confirm-dialog'
 import { Loading } from '@/components/ui/loading'
 import { ErrorMessage } from '@/components/ui/error-message'
 import { MainLayout } from '@/components/layout/MainLayout'
+import { FloatingActionButtons } from '@/components/floating/FloatingActionButtons'
 import { useMode } from '@/lib/contexts/ModeContext'
 import { groupTasks } from '@/lib/tasks/grouping'
 import { useDevTasks } from '@/hooks/useDevTasks'
@@ -24,6 +26,7 @@ import type { Task, CreateTaskInput } from '@/lib/types/task'
 
 export default function DevTasksPage() {
   const { mode } = useMode()
+  const router = useRouter()
 
   const [activeType, setActiveType] = useState<'inbox' | 'learning'>('inbox')
 
@@ -301,6 +304,17 @@ export default function DevTasksPage() {
           }件）をすべて削除しますか？この操作は取り消せません。`}
           onConfirm={handleDeleteCompletedTasks}
           onCancel={() => setIsDeletingCompletedDialogOpen(false)}
+        />
+
+        <FloatingActionButtons
+          actions={[
+            {
+              id: 'focus',
+              label: 'フォーカスモード',
+              icon: <Focus className="h-5 w-5" />,
+              onClick: () => router.push('/dev/focus'),
+            },
+          ]}
         />
       </div>
     </MainLayout>
