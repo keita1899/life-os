@@ -293,6 +293,80 @@ export default function DevFocusPage() {
     }
   }, [isSessionActive])
 
+  const focusTasks = useMemo(() => {
+    const taskMap = new Map(todayTasks.map((task) => [task.id, task]))
+    return focusTaskIds
+      .map((id) => taskMap.get(id))
+      .filter((task): task is DevTask => task !== undefined)
+  }, [todayTasks, focusTaskIds])
+
+  const availableTasks = useMemo(() => {
+    const focusTaskIdSet = new Set(focusTaskIds)
+    const filtered = todayTasks.filter((task) => !focusTaskIdSet.has(task.id))
+    
+    if (availableTaskIds.length === 0) {
+      return filtered
+    }
+    
+    const taskMap = new Map(filtered.map((task) => [task.id, task]))
+    const ordered: DevTask[] = []
+    const unordered: DevTask[] = []
+    
+    availableTaskIds.forEach((id) => {
+      const task = taskMap.get(id)
+      if (task) {
+        ordered.push(task)
+        taskMap.delete(id)
+      }
+    })
+    
+    filtered.forEach((task) => {
+      if (taskMap.has(task.id)) {
+        unordered.push(task)
+      }
+    })
+    
+    return [...ordered, ...unordered]
+  }, [todayTasks, focusTaskIds, availableTaskIds])
+
+  useEffect(() => {
+    const focusTaskIdSet = new Set(focusTaskIds)
+    const newAvailableTaskIds = todayTasks
+      .filter((task) => !focusTaskIdSet.has(task.id))
+      .map((task) => task.id)
+    
+    setAvailableTaskIds((prev) => {
+      const prevSet = new Set(prev)
+      const newSet = new Set(newAvailableTaskIds)
+      
+      if (prev.length === 0 || !prev.every((id) => newSet.has(id))) {
+        return newAvailableTaskIds
+      }
+      
+      const ordered: number[] = []
+      const unordered: number[] = []
+      
+      prev.forEach((id) => {
+        if (newSet.has(id)) {
+          ordered.push(id)
+        }
+      })
+      
+      newAvailableTaskIds.forEach((id) => {
+        if (!prevSet.has(id)) {
+          unordered.push(id)
+        }
+      })
+      
+      return [...ordered, ...unordered]
+    })
+  }, [todayTasks, focusTaskIds])
+
+  const activeTask = useMemo(() => {
+    if (activeId === null) return null
+    return todayTasks.find((task) => task.id === activeId) || null
+  }, [activeId, todayTasks])
+
   if (mode !== 'development') {
     return null
   }
@@ -457,80 +531,6 @@ export default function DevFocusPage() {
     return completedTasks.reduce((sum, item) => sum + item.timeMinutes, 0)
   }, [completedTasks])
 
-  const focusTasks = useMemo(() => {
-    const taskMap = new Map(todayTasks.map((task) => [task.id, task]))
-    return focusTaskIds
-      .map((id) => taskMap.get(id))
-      .filter((task): task is DevTask => task !== undefined)
-  }, [todayTasks, focusTaskIds])
-
-  const availableTasks = useMemo(() => {
-    const focusTaskIdSet = new Set(focusTaskIds)
-    const filtered = todayTasks.filter((task) => !focusTaskIdSet.has(task.id))
-    
-    if (availableTaskIds.length === 0) {
-      return filtered
-    }
-    
-    const taskMap = new Map(filtered.map((task) => [task.id, task]))
-    const ordered: DevTask[] = []
-    const unordered: DevTask[] = []
-    
-    availableTaskIds.forEach((id) => {
-      const task = taskMap.get(id)
-      if (task) {
-        ordered.push(task)
-        taskMap.delete(id)
-      }
-    })
-    
-    filtered.forEach((task) => {
-      if (taskMap.has(task.id)) {
-        unordered.push(task)
-      }
-    })
-    
-    return [...ordered, ...unordered]
-  }, [todayTasks, focusTaskIds, availableTaskIds])
-
-  useEffect(() => {
-    const focusTaskIdSet = new Set(focusTaskIds)
-    const newAvailableTaskIds = todayTasks
-      .filter((task) => !focusTaskIdSet.has(task.id))
-      .map((task) => task.id)
-    
-    setAvailableTaskIds((prev) => {
-      const prevSet = new Set(prev)
-      const newSet = new Set(newAvailableTaskIds)
-      
-      if (prev.length === 0 || !prev.every((id) => newSet.has(id))) {
-        return newAvailableTaskIds
-      }
-      
-      const ordered: number[] = []
-      const unordered: number[] = []
-      
-      prev.forEach((id) => {
-        if (newSet.has(id)) {
-          ordered.push(id)
-        }
-      })
-      
-      newAvailableTaskIds.forEach((id) => {
-        if (!prevSet.has(id)) {
-          unordered.push(id)
-        }
-      })
-      
-      return [...ordered, ...unordered]
-    })
-  }, [todayTasks, focusTaskIds])
-
-  const activeTask = useMemo(() => {
-    if (activeId === null) return null
-    return todayTasks.find((task) => task.id === activeId) || null
-  }, [activeId, todayTasks])
-
   return (
     <div className="min-h-screen bg-background">
       <div className="container mx-auto max-w-7xl py-8 px-4">
@@ -623,7 +623,7 @@ export default function DevFocusPage() {
                     </EmptyListDroppable>
                   ) : (
                     <SortableContext
-                      items={availableTaskIds}
+                      items={availableTasks.map((task) => task.id)}
                       strategy={verticalListSortingStrategy}
                     >
                       <div className="space-y-2">

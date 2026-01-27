@@ -255,100 +255,6 @@ export default function FocusPage() {
     }),
   )
 
-  if (mode !== 'life') {
-    return null
-  }
-
-  const handleToggleTask = (taskId: number) => {
-    setFocusTaskIds((prev) => {
-      if (prev.includes(taskId)) {
-        return prev.filter((id) => id !== taskId)
-      } else {
-        return [...prev, taskId]
-      }
-    })
-  }
-
-  const handleRemoveFromFocus = (taskId: number) => {
-    setFocusTaskIds((prev) => prev.filter((id) => id !== taskId))
-  }
-
-  const handleDragStart = (event: DragStartEvent) => {
-    setActiveId(event.active.id as number)
-  }
-
-  const handleDragOver = (event: DragOverEvent) => {
-    if (event.over) {
-      setOverId(event.over.id)
-    }
-  }
-
-  const handleDragEnd = (event: DragEndEvent) => {
-    const { active, over } = event
-
-    setActiveId(null)
-    setOverId(null)
-
-    if (!over) return
-
-    const activeId = active.id as number
-    const overId = over.id
-
-    const isActiveInFocus = focusTaskIds.includes(activeId)
-    const isActiveInAvailable = availableTaskIds.includes(activeId)
-
-    if (typeof overId === 'string') {
-      if (overId === 'available-tasks-list' && isActiveInFocus) {
-        setFocusTaskIds((items) => items.filter((id) => id !== activeId))
-        setAvailableTaskIds((items) => [...items, activeId])
-      } else if (overId === 'available-tasks-list-end' && isActiveInFocus) {
-        setFocusTaskIds((items) => items.filter((id) => id !== activeId))
-        setAvailableTaskIds((items) => [...items, activeId])
-      } else if (overId === 'focus-tasks-list' && !isActiveInFocus) {
-        setFocusTaskIds((items) => [...items, activeId])
-        setAvailableTaskIds((items) => items.filter((id) => id !== activeId))
-      } else if (overId === 'focus-tasks-list-end' && !isActiveInFocus) {
-        setFocusTaskIds((items) => [...items, activeId])
-        setAvailableTaskIds((items) => items.filter((id) => id !== activeId))
-      }
-      return
-    }
-
-    const overIdNum = overId as number
-    const isOverInFocus = focusTaskIds.includes(overIdNum)
-    const isOverInAvailable = availableTaskIds.includes(overIdNum)
-
-    if (isActiveInFocus && isOverInFocus) {
-      setFocusTaskIds((items) => {
-        const oldIndex = items.indexOf(activeId)
-        const newIndex = items.indexOf(overIdNum)
-        return arrayMove(items, oldIndex, newIndex)
-      })
-    } else if (!isActiveInFocus && isOverInFocus) {
-      setFocusTaskIds((items) => {
-        const overIndex = items.indexOf(overIdNum)
-        const newItems = [...items]
-        newItems.splice(overIndex, 0, activeId)
-        return newItems
-      })
-      setAvailableTaskIds((items) => items.filter((id) => id !== activeId))
-    } else if (isActiveInFocus && isOverInAvailable) {
-      setFocusTaskIds((items) => items.filter((id) => id !== activeId))
-      setAvailableTaskIds((items) => {
-        const overIndex = items.indexOf(overIdNum)
-        const newItems = [...items]
-        newItems.splice(overIndex, 0, activeId)
-        return newItems
-      })
-    } else if (isActiveInAvailable && isOverInAvailable) {
-      setAvailableTaskIds((items) => {
-        const oldIndex = items.indexOf(activeId)
-        const newIndex = items.indexOf(overIdNum)
-        return arrayMove(items, oldIndex, newIndex)
-      })
-    }
-  }
-
   const focusTasks = useMemo(() => {
     const taskMap = new Map(todayTasks.map((task) => [task.id, task]))
     return focusTaskIds
@@ -442,6 +348,100 @@ export default function FocusPage() {
       window.removeEventListener('popstate', handlePopState)
     }
   }, [isSessionActive])
+
+  if (mode !== 'life') {
+    return null
+  }
+
+  const handleToggleTask = (taskId: number) => {
+    setFocusTaskIds((prev) => {
+      if (prev.includes(taskId)) {
+        return prev.filter((id) => id !== taskId)
+      } else {
+        return [...prev, taskId]
+      }
+    })
+  }
+
+  const handleRemoveFromFocus = (taskId: number) => {
+    setFocusTaskIds((prev) => prev.filter((id) => id !== taskId))
+  }
+
+  const handleDragStart = (event: DragStartEvent) => {
+    setActiveId(event.active.id as number)
+  }
+
+  const handleDragOver = (event: DragOverEvent) => {
+    if (event.over) {
+      setOverId(event.over.id)
+    }
+  }
+
+  const handleDragEnd = (event: DragEndEvent) => {
+    const { active, over } = event
+
+    setActiveId(null)
+    setOverId(null)
+
+    if (!over) return
+
+    const activeId = active.id as number
+    const overId = over.id
+
+    const isActiveInFocus = focusTaskIds.includes(activeId)
+    const isActiveInAvailable = availableTaskIds.includes(activeId)
+
+    if (typeof overId === 'string') {
+      if (overId === 'available-tasks-list' && isActiveInFocus) {
+        setFocusTaskIds((items) => items.filter((id) => id !== activeId))
+        setAvailableTaskIds((items) => [...items, activeId])
+      } else if (overId === 'available-tasks-list-end' && isActiveInFocus) {
+        setFocusTaskIds((items) => items.filter((id) => id !== activeId))
+        setAvailableTaskIds((items) => [...items, activeId])
+      } else if (overId === 'focus-tasks-list' && !isActiveInFocus) {
+        setFocusTaskIds((items) => [...items, activeId])
+        setAvailableTaskIds((items) => items.filter((id) => id !== activeId))
+      } else if (overId === 'focus-tasks-list-end' && !isActiveInFocus) {
+        setFocusTaskIds((items) => [...items, activeId])
+        setAvailableTaskIds((items) => items.filter((id) => id !== activeId))
+      }
+      return
+    }
+
+    const overIdNum = overId as number
+    const isOverInFocus = focusTaskIds.includes(overIdNum)
+    const isOverInAvailable = availableTaskIds.includes(overIdNum)
+
+    if (isActiveInFocus && isOverInFocus) {
+      setFocusTaskIds((items) => {
+        const oldIndex = items.indexOf(activeId)
+        const newIndex = items.indexOf(overIdNum)
+        return arrayMove(items, oldIndex, newIndex)
+      })
+    } else if (!isActiveInFocus && isOverInFocus) {
+      setFocusTaskIds((items) => {
+        const overIndex = items.indexOf(overIdNum)
+        const newItems = [...items]
+        newItems.splice(overIndex, 0, activeId)
+        return newItems
+      })
+      setAvailableTaskIds((items) => items.filter((id) => id !== activeId))
+    } else if (isActiveInFocus && isOverInAvailable) {
+      setFocusTaskIds((items) => items.filter((id) => id !== activeId))
+      setAvailableTaskIds((items) => {
+        const overIndex = items.indexOf(overIdNum)
+        const newItems = [...items]
+        newItems.splice(overIndex, 0, activeId)
+        return newItems
+      })
+    } else if (isActiveInAvailable && isOverInAvailable) {
+      setAvailableTaskIds((items) => {
+        const oldIndex = items.indexOf(activeId)
+        const newIndex = items.indexOf(overIdNum)
+        return arrayMove(items, oldIndex, newIndex)
+      })
+    }
+  }
 
   const handleBack = () => {
     router.back()
@@ -590,7 +590,7 @@ export default function FocusPage() {
                     </EmptyListDroppable>
                   ) : (
                     <SortableContext
-                      items={availableTaskIds}
+                      items={availableTasks.map((task) => task.id)}
                       strategy={verticalListSortingStrategy}
                     >
                       <div className="space-y-2">
