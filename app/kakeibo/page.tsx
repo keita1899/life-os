@@ -143,7 +143,7 @@ export default function KakeiboPage() {
       variableExpense,
       totalExpense,
     }
-  }, [allTransactions, transactions, periodRange.startDate, periodType])
+  }, [allTransactions, transactions, periodRange.startDate, userSettings])
 
   useEffect(() => {
     setFilterCategoryId('all')
