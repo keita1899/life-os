@@ -8,6 +8,7 @@ export interface UserSettings {
   morningReviewTime: string | null
   eveningReviewTime: string | null
   barcelonaIcalUrl: string | null
+  initialBalance: number | null
   createdAt: string
   updatedAt: string
 }
@@ -19,4 +20,5 @@ export interface UpdateUserSettingsInput {
   morningReviewTime?: string | null
   eveningReviewTime?: string | null
   barcelonaIcalUrl?: string | null
+  initialBalance?: number | null
 }
