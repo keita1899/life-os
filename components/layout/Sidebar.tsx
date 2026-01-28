@@ -14,6 +14,7 @@ import {
   ChevronLeft,
   FolderKanban,
   Eye,
+  Wallet,
 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { cn } from '@/lib/utils'
@@ -67,6 +68,13 @@ const otherItems = [
     title: 'サブスク',
     color:
       'bg-green-100 text-green-600 dark:bg-green-900/30 dark:text-green-400',
+  },
+  {
+    href: '/kakeibo',
+    icon: Wallet,
+    title: '家計簿',
+    color:
+      'bg-emerald-100 text-emerald-600 dark:bg-emerald-900/30 dark:text-emerald-400',
   },
   {
     href: '/bucket-list',
