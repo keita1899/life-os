@@ -161,4 +161,22 @@ export const DB_COLUMNS = {
     'created_at',
     'updated_at',
   ],
+  TRANSACTION_CATEGORIES: [
+    'id',
+    'type',
+    'name',
+    'created_at',
+    'updated_at',
+  ],
+  TRANSACTIONS: [
+    'id',
+    'date',
+    'type',
+    'name',
+    'amount',
+    'category_id',
+    'is_fixed',
+    'created_at',
+    'updated_at',
+  ],
 } as const

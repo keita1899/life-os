@@ -179,6 +179,31 @@ async function initializeAllTables(): Promise<void> {
   `)
 
   await db.execute(`
+    CREATE TABLE IF NOT EXISTS transaction_categories (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      type TEXT NOT NULL,
+      name TEXT NOT NULL,
+      created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+      updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+      UNIQUE(type, name)
+    )
+  `)
+
+  await db.execute(`
+    CREATE TABLE IF NOT EXISTS transactions (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      date DATE NOT NULL,
+      type TEXT NOT NULL,
+      name TEXT NOT NULL,
+      amount INTEGER NOT NULL,
+      category_id INTEGER,
+      is_fixed INTEGER NOT NULL DEFAULT 0,
+      created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+      updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
+    )
+  `)
+
+  await db.execute(`
     CREATE TABLE IF NOT EXISTS dev_yearly_goals (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
       title TEXT NOT NULL,
@@ -642,6 +667,19 @@ async function initializeAllTables(): Promise<void> {
     await db.execute(
       'ALTER TABLE user_settings ADD COLUMN barcelona_ical_url TEXT',
     )
+  }
+
+  if (!userSettingsColumns.has('initial_balance')) {
+    await db.execute(
+      'ALTER TABLE user_settings ADD COLUMN initial_balance INTEGER',
+    )
+  }
+
+  const oldTableRows = await db.select<{ name: string }[]>(
+    "SELECT name FROM sqlite_master WHERE type='table' AND name='transaction_categories_old'",
+  )
+  if (oldTableRows.length > 0) {
+    await db.execute('DROP TABLE IF EXISTS transaction_categories_old')
   }
   } catch (error) {
     console.error('[DB] Migration error:', error)
