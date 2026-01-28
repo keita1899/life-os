@@ -12,6 +12,7 @@ interface DbUserSettings {
   morning_review_time: string | null
   evening_review_time: string | null
   barcelona_ical_url: string | null
+  initial_balance: number | null
   created_at: string
   updated_at: string
 }
@@ -33,6 +34,7 @@ function mapDbUserSettingsToUserSettings(
     morningReviewTime: dbSettings.morning_review_time,
     eveningReviewTime: dbSettings.evening_review_time,
     barcelonaIcalUrl: dbSettings.barcelona_ical_url ?? null,
+    initialBalance: dbSettings.initial_balance ?? null,
     createdAt: dbSettings.created_at,
     updatedAt: dbSettings.updated_at,
   }
@@ -120,6 +122,11 @@ export async function updateUserSettings(
   if (input.barcelonaIcalUrl !== undefined) {
     updateFields.push('barcelona_ical_url = ?')
     updateValues.push(input.barcelonaIcalUrl || null)
+  }
+
+  if (input.initialBalance !== undefined) {
+    updateFields.push('initial_balance = ?')
+    updateValues.push(input.initialBalance ?? null)
   }
 
   if (updateFields.length === 0) {
