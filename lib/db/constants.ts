@@ -54,6 +54,7 @@ export const DB_COLUMNS = {
     'morning_review_time',
     'evening_review_time',
     'barcelona_ical_url',
+    'initial_balance',
     'created_at',
     'updated_at',
   ],

@@ -105,7 +105,7 @@ export async function createTransaction(
   const db = await getDatabase()
 
   try {
-    await db.execute(
+    const insertResult = await db.execute(
       `INSERT INTO transactions (date, type, name, amount, category_id, is_fixed)
        VALUES (?, ?, ?, ?, ?, ?)`,
       [
@@ -113,17 +113,36 @@ export async function createTransaction(
         input.type,
         input.name,
         input.amount,
-        input.categoryId || null,
+        input.categoryId ?? null,
         input.isFixed ? 1 : 0,
       ],
     )
 
+    let insertedId: number | undefined
+
+    if (
+      insertResult &&
+      typeof insertResult === 'object' &&
+      'lastInsertId' in insertResult
+    ) {
+      insertedId = (insertResult as { lastInsertId: number }).lastInsertId
+    }
+
+    if (!insertedId) {
+      const lastInsertIdResult = await db.select<
+        { last_insert_rowid: number }[]
+      >('SELECT last_insert_rowid() as last_insert_rowid')
+      insertedId = lastInsertIdResult[0]?.last_insert_rowid
+    }
+
+    if (!insertedId) {
+      throw new Error('Failed to get inserted transaction id')
+    }
+
     const result = await db.select<DbTransaction[]>(
       `SELECT ${DB_COLUMNS.TRANSACTIONS.join(', ')} FROM transactions
-       WHERE date = ? AND type = ? AND name = ? AND amount = ?
-       ORDER BY created_at DESC, id DESC
-       LIMIT 1`,
-      [input.date, input.type, input.name, input.amount],
+       WHERE id = ?`,
+      [insertedId],
     )
 
     if (result.length === 0) {
@@ -169,7 +188,7 @@ export async function updateTransaction(
 
   if (input.categoryId !== undefined) {
     updateFields.push('category_id = ?')
-    updateValues.push(input.categoryId || null)
+    updateValues.push(input.categoryId ?? null)
   }
 
   if (input.isFixed !== undefined) {

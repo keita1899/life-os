@@ -79,6 +79,17 @@ export function getPeriodRange(periodType: PeriodType, year?: number, month?: nu
           label: format(today, 'yyyy年M月'),
         }
       }
+      if (
+        !Number.isInteger(year) ||
+        !Number.isInteger(month) ||
+        year <= 0 ||
+        month < 1 ||
+        month > 12
+      ) {
+        throw new RangeError(
+          `Invalid custom year/month: year=${year}, month=${month}`,
+        )
+      }
       const customDate = new Date(year, month - 1, 1)
       const customMonthStart = startOfMonth(customDate)
       const customMonthEnd = endOfMonth(customDate)

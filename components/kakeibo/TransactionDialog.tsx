@@ -2,16 +2,6 @@
 
 import { FormDialog } from '@/components/ui/form-dialog'
 import { TransactionForm } from './TransactionForm'
-
-interface TransactionData {
-  date: string
-  type: 'income' | 'expense'
-  name: string
-  amount: number
-  categoryId?: number | null
-  isFixed: boolean
-}
-
 import type { Transaction, CreateTransactionInput } from '@/lib/types/transaction'
 
 interface TransactionDialogProps {

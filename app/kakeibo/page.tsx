@@ -149,6 +149,23 @@ export default function KakeiboPage() {
     setFilterCategoryId('all')
   }, [filterType])
 
+  const balanceLabel = useMemo(() => {
+    switch (periodType) {
+      case 'today':
+        return { start: '開始時残高', end: '終了時残高' }
+      case 'thisWeek':
+        return { start: '週初残高', end: '週末残高' }
+      case 'thisMonth':
+      case 'lastMonth':
+      case 'custom':
+        return { start: '月初残高', end: '月末残高' }
+      case 'thisYear':
+        return { start: '年初残高', end: '年末残高' }
+      default:
+        return { start: '期間開始時残高', end: '期間終了時残高' }
+    }
+  }, [periodType])
+
   if (mode !== 'life') {
     return null
   }
@@ -160,9 +177,7 @@ export default function KakeiboPage() {
   const handleCreateTransaction = async (input: CreateTransactionInput) => {
     try {
       setOperationError(null)
-      console.log('Creating transaction:', input)
-      const result = await createTransaction(input)
-      console.log('Transaction created:', result)
+      await createTransaction(input)
       await refreshTransactions()
       await mutate(`transactions-${selectedYear}-${selectedMonth}`)
       setIsDialogOpen(false)
@@ -250,23 +265,6 @@ export default function KakeiboPage() {
   const handleInitialBalanceConfirm = async (balance: number) => {
     await updateUserSettings({ initialBalance: balance })
   }
-
-  const balanceLabel = useMemo(() => {
-    switch (periodType) {
-      case 'today':
-        return { start: '開始時残高', end: '終了時残高' }
-      case 'thisWeek':
-        return { start: '週初残高', end: '週末残高' }
-      case 'thisMonth':
-      case 'lastMonth':
-      case 'custom':
-        return { start: '月初残高', end: '月末残高' }
-      case 'thisYear':
-        return { start: '年初残高', end: '年末残高' }
-      default:
-        return { start: '期間開始時残高', end: '期間終了時残高' }
-    }
-  }, [periodType])
 
   return (
     <MainLayout>
@@ -359,6 +357,7 @@ export default function KakeiboPage() {
 
         <InitialBalanceDialog
           open={shouldShowInitialBalanceDialog}
+          onOpenChange={() => {}}
           onConfirm={handleInitialBalanceConfirm}
         />
       </div>

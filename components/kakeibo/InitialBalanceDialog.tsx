@@ -14,11 +14,13 @@ import { Label } from '@/components/ui/label'
 
 interface InitialBalanceDialogProps {
   open: boolean
+  onOpenChange: (open: boolean) => void
   onConfirm: (balance: number) => Promise<void>
 }
 
 export function InitialBalanceDialog({
   open,
+  onOpenChange,
   onConfirm,
 }: InitialBalanceDialogProps) {
   const [balance, setBalance] = useState<string>('')
@@ -46,7 +48,7 @@ export function InitialBalanceDialog({
   }
 
   return (
-    <Dialog open={open} onOpenChange={() => {}}>
+    <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-[425px]">
         <DialogHeader>
           <DialogTitle>家計簿を始める</DialogTitle>

@@ -93,7 +93,7 @@ export function TransactionItem({
               type="button"
               variant="ghost"
               size="sm"
-              className="h-8 w-8 p-0 opacity-0 transition-opacity group-hover:opacity-100"
+              className="h-8 w-8 p-0 opacity-0 transition-opacity group-hover:opacity-100 focus-visible:opacity-100 focus-visible:outline-none focus-visible:ring-2"
             >
               <MoreVertical className="h-4 w-4" />
               <span className="sr-only">メニュー</span>

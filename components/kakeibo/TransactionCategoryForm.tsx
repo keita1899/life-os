@@ -1,6 +1,6 @@
 'use client'
 
-import { useMemo } from 'react'
+import { useMemo, type ReactElement } from 'react'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import * as z from 'zod'
@@ -20,7 +20,7 @@ import type {
 } from '@/lib/types/transaction-category'
 
 const transactionCategoryFormSchema = z.object({
-  name: z.string().min(1, 'カテゴリー名は必須です'),
+  name: z.string().trim().min(1, 'カテゴリー名は必須です'),
 })
 
 type TransactionCategoryFormValues = z.infer<typeof transactionCategoryFormSchema>
@@ -37,7 +37,7 @@ export const TransactionCategoryForm = ({
   onCancel,
   initialData,
   submitLabel = '作成',
-}: TransactionCategoryFormProps) => {
+}: TransactionCategoryFormProps): ReactElement => {
   const formValues = useMemo<TransactionCategoryFormValues>(() => {
     return {
       name: initialData?.name || '',
@@ -49,7 +49,7 @@ export const TransactionCategoryForm = ({
     values: formValues,
   })
 
-  const handleSubmit = async (data: TransactionCategoryFormValues) => {
+  const handleSubmit = async (data: TransactionCategoryFormValues): Promise<void> => {
     await onSubmit({
       name: data.name,
     })
