@@ -67,6 +67,7 @@ function DevLogPageView({ logDate, date }: DevLogPageViewProps) {
     isLoading: isLoadingDailyLog,
     createDevDailyLog,
     updateDevDailyLog,
+    error: dailyLogError,
   } = useDevDailyLog(date)
 
   const weekStartDay = userSettings?.weekStartDay ?? 1
@@ -249,7 +250,7 @@ function DevLogPageView({ logDate, date }: DevLogPageViewProps) {
 
   const isLoading =
     isLoadingGoals || isLoadingTasks || isLoadingDailyLog
-  const error = goalsError || tasksError
+  const error = goalsError || tasksError || dailyLogError
 
   return (
     <MainLayout>
@@ -297,10 +298,18 @@ function DevLogPageView({ logDate, date }: DevLogPageViewProps) {
             <DevLogTasksSection
               tasks={tasks}
               onToggleCompletion={async (task) => {
-                const devTask = allDevTasks.find((t) => t.id === task.id)
-                if (devTask) {
+                try {
+                  setOperationError(null)
+                  const devTask = allDevTasks.find((t) => t.id === task.id)
+                  if (!devTask) return
                   await updateDevTask(task.id, { completed: !task.completed })
                   await mutate('dev-calendar-tasks')
+                } catch (err) {
+                  setOperationError(
+                    err instanceof Error
+                      ? err.message
+                      : 'タスクの完了状態の更新に失敗しました',
+                  )
                 }
               }}
               onEdit={handleEditTask}
