@@ -179,6 +179,16 @@ async function initializeAllTables(): Promise<void> {
   `)
 
   await db.execute(`
+    CREATE TABLE IF NOT EXISTS dev_daily_logs (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      log_date DATE NOT NULL UNIQUE,
+      report TEXT,
+      created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+      updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
+    )
+  `)
+
+  await db.execute(`
     CREATE TABLE IF NOT EXISTS transaction_categories (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
       type TEXT NOT NULL,

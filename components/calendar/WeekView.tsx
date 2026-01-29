@@ -3,6 +3,7 @@
 import { useMemo, useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { format } from 'date-fns'
+import { useMode } from '@/lib/contexts/ModeContext'
 import type React from 'react'
 import { cn } from '@/lib/utils'
 import {
@@ -262,6 +263,7 @@ function WeekDateCell({
   onToggleTaskCompletion?: (task: Task) => void
 }) {
   const router = useRouter()
+  const { mode } = useMode()
   const [hasOpenPopover, setHasOpenPopover] = useState(false)
   const [hasOpenTaskPopover, setHasOpenTaskPopover] = useState(false)
   const visibleEvents = isExpanded ? dayEvents : dayEvents.slice(0, 3)
@@ -269,7 +271,12 @@ function WeekDateCell({
 
   const navigateToDay = () => {
     if (!hasOpenPopover && !hasOpenTaskPopover) {
-      router.push(`/logs?date=${format(date, 'yyyy-MM-dd')}`)
+      const dateStr = format(date, 'yyyy-MM-dd')
+      if (mode === 'development') {
+        router.push(`/dev/logs?date=${dateStr}`)
+      } else {
+        router.push(`/logs?date=${dateStr}`)
+      }
     }
   }
 

@@ -110,6 +110,13 @@ export const DB_COLUMNS = {
     'created_at',
     'updated_at',
   ],
+  DEV_DAILY_LOGS: [
+    'id',
+    'log_date',
+    'report',
+    'created_at',
+    'updated_at',
+  ],
   DEV_YEARLY_GOALS: [
     'id',
     'title',
