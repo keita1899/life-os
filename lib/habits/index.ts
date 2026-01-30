@@ -11,3 +11,5 @@ export {
   deleteCompletion,
 } from './habit-completion'
 export { isHabitDueOnDate } from './frequency'
+export { formatHabitFrequency, formatHabitScheduledTime } from './format'
+export { calcHabitStreak } from './streak'
