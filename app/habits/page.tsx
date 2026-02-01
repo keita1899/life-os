@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useMemo } from 'react'
-import { format, addMonths, subMonths } from 'date-fns'
+import { format } from 'date-fns'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { HabitDialog } from '@/components/habits/HabitDialog'
@@ -12,6 +12,7 @@ import { ErrorMessage } from '@/components/ui/error-message'
 import { MainLayout } from '@/components/layout/MainLayout'
 import { useHabits } from '@/hooks/useHabits'
 import { useHabitCompletionsByDate } from '@/hooks/useHabitCompletions'
+import { useHabitHeatmapView } from '@/hooks/useHabitHeatmapView'
 import { useMode } from '@/lib/contexts/ModeContext'
 import type { Habit, CreateHabitInput } from '@/lib/types/habit'
 import { ChevronLeft, ChevronRight } from 'lucide-react'
@@ -30,12 +31,18 @@ export default function HabitsPage() {
   const [editingHabit, setEditingHabit] = useState<Habit | undefined>(undefined)
   const [deletingHabit, setDeletingHabit] = useState<Habit | undefined>(undefined)
   const [operationError, setOperationError] = useState<string | null>(null)
-  const [heatmapDate, setHeatmapDate] = useState(() => new Date())
-
-  const now = new Date()
-  const heatmapYear = heatmapDate.getFullYear()
-  const heatmapMonth = heatmapDate.getMonth() + 1
-  const todayStr = format(now, 'yyyy-MM-dd')
+  const {
+    currentDate: heatmapDate,
+    viewMode,
+    setViewMode,
+    weekStartDay,
+    handlePrev,
+    handleNext,
+    displayTitle,
+    year: heatmapYear,
+    month: heatmapMonth,
+  } = useHabitHeatmapView()
+  const todayStr = format(new Date(), 'yyyy-MM-dd')
 
   const {
     completions: todayCompletions,
@@ -182,33 +189,57 @@ export default function HabitsPage() {
         ) : (
           <Card>
             <CardHeader>
-              <div className="flex items-center justify-between">
+              <div className="flex flex-wrap items-center justify-between gap-2">
                 <CardTitle className="text-lg">実行記録</CardTitle>
                 <div className="flex items-center gap-2">
+                  <div className="flex rounded-md border border-stone-200 dark:border-stone-800">
+                    <Button
+                      variant={viewMode === 'month' ? 'secondary' : 'ghost'}
+                      size="sm"
+                      className="h-8 rounded-r-none border-0"
+                      onClick={() => setViewMode('month')}
+                    >
+                      <span className="flex items-center gap-2">
+                        月
+                        <span className="text-xs text-muted-foreground">M</span>
+                      </span>
+                    </Button>
+                    <Button
+                      variant={viewMode === 'week' ? 'secondary' : 'ghost'}
+                      size="sm"
+                      className="h-8 rounded-l-none border-0 border-l border-stone-200 dark:border-stone-800"
+                      onClick={() => setViewMode('week')}
+                    >
+                      <span className="flex items-center gap-2">
+                        週
+                        <span className="text-xs text-muted-foreground">W</span>
+                      </span>
+                    </Button>
+                  </div>
                   <Button
                     variant="outline"
                     size="icon"
-                    className="h-8 w-8"
-                    onClick={() =>
-                      setHeatmapDate((d) => subMonths(d, 1))
-                    }
+                    className="h-8 w-8 shrink-0"
+                    onClick={handlePrev}
                   >
                     <ChevronLeft className="h-4 w-4" />
-                    <span className="sr-only">前月</span>
+                    <span className="sr-only">
+                      {viewMode === 'month' ? '前月' : '前週'}
+                    </span>
                   </Button>
-                  <span className="min-w-[7rem] text-center text-sm font-medium tabular-nums">
-                    {heatmapYear}年{heatmapMonth}月
+                  <span className="w-[11rem] shrink-0 text-center text-sm font-medium tabular-nums">
+                    {displayTitle}
                   </span>
                   <Button
                     variant="outline"
                     size="icon"
-                    className="h-8 w-8"
-                    onClick={() =>
-                      setHeatmapDate((d) => addMonths(d, 1))
-                    }
+                    className="h-8 w-8 shrink-0"
+                    onClick={handleNext}
                   >
                     <ChevronRight className="h-4 w-4" />
-                    <span className="sr-only">翌月</span>
+                    <span className="sr-only">
+                      {viewMode === 'month' ? '翌月' : '翌週'}
+                    </span>
                   </Button>
                 </div>
               </div>
@@ -216,6 +247,9 @@ export default function HabitsPage() {
             <CardContent>
               <HabitHeatmap
                 habits={sortedHabits}
+                viewMode={viewMode}
+                focusDate={heatmapDate}
+                weekStartDay={weekStartDay}
                 year={heatmapYear}
                 month={heatmapMonth}
                 completedHabitIdsToday={completedHabitIdsToday}
