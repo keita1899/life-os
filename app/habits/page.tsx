@@ -1,30 +1,20 @@
 'use client'
 
 import { useState, useMemo } from 'react'
+import { format, addMonths, subMonths } from 'date-fns'
 import { Button } from '@/components/ui/button'
-import { Card, CardContent, CardHeader } from '@/components/ui/card'
-import { Badge } from '@/components/ui/badge'
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu'
-import { MoreVertical, Pencil, Trash2 } from 'lucide-react'
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { HabitDialog } from '@/components/habits/HabitDialog'
-import { HabitMonthCompletions } from '@/components/habits/HabitMonthCompletions'
-import { HabitStreakLabel } from '@/components/habits/HabitStreakLabel'
+import { HabitHeatmap } from '@/components/habits/HabitHeatmap'
 import { DeleteConfirmDialog } from '@/components/ui/delete-confirm-dialog'
 import { Loading } from '@/components/ui/loading'
 import { ErrorMessage } from '@/components/ui/error-message'
 import { MainLayout } from '@/components/layout/MainLayout'
 import { useHabits } from '@/hooks/useHabits'
+import { useHabitCompletionsByDate } from '@/hooks/useHabitCompletions'
 import { useMode } from '@/lib/contexts/ModeContext'
-import {
-  formatHabitFrequency,
-  formatHabitScheduledTime,
-} from '@/lib/habits'
 import type { Habit, CreateHabitInput } from '@/lib/types/habit'
+import { ChevronLeft, ChevronRight } from 'lucide-react'
 
 export default function HabitsPage() {
   const { mode } = useMode()
@@ -40,10 +30,23 @@ export default function HabitsPage() {
   const [editingHabit, setEditingHabit] = useState<Habit | undefined>(undefined)
   const [deletingHabit, setDeletingHabit] = useState<Habit | undefined>(undefined)
   const [operationError, setOperationError] = useState<string | null>(null)
+  const [heatmapDate, setHeatmapDate] = useState(() => new Date())
 
   const now = new Date()
-  const currentYear = now.getFullYear()
-  const currentMonth = now.getMonth() + 1
+  const heatmapYear = heatmapDate.getFullYear()
+  const heatmapMonth = heatmapDate.getMonth() + 1
+  const todayStr = format(now, 'yyyy-MM-dd')
+
+  const {
+    completions: todayCompletions,
+    createCompletion: createHabitCompletion,
+    deleteCompletion: deleteHabitCompletion,
+  } = useHabitCompletionsByDate(todayStr)
+
+  const completedHabitIdsToday = useMemo(
+    () => new Set(todayCompletions.map((c) => c.habitId)),
+    [todayCompletions],
+  )
 
   const sortedHabits = useMemo(() => {
     const normalizeTime = (t: string | null): string => {
@@ -134,9 +137,25 @@ export default function HabitsPage() {
     setIsDialogOpen(true)
   }
 
+  const handleToggleToday = async (habit: Habit) => {
+    const completed = completedHabitIdsToday.has(habit.id)
+    try {
+      setOperationError(null)
+      if (completed) {
+        await deleteHabitCompletion(habit.id, todayStr)
+      } else {
+        await createHabitCompletion(habit.id, todayStr)
+      }
+    } catch (err) {
+      setOperationError(
+        err instanceof Error ? err.message : '習慣の完了状態の更新に失敗しました',
+      )
+    }
+  }
+
   return (
     <MainLayout>
-      <div className="container mx-auto max-w-4xl py-8 px-4">
+      <div className="container mx-auto max-w-5xl py-8 px-4">
         <div className="mb-6 flex items-center justify-between">
           <h1 className="text-3xl font-bold">習慣</h1>
           <Button onClick={handleOpenCreate}>習慣を追加</Button>
@@ -161,70 +180,51 @@ export default function HabitsPage() {
             </Button>
           </div>
         ) : (
-          <div className="space-y-4">
-            {sortedHabits.map((habit) => (
-              <Card key={habit.id} className="group">
-                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                  <div className="flex min-w-0 flex-1 flex-wrap items-center gap-2">
-                    <Badge variant="secondary">
-                      {formatHabitFrequency(habit)}
-                    </Badge>
-                    {habit.scheduledTime && (
-                      <span className="text-sm text-muted-foreground tabular-nums">
-                        {formatHabitScheduledTime(habit.scheduledTime)}
-                      </span>
-                    )}
-                    <h2 className="text-lg font-semibold truncate">
-                      {habit.name}
-                    </h2>
-                    <HabitStreakLabel
-                      habit={habit}
-                      year={currentYear}
-                      month={currentMonth}
-                    />
-                  </div>
-                  <DropdownMenu>
-                    <DropdownMenuTrigger asChild>
-                      <Button
-                        type="button"
-                        variant="ghost"
-                        size="icon"
-                        className="h-8 w-8 shrink-0 opacity-0 transition-opacity group-hover:opacity-100 focus:opacity-100"
-                      >
-                        <MoreVertical className="h-4 w-4" />
-                        <span className="sr-only">メニューを開く</span>
-                      </Button>
-                    </DropdownMenuTrigger>
-                    <DropdownMenuContent align="end">
-                      <DropdownMenuItem onClick={() => handleEditHabit(habit)}>
-                        <Pencil className="mr-2 h-4 w-4" />
-                        編集
-                      </DropdownMenuItem>
-                      <DropdownMenuItem
-                        onClick={() => handleDeleteClick(habit)}
-                        className="text-destructive focus:text-destructive"
-                      >
-                        <Trash2 className="mr-2 h-4 w-4" />
-                        削除
-                      </DropdownMenuItem>
-                    </DropdownMenuContent>
-                  </DropdownMenu>
-                </CardHeader>
-                <CardContent>
-                  <div className="text-sm font-medium text-muted-foreground">
-                    今月の実行記録
-                  </div>
-                  <div className="mt-2">
-                    <HabitMonthCompletions
-                      habit={habit}
-                      year={currentYear}
-                      month={currentMonth}
-                    />
-                  </div>
-                </CardContent>
-              </Card>
-            ))}
-          </div>
+          <Card>
+            <CardHeader>
+              <div className="flex items-center justify-between">
+                <CardTitle className="text-lg">実行記録</CardTitle>
+                <div className="flex items-center gap-2">
+                  <Button
+                    variant="outline"
+                    size="icon"
+                    className="h-8 w-8"
+                    onClick={() =>
+                      setHeatmapDate((d) => subMonths(d, 1))
+                    }
+                  >
+                    <ChevronLeft className="h-4 w-4" />
+                    <span className="sr-only">前月</span>
+                  </Button>
+                  <span className="min-w-[7rem] text-center text-sm font-medium tabular-nums">
+                    {heatmapYear}年{heatmapMonth}月
+                  </span>
+                  <Button
+                    variant="outline"
+                    size="icon"
+                    className="h-8 w-8"
+                    onClick={() =>
+                      setHeatmapDate((d) => addMonths(d, 1))
+                    }
+                  >
+                    <ChevronRight className="h-4 w-4" />
+                    <span className="sr-only">翌月</span>
+                  </Button>
+                </div>
+              </div>
+            </CardHeader>
+            <CardContent>
+              <HabitHeatmap
+                habits={sortedHabits}
+                year={heatmapYear}
+                month={heatmapMonth}
+                completedHabitIdsToday={completedHabitIdsToday}
+                onToggleToday={handleToggleToday}
+                onEdit={handleEditHabit}
+                onDelete={handleDeleteClick}
+              />
+            </CardContent>
+          </Card>
         )}
 
         <HabitDialog

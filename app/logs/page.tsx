@@ -14,10 +14,13 @@ import { useTasks } from '@/hooks/useTasks'
 import { useEvents } from '@/hooks/useEvents'
 import { useUserSettings } from '@/hooks/useUserSettings'
 import { useDailyLog } from '@/hooks/useDailyLog'
+import { useHabits } from '@/hooks/useHabits'
+import { useHabitCompletionsByDate } from '@/hooks/useHabitCompletions'
 import { Loading } from '@/components/ui/loading'
 import { ErrorMessage } from '@/components/ui/error-message'
 import { MainLayout } from '@/components/layout/MainLayout'
 import { LogGoalsSection } from '@/components/logs/LogGoalsSection'
+import { LogHabitsSection } from '@/components/logs/LogHabitsSection'
 import { LogTasksSection } from '@/components/logs/LogTasksSection'
 import { LogEventsSection } from '@/components/logs/LogEventsSection'
 import { LogDiarySection } from '@/components/logs/LogDiarySection'
@@ -31,6 +34,7 @@ import {
   getTasksForDate,
   getEventsForDateSorted,
 } from '@/lib/logs/utils'
+import { isHabitDueOnDate } from '@/lib/habits'
 import type { Task, CreateTaskInput, UpdateTaskInput } from '@/lib/types/task'
 import type { UpdateDailyLogInput } from '@/lib/types/daily-log'
 import Link from 'next/link'
@@ -83,6 +87,13 @@ function LogPageView({ logDate, date }: LogPageViewProps) {
     createDailyLog,
     updateDailyLog,
   } = useDailyLog(date)
+  const { habits: allHabits, isLoading: isLoadingHabits } = useHabits()
+  const {
+    completions: habitCompletions,
+    isLoading: isLoadingHabitCompletions,
+    createCompletion: createHabitCompletion,
+    deleteCompletion: deleteHabitCompletion,
+  } = useHabitCompletionsByDate(date)
 
   const weekStartDay = userSettings?.weekStartDay ?? 1
 
@@ -105,6 +116,27 @@ function LogPageView({ logDate, date }: LogPageViewProps) {
   const events = useMemo(
     () => getEventsForDateSorted(allEvents, logDate),
     [allEvents, logDate],
+  )
+
+  const habitsForDate = useMemo(() => {
+    const filtered = allHabits.filter((h) => isHabitDueOnDate(h, logDate))
+    const normalizeTime = (t: string | null): string => {
+      if (!t?.trim()) return '99:99'
+      const parts = t.trim().split(':')
+      const h = (parts[0] ?? '0').padStart(2, '0')
+      const m = (parts[1] ?? '0').padStart(2, '0')
+      return `${h}:${m}`
+    }
+    return [...filtered].sort((a, b) =>
+      normalizeTime(a.scheduledTime).localeCompare(
+        normalizeTime(b.scheduledTime),
+      ),
+    )
+  }, [allHabits, logDate])
+
+  const completedHabitIds = useMemo(
+    () => new Set(habitCompletions.map((c) => c.habitId)),
+    [habitCompletions],
   )
 
   const formattedDate = format(logDate, 'yyyy年M月d日(E)', { locale: ja })
@@ -277,8 +309,29 @@ function LogPageView({ logDate, date }: LogPageViewProps) {
     }
   }
 
+  const handleToggleHabit = async (habit: { id: number }) => {
+    const completed = completedHabitIds.has(habit.id)
+    try {
+      setOperationError(null)
+      if (completed) {
+        await deleteHabitCompletion(habit.id, date)
+      } else {
+        await createHabitCompletion(habit.id, date)
+      }
+    } catch (err) {
+      setOperationError(
+        err instanceof Error ? err.message : '習慣の完了状態の更新に失敗しました',
+      )
+    }
+  }
+
   const isLoading =
-    isLoadingGoals || isLoadingTasks || isLoadingEvents || isLoadingDailyLog
+    isLoadingGoals ||
+    isLoadingTasks ||
+    isLoadingEvents ||
+    isLoadingDailyLog ||
+    isLoadingHabits ||
+    isLoadingHabitCompletions
   const error = goalsError || tasksError || eventsError
 
   return (
@@ -323,6 +376,11 @@ function LogPageView({ logDate, date }: LogPageViewProps) {
             yearlyGoals={yearlyGoals}
             monthlyGoals={monthlyGoals}
             weeklyGoals={weeklyGoals}
+          />
+          <LogHabitsSection
+            habits={habitsForDate}
+            completedHabitIds={completedHabitIds}
+            onToggle={handleToggleHabit}
           />
           <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
             <LogEventsSection
