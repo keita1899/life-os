@@ -100,6 +100,7 @@ async function initializeAllTables(): Promise<void> {
       title TEXT NOT NULL,
       category_id INTEGER,
       target_year INTEGER,
+      target_month INTEGER,
       achieved_date DATE,
       completed INTEGER NOT NULL DEFAULT 0,
       "order" INTEGER NOT NULL DEFAULT 0,
@@ -708,6 +709,33 @@ async function initializeAllTables(): Promise<void> {
     await db.execute(
       'ALTER TABLE user_settings ADD COLUMN initial_balance INTEGER',
     )
+  }
+
+  try {
+    const bucketListItemsColumnRows = await db.select<
+      { name?: string; NAME?: string }[]
+    >("SELECT name FROM pragma_table_info('bucket_list_items')")
+    const names = bucketListItemsColumnRows.map(
+      (r) => r.name ?? r.NAME ?? '',
+    )
+    const bucketListItemsColumns = new Set(names)
+    if (!bucketListItemsColumns.has('target_month')) {
+      await db.execute(
+        'ALTER TABLE bucket_list_items ADD COLUMN target_month INTEGER',
+      )
+    }
+  } catch (bucketListMigrationErr) {
+    try {
+      await db.execute(
+        'ALTER TABLE bucket_list_items ADD COLUMN target_month INTEGER',
+      )
+    } catch (alterErr) {
+      const msg = alterErr instanceof Error ? alterErr.message : String(alterErr)
+      if (!msg.includes('duplicate column name')) {
+        console.error('[DB] bucket_list_items target_month migration:', alterErr)
+        throw alterErr
+      }
+    }
   }
 
   const oldTableRows = await db.select<{ name: string }[]>(

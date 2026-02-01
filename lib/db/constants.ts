@@ -69,6 +69,7 @@ export const DB_COLUMNS = {
     'title',
     'category_id',
     'target_year',
+    'target_month',
     'achieved_date',
     'completed',
     'order',

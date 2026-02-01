@@ -139,6 +139,7 @@ export default function BucketListPage() {
         title: input.title,
         categoryId: input.categoryId,
         targetYear: input.targetYear,
+        targetMonth: input.targetMonth,
       }
       await updateBucketListItem(editingItem.id, updateInput)
       setIsDialogOpen(false)

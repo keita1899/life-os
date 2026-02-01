@@ -36,11 +36,17 @@ export function BucketListItem({
   const { userSettings } = useUserSettings()
   const birthday = userSettings?.birthday ?? null
 
-  const ageInfo = useMemo(() => {
-    if (!item.targetYear || !birthday) return null
+  const yearLabel = useMemo(() => {
+    if (item.targetYear == null) return null
+    if (!birthday) return `${item.targetYear}年`
     const age = calculateAgeAtYear(birthday, item.targetYear)
     return age !== null ? `${item.targetYear}年（${age}歳）` : `${item.targetYear}年`
   }, [birthday, item.targetYear])
+
+  const monthLabel = useMemo(() => {
+    if (item.targetMonth == null) return null
+    return `${item.targetMonth}月`
+  }, [item.targetMonth])
 
   const achievedDateLabel = useMemo(() => {
     if (!item.achievedDate) return null
@@ -97,9 +103,14 @@ export function BucketListItem({
               {item.category.name}
             </span>
           )}
-          {ageInfo && (
+          {yearLabel && (
             <span className="rounded-md bg-stone-100 px-2 py-1 dark:bg-stone-800">
-              {ageInfo}
+              {yearLabel}
+            </span>
+          )}
+          {monthLabel && (
+            <span className="rounded-md bg-stone-100 px-2 py-1 dark:bg-stone-800">
+              {monthLabel}
             </span>
           )}
           {achievedDateLabel && (

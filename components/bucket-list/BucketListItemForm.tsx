@@ -33,6 +33,7 @@ const bucketListItemFormSchema = z.object({
   title: z.string().min(1, 'タイトルは必須です'),
   categoryId: z.string().optional(),
   targetYear: z.string().optional(),
+  targetMonth: z.string().optional(),
 })
 
 type BucketListItemFormValues = z.infer<typeof bucketListItemFormSchema>
@@ -63,11 +64,13 @@ export const BucketListItemForm = ({
           title: initialData.title,
           categoryId: initialData.categoryId?.toString() || '',
           targetYear: initialData.targetYear?.toString() || '',
+          targetMonth: initialData.targetMonth?.toString() || '',
         }
       : {
           title: '',
           categoryId: '',
           targetYear: '',
+          targetMonth: '',
         },
   })
 
@@ -109,6 +112,10 @@ export const BucketListItemForm = ({
         data.targetYear === '' || data.targetYear === undefined
           ? null
           : Number(data.targetYear),
+      targetMonth:
+        data.targetMonth === '' || data.targetMonth === undefined
+          ? null
+          : Number(data.targetMonth),
     })
   }
 
@@ -175,6 +182,35 @@ export const BucketListItemForm = ({
                     onChange={(e) => field.onChange(e.target.value)}
                   />
                 </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+
+          <FormField
+            control={form.control}
+            name="targetMonth"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>目標月</FormLabel>
+                <Select
+                  value={field.value || 'none'}
+                  onValueChange={(v) => form.setValue('targetMonth', v === 'none' ? '' : v)}
+                >
+                  <FormControl>
+                    <SelectTrigger>
+                      <SelectValue placeholder="指定なし" />
+                    </SelectTrigger>
+                  </FormControl>
+                  <SelectContent position="item-aligned">
+                    <SelectItem value="none">指定なし</SelectItem>
+                    {Array.from({ length: 12 }, (_, i) => i + 1).map((m) => (
+                      <SelectItem key={m} value={String(m)}>
+                        {m}月
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
                 <FormMessage />
               </FormItem>
             )}
