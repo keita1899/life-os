@@ -1,6 +1,6 @@
 'use client'
 
-import { getDate, endOfMonth, format } from 'date-fns'
+import { format } from 'date-fns'
 import { getWeekDays } from '@/lib/calendar/utils'
 import type { Habit } from '@/lib/types/habit'
 import type { HabitHeatmapViewMode } from '@/hooks/useHabitHeatmapView'
@@ -67,7 +67,6 @@ export function HabitHeatmap({
     )
   }
 
-  const lastDay = getDate(endOfMonth(new Date(year, month - 1)))
   const todayDay =
     now.getFullYear() === year && now.getMonth() + 1 === month
       ? now.getDate()

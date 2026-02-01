@@ -35,7 +35,7 @@ export function HabitHeatmapRow({
   onEdit,
   onDelete,
 }: HabitHeatmapRowProps) {
-  const { completions, isLoading } = useHabitCompletions(
+  const { completions, isLoading, error } = useHabitCompletions(
     habit.id,
     year,
     month,
@@ -43,6 +43,23 @@ export function HabitHeatmapRow({
   const completedDateSet = new Set(completions.map((c) => c.completedDate))
   const lastDay = getDate(endOfMonth(new Date(year, month - 1)))
   const isViewingCurrentMonth = todayDay !== null
+
+  if (error) {
+    return (
+      <tr>
+        <td className="w-12 shrink-0 border-b border-stone-200 px-2 py-1.5 dark:border-stone-800" />
+        <td className="border-b border-stone-200 px-2 py-1.5 text-sm dark:border-stone-800">
+          {habit.name}
+        </td>
+        <td
+          colSpan={lastDay + 2}
+          className="border-b border-stone-200 px-2 py-1.5 text-xs text-destructive dark:border-stone-800"
+        >
+          取得エラー: {error}
+        </td>
+      </tr>
+    )
+  }
 
   if (isLoading) {
     return (
@@ -109,6 +126,8 @@ export function HabitHeatmapRow({
                 <button
                   type="button"
                   onClick={() => onToggleToday(habit)}
+                  aria-label={`${day}日: ${completed ? '完了' : '未完了'}`}
+                  aria-pressed={completed}
                   className={cn(
                     'block h-4 w-4 rounded-sm focus:outline-none',
                     completed
