@@ -35,6 +35,7 @@ import {
 import { CSS } from '@dnd-kit/utilities'
 import { useTasks } from '@/hooks/useTasks'
 import { useMode } from '@/lib/contexts/ModeContext'
+import { MainLayout } from '@/components/layout/MainLayout'
 import { getTodayTasks } from '@/lib/tasks/utils'
 import { useStopwatch } from '@/components/focus/Stopwatch'
 import type { Task } from '@/lib/types/task'
@@ -534,36 +535,11 @@ export default function FocusPage() {
     return `${mins}分`
   }
 
-  return (
-    <div className="min-h-screen bg-background">
-      <div className="container mx-auto max-w-7xl py-8 px-4">
-        <div className="mb-6 flex items-center justify-between">
-          <div className="flex items-center gap-4">
-            {!isSessionActive && (
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={handleBack}
-              >
-                <ArrowLeft className="mr-2 h-4 w-4" />
-                戻る
-              </Button>
-            )}
-            <h1 className="text-3xl font-bold">フォーカスモード</h1>
-          </div>
-          {!isSessionActive && focusTasks.length > 0 && (
-            <Button onClick={handleStartSession} size="lg">
-              <Play className="mr-2 h-4 w-4" />
-              スタート
-            </Button>
-          )}
-        </div>
-
-        <ErrorMessage message={error || sessionError || ''} />
-
-        {isLoading ? (
-          <Loading />
-        ) : isSessionActive ? (
+  if (isSessionActive) {
+    return (
+      <div className="min-h-screen bg-background">
+        <div className="container mx-auto max-w-7xl py-8 px-4">
+          <ErrorMessage message={error || sessionError || ''} />
           <div className="flex min-h-[60vh] flex-col items-center justify-center space-y-8">
             <div className="text-center">
               <div className="mb-4 text-6xl font-mono font-bold">
@@ -589,6 +565,34 @@ export default function FocusPage() {
               </div>
             </div>
           </div>
+        </div>
+      </div>
+    )
+  }
+
+  return (
+    <MainLayout>
+      <div className="container mx-auto max-w-7xl py-8 px-4">
+        <div className="mb-6 flex items-center justify-between">
+          <div className="flex items-center gap-4">
+            <Button variant="ghost" size="sm" onClick={handleBack}>
+              <ArrowLeft className="mr-2 h-4 w-4" />
+              戻る
+            </Button>
+            <h1 className="text-3xl font-bold">フォーカスモード</h1>
+          </div>
+          {focusTasks.length > 0 && (
+            <Button onClick={handleStartSession} size="lg">
+              <Play className="mr-2 h-4 w-4" />
+              スタート
+            </Button>
+          )}
+        </div>
+
+        <ErrorMessage message={error || sessionError || ''} />
+
+        {isLoading ? (
+          <Loading />
         ) : (
           <DndContext
             sensors={sensors}
@@ -765,6 +769,6 @@ export default function FocusPage() {
           </div>
         </DialogContent>
       </Dialog>
-    </div>
+    </MainLayout>
   )
 }

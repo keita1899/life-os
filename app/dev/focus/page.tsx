@@ -36,6 +36,7 @@ import { CSS } from '@dnd-kit/utilities'
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { useDevTasks } from '@/hooks/useDevTasks'
 import { useMode } from '@/lib/contexts/ModeContext'
+import { MainLayout } from '@/components/layout/MainLayout'
 import { getTodayDevTasks } from '@/lib/tasks/utils'
 import { useStopwatch } from '@/components/focus/Stopwatch'
 import type { DevTask } from '@/lib/types/dev-task'
@@ -554,24 +555,53 @@ export default function DevFocusPage() {
     return `${mins}分`
   }
 
+  if (isSessionActive) {
+    return (
+      <div className="min-h-screen bg-background">
+        <div className="container mx-auto max-w-7xl py-8 px-4">
+          <ErrorMessage message={error || sessionError || ''} />
+          <div className="flex min-h-[60vh] flex-col items-center justify-center space-y-8">
+            <div className="text-center">
+              <div className="mb-4 text-6xl font-mono font-bold">
+                {stopwatch.formattedTime}
+              </div>
+              <div className="text-sm text-muted-foreground">
+                {currentTaskIndex + 1} / {sessionTasks.length}
+              </div>
+            </div>
+
+            <div className="w-full max-w-2xl space-y-4">
+              <div className="rounded-lg border-2 border-primary bg-primary/5 p-8 text-center dark:bg-primary/10">
+                <h2 className="text-2xl font-semibold">
+                  {sessionTasks[currentTaskIndex]?.title}
+                </h2>
+              </div>
+
+              <div className="flex justify-center">
+                <Button onClick={handleCompleteTask} size="lg" disabled={isCompleting}>
+                  <CheckCircle2 className="mr-2 h-5 w-5" />
+                  完了
+                </Button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    )
+  }
+
   return (
-    <div className="min-h-screen bg-background">
+    <MainLayout>
       <div className="container mx-auto max-w-7xl py-8 px-4">
         <div className="mb-6 flex items-center justify-between">
           <div className="flex items-center gap-4">
-            {!isSessionActive && (
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={handleBack}
-              >
-                <ArrowLeft className="mr-2 h-4 w-4" />
-                戻る
-              </Button>
-            )}
+            <Button variant="ghost" size="sm" onClick={handleBack}>
+              <ArrowLeft className="mr-2 h-4 w-4" />
+              戻る
+            </Button>
             <h1 className="text-3xl font-bold">フォーカスモード</h1>
           </div>
-          {!isSessionActive && focusTasks.length > 0 && (
+          {focusTasks.length > 0 && (
             <Button onClick={handleStartSession} size="lg">
               <Play className="mr-2 h-4 w-4" />
               スタート
@@ -598,32 +628,6 @@ export default function DevFocusPage() {
 
         {isLoading ? (
           <Loading />
-        ) : isSessionActive ? (
-          <div className="flex min-h-[60vh] flex-col items-center justify-center space-y-8">
-            <div className="text-center">
-              <div className="mb-4 text-6xl font-mono font-bold">
-                {stopwatch.formattedTime}
-              </div>
-              <div className="text-sm text-muted-foreground">
-                {currentTaskIndex + 1} / {sessionTasks.length}
-              </div>
-            </div>
-
-            <div className="w-full max-w-2xl space-y-4">
-              <div className="rounded-lg border-2 border-primary bg-primary/5 p-8 text-center dark:bg-primary/10">
-                <h2 className="text-2xl font-semibold">
-                  {sessionTasks[currentTaskIndex]?.title}
-                </h2>
-              </div>
-
-              <div className="flex justify-center">
-                <Button onClick={handleCompleteTask} size="lg" disabled={isCompleting}>
-                  <CheckCircle2 className="mr-2 h-5 w-5" />
-                  完了
-                </Button>
-              </div>
-            </div>
-          </div>
         ) : (
           <DndContext
             sensors={sensors}
@@ -800,6 +804,6 @@ export default function DevFocusPage() {
           </div>
         </DialogContent>
       </Dialog>
-    </div>
+    </MainLayout>
   )
 }
