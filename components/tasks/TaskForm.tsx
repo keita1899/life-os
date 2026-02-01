@@ -14,13 +14,6 @@ import {
 } from '@/components/ui/form'
 import { Input } from '@/components/ui/input'
 import { Button } from '@/components/ui/button'
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select'
 import type { Task, CreateTaskInput } from '@/lib/types/task'
 import {
   getTodayDateString,
@@ -126,29 +119,47 @@ export const TaskForm = ({
           render={({ field }) => (
             <FormItem>
               <FormLabel>実行日</FormLabel>
-              <div className="space-y-2">
-                <Select
-                  value={datePreset}
-                  onValueChange={handleDatePresetChange}
-                >
-                  <FormControl>
-                    <SelectTrigger>
-                      <SelectValue />
-                    </SelectTrigger>
-                  </FormControl>
-                  <SelectContent>
-                    <SelectItem value="today">今日</SelectItem>
-                    <SelectItem value="tomorrow">明日</SelectItem>
-                    <SelectItem value="none">日付なし</SelectItem>
-                    <SelectItem value="custom">日付を選択</SelectItem>
-                  </SelectContent>
-                </Select>
-                {datePreset === 'custom' && (
-                  <FormControl>
+              <FormControl>
+                <div className="space-y-2">
+                  <div className="flex flex-wrap gap-2">
+                    <Button
+                      type="button"
+                      variant={datePreset === 'today' ? 'default' : 'outline'}
+                      size="sm"
+                      onClick={() => handleDatePresetChange('today')}
+                    >
+                      今日
+                    </Button>
+                    <Button
+                      type="button"
+                      variant={datePreset === 'tomorrow' ? 'default' : 'outline'}
+                      size="sm"
+                      onClick={() => handleDatePresetChange('tomorrow')}
+                    >
+                      明日
+                    </Button>
+                    <Button
+                      type="button"
+                      variant={datePreset === 'none' ? 'default' : 'outline'}
+                      size="sm"
+                      onClick={() => handleDatePresetChange('none')}
+                    >
+                      日付なし
+                    </Button>
+                    <Button
+                      type="button"
+                      variant={datePreset === 'custom' ? 'default' : 'outline'}
+                      size="sm"
+                      onClick={() => handleDatePresetChange('custom')}
+                    >
+                      日付を選択
+                    </Button>
+                  </div>
+                  {datePreset === 'custom' && (
                     <Input type="date" {...field} value={field.value || ''} />
-                  </FormControl>
-                )}
-              </div>
+                  )}
+                </div>
+              </FormControl>
               <FormMessage />
             </FormItem>
           )}
