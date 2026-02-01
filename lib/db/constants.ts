@@ -117,6 +117,23 @@ export const DB_COLUMNS = {
     'created_at',
     'updated_at',
   ],
+  HABITS: [
+    'id',
+    'name',
+    'scheduled_time',
+    'frequency_type',
+    'frequency_days',
+    'frequency_day_of_month',
+    'order',
+    'created_at',
+    'updated_at',
+  ],
+  HABIT_COMPLETIONS: [
+    'id',
+    'habit_id',
+    'completed_date',
+    'created_at',
+  ],
   DEV_YEARLY_GOALS: [
     'id',
     'title',

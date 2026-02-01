@@ -15,6 +15,7 @@ import {
   FolderKanban,
   Eye,
   Wallet,
+  Repeat,
 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { cn } from '@/lib/utils'
@@ -58,6 +59,13 @@ const taskItems = [
     title: 'タスク',
     color:
       'bg-green-100 text-green-600 dark:bg-green-900/30 dark:text-green-400',
+  },
+  {
+    href: '/habits',
+    icon: Repeat,
+    title: '習慣',
+    color:
+      'bg-teal-100 text-teal-600 dark:bg-teal-900/30 dark:text-teal-400',
   },
 ]
 

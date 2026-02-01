@@ -189,6 +189,31 @@ async function initializeAllTables(): Promise<void> {
   `)
 
   await db.execute(`
+    CREATE TABLE IF NOT EXISTS habits (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      name TEXT NOT NULL,
+      scheduled_time TEXT,
+      frequency_type TEXT NOT NULL,
+      frequency_days TEXT,
+      frequency_day_of_month INTEGER,
+      "order" INTEGER NOT NULL DEFAULT 0,
+      created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+      updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
+    )
+  `)
+
+  await db.execute(`
+    CREATE TABLE IF NOT EXISTS habit_completions (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      habit_id INTEGER NOT NULL,
+      completed_date DATE NOT NULL,
+      created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+      UNIQUE(habit_id, completed_date),
+      FOREIGN KEY (habit_id) REFERENCES habits(id) ON DELETE CASCADE
+    )
+  `)
+
+  await db.execute(`
     CREATE TABLE IF NOT EXISTS transaction_categories (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
       type TEXT NOT NULL,
