@@ -7,12 +7,14 @@ interface WishlistListProps {
   items: WishlistItemType[]
   onEdit?: (item: WishlistItemType) => void
   onDelete?: (item: WishlistItemType) => void
+  onToggleCompletion?: (item: WishlistItemType) => void
 }
 
 export function WishlistList({
   items,
   onEdit,
   onDelete,
+  onToggleCompletion,
 }: WishlistListProps) {
   if (items.length === 0) {
     return (
@@ -30,6 +32,7 @@ export function WishlistList({
           item={item}
           onEdit={onEdit}
           onDelete={onDelete}
+          onToggleCompletion={onToggleCompletion}
         />
       ))}
     </div>

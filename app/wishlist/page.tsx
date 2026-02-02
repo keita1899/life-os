@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useMemo } from 'react'
+import { Trash2 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import {
   Accordion,
@@ -42,6 +43,7 @@ export default function WishlistPage() {
     createWishlistItem,
     updateWishlistItem,
     deleteWishlistItem,
+    deleteWishlistItemsByIds,
   } = useWishlist()
   const { categories } = useWishlistCategories()
   const [selectedCategoryId, setSelectedCategoryId] = useState<string>('all')
@@ -53,6 +55,8 @@ export default function WishlistPage() {
   const [deletingItem, setDeletingItem] = useState<WishlistItem | undefined>(
     undefined,
   )
+  const [isDeletingPurchasedDialogOpen, setIsDeletingPurchasedDialogOpen] =
+    useState(false)
   const [operationError, setOperationError] = useState<string | null>(null)
 
   const availableYears = useMemo(() => {
@@ -85,9 +89,18 @@ export default function WishlistPage() {
     return filtered
   }, [items, selectedCategoryId, selectedYear])
 
+  const unpurchasedItems = useMemo(
+    () => filteredItems.filter((item) => !item.purchased),
+    [filteredItems],
+  )
+  const purchasedItems = useMemo(
+    () => filteredItems.filter((item) => item.purchased),
+    [filteredItems],
+  )
+
   const totalPrice = useMemo(() => {
-    return calculateTotalPrice(filteredItems)
-  }, [filteredItems])
+    return calculateTotalPrice(unpurchasedItems)
+  }, [unpurchasedItems])
 
   const selectedCategoryName = useMemo(() => {
     if (selectedCategoryId === 'all') return 'すべて'
@@ -166,6 +179,38 @@ export default function WishlistPage() {
     setDeletingItem(item)
   }
 
+  const handleTogglePurchased = async (item: WishlistItem) => {
+    try {
+      setOperationError(null)
+      await updateWishlistItem(item.id, { purchased: !item.purchased })
+    } catch (err) {
+      setOperationError(
+        err instanceof Error ? err.message : '更新に失敗しました',
+      )
+    }
+  }
+
+  const handleDeletePurchasedItemsClick = () => {
+    setIsDeletingPurchasedDialogOpen(true)
+  }
+
+  const handleDeletePurchasedItems = async () => {
+    const ids = purchasedItems.map((item) => item.id)
+    if (ids.length === 0) return
+
+    try {
+      setOperationError(null)
+      await deleteWishlistItemsByIds(ids)
+      setIsDeletingPurchasedDialogOpen(false)
+    } catch (err) {
+      setOperationError(
+        err instanceof Error
+          ? err.message
+          : '購入済みの一括削除に失敗しました',
+      )
+    }
+  }
+
   return (
     <MainLayout>
       <div className="flex h-[calc(100vh-3.5rem)]">
@@ -222,9 +267,9 @@ export default function WishlistPage() {
                 <Accordion
                   type="multiple"
                   className="w-full"
-                  defaultValue={['items']}
+                  defaultValue={['unpurchased', 'purchased']}
                 >
-                  <AccordionItem value="items">
+                  <AccordionItem value="unpurchased">
                     <AccordionHeader>
                       <AccordionTrigger className="hover:no-underline">
                         <div className="flex items-center gap-2">
@@ -232,7 +277,7 @@ export default function WishlistPage() {
                             未購入
                           </h2>
                           <span className="text-sm text-muted-foreground">
-                            ({filteredItems.length})
+                            ({unpurchasedItems.length})
                           </span>
                         </div>
                       </AccordionTrigger>
@@ -240,10 +285,49 @@ export default function WishlistPage() {
                     <AccordionContent>
                       <div className="space-y-4">
                         <WishlistList
-                          items={filteredItems}
+                          items={unpurchasedItems}
                           onEdit={handleEditItem}
                           onDelete={handleDeleteClick}
+                          onToggleCompletion={handleTogglePurchased}
                         />
+                      </div>
+                    </AccordionContent>
+                  </AccordionItem>
+                  <AccordionItem value="purchased">
+                    <AccordionHeader>
+                      <AccordionTrigger className="hover:no-underline">
+                        <div className="flex items-center gap-2">
+                          <h2 className="text-lg font-semibold text-stone-900 dark:text-stone-100">
+                            購入済
+                          </h2>
+                          <span className="text-sm text-muted-foreground">
+                            ({purchasedItems.length})
+                          </span>
+                        </div>
+                      </AccordionTrigger>
+                    </AccordionHeader>
+                    <AccordionContent>
+                      <div className="space-y-4">
+                        <WishlistList
+                          items={purchasedItems}
+                          onEdit={handleEditItem}
+                          onDelete={handleDeleteClick}
+                          onToggleCompletion={handleTogglePurchased}
+                        />
+                        {purchasedItems.length > 0 && (
+                          <div className="flex justify-end">
+                            <Button
+                              type="button"
+                              variant="outline"
+                              size="sm"
+                              className="text-destructive hover:text-destructive hover:bg-destructive/10"
+                              onClick={handleDeletePurchasedItemsClick}
+                            >
+                              <Trash2 className="mr-2 h-4 w-4" />
+                              購入済みを一括削除
+                            </Button>
+                          </div>
+                        )}
                       </div>
                     </AccordionContent>
                   </AccordionItem>
@@ -270,6 +354,13 @@ export default function WishlistPage() {
               message={`「${deletingItem?.name}」を削除しますか？この操作は取り消せません。`}
               onConfirm={handleDeleteItem}
               onCancel={() => setDeletingItem(undefined)}
+            />
+
+            <DeleteConfirmDialog
+              open={isDeletingPurchasedDialogOpen}
+              message={`購入済みの欲しいもの（${purchasedItems.length}件）をすべて削除しますか？この操作は取り消せません。`}
+              onConfirm={handleDeletePurchasedItems}
+              onCancel={() => setIsDeletingPurchasedDialogOpen(false)}
             />
           </div>
         </div>

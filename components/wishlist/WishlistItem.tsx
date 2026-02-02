@@ -2,6 +2,8 @@
 
 import { useMemo } from 'react'
 import {
+  CheckCircle2,
+  Circle,
   MoreVertical,
   Pencil,
   Trash2,
@@ -20,12 +22,14 @@ interface WishlistItemProps {
   item: WishlistItemType
   onEdit?: (item: WishlistItemType) => void
   onDelete?: (item: WishlistItemType) => void
+  onToggleCompletion?: (item: WishlistItemType) => void
 }
 
 export function WishlistItem({
   item,
   onEdit,
   onDelete,
+  onToggleCompletion,
 }: WishlistItemProps) {
   const priceLabel = useMemo(() => {
     if (item.price === null) return null
@@ -36,15 +40,38 @@ export function WishlistItem({
     <div
       className={cn(
         'group flex items-start gap-3 rounded-lg border p-4',
-        'border-stone-200 bg-white dark:border-stone-800 dark:bg-stone-900',
+        item.purchased
+          ? 'border-stone-200 bg-stone-50 dark:border-stone-800 dark:bg-stone-950'
+          : 'border-stone-200 bg-white dark:border-stone-800 dark:bg-stone-900',
       )}
     >
+      <div className="mt-0.5">
+        {onToggleCompletion ? (
+          <button
+            type="button"
+            onClick={() => onToggleCompletion(item)}
+            className="focus:outline-none"
+          >
+            {item.purchased ? (
+              <CheckCircle2 className="h-5 w-5 text-green-500" />
+            ) : (
+              <Circle className="h-5 w-5 text-stone-400" />
+            )}
+          </button>
+        ) : item.purchased ? (
+          <CheckCircle2 className="h-5 w-5 text-green-500" />
+        ) : (
+          <Circle className="h-5 w-5 text-stone-400" />
+        )}
+      </div>
       <div className="flex-1 min-w-0">
         <div className="flex items-baseline gap-2">
           <span
             className={cn(
               'text-sm font-medium',
-              'text-stone-900 dark:text-stone-100',
+              item.purchased
+                ? 'text-stone-500 line-through dark:text-stone-400'
+                : 'text-stone-900 dark:text-stone-100',
             )}
           >
             {item.name}
@@ -87,7 +114,7 @@ export function WishlistItem({
             </Button>
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end">
-            {onEdit && (
+            {!item.purchased && onEdit && (
               <DropdownMenuItem onClick={() => onEdit(item)}>
                 <Pencil className="mr-2 h-4 w-4" />
                 <span>編集</span>

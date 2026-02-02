@@ -148,6 +148,7 @@ async function initializeAllTables(): Promise<void> {
       target_year INTEGER,
       target_month INTEGER,
       price INTEGER,
+      purchased INTEGER NOT NULL DEFAULT 0,
       "order" INTEGER NOT NULL DEFAULT 0,
       created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
       updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,
@@ -371,50 +372,10 @@ async function initializeAllTables(): Promise<void> {
     )
   }
 
-  if (wishlistItemColumns.has('purchased')) {
-    await db.execute('ALTER TABLE wishlist_items RENAME TO wishlist_items_old')
-
-    await db.execute(`
-      CREATE TABLE wishlist_items (
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
-        name TEXT NOT NULL,
-        category_id INTEGER,
-        target_year INTEGER,
-        target_month INTEGER,
-        price INTEGER,
-        "order" INTEGER NOT NULL DEFAULT 0,
-        created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-        updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-        FOREIGN KEY (category_id) REFERENCES wishlist_categories(id) ON DELETE SET NULL
-      )
-    `)
-
+  if (!wishlistItemColumns.has('purchased')) {
     await db.execute(
-      `INSERT INTO wishlist_items (
-        id,
-        name,
-        category_id,
-        target_year,
-        target_month,
-        price,
-        "order",
-        created_at,
-        updated_at
-      )
-      SELECT
-        id,
-        name,
-        category_id,
-        target_year,
-        target_month,
-        price,
-        "order",
-        created_at,
-        updated_at
-      FROM wishlist_items_old`,
+      'ALTER TABLE wishlist_items ADD COLUMN purchased INTEGER NOT NULL DEFAULT 0',
     )
-
-    await db.execute('DROP TABLE wishlist_items_old')
   }
 
   const devTaskColumnRows = await db.select<{ name: string }[]>(

@@ -5,6 +5,7 @@ import {
   getAllWishlistItems,
   updateWishlistItem,
   deleteWishlistItem,
+  deleteWishlistItemsByIds,
 } from '@/lib/wishlist'
 import type {
   WishlistItem,
@@ -42,6 +43,11 @@ export function useWishlist() {
     await mutate(wishlistKey)
   }
 
+  const handleDeleteWishlistItemsByIds = async (ids: number[]) => {
+    await deleteWishlistItemsByIds(ids)
+    await mutate(wishlistKey)
+  }
+
   return {
     items: data,
     isLoading,
@@ -53,6 +59,6 @@ export function useWishlist() {
     createWishlistItem: handleCreateWishlistItem,
     updateWishlistItem: handleUpdateWishlistItem,
     deleteWishlistItem: handleDeleteWishlistItem,
-    refreshWishlist: () => mutate(wishlistKey),
+    deleteWishlistItemsByIds: handleDeleteWishlistItemsByIds,
   }
 }
