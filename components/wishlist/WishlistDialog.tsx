@@ -9,6 +9,7 @@ interface WishlistDialogProps {
   onOpenChange: (open: boolean) => void
   onSubmit: (input: CreateWishlistItemInput) => Promise<void>
   item?: WishlistItem
+  defaultCategoryId?: string
 }
 
 export const WishlistDialog = ({
@@ -16,6 +17,7 @@ export const WishlistDialog = ({
   onOpenChange,
   onSubmit,
   item,
+  defaultCategoryId,
 }: WishlistDialogProps) => {
   return (
     <FormDialog
@@ -28,6 +30,7 @@ export const WishlistDialog = ({
         edit: '欲しいものを編集',
       }}
       formComponent={WishlistItemForm}
+      formProps={{ defaultCategoryId }}
     />
   )
 }

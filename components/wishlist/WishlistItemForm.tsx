@@ -42,6 +42,7 @@ interface WishlistItemFormProps {
   onSubmit: (data: CreateWishlistItemInput) => Promise<void>
   onCancel?: () => void
   initialData?: WishlistItem
+  defaultCategoryId?: string
   submitLabel?: string
 }
 
@@ -49,6 +50,7 @@ export const WishlistItemForm = ({
   onSubmit,
   onCancel,
   initialData,
+  defaultCategoryId = '',
   submitLabel = '作成',
 }: WishlistItemFormProps) => {
   const { categories, createWishlistCategory } = useWishlistCategories()
@@ -78,12 +80,12 @@ export const WishlistItemForm = ({
     } else {
       form.reset({
         name: '',
-        categoryId: '',
+        categoryId: defaultCategoryId,
         targetYear: '',
         price: '',
       })
     }
-  }, [initialData, form])
+  }, [initialData, defaultCategoryId, form])
 
   const handleCategoryChange = (value: string) => {
     if (value === 'add-new') {

@@ -3,12 +3,6 @@
 import { useState, useMemo } from 'react'
 import { Button } from '@/components/ui/button'
 import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-} from '@/components/ui/dialog'
-import {
   Accordion,
   AccordionContent,
   AccordionHeader,
@@ -17,13 +11,12 @@ import {
 } from '@/components/ui/accordion'
 import { WishlistList } from '@/components/wishlist/WishlistList'
 import { WishlistDialog } from '@/components/wishlist/WishlistDialog'
-import { WishlistCategoryManagement } from '@/components/wishlist/WishlistCategoryManagement'
+import { WishlistCategorySidebar } from '@/components/wishlist/WishlistCategorySidebar'
 import { DeleteConfirmDialog } from '@/components/ui/delete-confirm-dialog'
 import { Loading } from '@/components/ui/loading'
 import { ErrorMessage } from '@/components/ui/error-message'
 import { MainLayout } from '@/components/layout/MainLayout'
 import { useWishlist } from '@/hooks/useWishlist'
-import { useWishlistCategories } from '@/hooks/useWishlistCategories'
 import { useMode } from '@/lib/contexts/ModeContext'
 import { calculateTotalPrice } from '@/lib/wishlist'
 import {
@@ -49,7 +42,6 @@ export default function WishlistPage() {
     updateWishlistItem,
     deleteWishlistItem,
   } = useWishlist()
-  const { categories } = useWishlistCategories()
   const [selectedCategoryId, setSelectedCategoryId] = useState<string>('all')
   const [selectedYear, setSelectedYear] = useState<string>('all')
   const [isDialogOpen, setIsDialogOpen] = useState(false)
@@ -59,8 +51,6 @@ export default function WishlistPage() {
   const [deletingItem, setDeletingItem] = useState<WishlistItem | undefined>(
     undefined,
   )
-  const [isCategoryManagementOpen, setIsCategoryManagementOpen] =
-    useState(false)
   const [operationError, setOperationError] = useState<string | null>(null)
 
   const availableYears = useMemo(() => {
@@ -166,130 +156,108 @@ export default function WishlistPage() {
 
   return (
     <MainLayout>
-      <div className="container mx-auto max-w-4xl py-8 px-4">
-        <div className="mb-6">
-          <div className="flex items-center justify-between">
-            <h1 className="text-3xl font-bold">欲しいものリスト</h1>
-            <div className="flex items-center gap-2">
-              <Button
-                variant="outline"
-                onClick={() => setIsCategoryManagementOpen(true)}
-              >
-                カテゴリー管理
-              </Button>
+      <div className="flex h-[calc(100vh-3.5rem)]">
+        <WishlistCategorySidebar
+          selectedCategoryId={selectedCategoryId}
+          onSelectCategory={setSelectedCategoryId}
+        />
+        <div className="min-h-0 flex-1 overflow-y-auto">
+          <div className="container mx-auto max-w-4xl py-8 px-4">
+            <div className="mb-6 flex items-center justify-between">
+              <h1 className="text-3xl font-bold">欲しいものリスト</h1>
               <Button onClick={() => setIsDialogOpen(true)}>
                 欲しいものを追加
               </Button>
             </div>
+
+            {totalPrice > 0 && (
+              <div className="mb-6 rounded-lg border border-stone-200 bg-white p-4 dark:border-stone-800 dark:bg-stone-900">
+                <div className="text-sm text-muted-foreground">未購入の合計金額</div>
+                <div className="text-2xl font-bold">
+                  {totalPrice.toLocaleString()}円
+                </div>
+              </div>
+            )}
+
+            <ErrorMessage
+              message={operationError || error || ''}
+              onDismiss={operationError ? () => setOperationError(null) : undefined}
+            />
+
+            {isLoading ? (
+              <Loading />
+            ) : (
+              <>
+                <div className="mb-4 flex justify-end">
+                  <Select value={selectedYear} onValueChange={setSelectedYear}>
+                    <SelectTrigger className="w-[200px]">
+                      <SelectValue placeholder="年を選択" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="all">すべて</SelectItem>
+                      <SelectItem value="none">未定</SelectItem>
+                      {availableYears.map((year) => (
+                        <SelectItem key={year} value={year.toString()}>
+                          {year}年
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+                <Accordion
+                  type="multiple"
+                  className="w-full"
+                  defaultValue={['items']}
+                >
+                  <AccordionItem value="items">
+                    <AccordionHeader>
+                      <AccordionTrigger className="hover:no-underline">
+                        <div className="flex items-center gap-2">
+                          <h2 className="text-lg font-semibold text-stone-900 dark:text-stone-100">
+                            欲しいもの
+                          </h2>
+                          <span className="text-sm text-muted-foreground">
+                            ({filteredItems.length})
+                          </span>
+                        </div>
+                      </AccordionTrigger>
+                    </AccordionHeader>
+                    <AccordionContent>
+                      <div className="space-y-4">
+                        <WishlistList
+                          items={filteredItems}
+                          onEdit={handleEditItem}
+                          onDelete={handleDeleteClick}
+                        />
+                      </div>
+                    </AccordionContent>
+                  </AccordionItem>
+                </Accordion>
+              </>
+            )}
+
+            <WishlistDialog
+              open={isDialogOpen}
+              onOpenChange={handleDialogClose}
+              onSubmit={editingItem ? handleUpdateItem : handleCreateItem}
+              item={editingItem}
+              defaultCategoryId={
+                editingItem == null &&
+                selectedCategoryId !== 'all' &&
+                selectedCategoryId !== 'none'
+                  ? selectedCategoryId
+                  : undefined
+              }
+            />
+
+            <DeleteConfirmDialog
+              open={!!deletingItem}
+              message={`「${deletingItem?.name}」を削除しますか？この操作は取り消せません。`}
+              onConfirm={handleDeleteItem}
+              onCancel={() => setDeletingItem(undefined)}
+            />
           </div>
         </div>
-
-        {totalPrice > 0 && (
-          <div className="mb-6 rounded-lg border border-stone-200 bg-white p-4 dark:border-stone-800 dark:bg-stone-900">
-            <div className="text-sm text-muted-foreground">未購入の合計金額</div>
-            <div className="text-2xl font-bold">
-              {totalPrice.toLocaleString()}円
-            </div>
-          </div>
-        )}
-
-        <ErrorMessage
-          message={operationError || error || ''}
-          onDismiss={operationError ? () => setOperationError(null) : undefined}
-        />
-
-        {isLoading ? (
-          <Loading />
-        ) : (
-          <>
-            <div className="mb-4 flex justify-end gap-2">
-              <Select value={selectedCategoryId} onValueChange={setSelectedCategoryId}>
-                <SelectTrigger className="w-[200px]">
-                  <SelectValue placeholder="カテゴリーを選択" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">すべてのカテゴリー</SelectItem>
-                  <SelectItem value="none">未分類</SelectItem>
-                  {categories.map((category) => (
-                    <SelectItem key={category.id} value={category.id.toString()}>
-                      {category.name}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-              <Select value={selectedYear} onValueChange={setSelectedYear}>
-                <SelectTrigger className="w-[200px]">
-                  <SelectValue placeholder="年を選択" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">全期間</SelectItem>
-                  <SelectItem value="none">未設定</SelectItem>
-                  {availableYears.map((year) => (
-                    <SelectItem key={year} value={year.toString()}>
-                      {year}年
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-            <Accordion
-            type="multiple"
-            className="w-full"
-            defaultValue={['items']}
-          >
-              <AccordionItem value="items">
-                <AccordionHeader>
-                  <AccordionTrigger className="hover:no-underline">
-                    <div className="flex items-center gap-2">
-                      <h2 className="text-lg font-semibold text-stone-900 dark:text-stone-100">
-                        欲しいもの
-                      </h2>
-                      <span className="text-sm text-muted-foreground">
-                        ({filteredItems.length})
-                      </span>
-                    </div>
-                  </AccordionTrigger>
-                </AccordionHeader>
-                <AccordionContent>
-                  <div className="space-y-4">
-                    <WishlistList
-                      items={filteredItems}
-                      onEdit={handleEditItem}
-                      onDelete={handleDeleteClick}
-                    />
-                  </div>
-                </AccordionContent>
-              </AccordionItem>
-          </Accordion>
-          </>
-        )}
-
-        <WishlistDialog
-          open={isDialogOpen}
-          onOpenChange={handleDialogClose}
-          onSubmit={editingItem ? handleUpdateItem : handleCreateItem}
-          item={editingItem}
-        />
-
-        <Dialog
-          open={isCategoryManagementOpen}
-          onOpenChange={setIsCategoryManagementOpen}
-        >
-          <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
-            <DialogHeader>
-              <DialogTitle>カテゴリー管理</DialogTitle>
-            </DialogHeader>
-            <WishlistCategoryManagement />
-          </DialogContent>
-        </Dialog>
-
-        <DeleteConfirmDialog
-          open={!!deletingItem}
-          message={`「${deletingItem?.name}」を削除しますか？この操作は取り消せません。`}
-          onConfirm={handleDeleteItem}
-          onCancel={() => setDeletingItem(undefined)}
-        />
-
       </div>
     </MainLayout>
   )
