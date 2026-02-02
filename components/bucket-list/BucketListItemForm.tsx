@@ -15,19 +15,16 @@ import {
 import { Input } from '@/components/ui/input'
 import { Button } from '@/components/ui/button'
 import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select'
-import { BucketListCategoryDialog } from './BucketListCategoryDialog'
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from '@/components/ui/popover'
+import { ChevronDown, Plus } from 'lucide-react'
 import { useBucketListCategories } from '@/hooks/useBucketListCategories'
 import type {
   BucketListItem,
   CreateBucketListItemInput,
 } from '@/lib/types/bucket-list-item'
-import type { CreateBucketListCategoryInput } from '@/lib/types/bucket-list-category'
 
 const bucketListItemFormSchema = z.object({
   title: z.string().min(1, 'タイトルは必須です'),
@@ -54,7 +51,8 @@ export const BucketListItemForm = ({
   submitLabel = '作成',
 }: BucketListItemFormProps) => {
   const { categories, createBucketListCategory } = useBucketListCategories()
-  const [isCategoryDialogOpen, setIsCategoryDialogOpen] = useState(false)
+  const [categoryComboboxOpen, setCategoryComboboxOpen] = useState(false)
+  const [categorySearchQuery, setCategorySearchQuery] = useState('')
   const currentYear = new Date().getFullYear()
   const presetYears = [currentYear, currentYear + 1, currentYear + 2]
   const [isOtherYearActive, setIsOtherYearActive] = useState(false)
@@ -84,24 +82,29 @@ export const BucketListItemForm = ({
   }, [targetYearValue, form])
 
   const handleCategoryChange = (value: string) => {
-    if (value === 'add-new') {
-      setIsCategoryDialogOpen(true)
-    } else if (value === 'none') {
+    if (value === 'none') {
       form.setValue('categoryId', '')
     } else {
       form.setValue('categoryId', value)
     }
+    setCategoryComboboxOpen(false)
+    setCategorySearchQuery('')
   }
 
-  const handleCategoryCreate = async (input: CreateBucketListCategoryInput) => {
+  const handleCreateCategory = async () => {
+    const newName = categorySearchQuery.trim()
+    if (!newName) return
+
     try {
-      const newCategory = await createBucketListCategory(input)
+      const newCategory = await createBucketListCategory({ name: newName })
       form.setValue('categoryId', newCategory.id.toString())
-      setIsCategoryDialogOpen(false)
+      setCategoryComboboxOpen(false)
+      setCategorySearchQuery('')
     } catch (err) {
       form.setError('categoryId', {
         type: 'server',
-        message: err instanceof Error ? err.message : 'カテゴリーの作成に失敗しました',
+        message:
+          err instanceof Error ? err.message : 'カテゴリーの作成に失敗しました',
       })
     }
   }
@@ -145,31 +148,115 @@ export const BucketListItemForm = ({
           <FormField
             control={form.control}
             name="categoryId"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>カテゴリー</FormLabel>
-                <Select
-                  value={field.value || 'none'}
-                  onValueChange={handleCategoryChange}
-                >
-                  <FormControl>
-                    <SelectTrigger>
-                      <SelectValue placeholder="カテゴリーを選択（オプション）" />
-                    </SelectTrigger>
-                  </FormControl>
-                  <SelectContent position="item-aligned">
-                    <SelectItem value="none">未分類</SelectItem>
-                    {categories.map((category) => (
-                      <SelectItem key={category.id} value={category.id.toString()}>
-                        {category.name}
-                      </SelectItem>
-                    ))}
-                    <SelectItem value="add-new">+ カテゴリーを追加</SelectItem>
-                  </SelectContent>
-                </Select>
-                <FormMessage />
-              </FormItem>
-            )}
+            render={({ field }) => {
+              const selectedCategory = categories.find(
+                (c) => c.id.toString() === field.value,
+              )
+              const displayValue =
+                field.value !== '' && field.value !== undefined
+                  ? selectedCategory?.name ?? field.value
+                  : null
+              const filteredCategories =
+                categorySearchQuery.trim() === ''
+                  ? categories
+                  : categories.filter((c) =>
+                      c.name
+                        .toLowerCase()
+                        .includes(categorySearchQuery.trim().toLowerCase()),
+                    )
+              const exactMatch = categories.find(
+                (c) =>
+                  c.name.toLowerCase() ===
+                  categorySearchQuery.trim().toLowerCase(),
+              )
+              return (
+                <FormItem>
+                  <FormLabel>カテゴリー</FormLabel>
+                  <Popover
+                    open={categoryComboboxOpen}
+                    onOpenChange={setCategoryComboboxOpen}
+                  >
+                    <FormControl>
+                      <PopoverTrigger asChild>
+                        <Button
+                          type="button"
+                          variant="outline"
+                          role="combobox"
+                          aria-expanded={categoryComboboxOpen}
+                          className="h-10 w-full justify-between font-normal"
+                        >
+                          {displayValue ?? 'カテゴリーを選択（オプション）'}
+                          <ChevronDown className="h-4 w-4 shrink-0 opacity-50" />
+                        </Button>
+                      </PopoverTrigger>
+                    </FormControl>
+                    <PopoverContent
+                      className="z-[110] w-72 p-0"
+                      align="start"
+                      sideOffset={4}
+                    >
+                      <div className="p-2 border-b">
+                        <Input
+                          placeholder="検索..."
+                          value={categorySearchQuery}
+                          onChange={(e) =>
+                            setCategorySearchQuery(e.target.value)
+                          }
+                          className="h-9"
+                        />
+                      </div>
+                      <div className="min-h-[100px] max-h-[300px] overflow-y-auto p-1">
+                        {!exactMatch && categorySearchQuery.trim() !== '' && (
+                          <button
+                            type="button"
+                            className="w-full flex items-center rounded-sm px-2 py-1.5 text-left text-sm hover:bg-accent hover:text-accent-foreground border-b mb-1"
+                            onClick={handleCreateCategory}
+                          >
+                            <Plus className="mr-2 h-4 w-4" />
+                            カテゴリー「{categorySearchQuery.trim()}
+                            」を作成
+                          </button>
+                        )}
+                        {categorySearchQuery.trim() === '' && (
+                          <button
+                            type="button"
+                            className="w-full rounded-sm px-2 py-1.5 text-left text-sm hover:bg-accent hover:text-accent-foreground"
+                            onClick={() => handleCategoryChange('none')}
+                          >
+                            未分類
+                          </button>
+                        )}
+                        {filteredCategories.map((category) => (
+                          <button
+                            key={category.id}
+                            type="button"
+                            className="w-full rounded-sm px-2 py-1.5 text-left text-sm hover:bg-accent hover:text-accent-foreground"
+                            onClick={() =>
+                              handleCategoryChange(category.id.toString())
+                            }
+                          >
+                            {category.name}
+                          </button>
+                        ))}
+                        {filteredCategories.length === 0 &&
+                          categorySearchQuery.trim() !== '' && (
+                            <div className="py-6 text-center text-sm text-muted-foreground">
+                              該当するカテゴリーが見つかりません
+                            </div>
+                          )}
+                        {categories.length === 0 &&
+                          categorySearchQuery.trim() === '' && (
+                            <div className="py-6 text-center text-sm text-muted-foreground">
+                              カテゴリーがありません
+                            </div>
+                          )}
+                      </div>
+                    </PopoverContent>
+                  </Popover>
+                  <FormMessage />
+                </FormItem>
+              )
+            }}
           />
 
           <FormField
@@ -333,12 +420,6 @@ export const BucketListItemForm = ({
           </div>
         </form>
       </Form>
-
-      <BucketListCategoryDialog
-        open={isCategoryDialogOpen}
-        onOpenChange={setIsCategoryDialogOpen}
-        onSubmit={handleCategoryCreate}
-      />
     </>
   )
 }
