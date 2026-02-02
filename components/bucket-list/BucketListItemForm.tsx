@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import * as z from 'zod'
@@ -55,6 +55,9 @@ export const BucketListItemForm = ({
 }: BucketListItemFormProps) => {
   const { categories, createBucketListCategory } = useBucketListCategories()
   const [isCategoryDialogOpen, setIsCategoryDialogOpen] = useState(false)
+  const currentYear = new Date().getFullYear()
+  const presetYears = [currentYear, currentYear + 1, currentYear + 2]
+  const [isOtherYearActive, setIsOtherYearActive] = useState(false)
 
   const form = useForm<BucketListItemFormValues>({
     resolver: zodResolver(bucketListItemFormSchema),
@@ -68,10 +71,17 @@ export const BucketListItemForm = ({
       : {
           title: '',
           categoryId: defaultCategoryId,
-          targetYear: '',
+          targetYear: String(currentYear),
           targetMonth: '',
         },
   })
+
+  const targetYearValue = form.watch('targetYear')
+  useEffect(() => {
+    if (targetYearValue === '' || targetYearValue === undefined) {
+      form.setValue('targetMonth', '')
+    }
+  }, [targetYearValue, form])
 
   const handleCategoryChange = (value: string) => {
     if (value === 'add-new') {
@@ -165,51 +175,149 @@ export const BucketListItemForm = ({
           <FormField
             control={form.control}
             name="targetYear"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>目標年</FormLabel>
-                <FormControl>
-                  <Input
-                    type="number"
-                    placeholder="例: 2026"
-                    {...field}
-                    value={field.value || ''}
-                    onChange={(e) => field.onChange(e.target.value)}
-                  />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
+            render={({ field }) => {
+              const yearStr = field.value ?? ''
+              const yearNum = yearStr === '' ? null : Number(yearStr)
+              const isPreset =
+                yearStr === '' ||
+                (yearNum !== null && Number.isInteger(yearNum) && presetYears.includes(yearNum))
+              const showOtherInput = isOtherYearActive || (!isPreset && yearStr !== '')
+              return (
+                <FormItem>
+                  <FormLabel>目標年</FormLabel>
+                  <div className="flex flex-wrap gap-2">
+                    <Button
+                      type="button"
+                      variant={
+                        !showOtherInput && yearStr === String(currentYear)
+                          ? 'default'
+                          : 'outline'
+                      }
+                      size="sm"
+                      onClick={() => {
+                        setIsOtherYearActive(false)
+                        field.onChange(String(currentYear))
+                      }}
+                    >
+                      今年（{currentYear}）
+                    </Button>
+                    <Button
+                      type="button"
+                      variant={
+                        !showOtherInput && yearStr === String(currentYear + 1)
+                          ? 'default'
+                          : 'outline'
+                      }
+                      size="sm"
+                      onClick={() => {
+                        setIsOtherYearActive(false)
+                        field.onChange(String(currentYear + 1))
+                      }}
+                    >
+                      {currentYear + 1}
+                    </Button>
+                    <Button
+                      type="button"
+                      variant={
+                        !showOtherInput && yearStr === String(currentYear + 2)
+                          ? 'default'
+                          : 'outline'
+                      }
+                      size="sm"
+                      onClick={() => {
+                        setIsOtherYearActive(false)
+                        field.onChange(String(currentYear + 2))
+                      }}
+                    >
+                      {currentYear + 2}
+                    </Button>
+                    <Button
+                      type="button"
+                      variant={
+                        !showOtherInput && yearStr === ''
+                          ? 'default'
+                          : 'outline'
+                      }
+                      size="sm"
+                      onClick={() => {
+                        setIsOtherYearActive(false)
+                        field.onChange('')
+                      }}
+                    >
+                      未定
+                    </Button>
+                    <Button
+                      type="button"
+                      variant={showOtherInput ? 'default' : 'outline'}
+                      size="sm"
+                      onClick={() => {
+                        setIsOtherYearActive(true)
+                        if (
+                          yearStr !== '' &&
+                          yearNum !== null &&
+                          !presetYears.includes(yearNum)
+                        ) {
+                          field.onChange(yearStr)
+                        } else {
+                          field.onChange('')
+                        }
+                      }}
+                    >
+                      その他
+                    </Button>
+                  </div>
+                  {showOtherInput && (
+                    <FormControl className="mt-2">
+                      <Input
+                        type="number"
+                        placeholder="例: 2029"
+                        value={field.value || ''}
+                        onChange={(e) => field.onChange(e.target.value)}
+                      />
+                    </FormControl>
+                  )}
+                  <FormMessage />
+                </FormItem>
+              )
+            }}
           />
 
-          <FormField
-            control={form.control}
-            name="targetMonth"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>目標月</FormLabel>
-                <Select
-                  value={field.value || 'none'}
-                  onValueChange={(v) => form.setValue('targetMonth', v === 'none' ? '' : v)}
-                >
-                  <FormControl>
-                    <SelectTrigger>
-                      <SelectValue placeholder="指定なし" />
-                    </SelectTrigger>
-                  </FormControl>
-                  <SelectContent position="item-aligned">
-                    <SelectItem value="none">指定なし</SelectItem>
-                    {Array.from({ length: 12 }, (_, i) => i + 1).map((m) => (
-                      <SelectItem key={m} value={String(m)}>
-                        {m}月
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
+          {targetYearValue !== '' && targetYearValue !== undefined && (
+            <FormField
+              control={form.control}
+              name="targetMonth"
+              render={({ field }) => {
+                const monthValue = field.value ?? ''
+                return (
+                  <FormItem>
+                    <FormLabel>目標月</FormLabel>
+                    <div className="flex flex-wrap gap-2">
+                      <Button
+                        type="button"
+                        variant={monthValue === '' ? 'default' : 'outline'}
+                        size="sm"
+                        onClick={() => field.onChange('')}
+                      >
+                        未定
+                      </Button>
+                      {Array.from({ length: 12 }, (_, i) => i + 1).map((m) => (
+                        <Button
+                          key={m}
+                          type="button"
+                          variant={monthValue === String(m) ? 'default' : 'outline'}
+                          size="sm"
+                          onClick={() => field.onChange(String(m))}
+                        >
+                          {m}月
+                        </Button>
+                      ))}
+                    </div>
+                    <FormMessage />
+                  </FormItem>
+                )
+              }}
+            />
+          )}
 
           <div className="flex justify-end gap-2">
             {onCancel && (
