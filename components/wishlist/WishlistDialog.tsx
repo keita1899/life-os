@@ -30,7 +30,11 @@ export const WishlistDialog = ({
         edit: '欲しいものを編集',
       }}
       formComponent={WishlistItemForm}
-      formProps={{ defaultCategoryId }}
+      formProps={
+        item == null && defaultCategoryId != null
+          ? { defaultCategoryId }
+          : undefined
+      }
     />
   )
 }

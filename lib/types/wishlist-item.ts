@@ -6,6 +6,7 @@ export interface WishlistItem {
   categoryId: number | null
   category: WishlistCategory | null
   targetYear: number | null
+  targetMonth: number | null
   price: number | null
   order: number
   createdAt: string
@@ -16,6 +17,7 @@ export interface CreateWishlistItemInput {
   name: string
   categoryId?: number | null
   targetYear?: number | null
+  targetMonth?: number | null
   price?: number | null
 }
 
@@ -23,6 +25,7 @@ export interface UpdateWishlistItemInput {
   name?: string
   categoryId?: number | null
   targetYear?: number | null
+  targetMonth?: number | null
   price?: number | null
   order?: number
 }

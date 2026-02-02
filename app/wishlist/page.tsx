@@ -17,6 +17,7 @@ import { Loading } from '@/components/ui/loading'
 import { ErrorMessage } from '@/components/ui/error-message'
 import { MainLayout } from '@/components/layout/MainLayout'
 import { useWishlist } from '@/hooks/useWishlist'
+import { useWishlistCategories } from '@/hooks/useWishlistCategories'
 import { useMode } from '@/lib/contexts/ModeContext'
 import { calculateTotalPrice } from '@/lib/wishlist'
 import {
@@ -42,6 +43,7 @@ export default function WishlistPage() {
     updateWishlistItem,
     deleteWishlistItem,
   } = useWishlist()
+  const { categories } = useWishlistCategories()
   const [selectedCategoryId, setSelectedCategoryId] = useState<string>('all')
   const [selectedYear, setSelectedYear] = useState<string>('all')
   const [isDialogOpen, setIsDialogOpen] = useState(false)
@@ -87,6 +89,15 @@ export default function WishlistPage() {
     return calculateTotalPrice(filteredItems)
   }, [filteredItems])
 
+  const selectedCategoryName = useMemo(() => {
+    if (selectedCategoryId === 'all') return 'すべて'
+    if (selectedCategoryId === 'none') return '未分類'
+    const category = categories.find(
+      (c) => c.id.toString() === selectedCategoryId,
+    )
+    return category?.name ?? ''
+  }, [selectedCategoryId, categories])
+
   if (mode !== 'life') {
     return null
   }
@@ -112,6 +123,7 @@ export default function WishlistPage() {
         name: input.name,
         categoryId: input.categoryId,
         targetYear: input.targetYear,
+        targetMonth: input.targetMonth,
         price: input.price,
       }
       await updateWishlistItem(editingItem.id, updateInput)
@@ -188,7 +200,10 @@ export default function WishlistPage() {
               <Loading />
             ) : (
               <>
-                <div className="mb-4 flex justify-end">
+                <div className="mb-4 flex items-center justify-between gap-4">
+                  <h2 className="text-lg font-semibold text-stone-900 dark:text-stone-100">
+                    {selectedCategoryName}
+                  </h2>
                   <Select value={selectedYear} onValueChange={setSelectedYear}>
                     <SelectTrigger className="w-[200px]">
                       <SelectValue placeholder="年を選択" />
@@ -214,7 +229,7 @@ export default function WishlistPage() {
                       <AccordionTrigger className="hover:no-underline">
                         <div className="flex items-center gap-2">
                           <h2 className="text-lg font-semibold text-stone-900 dark:text-stone-100">
-                            欲しいもの
+                            未購入
                           </h2>
                           <span className="text-sm text-muted-foreground">
                             ({filteredItems.length})

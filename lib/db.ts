@@ -146,6 +146,7 @@ async function initializeAllTables(): Promise<void> {
       name TEXT NOT NULL,
       category_id INTEGER,
       target_year INTEGER,
+      target_month INTEGER,
       price INTEGER,
       "order" INTEGER NOT NULL DEFAULT 0,
       created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
@@ -364,6 +365,12 @@ async function initializeAllTables(): Promise<void> {
   )
   const wishlistItemColumns = new Set(wishlistItemColumnRows.map((r) => r.name))
 
+  if (!wishlistItemColumns.has('target_month')) {
+    await db.execute(
+      'ALTER TABLE wishlist_items ADD COLUMN target_month INTEGER',
+    )
+  }
+
   if (wishlistItemColumns.has('purchased')) {
     await db.execute('ALTER TABLE wishlist_items RENAME TO wishlist_items_old')
 
@@ -373,6 +380,7 @@ async function initializeAllTables(): Promise<void> {
         name TEXT NOT NULL,
         category_id INTEGER,
         target_year INTEGER,
+        target_month INTEGER,
         price INTEGER,
         "order" INTEGER NOT NULL DEFAULT 0,
         created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
@@ -387,6 +395,7 @@ async function initializeAllTables(): Promise<void> {
         name,
         category_id,
         target_year,
+        target_month,
         price,
         "order",
         created_at,
@@ -397,6 +406,7 @@ async function initializeAllTables(): Promise<void> {
         name,
         category_id,
         target_year,
+        target_month,
         price,
         "order",
         created_at,

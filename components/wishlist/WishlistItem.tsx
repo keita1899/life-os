@@ -39,14 +39,21 @@ export function WishlistItem({
         'border-stone-200 bg-white dark:border-stone-800 dark:bg-stone-900',
       )}
     >
-      <div className="flex-1">
-        <div
-          className={cn(
-            'text-sm font-medium',
-            'text-stone-900 dark:text-stone-100',
+      <div className="flex-1 min-w-0">
+        <div className="flex items-baseline gap-2">
+          <span
+            className={cn(
+              'text-sm font-medium',
+              'text-stone-900 dark:text-stone-100',
+            )}
+          >
+            {item.name}
+          </span>
+          {priceLabel && (
+            <span className="text-sm text-muted-foreground shrink-0">
+              {priceLabel}
+            </span>
           )}
-        >
-          {item.name}
         </div>
         <div className="mt-2 flex flex-wrap gap-2 text-xs text-muted-foreground">
           {item.category && (
@@ -54,14 +61,14 @@ export function WishlistItem({
               {item.category.name}
             </span>
           )}
-          {item.targetYear && (
+          {item.targetYear != null && (
             <span className="rounded-md bg-stone-100 px-2 py-1 dark:bg-stone-800">
               {item.targetYear}年
             </span>
           )}
-          {priceLabel && (
-            <span className="rounded-md bg-blue-100 px-2 py-1 text-blue-700 dark:bg-blue-900/30 dark:text-blue-300">
-              {priceLabel}
+          {item.targetMonth != null && (
+            <span className="rounded-md bg-stone-100 px-2 py-1 dark:bg-stone-800">
+              {item.targetMonth}月
             </span>
           )}
         </div>

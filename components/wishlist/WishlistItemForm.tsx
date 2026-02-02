@@ -32,8 +32,9 @@ import type { CreateWishlistCategoryInput } from '@/lib/types/wishlist-category'
 const wishlistItemFormSchema = z.object({
   name: z.string().min(1, '名前は必須です'),
   categoryId: z.string().optional(),
-  targetYear: z.string().optional(),
   price: z.string().optional(),
+  targetYear: z.string().optional(),
+  targetMonth: z.string().optional(),
 })
 
 type WishlistItemFormValues = z.infer<typeof wishlistItemFormSchema>
@@ -55,56 +56,50 @@ export const WishlistItemForm = ({
 }: WishlistItemFormProps) => {
   const { categories, createWishlistCategory } = useWishlistCategories()
   const [isCategoryDialogOpen, setIsCategoryDialogOpen] = useState(false)
-  const [selectedCategoryId, setSelectedCategoryId] = useState<string | null>(
-    null,
-  )
+  const currentYear = new Date().getFullYear()
+  const presetYears = [currentYear, currentYear + 1, currentYear + 2]
+  const [isOtherYearActive, setIsOtherYearActive] = useState(false)
 
   const form = useForm<WishlistItemFormValues>({
     resolver: zodResolver(wishlistItemFormSchema),
-    defaultValues: {
-      name: '',
-      categoryId: '',
-      targetYear: '',
-      price: '',
-    },
+    values: initialData
+      ? {
+          name: initialData.name,
+          categoryId: initialData.categoryId?.toString() || '',
+          price: initialData.price?.toString() || '',
+          targetYear: initialData.targetYear?.toString() || '',
+          targetMonth: initialData.targetMonth?.toString() || '',
+        }
+      : {
+          name: '',
+          categoryId: defaultCategoryId,
+          price: '',
+          targetYear: String(currentYear),
+          targetMonth: '',
+        },
   })
 
+  const targetYearValue = form.watch('targetYear')
   useEffect(() => {
-    if (initialData) {
-      form.reset({
-        name: initialData.name,
-        categoryId: initialData.categoryId?.toString() || '',
-        targetYear: initialData.targetYear?.toString() || '',
-        price: initialData.price?.toString() || '',
-      })
-    } else {
-      form.reset({
-        name: '',
-        categoryId: defaultCategoryId,
-        targetYear: '',
-        price: '',
-      })
+    if (targetYearValue === '' || targetYearValue === undefined) {
+      form.setValue('targetMonth', '')
     }
-  }, [initialData, defaultCategoryId, form])
+  }, [targetYearValue, form])
 
   const handleCategoryChange = (value: string) => {
     if (value === 'add-new') {
       setIsCategoryDialogOpen(true)
     } else if (value === 'none') {
       form.setValue('categoryId', '')
-      setSelectedCategoryId(null)
     } else {
       form.setValue('categoryId', value)
-      setSelectedCategoryId(value)
     }
   }
 
   const handleCategoryCreate = async (input: CreateWishlistCategoryInput) => {
     try {
       const newCategory = await createWishlistCategory(input)
-      const categoryIdStr = newCategory.id.toString()
-      form.setValue('categoryId', categoryIdStr)
-      setSelectedCategoryId(categoryIdStr)
+      form.setValue('categoryId', newCategory.id.toString())
       setIsCategoryDialogOpen(false)
     } catch (err) {
       form.setError('categoryId', {
@@ -121,14 +116,18 @@ export const WishlistItemForm = ({
         data.categoryId === '' || data.categoryId === undefined
           ? null
           : Number(data.categoryId),
-      targetYear:
-        data.targetYear === '' || data.targetYear === undefined
-          ? null
-          : Number(data.targetYear),
       price:
         data.price === '' || data.price === undefined
           ? null
           : Number(data.price),
+      targetYear:
+        data.targetYear === '' || data.targetYear === undefined
+          ? null
+          : Number(data.targetYear),
+      targetMonth:
+        data.targetMonth === '' || data.targetMonth === undefined
+          ? null
+          : Number(data.targetMonth),
     })
   }
 
@@ -182,26 +181,6 @@ export const WishlistItemForm = ({
 
           <FormField
             control={form.control}
-            name="targetYear"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>購入予定年</FormLabel>
-                <FormControl>
-                  <Input
-                    type="number"
-                    placeholder="例: 2026"
-                    {...field}
-                    value={field.value || ''}
-                    onChange={(e) => field.onChange(e.target.value)}
-                  />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-
-          <FormField
-            control={form.control}
             name="price"
             render={({ field }) => (
               <FormItem>
@@ -219,6 +198,158 @@ export const WishlistItemForm = ({
               </FormItem>
             )}
           />
+
+          <FormField
+            control={form.control}
+            name="targetYear"
+            render={({ field }) => {
+              const yearStr = field.value ?? ''
+              const yearNum = yearStr === '' ? null : Number(yearStr)
+              const isPreset =
+                yearStr === '' ||
+                (yearNum !== null &&
+                  Number.isInteger(yearNum) &&
+                  presetYears.includes(yearNum))
+              const showOtherInput =
+                isOtherYearActive || (!isPreset && yearStr !== '')
+              return (
+                <FormItem>
+                  <FormLabel>購入予定年</FormLabel>
+                  <div className="flex flex-wrap gap-2">
+                    <Button
+                      type="button"
+                      variant={
+                        !showOtherInput && yearStr === String(currentYear)
+                          ? 'default'
+                          : 'outline'
+                      }
+                      size="sm"
+                      onClick={() => {
+                        setIsOtherYearActive(false)
+                        field.onChange(String(currentYear))
+                      }}
+                    >
+                      今年（{currentYear}）
+                    </Button>
+                    <Button
+                      type="button"
+                      variant={
+                        !showOtherInput && yearStr === String(currentYear + 1)
+                          ? 'default'
+                          : 'outline'
+                      }
+                      size="sm"
+                      onClick={() => {
+                        setIsOtherYearActive(false)
+                        field.onChange(String(currentYear + 1))
+                      }}
+                    >
+                      {currentYear + 1}
+                    </Button>
+                    <Button
+                      type="button"
+                      variant={
+                        !showOtherInput && yearStr === String(currentYear + 2)
+                          ? 'default'
+                          : 'outline'
+                      }
+                      size="sm"
+                      onClick={() => {
+                        setIsOtherYearActive(false)
+                        field.onChange(String(currentYear + 2))
+                      }}
+                    >
+                      {currentYear + 2}
+                    </Button>
+                    <Button
+                      type="button"
+                      variant={
+                        !showOtherInput && yearStr === ''
+                          ? 'default'
+                          : 'outline'
+                      }
+                      size="sm"
+                      onClick={() => {
+                        setIsOtherYearActive(false)
+                        field.onChange('')
+                      }}
+                    >
+                      未定
+                    </Button>
+                    <Button
+                      type="button"
+                      variant={showOtherInput ? 'default' : 'outline'}
+                      size="sm"
+                      onClick={() => {
+                        setIsOtherYearActive(true)
+                        if (
+                          yearStr !== '' &&
+                          yearNum !== null &&
+                          !presetYears.includes(yearNum)
+                        ) {
+                          field.onChange(yearStr)
+                        } else {
+                          field.onChange('')
+                        }
+                      }}
+                    >
+                      その他
+                    </Button>
+                  </div>
+                  {showOtherInput && (
+                    <FormControl className="mt-2">
+                      <Input
+                        type="number"
+                        placeholder="例: 2029"
+                        value={field.value || ''}
+                        onChange={(e) => field.onChange(e.target.value)}
+                      />
+                    </FormControl>
+                  )}
+                  <FormMessage />
+                </FormItem>
+              )
+            }}
+          />
+
+          {targetYearValue !== '' && targetYearValue !== undefined && (
+            <FormField
+              control={form.control}
+              name="targetMonth"
+              render={({ field }) => {
+                const monthValue = field.value ?? ''
+                return (
+                  <FormItem>
+                    <FormLabel>購入予定月</FormLabel>
+                    <div className="flex flex-wrap gap-2">
+                      <Button
+                        type="button"
+                        variant={monthValue === '' ? 'default' : 'outline'}
+                        size="sm"
+                        onClick={() => field.onChange('')}
+                      >
+                        未定
+                      </Button>
+                      {Array.from({ length: 12 }, (_, i) => i + 1).map((m) => (
+                        <Button
+                          key={m}
+                          type="button"
+                          variant={
+                            monthValue === String(m) ? 'default' : 'outline'
+                          }
+                          size="sm"
+                          onClick={() => field.onChange(String(m))}
+                        >
+                          {m}月
+                        </Button>
+                      ))}
+                    </div>
+                    <FormMessage />
+                  </FormItem>
+                )
+              }}
+            />
+          )}
 
           <div className="flex justify-end gap-2">
             {onCancel && (

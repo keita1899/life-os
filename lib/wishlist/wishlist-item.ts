@@ -11,6 +11,7 @@ interface DbWishlistItem {
   name: string
   category_id: number | null
   target_year: number | null
+  target_month: number | null
   price: number | null
   order: number
   created_at: string
@@ -43,6 +44,7 @@ function mapDbWishlistItemToWishlistItem(
     categoryId: dbItem.category_id,
     category,
     targetYear: dbItem.target_year,
+    targetMonth: dbItem.target_month ?? null,
     price: dbItem.price,
     order: dbItem.order,
     createdAt: dbItem.created_at,
@@ -72,6 +74,7 @@ export async function getAllWishlistItems(): Promise<WishlistItem[]> {
         wi.name,
         wi.category_id,
         wi.target_year,
+        wi.target_month,
         wi.price,
         wi."order",
         wi.created_at,
@@ -101,12 +104,13 @@ export async function createWishlistItem(
 
   try {
     await db.execute(
-      `INSERT INTO wishlist_items (name, category_id, target_year, price, "order")
-       VALUES (?, ?, ?, ?, ?)`,
+      `INSERT INTO wishlist_items (name, category_id, target_year, target_month, price, "order")
+       VALUES (?, ?, ?, ?, ?, ?)`,
       [
         input.name,
         input.categoryId ?? null,
         input.targetYear ?? null,
+        input.targetMonth ?? null,
         input.price ?? null,
         newOrder,
       ],
@@ -118,6 +122,7 @@ export async function createWishlistItem(
         wi.name,
         wi.category_id,
         wi.target_year,
+        wi.target_month,
         wi.price,
         wi."order",
         wi.created_at,
@@ -170,6 +175,11 @@ export async function updateWishlistItem(
     updateValues.push(input.targetYear ?? null)
   }
 
+  if (input.targetMonth !== undefined) {
+    updateFields.push('target_month = ?')
+    updateValues.push(input.targetMonth ?? null)
+  }
+
   if (input.price !== undefined) {
     updateFields.push('price = ?')
     updateValues.push(input.price ?? null)
@@ -188,6 +198,7 @@ export async function updateWishlistItem(
           wi.name,
           wi.category_id,
           wi.target_year,
+          wi.target_month,
           wi.price,
           wi."order",
           wi.created_at,
@@ -225,6 +236,7 @@ export async function updateWishlistItem(
         wi.name,
         wi.category_id,
         wi.target_year,
+        wi.target_month,
         wi.price,
         wi."order",
         wi.created_at,
