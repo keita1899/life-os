@@ -1,18 +1,22 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useMemo } from 'react'
+import Link from 'next/link'
 import { MonthView } from './MonthView'
 import { WeekView } from './WeekView'
 import { CalendarViewBase } from './CalendarViewBase'
 import { MonthlyGoalCalendarForm } from '@/components/goals/MonthlyGoalCalendarForm'
+import { BucketListList } from '@/components/bucket-list/BucketListList'
 import { useGoals } from '@/hooks/useGoals'
 import { useEvents } from '@/hooks/useEvents'
 import { useTasks } from '@/hooks/useTasks'
+import { useBucketList } from '@/hooks/useBucketList'
 import { useCalendarView } from '@/hooks/useCalendarView'
 import { useUserSettings } from '@/hooks/useUserSettings'
 import { useBarcelonaMatches } from '@/hooks/useBarcelonaMatches'
 import { EventDialog } from '@/components/events/EventDialog'
 import { TaskDialog } from '@/components/tasks/TaskDialog'
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { DeleteConfirmDialog } from '@/components/ui/delete-confirm-dialog'
 import { ErrorMessage } from '@/components/ui/error-message'
 import type { CreateEventInput, Event, UpdateEventInput } from '@/lib/types/event'
@@ -57,6 +61,16 @@ export function CalendarView({ initialDate }: CalendarViewProps) {
   } = useTasks()
   const { userSettings } = useUserSettings()
   useBarcelonaMatches(userSettings?.barcelonaIcalUrl ?? null)
+  const { items: bucketListItems } = useBucketList()
+  const bucketListItemsForMonth = useMemo(() => {
+    const year = currentDate.getFullYear()
+    const month = currentDate.getMonth() + 1
+    return bucketListItems.filter(
+      (item) =>
+        item.targetYear === year &&
+        item.targetMonth === month,
+    )
+  }, [bucketListItems, currentDate])
   const [operationError, setOperationError] = useState<string | null>(null)
   const [isEventDialogOpen, setIsEventDialogOpen] = useState(false)
   const [editingEvent, setEditingEvent] = useState<Event | undefined>(undefined)
@@ -216,6 +230,25 @@ export function CalendarView({ initialDate }: CalendarViewProps) {
           />
         )}
       </CalendarViewBase>
+
+      {viewMode === 'month' && (
+        <Card className="mt-4 border-border shadow-none">
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-lg">
+              {currentDate.getFullYear()}年{currentDate.getMonth() + 1}月のやりたいこと
+            </CardTitle>
+            <Link
+              href="/bucket-list"
+              className="text-sm text-primary hover:underline"
+            >
+              やりたいことリストへ
+            </Link>
+          </CardHeader>
+          <CardContent>
+            <BucketListList items={bucketListItemsForMonth} />
+          </CardContent>
+        </Card>
+      )}
 
       <EventDialog
         open={isEventDialogOpen}
