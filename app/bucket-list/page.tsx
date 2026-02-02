@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useMemo, useEffect } from 'react'
+import { useState, useMemo } from 'react'
 import { Trash2 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import {
@@ -121,18 +121,6 @@ export default function BucketListPage() {
     values.push('completed')
     return values
   }, [incompleteByMonth])
-
-  const defaultAccordionValuesKey = useMemo(
-    () => JSON.stringify(defaultAccordionValues),
-    [defaultAccordionValues],
-  )
-
-  const [openAccordionValues, setOpenAccordionValues] = useState<string[]>(
-    () => defaultAccordionValues,
-  )
-  useEffect(() => {
-    setOpenAccordionValues(defaultAccordionValues)
-  }, [selectedYear, selectedCategoryId, items.length, defaultAccordionValuesKey])
 
   if (mode !== 'life') {
     return null
@@ -299,8 +287,8 @@ export default function BucketListPage() {
                 <Accordion
                   type="multiple"
                   className="w-full"
-                  value={openAccordionValues}
-                  onValueChange={setOpenAccordionValues}
+                  defaultValue={defaultAccordionValues}
+                  key={`${selectedYear}-${selectedCategoryId}-${items.length}`}
                 >
                   {Array.from({ length: 12 }, (_, i) => i + 1)
                     .filter((month) => (incompleteByMonth.byMonth[month] ?? []).length > 0)
