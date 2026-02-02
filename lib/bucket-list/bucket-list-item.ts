@@ -303,15 +303,18 @@ export async function deleteBucketListItem(id: number): Promise<void> {
   }
 }
 
-export async function deleteCompletedBucketListItems(): Promise<number> {
+export async function deleteBucketListItemsByIds(ids: number[]): Promise<void> {
+  if (ids.length === 0) return
+
   const db = await getDatabase()
 
   try {
-    const result = await db.execute(
-      'DELETE FROM bucket_list_items WHERE completed = 1',
+    const placeholders = ids.map(() => '?').join(', ')
+    await db.execute(
+      `DELETE FROM bucket_list_items WHERE id IN (${placeholders})`,
+      ids,
     )
-    return result.rowsAffected
   } catch (err) {
-    handleDbError(err, 'delete completed bucket list items')
+    handleDbError(err, 'delete bucket list items by ids')
   }
 }

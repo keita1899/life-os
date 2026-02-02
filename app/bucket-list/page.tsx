@@ -42,7 +42,7 @@ export default function BucketListPage() {
     updateBucketListItem,
     deleteBucketListItem,
     toggleBucketListItemCompletion,
-    deleteCompletedBucketListItems,
+    deleteBucketListItemsByIds,
   } = useBucketList()
   const [selectedCategoryId, setSelectedCategoryId] = useState<string>('all')
   const [selectedYear, setSelectedYear] = useState<string>('all')
@@ -207,9 +207,12 @@ export default function BucketListPage() {
   }
 
   const handleDeleteCompletedItems = async () => {
+    const ids = completedItems.map((item) => item.id)
+    if (ids.length === 0) return
+
     try {
       setOperationError(null)
-      await deleteCompletedBucketListItems()
+      await deleteBucketListItemsByIds(ids)
       setIsDeletingCompletedDialogOpen(false)
     } catch (err) {
       setOperationError(
@@ -416,9 +419,7 @@ export default function BucketListPage() {
 
             <DeleteConfirmDialog
               open={isDeletingCompletedDialogOpen}
-              message={`完了済みのやりたいこと（${
-                items.filter((item) => item.completed).length
-              }件）をすべて削除しますか？この操作は取り消せません。`}
+              message={`完了済みのやりたいこと（${completedItems.length}件）をすべて削除しますか？この操作は取り消せません。`}
               onConfirm={handleDeleteCompletedItems}
               onCancel={() => setIsDeletingCompletedDialogOpen(false)}
             />
