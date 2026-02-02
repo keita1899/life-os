@@ -69,6 +69,5 @@ export function useBucketList() {
     deleteBucketListItem: handleDeleteBucketListItem,
     toggleBucketListItemCompletion: handleToggleBucketListItemCompletion,
     deleteCompletedBucketListItems: handleDeleteCompletedBucketListItems,
-    refreshBucketList: () => mutate(bucketListKey),
   }
 }

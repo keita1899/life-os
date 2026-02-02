@@ -315,19 +315,3 @@ export async function deleteCompletedBucketListItems(): Promise<number> {
     handleDbError(err, 'delete completed bucket list items')
   }
 }
-
-export async function updateBucketListItemOrder(
-  id: number,
-  order: number,
-): Promise<void> {
-  const db = await getDatabase()
-
-  try {
-    await db.execute('UPDATE bucket_list_items SET "order" = ? WHERE id = ?', [
-      order,
-      id,
-    ])
-  } catch (err) {
-    handleDbError(err, 'update bucket list item order')
-  }
-}

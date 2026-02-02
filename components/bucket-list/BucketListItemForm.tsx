@@ -42,6 +42,7 @@ interface BucketListItemFormProps {
   onSubmit: (data: CreateBucketListItemInput) => Promise<void>
   onCancel?: () => void
   initialData?: BucketListItem
+  defaultCategoryId?: string
   submitLabel?: string
 }
 
@@ -49,13 +50,11 @@ export const BucketListItemForm = ({
   onSubmit,
   onCancel,
   initialData,
+  defaultCategoryId = '',
   submitLabel = '作成',
 }: BucketListItemFormProps) => {
   const { categories, createBucketListCategory } = useBucketListCategories()
   const [isCategoryDialogOpen, setIsCategoryDialogOpen] = useState(false)
-  const [selectedCategoryId, setSelectedCategoryId] = useState<string | null>(
-    null,
-  )
 
   const form = useForm<BucketListItemFormValues>({
     resolver: zodResolver(bucketListItemFormSchema),
@@ -68,7 +67,7 @@ export const BucketListItemForm = ({
         }
       : {
           title: '',
-          categoryId: '',
+          categoryId: defaultCategoryId,
           targetYear: '',
           targetMonth: '',
         },
@@ -79,19 +78,15 @@ export const BucketListItemForm = ({
       setIsCategoryDialogOpen(true)
     } else if (value === 'none') {
       form.setValue('categoryId', '')
-      setSelectedCategoryId(null)
     } else {
       form.setValue('categoryId', value)
-      setSelectedCategoryId(value)
     }
   }
 
   const handleCategoryCreate = async (input: CreateBucketListCategoryInput) => {
     try {
       const newCategory = await createBucketListCategory(input)
-      const categoryIdStr = newCategory.id.toString()
-      form.setValue('categoryId', categoryIdStr)
-      setSelectedCategoryId(categoryIdStr)
+      form.setValue('categoryId', newCategory.id.toString())
       setIsCategoryDialogOpen(false)
     } catch (err) {
       form.setError('categoryId', {
@@ -153,7 +148,7 @@ export const BucketListItemForm = ({
                     </SelectTrigger>
                   </FormControl>
                   <SelectContent position="item-aligned">
-                    <SelectItem value="none">カテゴリーなし</SelectItem>
+                    <SelectItem value="none">未分類</SelectItem>
                     {categories.map((category) => (
                       <SelectItem key={category.id} value={category.id.toString()}>
                         {category.name}

@@ -1,14 +1,8 @@
 'use client'
 
-import { useState, useMemo } from 'react'
+import { useState, useMemo, useEffect } from 'react'
 import { Trash2 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-} from '@/components/ui/dialog'
 import {
   Accordion,
   AccordionContent,
@@ -18,13 +12,12 @@ import {
 } from '@/components/ui/accordion'
 import { BucketListList } from '@/components/bucket-list/BucketListList'
 import { BucketListDialog } from '@/components/bucket-list/BucketListDialog'
-import { BucketListCategoryManagement } from '@/components/bucket-list/BucketListCategoryManagement'
+import { BucketListCategorySidebar } from '@/components/bucket-list/BucketListCategorySidebar'
 import { DeleteConfirmDialog } from '@/components/ui/delete-confirm-dialog'
 import { Loading } from '@/components/ui/loading'
 import { ErrorMessage } from '@/components/ui/error-message'
 import { MainLayout } from '@/components/layout/MainLayout'
 import { useBucketList } from '@/hooks/useBucketList'
-import { useBucketListCategories } from '@/hooks/useBucketListCategories'
 import { useMode } from '@/lib/contexts/ModeContext'
 import {
   Select,
@@ -51,7 +44,6 @@ export default function BucketListPage() {
     toggleBucketListItemCompletion,
     deleteCompletedBucketListItems,
   } = useBucketList()
-  const { categories } = useBucketListCategories()
   const [selectedCategoryId, setSelectedCategoryId] = useState<string>('all')
   const [selectedYear, setSelectedYear] = useState<string>('all')
   const [isDialogOpen, setIsDialogOpen] = useState(false)
@@ -61,8 +53,6 @@ export default function BucketListPage() {
   const [deletingItem, setDeletingItem] = useState<BucketListItem | undefined>(
     undefined,
   )
-  const [isCategoryManagementOpen, setIsCategoryManagementOpen] =
-    useState(false)
   const [isDeletingCompletedDialogOpen, setIsDeletingCompletedDialogOpen] =
     useState(false)
   const [operationError, setOperationError] = useState<string | null>(null)
@@ -70,49 +60,57 @@ export default function BucketListPage() {
   const availableYears = useMemo(() => {
     const years = new Set<number>()
     items.forEach((item) => {
-      if (item.targetYear !== null) {
-        years.add(item.targetYear)
-      }
+      if (item.targetYear !== null) years.add(item.targetYear)
     })
     return Array.from(years).sort((a, b) => b - a)
   }, [items])
 
   const filteredItems = useMemo(() => {
+    if (selectedCategoryId === 'achieved') {
+      return items.filter((item) => item.completed)
+    }
     let filtered = items
-
     if (selectedCategoryId === 'none') {
       filtered = filtered.filter((item) => item.categoryId === null)
     } else if (selectedCategoryId !== 'all') {
       const categoryId = Number(selectedCategoryId)
       filtered = filtered.filter((item) => item.categoryId === categoryId)
     }
-
     if (selectedYear === 'none') {
       filtered = filtered.filter((item) => item.targetYear === null)
     } else if (selectedYear !== 'all') {
       const year = Number(selectedYear)
       filtered = filtered.filter((item) => item.targetYear === year)
     }
-
     return filtered
   }, [items, selectedCategoryId, selectedYear])
 
-  const groupedItems = useMemo(() => {
-    const incomplete = filteredItems.filter((item) => !item.completed)
-    const completed = filteredItems.filter((item) => item.completed)
-    return [
-      {
-        key: 'incomplete',
-        title: '未完了',
-        items: incomplete,
-      },
-      {
-        key: 'completed',
-        title: '完了済み',
-        items: completed,
-      },
-    ]
-  }, [filteredItems])
+  const incompleteByMonth = useMemo(() => {
+    const yearFilter =
+      selectedYear === 'all'
+        ? () => true
+        : selectedYear === 'none'
+          ? (item: BucketListItem) => item.targetYear === null
+          : (item: BucketListItem) => item.targetYear === Number(selectedYear)
+    const incomplete = filteredItems.filter((item) => !item.completed && yearFilter(item))
+    const byMonth: Record<number, BucketListItem[]> = {}
+    const unset: BucketListItem[] = []
+    for (let m = 1; m <= 12; m++) byMonth[m] = []
+    incomplete.forEach((item) => {
+      if (item.targetMonth != null) {
+        byMonth[item.targetMonth] = byMonth[item.targetMonth] ?? []
+        byMonth[item.targetMonth].push(item)
+      } else {
+        unset.push(item)
+      }
+    })
+    return { byMonth, unset }
+  }, [filteredItems, selectedYear])
+
+  const completedItems = useMemo(
+    () => filteredItems.filter((item) => item.completed),
+    [filteredItems],
+  )
 
   if (mode !== 'life') {
     return null
@@ -212,148 +210,227 @@ export default function BucketListPage() {
     }
   }
 
+  const defaultAccordionValues = useMemo(() => {
+    const values: string[] = []
+    Array.from({ length: 12 }, (_, i) => i + 1)
+      .filter((month) => (incompleteByMonth.byMonth[month] ?? []).length > 0)
+      .forEach((month) => values.push(`month-${month}`))
+    if (incompleteByMonth.unset.length > 0) values.push('month-unset')
+    values.push('completed')
+    return values
+  }, [incompleteByMonth])
+
+  const [openAccordionValues, setOpenAccordionValues] = useState<string[]>(
+    () => defaultAccordionValues,
+  )
+  useEffect(() => {
+    setOpenAccordionValues(defaultAccordionValues)
+  }, [defaultAccordionValues])
+
   return (
     <MainLayout>
-      <div className="container mx-auto max-w-4xl py-8 px-4">
-        <div className="mb-6">
-          <div className="flex items-center justify-between">
-            <h1 className="text-3xl font-bold">やりたいことリスト</h1>
-            <div className="flex items-center gap-2">
-              <Button
-                variant="outline"
-                onClick={() => setIsCategoryManagementOpen(true)}
-              >
-                カテゴリー管理
-              </Button>
+      <div className="flex h-[calc(100vh-3.5rem)]">
+        <BucketListCategorySidebar
+          selectedCategoryId={selectedCategoryId}
+          onSelectCategory={setSelectedCategoryId}
+        />
+        <div className="min-h-0 flex-1 overflow-y-auto">
+          <div className="container mx-auto max-w-4xl py-8 px-4">
+            <div className="mb-6 flex items-center justify-between">
+              <h1 className="text-3xl font-bold">やりたいことリスト</h1>
               <Button onClick={() => setIsDialogOpen(true)}>
                 やりたいことを作成
               </Button>
             </div>
+
+            <ErrorMessage
+              message={operationError || error || ''}
+              onDismiss={operationError ? () => setOperationError(null) : undefined}
+            />
+
+            {isLoading ? (
+              <Loading />
+            ) : selectedCategoryId === 'achieved' ? (
+              <div className="space-y-4">
+                <BucketListList
+                  items={filteredItems}
+                  onEdit={handleEditItem}
+                  onDelete={handleDeleteClick}
+                  onToggleCompletion={handleToggleCompletion}
+                />
+                {filteredItems.length > 0 && (
+                  <div className="flex justify-end">
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      className="text-destructive hover:text-destructive hover:bg-destructive/10"
+                      onClick={handleDeleteCompletedItemsClick}
+                    >
+                      <Trash2 className="mr-2 h-4 w-4" />
+                      完了済みを一括削除
+                    </Button>
+                  </div>
+                )}
+              </div>
+            ) : (
+              <>
+                <div className="mb-4 flex justify-end">
+                  <Select value={selectedYear} onValueChange={setSelectedYear}>
+                    <SelectTrigger className="w-[200px]">
+                      <SelectValue placeholder="年を選択" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="all">全期間</SelectItem>
+                      <SelectItem value="none">未設定</SelectItem>
+                      {availableYears.map((year) => (
+                        <SelectItem key={year} value={year.toString()}>
+                          {year}年
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+                <Accordion
+                  type="multiple"
+                  className="w-full"
+                  value={openAccordionValues}
+                  onValueChange={setOpenAccordionValues}
+                >
+                  {Array.from({ length: 12 }, (_, i) => i + 1)
+                    .filter((month) => (incompleteByMonth.byMonth[month] ?? []).length > 0)
+                    .map((month) => {
+                      const monthItems = incompleteByMonth.byMonth[month] ?? []
+                      return (
+                        <AccordionItem
+                          key={month}
+                          value={`month-${month}`}
+                          className="border-none"
+                        >
+                          <AccordionHeader>
+                            <AccordionTrigger className="hover:no-underline py-2">
+                              <span className="inline-flex items-center gap-1">
+                                <span className="text-stone-900 dark:text-stone-100">
+                                  {month}月
+                                </span>
+                                <span className="text-sm text-muted-foreground">
+                                  ({monthItems.length})
+                                </span>
+                              </span>
+                            </AccordionTrigger>
+                          </AccordionHeader>
+                          <AccordionContent className="pt-2">
+                            <BucketListList
+                              items={monthItems}
+                              onEdit={handleEditItem}
+                              onDelete={handleDeleteClick}
+                              onToggleCompletion={handleToggleCompletion}
+                            />
+                          </AccordionContent>
+                        </AccordionItem>
+                      )
+                    })}
+                  {incompleteByMonth.unset.length > 0 && (
+                    <AccordionItem
+                      value="month-unset"
+                      className="border-none"
+                    >
+                      <AccordionHeader>
+                        <AccordionTrigger className="hover:no-underline py-2">
+                          <span className="inline-flex items-center gap-1">
+                            <span className="text-stone-900 dark:text-stone-100">
+                              未設定
+                            </span>
+                            <span className="text-sm text-muted-foreground">
+                              ({incompleteByMonth.unset.length})
+                            </span>
+                          </span>
+                        </AccordionTrigger>
+                      </AccordionHeader>
+                      <AccordionContent className="pt-2">
+                        <BucketListList
+                          items={incompleteByMonth.unset}
+                          onEdit={handleEditItem}
+                          onDelete={handleDeleteClick}
+                          onToggleCompletion={handleToggleCompletion}
+                        />
+                      </AccordionContent>
+                    </AccordionItem>
+                  )}
+                  <AccordionItem value="completed" className="border-none">
+                    <AccordionHeader>
+                      <AccordionTrigger className="hover:no-underline py-2">
+                        <span className="inline-flex items-center gap-1">
+                          <span className="text-stone-900 dark:text-stone-100">
+                            完了済み
+                          </span>
+                          <span className="text-sm text-muted-foreground">
+                            ({completedItems.length})
+                          </span>
+                        </span>
+                      </AccordionTrigger>
+                    </AccordionHeader>
+                    <AccordionContent className="pt-2">
+                      <div className="space-y-4">
+                        <BucketListList
+                          items={completedItems}
+                          onEdit={handleEditItem}
+                          onDelete={handleDeleteClick}
+                          onToggleCompletion={handleToggleCompletion}
+                        />
+                        {completedItems.length > 0 && (
+                          <div className="flex justify-end">
+                            <Button
+                              type="button"
+                              variant="outline"
+                              size="sm"
+                              className="text-destructive hover:text-destructive hover:bg-destructive/10"
+                              onClick={handleDeleteCompletedItemsClick}
+                            >
+                              <Trash2 className="mr-2 h-4 w-4" />
+                              完了済みを一括削除
+                            </Button>
+                          </div>
+                        )}
+                      </div>
+                    </AccordionContent>
+                  </AccordionItem>
+                </Accordion>
+              </>
+            )}
+
+            <BucketListDialog
+              open={isDialogOpen}
+              onOpenChange={handleDialogClose}
+              onSubmit={editingItem ? handleUpdateItem : handleCreateItem}
+              item={editingItem}
+              defaultCategoryId={
+                editingItem == null &&
+                selectedCategoryId !== 'all' &&
+                selectedCategoryId !== 'none' &&
+                selectedCategoryId !== 'achieved'
+                  ? selectedCategoryId
+                  : undefined
+              }
+            />
+
+            <DeleteConfirmDialog
+              open={!!deletingItem}
+              message={`「${deletingItem?.title}」を削除しますか？この操作は取り消せません。`}
+              onConfirm={handleDeleteItem}
+              onCancel={() => setDeletingItem(undefined)}
+            />
+
+            <DeleteConfirmDialog
+              open={isDeletingCompletedDialogOpen}
+              message={`完了済みのやりたいこと（${
+                items.filter((item) => item.completed).length
+              }件）をすべて削除しますか？この操作は取り消せません。`}
+              onConfirm={handleDeleteCompletedItems}
+              onCancel={() => setIsDeletingCompletedDialogOpen(false)}
+            />
           </div>
         </div>
-
-      <ErrorMessage
-        message={operationError || error || ''}
-        onDismiss={operationError ? () => setOperationError(null) : undefined}
-      />
-
-      {isLoading ? (
-        <Loading />
-      ) : (
-        <>
-          <div className="mb-4 flex justify-end gap-2">
-            <Select value={selectedCategoryId} onValueChange={setSelectedCategoryId}>
-              <SelectTrigger className="w-[200px]">
-                <SelectValue placeholder="カテゴリーを選択" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">すべてのカテゴリー</SelectItem>
-                <SelectItem value="none">未分類</SelectItem>
-                {categories.map((category) => (
-                  <SelectItem key={category.id} value={category.id.toString()}>
-                    {category.name}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-            <Select value={selectedYear} onValueChange={setSelectedYear}>
-              <SelectTrigger className="w-[200px]">
-                <SelectValue placeholder="年を選択" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">全期間</SelectItem>
-                <SelectItem value="none">未設定</SelectItem>
-                {availableYears.map((year) => (
-                  <SelectItem key={year} value={year.toString()}>
-                    {year}年
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
-          <Accordion
-            type="multiple"
-            className="w-full"
-            defaultValue={groupedItems.map((group) => group.key)}
-          >
-            {groupedItems.map((group) => (
-              <AccordionItem key={group.key} value={group.key}>
-                <AccordionHeader>
-                  <AccordionTrigger className="hover:no-underline">
-                    <div className="flex items-center gap-2">
-                      <h2 className="text-lg font-semibold text-stone-900 dark:text-stone-100">
-                        {group.title}
-                      </h2>
-                      <span className="text-sm text-muted-foreground">
-                        ({group.items.length})
-                      </span>
-                    </div>
-                  </AccordionTrigger>
-                </AccordionHeader>
-                <AccordionContent>
-                  <div className="space-y-4">
-                    <BucketListList
-                      items={group.items}
-                      onEdit={handleEditItem}
-                      onDelete={handleDeleteClick}
-                      onToggleCompletion={handleToggleCompletion}
-                    />
-                    {group.key === 'completed' && group.items.length > 0 && (
-                      <div className="flex justify-end">
-                        <Button
-                          type="button"
-                          variant="outline"
-                          size="sm"
-                          className="text-destructive hover:text-destructive hover:bg-destructive/10"
-                          onClick={handleDeleteCompletedItemsClick}
-                        >
-                          <Trash2 className="mr-2 h-4 w-4" />
-                          完了済みを一括削除
-                        </Button>
-                      </div>
-                    )}
-                  </div>
-                </AccordionContent>
-              </AccordionItem>
-            ))}
-          </Accordion>
-        </>
-      )}
-
-      <BucketListDialog
-        open={isDialogOpen}
-        onOpenChange={handleDialogClose}
-        onSubmit={editingItem ? handleUpdateItem : handleCreateItem}
-        item={editingItem}
-      />
-
-      <Dialog
-        open={isCategoryManagementOpen}
-        onOpenChange={setIsCategoryManagementOpen}
-      >
-        <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
-          <DialogHeader>
-            <DialogTitle>カテゴリー管理</DialogTitle>
-          </DialogHeader>
-          <BucketListCategoryManagement />
-        </DialogContent>
-      </Dialog>
-
-      <DeleteConfirmDialog
-        open={!!deletingItem}
-        message={`「${deletingItem?.title}」を削除しますか？この操作は取り消せません。`}
-        onConfirm={handleDeleteItem}
-        onCancel={() => setDeletingItem(undefined)}
-      />
-
-      <DeleteConfirmDialog
-        open={isDeletingCompletedDialogOpen}
-        message={`完了済みのやりたいこと（${
-          groupedItems.find((g) => g.key === 'completed')?.items.length ?? 0
-        }件）をすべて削除しますか？この操作は取り消せません。`}
-        onConfirm={handleDeleteCompletedItems}
-        onCancel={() => setIsDeletingCompletedDialogOpen(false)}
-      />
       </div>
     </MainLayout>
   )
