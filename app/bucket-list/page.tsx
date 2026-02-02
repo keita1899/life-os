@@ -274,8 +274,8 @@ export default function BucketListPage() {
                       <SelectValue placeholder="年を選択" />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="all">全期間</SelectItem>
-                      <SelectItem value="none">未設定</SelectItem>
+                      <SelectItem value="all">すべて</SelectItem>
+                      <SelectItem value="none">未定</SelectItem>
                       {availableYears.map((year) => (
                         <SelectItem key={year} value={year.toString()}>
                           {year}年
@@ -332,7 +332,7 @@ export default function BucketListPage() {
                         <AccordionTrigger className="hover:no-underline py-2">
                           <span className="inline-flex items-center gap-1">
                             <span className="text-stone-900 dark:text-stone-100">
-                              未設定
+                              未定
                             </span>
                             <span className="text-sm text-muted-foreground">
                               ({incompleteByMonth.unset.length})
