@@ -112,6 +112,28 @@ export default function BucketListPage() {
     [filteredItems],
   )
 
+  const defaultAccordionValues = useMemo(() => {
+    const values: string[] = []
+    Array.from({ length: 12 }, (_, i) => i + 1)
+      .filter((month) => (incompleteByMonth.byMonth[month] ?? []).length > 0)
+      .forEach((month) => values.push(`month-${month}`))
+    if (incompleteByMonth.unset.length > 0) values.push('month-unset')
+    values.push('completed')
+    return values
+  }, [incompleteByMonth])
+
+  const defaultAccordionValuesKey = useMemo(
+    () => JSON.stringify(defaultAccordionValues),
+    [defaultAccordionValues],
+  )
+
+  const [openAccordionValues, setOpenAccordionValues] = useState<string[]>(
+    () => defaultAccordionValues,
+  )
+  useEffect(() => {
+    setOpenAccordionValues(defaultAccordionValues)
+  }, [selectedYear, selectedCategoryId, items.length, defaultAccordionValuesKey])
+
   if (mode !== 'life') {
     return null
   }
@@ -209,23 +231,6 @@ export default function BucketListPage() {
       )
     }
   }
-
-  const defaultAccordionValues = useMemo(() => {
-    const values: string[] = []
-    Array.from({ length: 12 }, (_, i) => i + 1)
-      .filter((month) => (incompleteByMonth.byMonth[month] ?? []).length > 0)
-      .forEach((month) => values.push(`month-${month}`))
-    if (incompleteByMonth.unset.length > 0) values.push('month-unset')
-    values.push('completed')
-    return values
-  }, [incompleteByMonth])
-
-  const [openAccordionValues, setOpenAccordionValues] = useState<string[]>(
-    () => defaultAccordionValues,
-  )
-  useEffect(() => {
-    setOpenAccordionValues(defaultAccordionValues)
-  }, [defaultAccordionValues])
 
   return (
     <MainLayout>
