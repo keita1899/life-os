@@ -37,16 +37,16 @@ export function EventDateTime({ event }: EventDateTimeProps) {
 
     if (event.endDatetime) {
       const endDate = parseISO(event.endDatetime)
-      const endTime = format(endDate, 'HH:mm')
-      const hasEndTime = endTime !== '00:00'
-      if (hasEndTime) {
-        const endDateStr = format(endDate, 'HH:mm', { locale: ja })
-        return `${startDateStr} - ${endDateStr}`
+      const endTimeStr = format(endDate, 'HH:mm', { locale: ja })
+      const isSameDay =
+        format(startDate, 'yyyy-MM-dd') === format(endDate, 'yyyy-MM-dd')
+      if (isSameDay) {
+        return `${startDateStr} - ${endTimeStr}`
       }
-      if (format(startDate, 'yyyy-MM-dd') !== format(endDate, 'yyyy-MM-dd')) {
-        const endDateStr = format(endDate, 'yyyy年M月d日(E)', { locale: ja })
-        return `${startDateStr} - ${endDateStr}`
-      }
+      const endDateStr = format(endDate, 'yyyy年M月d日(E) HH:mm', {
+        locale: ja,
+      })
+      return `${startDateStr} - ${endDateStr}`
     }
     return startDateStr
   }, [event.startDatetime, event.endDatetime, event.allDay])

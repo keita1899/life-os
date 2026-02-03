@@ -22,7 +22,7 @@ export function EventList({ events, onEdit, onDelete }: EventListProps) {
     <div className="space-y-2">
       {events.map((event) => (
         <EventItem
-          key={event.id}
+          key={`${event.id}-${event.startDatetime}`}
           event={event}
           onEdit={onEdit}
           onDelete={onDelete}
