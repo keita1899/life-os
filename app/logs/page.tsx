@@ -2,9 +2,10 @@
 
 import { Suspense, useMemo, useState } from 'react'
 import { useSearchParams } from 'next/navigation'
-import { format, getYear } from 'date-fns'
+import { format, getYear, startOfDay, endOfDay } from 'date-fns'
 import { ja } from 'date-fns/locale/ja'
 import { parseISO, isValid, addDays, subDays } from 'date-fns'
+import { expandRecurringEvents } from '@/lib/events'
 import { useMode } from '@/lib/contexts/ModeContext'
 import { useRouter } from 'next/navigation'
 import { Button } from '@/components/ui/button'
@@ -113,10 +114,12 @@ function LogPageView({ logDate, date }: LogPageViewProps) {
     () => getTasksForDate(allTasks, logDate),
     [allTasks, logDate],
   )
-  const events = useMemo(
-    () => getEventsForDateSorted(allEvents, logDate),
-    [allEvents, logDate],
-  )
+  const events = useMemo(() => {
+    const rangeStart = startOfDay(logDate)
+    const rangeEnd = endOfDay(logDate)
+    const expanded = expandRecurringEvents(allEvents, rangeStart, rangeEnd)
+    return getEventsForDateSorted(expanded, logDate)
+  }, [allEvents, logDate])
 
   const habitsForDate = useMemo(() => {
     const filtered = allHabits.filter((h) => isHabitDueOnDate(h, logDate))
@@ -233,6 +236,10 @@ function LogPageView({ logDate, date }: LogPageViewProps) {
         allDay: input.allDay,
         category: input.category,
         description: input.description,
+        recurrenceRule: input.recurrenceRule,
+        recurrenceDaysOfWeek: input.recurrenceDaysOfWeek,
+        recurrenceDayOfMonth: input.recurrenceDayOfMonth,
+        recurrenceEndDate: input.recurrenceEndDate,
       }
       await updateEvent(editingEvent.id, updateInput)
       setIsEventDialogOpen(false)
@@ -457,7 +464,11 @@ function LogPageView({ logDate, date }: LogPageViewProps) {
 
       <DeleteConfirmDialog
         open={!!deletingEvent}
-        message={`「${deletingEvent?.title}」を削除しますか？この操作は取り消せません。`}
+        message={
+          deletingEvent?.recurrenceRule
+            ? `「${deletingEvent.title}」の繰り返し予定をすべて削除しますか？この操作は取り消せません。`
+            : `「${deletingEvent?.title}」を削除しますか？この操作は取り消せません。`
+        }
         onConfirm={handleDeleteEvent}
         onCancel={() => setDeletingEvent(undefined)}
       />

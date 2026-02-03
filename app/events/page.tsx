@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useMemo } from 'react'
+import { startOfDay, subYears, addMonths } from 'date-fns'
 import { Button } from '@/components/ui/button'
 import {
   Accordion,
@@ -17,6 +18,7 @@ import { ErrorMessage } from '@/components/ui/error-message'
 import { MainLayout } from '@/components/layout/MainLayout'
 import { useEvents } from '@/hooks/useEvents'
 import { useMode } from '@/lib/contexts/ModeContext'
+import { expandRecurringEvents } from '@/lib/events'
 import { groupEvents } from '@/lib/events/grouping'
 import type {
   CreateEventInput,
@@ -35,7 +37,14 @@ export default function EventsPage() {
   )
   const [operationError, setOperationError] = useState<string | null>(null)
 
-  const groupedEvents = useMemo(() => groupEvents(events), [events])
+  const expandedEvents = useMemo(() => {
+    const today = new Date()
+    const rangeStart = startOfDay(subYears(today, 1))
+    const rangeEnd = addMonths(today, 1)
+    return expandRecurringEvents(events, rangeStart, rangeEnd)
+  }, [events])
+
+  const groupedEvents = useMemo(() => groupEvents(expandedEvents), [expandedEvents])
 
   const handleCreateEvent = async (input: CreateEventInput) => {
     try {
@@ -61,6 +70,10 @@ export default function EventsPage() {
         allDay: input.allDay,
         category: input.category,
         description: input.description,
+        recurrenceRule: input.recurrenceRule,
+        recurrenceDaysOfWeek: input.recurrenceDaysOfWeek,
+        recurrenceDayOfMonth: input.recurrenceDayOfMonth,
+        recurrenceEndDate: input.recurrenceEndDate,
       }
       await updateEvent(editingEvent.id, updateInput)
       setIsDialogOpen(false)
@@ -166,7 +179,11 @@ export default function EventsPage() {
 
       <DeleteConfirmDialog
         open={!!deletingEvent}
-        message={`「${deletingEvent?.title}」を削除しますか？この操作は取り消せません。`}
+        message={
+          deletingEvent?.recurrenceRule
+            ? `「${deletingEvent.title}」の繰り返し予定をすべて削除しますか？この操作は取り消せません。`
+            : `「${deletingEvent?.title}」を削除しますか？この操作は取り消せません。`
+        }
         onConfirm={handleDeleteEvent}
         onCancel={() => setDeletingEvent(undefined)}
       />
