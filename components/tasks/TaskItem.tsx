@@ -100,8 +100,8 @@ export function TaskItem({
       className={cn(
         'group flex items-start gap-3 rounded-lg border p-4',
         task.completed
-          ? 'border-stone-200 bg-stone-50 dark:border-stone-800 dark:bg-stone-950'
-          : 'border-stone-200 bg-white dark:border-stone-800 dark:bg-stone-900',
+          ? 'border-stone-200/60 bg-stone-900/5 dark:border-stone-700/40 dark:bg-stone-900/20'
+          : 'border-stone-200/60 bg-stone-900/10 dark:border-stone-700/40 dark:bg-stone-900/20',
       )}
     >
       <div className="mt-0.5">
@@ -114,7 +114,7 @@ export function TaskItem({
             {task.completed ? (
               <CheckCircle2 className="h-5 w-5 text-green-500" />
             ) : (
-              <Circle className="h-5 w-5 text-stone-400" />
+              <Circle className="h-5 w-5 text-red-500/40 dark:text-red-500/50" />
             )}
           </button>
         ) : task.completed ? (
@@ -151,7 +151,7 @@ export function TaskItem({
                   dateLabelStyle,
                 )}
               >
-                {dateLabel?.text ?? '日付なし'}
+                {dateLabel?.text ?? '未定'}
               </button>
             </PopoverTrigger>
             <PopoverContent className="w-48 p-1" align="end">
@@ -176,7 +176,7 @@ export function TaskItem({
                     className="flex w-full items-center rounded-sm px-2 py-1.5 text-sm hover:bg-stone-100 dark:hover:bg-stone-800"
                     onClick={() => handleDateSelect(null)}
                   >
-                    日付なし
+                    未定
                   </button>
                   <div className="my-1 h-px bg-stone-200 dark:bg-stone-700" />
                   <button
