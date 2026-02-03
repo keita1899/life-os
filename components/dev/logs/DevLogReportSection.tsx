@@ -59,7 +59,7 @@ export function DevLogReportSection({
   }
 
   return (
-    <Card>
+    <Card className="border-stone-200/60 dark:border-stone-700/40">
       <CardHeader>
         <CardTitle className="text-lg">日報</CardTitle>
       </CardHeader>

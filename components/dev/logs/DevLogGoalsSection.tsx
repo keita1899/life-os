@@ -23,7 +23,7 @@ export function DevLogGoalsSection({
     weeklyGoals.length > 0
 
   return (
-    <Card>
+    <Card className="border-stone-200/60 dark:border-stone-700/40">
       <CardHeader>
         <CardTitle className="text-lg">目標</CardTitle>
       </CardHeader>
