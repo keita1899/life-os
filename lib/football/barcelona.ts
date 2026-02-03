@@ -40,7 +40,7 @@ export async function syncBarcelonaMatches(icalUrl: string): Promise<number> {
       endDatetime: match.endDatetime,
       allDay: false,
       category: 'sports',
-      description: match.description,
+      description: null,
     })
   }
 

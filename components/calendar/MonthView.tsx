@@ -32,6 +32,7 @@ import {
   isBarcelonaMatch,
   getBarcelonaMatchBackground,
   BARCELONA_MATCH_TEXT_COLOR,
+  BARCELONA_MATCH_TITLE_COLOR,
 } from '@/lib/football'
 import { EVENT_CATEGORY_COLORS } from '@/lib/events/constants'
 
@@ -117,7 +118,11 @@ function EventPopoverWrapper({
           {!event.allDay && time && (
             <span className="mr-1 text-[10px] opacity-70">{time}</span>
           )}
-          {title}
+          {isBarca ? (
+            <span style={{ color: BARCELONA_MATCH_TITLE_COLOR }}>{title}</span>
+          ) : (
+            title
+          )}
         </button>
       </PopoverTrigger>
       <PopoverContent>

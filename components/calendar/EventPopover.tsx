@@ -10,7 +10,7 @@ import {
 import {
   isBarcelonaMatch,
   getBarcelonaMatchBackground,
-  BARCELONA_MATCH_TEXT_COLOR,
+  BARCELONA_MATCH_TITLE_COLOR,
 } from '@/lib/football'
 import { EventDateTime } from '@/components/events/EventDateTime'
 import type { Event } from '@/lib/types/event'
@@ -63,9 +63,23 @@ export function EventPopoverContent({
   const isBarca = isBarcelonaMatch(event)
 
   return (
-    <div className="space-y-3">
+    <div
+      className={cn(
+        'space-y-3 rounded-md p-2',
+        isBarca && 'text-white',
+      )}
+      style={
+        isBarca ? { background: getBarcelonaMatchBackground(isDark) } : undefined
+      }
+    >
       <div className="flex items-start justify-between gap-2">
-        <h3 className="min-w-0 flex-1 text-sm font-semibold text-stone-900 dark:text-stone-100">
+        <h3
+          className={cn(
+            'min-w-0 flex-1 text-sm font-semibold',
+            !isBarca && 'text-stone-900 dark:text-stone-100',
+          )}
+          style={isBarca ? { color: BARCELONA_MATCH_TITLE_COLOR } : undefined}
+        >
           {event.title}
         </h3>
         {(onEdit || onDelete) && (
@@ -75,7 +89,7 @@ export function EventPopoverContent({
                 type="button"
                 size="icon"
                 variant="ghost"
-                className="h-7 w-7"
+                className={cn('h-7 w-7', isBarca && 'text-white hover:bg-white/20')}
                 onClick={() => onEdit(event)}
               >
                 <Pencil className="h-4 w-4" />
@@ -87,7 +101,12 @@ export function EventPopoverContent({
                 type="button"
                 size="icon"
                 variant="ghost"
-                className="h-7 w-7 text-destructive hover:text-destructive hover:bg-destructive/10"
+                className={cn(
+                  'h-7 w-7',
+                  isBarca
+                    ? 'text-white hover:bg-white/20'
+                    : 'text-destructive hover:text-destructive hover:bg-destructive/10',
+                )}
                 onClick={() => onDelete(event)}
               >
                 <Trash2 className="h-4 w-4" />
@@ -97,12 +116,24 @@ export function EventPopoverContent({
           </div>
         )}
       </div>
-      <div className="space-y-2 text-xs text-muted-foreground">
+      <div
+        className={cn(
+          'space-y-2 text-xs',
+          isBarca ? 'text-white/90' : 'text-muted-foreground',
+        )}
+      >
         <EventDateTime event={event} />
         {event.allDay && (
           <div className="flex items-center gap-2">
             <Calendar className="h-3 w-3" />
-            <span className="rounded-md bg-blue-100 px-2 py-0.5 text-blue-700 dark:bg-blue-900/30 dark:text-blue-300">
+            <span
+              className={cn(
+                'rounded-md px-2 py-0.5',
+                isBarca
+                  ? 'bg-white/20 text-white'
+                  : 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-300',
+              )}
+            >
               終日
             </span>
           </div>
@@ -112,25 +143,25 @@ export function EventPopoverContent({
             <span
               className={cn(
                 'rounded-md px-2 py-0.5',
-                isBarca
-                  ? BARCELONA_MATCH_TEXT_COLOR
-                  : EVENT_CATEGORY_COLORS[event.category],
+                !isBarca && EVENT_CATEGORY_COLORS[event.category],
+                isBarca && 'bg-white/20',
               )}
               style={
-                isBarca
-                  ? {
-                      background: getBarcelonaMatchBackground(isDark),
-                    }
-                  : undefined
+                isBarca ? { color: BARCELONA_MATCH_TITLE_COLOR } : undefined
               }
             >
-              {EVENT_CATEGORY_LABELS[event.category]}
+              {isBarca ? 'Barca' : EVENT_CATEGORY_LABELS[event.category]}
             </span>
           </div>
         )}
         {event.description && (
           <div className="pt-1">
-            <p className="text-xs text-stone-600 dark:text-stone-400">
+            <p
+              className={cn(
+                'text-xs',
+                isBarca ? 'text-white/80' : 'text-stone-600 dark:text-stone-400',
+              )}
+            >
               {event.description}
             </p>
           </div>

@@ -29,6 +29,7 @@ import {
   isBarcelonaMatch,
   getBarcelonaMatchBackground,
   BARCELONA_MATCH_TEXT_COLOR,
+  BARCELONA_MATCH_TITLE_COLOR,
 } from '@/lib/football'
 import { EVENT_CATEGORY_COLORS } from '@/lib/events/constants'
 
@@ -113,7 +114,14 @@ function EventPopoverWrapper({
                 {formatEventTime(event)}
               </span>
             )}
-            <span className="font-medium line-clamp-2">{event.title}</span>
+            <span
+              className="font-medium line-clamp-2"
+              style={
+                isBarca ? { color: BARCELONA_MATCH_TITLE_COLOR } : undefined
+              }
+            >
+              {event.title}
+            </span>
           </div>
         </button>
       </PopoverTrigger>

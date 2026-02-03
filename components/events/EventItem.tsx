@@ -17,7 +17,7 @@ import {
 import {
   isBarcelonaMatch,
   getBarcelonaMatchBackground,
-  BARCELONA_MATCH_TEXT_COLOR,
+  BARCELONA_MATCH_TITLE_COLOR,
 } from '@/lib/football'
 import { EventDateTime } from './EventDateTime'
 import type { Event } from '@/lib/types/event'
@@ -61,44 +61,76 @@ export function EventItem({ event, onEdit, onDelete }: EventItemProps) {
     }
   }, [])
 
+  const isBarca = isBarcelonaMatch(event)
+
   return (
-    <div className="group flex items-start gap-3 rounded-lg border border-stone-200 bg-white p-4 dark:border-stone-800 dark:bg-stone-900">
+    <div
+      className={cn(
+        'group flex items-start gap-3 rounded-lg border p-4',
+        isBarca
+          ? 'border-transparent text-white'
+          : 'border-stone-200 bg-white dark:border-stone-800 dark:bg-stone-900',
+      )}
+      style={
+        isBarca ? { background: getBarcelonaMatchBackground(isDark) } : undefined
+      }
+    >
       <div className="mt-0.5">
-        <Calendar className="h-5 w-5 text-blue-500" />
+        <Calendar
+          className={cn('h-5 w-5', isBarca ? 'text-white' : 'text-blue-500')}
+        />
       </div>
       <div className="flex-1">
-        <div className="text-sm font-medium text-stone-900 dark:text-stone-100">
+        <div
+          className={cn(
+            'text-sm font-medium',
+            !isBarca && 'text-stone-900 dark:text-stone-100',
+          )}
+          style={isBarca ? { color: BARCELONA_MATCH_TITLE_COLOR } : undefined}
+        >
           {event.title}
         </div>
-        <div className="mt-2 flex items-center gap-4 text-xs text-muted-foreground">
+        <div
+          className={cn(
+            'mt-2 flex items-center gap-4 text-xs',
+            isBarca ? 'text-white/90' : 'text-muted-foreground',
+          )}
+        >
           <EventDateTime event={event} />
           {event.category && (
             <span
               className={cn(
                 'rounded-md px-2 py-0.5',
-                isBarcelonaMatch(event)
-                  ? BARCELONA_MATCH_TEXT_COLOR
-                  : EVENT_CATEGORY_COLORS[event.category],
+                !isBarca && EVENT_CATEGORY_COLORS[event.category],
+                isBarca && 'bg-white/20',
               )}
               style={
-                isBarcelonaMatch(event)
-                  ? {
-                      background: getBarcelonaMatchBackground(isDark),
-                    }
-                  : undefined
+                isBarca ? { color: BARCELONA_MATCH_TITLE_COLOR } : undefined
               }
             >
-              {EVENT_CATEGORY_LABELS[event.category]}
+              {isBarca ? 'Barca' : EVENT_CATEGORY_LABELS[event.category]}
             </span>
           )}
           {event.allDay && (
-            <span className="rounded-md bg-blue-100 px-2 py-0.5 text-blue-700 dark:bg-blue-900/30 dark:text-blue-300">
+            <span
+              className={cn(
+                'rounded-md px-2 py-0.5',
+                isBarca
+                  ? 'bg-white/20 text-white'
+                  : 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-300',
+              )}
+            >
               終日
             </span>
           )}
         </div>
         {event.description && (
-          <div className="mt-2 text-xs text-muted-foreground">
+          <div
+            className={cn(
+              'mt-2 text-xs',
+              isBarca ? 'text-white/80' : 'text-muted-foreground',
+            )}
+          >
             {event.description}
           </div>
         )}
