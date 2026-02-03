@@ -187,7 +187,7 @@ export default function HabitsPage() {
             </Button>
           </div>
         ) : (
-          <Card>
+          <Card className="border-stone-200/60 dark:border-stone-700/40">
             <CardHeader>
               <div className="flex flex-wrap items-center justify-between gap-2">
                 <CardTitle className="text-lg">実行記録</CardTitle>
