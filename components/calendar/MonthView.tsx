@@ -24,7 +24,6 @@ import {
 import { EventPopoverContent } from './EventPopover'
 import { TaskPopoverContent } from './TaskPopover'
 import { CheckCircle2, Circle } from 'lucide-react'
-import type { MonthlyGoal } from '@/lib/types/monthly-goal'
 import type { Event } from '@/lib/types/event'
 import type { Task } from '@/lib/types/task'
 import { getTasksForDate } from '@/lib/logs/utils'
@@ -369,7 +368,6 @@ function DateCell({
 
 interface MonthViewProps {
   currentDate: Date
-  monthlyGoals: MonthlyGoal[]
   events?: Event[]
   tasks?: Task[]
   weekStartDay?: number
@@ -382,7 +380,6 @@ interface MonthViewProps {
 
 export function MonthView({
   currentDate,
-  monthlyGoals: _monthlyGoals,
   events = [],
   tasks = [],
   weekStartDay = 0,

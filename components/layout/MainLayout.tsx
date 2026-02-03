@@ -32,7 +32,7 @@ export function MainLayout({ children }: MainLayoutProps) {
     setIsSidebarOpen(open)
     try {
       localStorage.setItem(SIDEBAR_STORAGE_KEY, String(open))
-    } catch (e) {
+    } catch {
       // localStorage access failed, ignore safely
     }
   }, [])

@@ -20,7 +20,6 @@ import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover
 import { EventPopoverContent } from './EventPopover'
 import { TaskPopoverContent } from './TaskPopover'
 import { WeeklyGoalForm } from '@/components/goals/WeeklyGoalForm'
-import type { MonthlyGoal } from '@/lib/types/monthly-goal'
 import type { WeeklyGoal } from '@/lib/types/weekly-goal'
 import type { Event } from '@/lib/types/event'
 import type { Task } from '@/lib/types/task'
@@ -372,7 +371,6 @@ function WeekDateCell({
 
 interface WeekViewProps {
   currentDate: Date
-  monthlyGoals: MonthlyGoal[]
   weeklyGoals: WeeklyGoal[]
   events?: Event[]
   tasks?: Task[]
@@ -387,7 +385,6 @@ interface WeekViewProps {
 
 export function WeekView({
   currentDate,
-  monthlyGoals: _monthlyGoals,
   weeklyGoals,
   events = [],
   tasks = [],

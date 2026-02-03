@@ -79,7 +79,7 @@ export default function KakeiboPage() {
 
   const incomeCategories = useTransactionCategories('income')
   const expenseCategories = useTransactionCategories('expense')
-  const { userSettings, updateUserSettings, refreshUserSettings } = useUserSettings()
+  const { userSettings, updateUserSettings } = useUserSettings()
 
   const filteredTransactions = useMemo(() => {
     let filtered = transactions

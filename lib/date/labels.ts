@@ -1,12 +1,9 @@
-import { parseISO } from 'date-fns'
 import {
   getTodayDate,
-  getTomorrowDate,
   getTodayDateString,
   getTomorrowDateString,
   parseDateString,
   formatMonthDayDisplay,
-  formatDateDisplay,
 } from './formats'
 
 export type DateLabelType = 'today' | 'tomorrow' | 'overdue' | 'future'
@@ -22,7 +19,6 @@ export function getDateLabel(
   if (!dateStr) return null
 
   const today = getTodayDate()
-  const tomorrow = getTomorrowDate()
   const todayStr = getTodayDateString()
   const tomorrowStr = getTomorrowDateString()
 

@@ -32,7 +32,6 @@ import {
   getDevTasksForDate,
 } from '@/lib/dev/logs/utils'
 import type { Task, CreateTaskInput } from '@/lib/types/task'
-import type { DevTask } from '@/lib/types/dev-task'
 import type { UpdateDevDailyLogInput } from '@/lib/types/dev-daily-log'
 import Link from 'next/link'
 

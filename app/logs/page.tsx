@@ -13,7 +13,6 @@ import { CalendarPlus, CheckSquare, ChevronLeft, ChevronRight, Focus } from 'luc
 import { useGoals } from '@/hooks/useGoals'
 import { useTasks } from '@/hooks/useTasks'
 import { useEvents } from '@/hooks/useEvents'
-import { useUserSettings } from '@/hooks/useUserSettings'
 import { useDailyLog } from '@/hooks/useDailyLog'
 import { useHabits } from '@/hooks/useHabits'
 import { useHabitCompletionsByDate } from '@/hooks/useHabitCompletions'
@@ -81,7 +80,6 @@ function LogPageView({ logDate, date }: LogPageViewProps) {
     updateEvent,
     deleteEvent,
   } = useEvents()
-  const { userSettings } = useUserSettings()
   const {
     dailyLog,
     isLoading: isLoadingDailyLog,
@@ -96,8 +94,6 @@ function LogPageView({ logDate, date }: LogPageViewProps) {
     deleteCompletion: deleteHabitCompletion,
   } = useHabitCompletionsByDate(date)
 
-  const weekStartDay = userSettings?.weekStartDay ?? 1
-
   const yearlyGoals = useMemo(
     () => getYearlyGoalsForDate(allYearlyGoals, logDate),
     [allYearlyGoals, logDate],
@@ -107,8 +103,8 @@ function LogPageView({ logDate, date }: LogPageViewProps) {
     [allMonthlyGoals, logDate],
   )
   const weeklyGoals = useMemo(
-    () => getWeeklyGoalsForDate(allWeeklyGoals, logDate, weekStartDay),
-    [allWeeklyGoals, logDate, weekStartDay],
+    () => getWeeklyGoalsForDate(allWeeklyGoals, logDate),
+    [allWeeklyGoals, logDate],
   )
   const tasks = useMemo(
     () => getTasksForDate(allTasks, logDate),

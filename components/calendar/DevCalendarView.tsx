@@ -193,7 +193,6 @@ export function DevCalendarView({ initialDate }: DevCalendarViewProps) {
         {viewMode === 'month' ? (
           <MonthView
             currentDate={currentDate}
-            monthlyGoals={monthlyGoals}
             events={[]}
             tasks={calendarTasks}
             weekStartDay={weekStartDay}
@@ -204,7 +203,6 @@ export function DevCalendarView({ initialDate }: DevCalendarViewProps) {
         ) : (
           <WeekView
             currentDate={currentDate}
-            monthlyGoals={monthlyGoals}
             weeklyGoals={weeklyGoals}
             events={[]}
             tasks={calendarTasks}

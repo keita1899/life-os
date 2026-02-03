@@ -13,7 +13,6 @@ import { MonthlyGoalDialog } from '@/components/dev/goals/MonthlyGoalDialog'
 import { DeleteConfirmDialog } from '@/components/ui/delete-confirm-dialog'
 import { YearlyGoalsSection } from '@/components/dev/goals/YearlyGoalsSection'
 import { MonthlyGoalsSection } from '@/components/dev/goals/MonthlyGoalsSection'
-import { updateDevMonthlyGoal } from '@/lib/dev/goals/monthly'
 import type {
   DevYearlyGoal,
   CreateDevYearlyGoalInput,

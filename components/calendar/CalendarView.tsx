@@ -223,7 +223,6 @@ export function CalendarView({ initialDate }: CalendarViewProps) {
         {viewMode === 'month' ? (
           <MonthView
             currentDate={currentDate}
-            monthlyGoals={monthlyGoals}
             events={expandedEvents}
             tasks={tasks}
             weekStartDay={weekStartDay}
@@ -236,7 +235,6 @@ export function CalendarView({ initialDate }: CalendarViewProps) {
         ) : (
           <WeekView
             currentDate={currentDate}
-            monthlyGoals={monthlyGoals}
             weeklyGoals={weeklyGoals}
             events={expandedEvents}
             tasks={tasks}

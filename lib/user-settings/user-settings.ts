@@ -87,7 +87,7 @@ export async function updateUserSettings(
     } else {
       currentSettings = mapDbUserSettingsToUserSettings(result[0])
     }
-  } catch (err) {
+  } catch {
     currentSettings = await getUserSettings()
   }
 

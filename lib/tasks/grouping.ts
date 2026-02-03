@@ -3,7 +3,6 @@ import {
   getTodayDate,
   getTodayDateString,
   getTomorrowDateString,
-  parseDateString,
 } from '@/lib/date/formats'
 import { categorizeDate } from '@/lib/date/labels'
 import type { Task } from '@/lib/types/task'

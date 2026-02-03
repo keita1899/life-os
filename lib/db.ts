@@ -731,7 +731,7 @@ async function initializeAllTables(): Promise<void> {
         'ALTER TABLE bucket_list_items ADD COLUMN target_month INTEGER',
       )
     }
-  } catch (bucketListMigrationErr) {
+  } catch {
     try {
       await db.execute(
         'ALTER TABLE bucket_list_items ADD COLUMN target_month INTEGER',

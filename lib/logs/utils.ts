@@ -27,7 +27,6 @@ export function getMonthlyGoalsForDate(
 export function getWeeklyGoalsForDate(
   goals: WeeklyGoal[],
   date: Date,
-  weekStartDay: number = 1,
 ): WeeklyGoal[] {
   const weekStartsOn = 1
   const weekStart = startOfWeek(date, { weekStartsOn })
