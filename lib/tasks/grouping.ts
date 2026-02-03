@@ -29,7 +29,7 @@ function createInitialGroups(): {
   overdueGroup: TaskGroup
 } {
   return {
-    noneGroup: { key: GROUP_KEYS.NONE, title: '日付なし', tasks: [] },
+    noneGroup: { key: GROUP_KEYS.NONE, title: '未定', tasks: [] },
     todayGroup: { key: GROUP_KEYS.TODAY, title: '今日', tasks: [] },
     tomorrowGroup: { key: GROUP_KEYS.TOMORROW, title: '明日', tasks: [] },
     overdueGroup: { key: GROUP_KEYS.OVERDUE, title: '期限切れ', tasks: [] },

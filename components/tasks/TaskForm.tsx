@@ -144,7 +144,7 @@ export const TaskForm = ({
                       size="sm"
                       onClick={() => handleDatePresetChange('none')}
                     >
-                      日付なし
+                      未定
                     </Button>
                     <Button
                       type="button"
