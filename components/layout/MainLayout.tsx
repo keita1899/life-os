@@ -1,8 +1,10 @@
 'use client'
 
 import { useCallback, useEffect, useState } from 'react'
+import { useMode } from '@/lib/contexts/ModeContext'
 import { Header } from './Header'
 import { Sidebar } from './Sidebar'
+import { cn } from '@/lib/utils'
 
 interface MainLayoutProps {
   children: React.ReactNode
@@ -23,6 +25,7 @@ function getInitialSidebarState(): boolean {
 }
 
 export function MainLayout({ children }: MainLayoutProps) {
+  const { mode } = useMode()
   const [isSidebarOpen, setIsSidebarOpen] = useState(getInitialSidebarState)
 
   const handleOpenChange = useCallback((open: boolean): void => {
@@ -68,7 +71,14 @@ export function MainLayout({ children }: MainLayoutProps) {
       <Header onMenuClick={handleMenuClick} />
       <div className="flex flex-1">
         <Sidebar open={isSidebarOpen} onOpenChange={handleOpenChange} />
-        <main className="flex-1">{children}</main>
+        <main
+          className={cn(
+            'flex-1',
+            mode === 'development' && 'bg-slate-950',
+          )}
+        >
+          {children}
+        </main>
       </div>
     </div>
   )

@@ -106,14 +106,11 @@ export function ModeSwitch() {
         className={cn(
           'flex-1 transition-all',
           mode === 'life'
-            ? 'bg-primary text-primary-foreground hover:bg-primary/90'
-            : 'hover:bg-accent',
+            ? 'bg-white text-black hover:bg-white/90 dark:bg-white dark:text-black dark:hover:bg-white/90'
+            : 'bg-black text-white hover:bg-black/90 dark:bg-black dark:text-white dark:hover:bg-black/90',
         )}
       >
-        <span className="flex items-center justify-between w-full">
-          <span>ライフモード</span>
-          <span className="ml-2 text-xs opacity-60">L</span>
-        </span>
+        Life
       </Button>
       <Button
         variant="ghost"
@@ -122,14 +119,11 @@ export function ModeSwitch() {
         className={cn(
           'flex-1 transition-all',
           mode === 'development'
-            ? 'bg-primary text-primary-foreground hover:bg-primary/90'
-            : 'hover:bg-accent',
+            ? 'bg-white text-black hover:bg-white/90 dark:bg-white dark:text-black dark:hover:bg-white/90'
+            : 'bg-slate-800 text-slate-100 hover:bg-slate-700 dark:bg-slate-800 dark:text-slate-100 dark:hover:bg-slate-700',
         )}
       >
-        <span className="flex items-center justify-between w-full">
-          <span>開発モード</span>
-          <span className="ml-2 text-xs opacity-60">D</span>
-        </span>
+        Dev
       </Button>
     </div>
   )
