@@ -46,12 +46,13 @@ export function WishlistCategoryList({
   return (
     <>
       <div className="space-y-4">
-        <div className="space-y-1">
+        <div className="space-y-0.5">
           <button
             onClick={() => onSelectCategory('all')}
             className={cn(
-              'w-full rounded-lg border border-stone-200 bg-card p-3 text-left transition-colors hover:bg-accent dark:border-stone-800',
-              selectedCategoryId === 'all' && 'bg-accent text-accent-foreground',
+              'w-full rounded-md py-2 px-2 text-left text-sm transition-colors hover:bg-accent hover:text-accent-foreground',
+              selectedCategoryId === 'all' &&
+                'bg-accent text-accent-foreground font-medium',
             )}
           >
             すべて
@@ -59,16 +60,17 @@ export function WishlistCategoryList({
           <button
             onClick={() => onSelectCategory('none')}
             className={cn(
-              'w-full rounded-lg border border-stone-200 bg-card p-3 text-left transition-colors hover:bg-accent dark:border-stone-800',
-              selectedCategoryId === 'none' && 'bg-accent text-accent-foreground',
+              'w-full rounded-md py-2 px-2 text-left text-sm transition-colors hover:bg-accent hover:text-accent-foreground',
+              selectedCategoryId === 'none' &&
+                'bg-accent text-accent-foreground font-medium',
             )}
           >
             未分類
           </button>
         </div>
 
-        <div className="space-y-1">
-          <p className="px-1 text-xs font-medium text-muted-foreground">
+        <div className="space-y-0.5">
+          <p className="px-2 py-1 text-xs font-medium text-muted-foreground">
             カテゴリー
           </p>
           {categories.map((category) => (
@@ -89,9 +91,9 @@ export function WishlistCategoryList({
                 }
               }}
               className={cn(
-                'group flex items-center gap-2 rounded-lg border border-stone-200 bg-card p-3 transition-colors hover:bg-accent cursor-pointer dark:border-stone-800',
+                'group flex items-center gap-2 rounded-md py-2 px-2 text-sm transition-colors hover:bg-accent hover:text-accent-foreground cursor-pointer',
                 selectedCategoryId === category.id.toString() &&
-                  'bg-accent text-accent-foreground',
+                  'bg-accent text-accent-foreground font-medium',
               )}
             >
               {editingCategoryId === category.id ? (
@@ -102,9 +104,11 @@ export function WishlistCategoryList({
                 />
               ) : (
                 <>
-                  <div className="flex-1 text-left">{category.name}</div>
+                  <div className="min-w-0 flex-1 truncate text-left">
+                    {category.name}
+                  </div>
                   <div
-                    className="flex items-center gap-1 opacity-0 transition-opacity group-hover:opacity-100"
+                    className="flex shrink-0 items-center gap-0.5 opacity-0 transition-opacity group-hover:opacity-100"
                     onClick={(e) => e.stopPropagation()}
                   >
                     <Button
@@ -114,7 +118,7 @@ export function WishlistCategoryList({
                         e.stopPropagation()
                         onStartEdit(category)
                       }}
-                      className="h-8 w-8"
+                      className="h-7 w-7"
                       aria-label="編集"
                     >
                       <Pencil className="h-4 w-4" />
@@ -126,7 +130,7 @@ export function WishlistCategoryList({
                         e.stopPropagation()
                         handleDeleteClick(category)
                       }}
-                      className="h-8 w-8"
+                      className="h-7 w-7"
                       aria-label="削除"
                     >
                       <Trash2 className="h-4 w-4" />

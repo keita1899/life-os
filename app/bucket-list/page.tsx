@@ -18,6 +18,7 @@ import { Loading } from '@/components/ui/loading'
 import { ErrorMessage } from '@/components/ui/error-message'
 import { MainLayout } from '@/components/layout/MainLayout'
 import { useBucketList } from '@/hooks/useBucketList'
+import { useBucketListCategories } from '@/hooks/useBucketListCategories'
 import { useMode } from '@/lib/contexts/ModeContext'
 import {
   Select,
@@ -44,6 +45,7 @@ export default function BucketListPage() {
     toggleBucketListItemCompletion,
     deleteBucketListItemsByIds,
   } = useBucketList()
+  const { categories } = useBucketListCategories()
   const [selectedCategoryId, setSelectedCategoryId] = useState<string>('all')
   const [selectedYear, setSelectedYear] = useState<string>('all')
   const [isDialogOpen, setIsDialogOpen] = useState(false)
@@ -84,6 +86,16 @@ export default function BucketListPage() {
     }
     return filtered
   }, [items, selectedCategoryId, selectedYear])
+
+  const selectedCategoryName = useMemo(() => {
+    if (selectedCategoryId === 'all') return 'すべて'
+    if (selectedCategoryId === 'none') return '未分類'
+    if (selectedCategoryId === 'achieved') return '達成リスト'
+    const category = categories.find(
+      (c) => c.id.toString() === selectedCategoryId,
+    )
+    return category?.name ?? ''
+  }, [selectedCategoryId, categories])
 
   const incompleteByMonth = useMemo(() => {
     const yearFilter =
@@ -233,7 +245,7 @@ export default function BucketListPage() {
         <div className="min-h-0 flex-1 overflow-y-auto">
           <div className="container mx-auto max-w-4xl py-8 px-4">
             <div className="mb-6 flex items-center justify-between">
-              <h1 className="text-3xl font-bold">やりたいことリスト</h1>
+              <h1 className="text-3xl font-bold">{selectedCategoryName}</h1>
               <Button onClick={() => setIsDialogOpen(true)}>
                 やりたいことを作成
               </Button>

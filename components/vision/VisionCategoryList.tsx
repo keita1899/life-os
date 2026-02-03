@@ -45,13 +45,13 @@ export function VisionCategoryList({
 
   return (
     <>
-      <div className="space-y-1">
+      <div className="space-y-0.5">
         <button
           onClick={() => onSelectCategory('all')}
           className={cn(
-            'w-full rounded-lg border border-stone-200 bg-card p-3 text-left transition-colors hover:bg-accent dark:border-stone-800',
+            'w-full rounded-md py-2 px-2 text-left text-sm transition-colors hover:bg-accent hover:text-accent-foreground',
             selectedCategoryId === 'all' &&
-              'bg-accent text-accent-foreground',
+              'bg-accent text-accent-foreground font-medium',
           )}
         >
           すべて
@@ -75,9 +75,9 @@ export function VisionCategoryList({
               }
             }}
             className={cn(
-              'group flex items-center gap-2 rounded-lg border border-stone-200 bg-card p-3 transition-colors hover:bg-accent cursor-pointer dark:border-stone-800',
+              'group flex items-center gap-2 rounded-md py-2 px-2 text-sm transition-colors hover:bg-accent hover:text-accent-foreground cursor-pointer',
               selectedCategoryId === category.id &&
-                'bg-accent text-accent-foreground',
+                'bg-accent text-accent-foreground font-medium',
             )}
           >
             {editingCategoryId === category.id ? (
@@ -88,9 +88,11 @@ export function VisionCategoryList({
               />
             ) : (
               <>
-                <div className="flex-1 text-left">{category.name}</div>
+                <div className="min-w-0 flex-1 truncate text-left">
+                  {category.name}
+                </div>
                 <div
-                  className="flex items-center gap-1 opacity-0 transition-opacity group-hover:opacity-100"
+                  className="flex shrink-0 items-center gap-0.5 opacity-0 transition-opacity group-hover:opacity-100"
                   onClick={(e) => e.stopPropagation()}
                 >
                   <Button
@@ -100,7 +102,7 @@ export function VisionCategoryList({
                       e.stopPropagation()
                       onStartEdit(category)
                     }}
-                    className="h-8 w-8"
+                    className="h-7 w-7"
                     aria-label="編集"
                   >
                     <Pencil className="h-4 w-4" />
@@ -112,7 +114,7 @@ export function VisionCategoryList({
                       e.stopPropagation()
                       handleDeleteClick(category)
                     }}
-                    className="h-8 w-8"
+                    className="h-7 w-7"
                     aria-label="削除"
                   >
                     <Trash2 className="h-4 w-4" />
