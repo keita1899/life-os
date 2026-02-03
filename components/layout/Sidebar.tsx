@@ -8,7 +8,8 @@ import {
   Target,
   CheckSquare,
   Calendar,
-  Heart,
+  ListChecks,
+  ShoppingBag,
   CreditCard,
   Menu,
   ChevronLeft,
@@ -36,7 +37,10 @@ const homeItem = {
   href: '/',
   icon: Home,
   title: 'ホーム',
-  color: 'bg-stone-100 text-stone-700 dark:bg-stone-800 dark:text-stone-300',
+  hoverIcon:
+    'group-hover:bg-stone-200 group-hover:text-stone-800 dark:group-hover:bg-stone-700 dark:group-hover:text-stone-200',
+  activeIcon:
+    'bg-stone-200 text-stone-800 dark:bg-stone-700 dark:text-stone-200',
 }
 
 const taskItems = [
@@ -44,65 +48,84 @@ const taskItems = [
     href: '/goals',
     icon: Target,
     title: '目標',
-    color: 'bg-blue-100 text-blue-600 dark:bg-blue-900/30 dark:text-blue-400',
+    hoverIcon:
+      'group-hover:bg-blue-100 group-hover:text-blue-600 dark:group-hover:bg-blue-900/30 dark:group-hover:text-blue-400',
+    activeIcon:
+      'bg-blue-100 text-blue-600 dark:bg-blue-900/30 dark:text-blue-400',
   },
   {
     href: '/events',
     icon: Calendar,
     title: '予定',
-    color:
+    hoverIcon:
+      'group-hover:bg-purple-100 group-hover:text-purple-600 dark:group-hover:bg-purple-900/30 dark:group-hover:text-purple-400',
+    activeIcon:
       'bg-purple-100 text-purple-600 dark:bg-purple-900/30 dark:text-purple-400',
   },
   {
     href: '/tasks',
     icon: CheckSquare,
     title: 'タスク',
-    color:
+    hoverIcon:
+      'group-hover:bg-green-100 group-hover:text-green-600 dark:group-hover:bg-green-900/30 dark:group-hover:text-green-400',
+    activeIcon:
       'bg-green-100 text-green-600 dark:bg-green-900/30 dark:text-green-400',
   },
   {
     href: '/habits',
     icon: Repeat,
     title: '習慣',
-    color:
+    hoverIcon:
+      'group-hover:bg-teal-100 group-hover:text-teal-600 dark:group-hover:bg-teal-900/30 dark:group-hover:text-teal-400',
+    activeIcon:
       'bg-teal-100 text-teal-600 dark:bg-teal-900/30 dark:text-teal-400',
   },
 ]
 
 const otherItems = [
   {
-    href: '/subscriptions',
-    icon: CreditCard,
-    title: 'サブスク',
-    color:
-      'bg-green-100 text-green-600 dark:bg-green-900/30 dark:text-green-400',
-  },
-  {
     href: '/kakeibo',
     icon: Wallet,
     title: '家計簿',
-    color:
+    hoverIcon:
+      'group-hover:bg-emerald-100 group-hover:text-emerald-600 dark:group-hover:bg-emerald-900/30 dark:group-hover:text-emerald-400',
+    activeIcon:
       'bg-emerald-100 text-emerald-600 dark:bg-emerald-900/30 dark:text-emerald-400',
   },
   {
+    href: '/subscriptions',
+    icon: CreditCard,
+    title: 'サブスク',
+    hoverIcon:
+      'group-hover:bg-green-100 group-hover:text-green-600 dark:group-hover:bg-green-900/30 dark:group-hover:text-green-400',
+    activeIcon:
+      'bg-green-100 text-green-600 dark:bg-green-900/30 dark:text-green-400',
+  },
+  {
     href: '/bucket-list',
-    icon: Heart,
+    icon: ListChecks,
     title: 'やりたいことリスト',
-    color:
+    hoverIcon:
+      'group-hover:bg-orange-100 group-hover:text-orange-600 dark:group-hover:bg-orange-900/30 dark:group-hover:text-orange-400',
+    activeIcon:
       'bg-orange-100 text-orange-600 dark:bg-orange-900/30 dark:text-orange-400',
   },
   {
     href: '/wishlist',
-    icon: Heart,
+    icon: ShoppingBag,
     title: '欲しいものリスト',
-    color:
+    hoverIcon:
+      'group-hover:bg-pink-100 group-hover:text-pink-600 dark:group-hover:bg-pink-900/30 dark:group-hover:text-pink-400',
+    activeIcon:
       'bg-pink-100 text-pink-600 dark:bg-pink-900/30 dark:text-pink-400',
   },
   {
     href: '/vision',
     icon: Eye,
     title: 'ビジョン',
-    color:
+    hoverIcon:
+      'group-hover:bg-indigo-100 group-hover:text-indigo-600 dark:group-hover:bg-indigo-900/30 dark:group-hover:text-indigo-400',
+    activeIcon:
       'bg-indigo-100 text-indigo-600 dark:bg-indigo-900/30 dark:text-indigo-400',
   },
 ]
@@ -111,7 +134,12 @@ function SidebarContent() {
   const pathname = usePathname()
   const { mode } = useMode()
 
-  const renderLink = (item: typeof homeItem) => {
+  const renderLink = (
+    item: typeof homeItem & {
+      hoverIcon?: string
+      activeIcon?: string
+    },
+  ) => {
     const Icon = item.icon
     const isActive = pathname === item.href
     return (
@@ -119,7 +147,7 @@ function SidebarContent() {
         key={item.href}
         href={item.href}
         className={cn(
-          'flex items-center gap-3 rounded-lg border border-stone-200 bg-card p-3 transition-colors dark:border-stone-800',
+          'group flex items-center gap-3 rounded-lg border border-stone-200 bg-card p-3 transition-colors dark:border-stone-800',
           'hover:bg-accent hover:text-accent-foreground',
           'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring',
           isActive && 'bg-accent text-accent-foreground',
@@ -127,8 +155,10 @@ function SidebarContent() {
       >
         <div
           className={cn(
-            'flex h-9 w-9 items-center justify-center rounded-md',
-            item.color,
+            'flex h-9 w-9 items-center justify-center rounded-md transition-colors',
+            'bg-stone-100 text-stone-600 dark:bg-stone-800 dark:text-stone-400',
+            item.hoverIcon,
+            isActive && item.activeIcon,
           )}
         >
           <Icon className="h-5 w-5" />
@@ -144,21 +174,27 @@ function SidebarContent() {
         href: '/dev/goals',
         icon: Target,
         title: '目標',
-        color:
+        hoverIcon:
+          'group-hover:bg-blue-100 group-hover:text-blue-600 dark:group-hover:bg-blue-900/30 dark:group-hover:text-blue-400',
+        activeIcon:
           'bg-blue-100 text-blue-600 dark:bg-blue-900/30 dark:text-blue-400',
       },
       {
         href: '/dev/projects',
         icon: FolderKanban,
         title: 'プロジェクト',
-        color:
-        'bg-purple-100 text-purple-600 dark:bg-purple-900/30 dark:text-purple-400',
+        hoverIcon:
+          'group-hover:bg-purple-100 group-hover:text-purple-600 dark:group-hover:bg-purple-900/30 dark:group-hover:text-purple-400',
+        activeIcon:
+          'bg-purple-100 text-purple-600 dark:bg-purple-900/30 dark:text-purple-400',
       },
       {
         href: '/dev/tasks',
         icon: CheckSquare,
         title: 'タスク',
-        color:
+        hoverIcon:
+          'group-hover:bg-green-100 group-hover:text-green-600 dark:group-hover:bg-green-900/30 dark:group-hover:text-green-400',
+        activeIcon:
           'bg-green-100 text-green-600 dark:bg-green-900/30 dark:text-green-400',
       },
     ]
