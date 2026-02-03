@@ -5,7 +5,7 @@ import { Calendar } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import {
   EVENT_CATEGORY_LABELS,
-  EVENT_CATEGORY_COLORS,
+  EVENT_CATEGORY_EMOJI,
 } from '@/lib/events/constants'
 import {
   isBarcelonaMatch,
@@ -61,23 +61,31 @@ export function EventPopoverContent({
   }, [])
 
   const isBarca = isBarcelonaMatch(event)
+  const ROYAL_BLUE_BG =
+    'rounded-md border border-blue-900/20 bg-blue-900/10 p-2 dark:border-blue-800/30 dark:bg-blue-900/20'
+
+  const categoryLabel = isBarca
+    ? '⚽ Barca'
+    : event.category
+      ? `${EVENT_CATEGORY_EMOJI[event.category]} ${EVENT_CATEGORY_LABELS[event.category]}`
+      : null
 
   return (
     <div
       className={cn(
         'space-y-3 rounded-md p-2',
-        isBarca && 'text-white',
+        !isBarca && 'border',
+        !isBarca && ROYAL_BLUE_BG,
       )}
       style={
-        isBarca ? { background: getBarcelonaMatchBackground(isDark) } : undefined
+        isBarca
+          ? { background: getBarcelonaMatchBackground(isDark) }
+          : undefined
       }
     >
       <div className="flex items-start justify-between gap-2">
         <h3
-          className={cn(
-            'min-w-0 flex-1 text-sm font-semibold',
-            !isBarca && 'text-stone-900 dark:text-stone-100',
-          )}
+          className="min-w-0 flex-1 text-sm font-semibold text-stone-900 dark:text-stone-100"
           style={isBarca ? { color: BARCELONA_MATCH_TITLE_COLOR } : undefined}
         >
           {event.title}
@@ -89,7 +97,7 @@ export function EventPopoverContent({
                 type="button"
                 size="icon"
                 variant="ghost"
-                className={cn('h-7 w-7', isBarca && 'text-white hover:bg-white/20')}
+                className="h-7 w-7"
                 onClick={() => onEdit(event)}
               >
                 <Pencil className="h-4 w-4" />
@@ -101,12 +109,7 @@ export function EventPopoverContent({
                 type="button"
                 size="icon"
                 variant="ghost"
-                className={cn(
-                  'h-7 w-7',
-                  isBarca
-                    ? 'text-white hover:bg-white/20'
-                    : 'text-destructive hover:text-destructive hover:bg-destructive/10',
-                )}
+                className="h-7 w-7 text-destructive hover:text-destructive hover:bg-destructive/10"
                 onClick={() => onDelete(event)}
               >
                 <Trash2 className="h-4 w-4" />
@@ -119,38 +122,22 @@ export function EventPopoverContent({
       <div
         className={cn(
           'space-y-2 text-xs',
-          isBarca ? 'text-white/90' : 'text-muted-foreground',
+          isBarca ? 'text-white/80' : 'text-muted-foreground',
         )}
       >
         <EventDateTime event={event} />
         {event.allDay && (
           <div className="flex items-center gap-2">
             <Calendar className="h-3 w-3" />
-            <span
-              className={cn(
-                'rounded-md px-2 py-0.5',
-                isBarca
-                  ? 'bg-white/20 text-white'
-                  : 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-300',
-              )}
-            >
+            <span className="rounded-md px-2 py-0.5 text-muted-foreground">
               終日
             </span>
           </div>
         )}
-        {event.category && (
+        {categoryLabel && (
           <div className="flex items-center gap-2">
-            <span
-              className={cn(
-                'rounded-md px-2 py-0.5',
-                !isBarca && EVENT_CATEGORY_COLORS[event.category],
-                isBarca && 'bg-white/20',
-              )}
-              style={
-                isBarca ? { color: BARCELONA_MATCH_TITLE_COLOR } : undefined
-              }
-            >
-              {isBarca ? 'Barca' : EVENT_CATEGORY_LABELS[event.category]}
+            <span className="rounded-md px-2 py-0.5 text-muted-foreground">
+              {categoryLabel}
             </span>
           </div>
         )}

@@ -12,7 +12,7 @@ import {
 import { cn } from '@/lib/utils'
 import {
   EVENT_CATEGORY_LABELS,
-  EVENT_CATEGORY_COLORS,
+  EVENT_CATEGORY_EMOJI,
 } from '@/lib/events/constants'
 import {
   isBarcelonaMatch,
@@ -63,29 +63,39 @@ export function EventItem({ event, onEdit, onDelete }: EventItemProps) {
 
   const isBarca = isBarcelonaMatch(event)
 
+  const ROYAL_BLUE_BG =
+    'border-blue-900/20 bg-blue-900/10 dark:border-blue-800/30 dark:bg-blue-900/20'
+
+  const categoryLabel = isBarca
+    ? '⚽ Barca'
+    : event.category
+      ? `${EVENT_CATEGORY_EMOJI[event.category]} ${EVENT_CATEGORY_LABELS[event.category]}`
+      : null
+
   return (
     <div
       className={cn(
-        'group flex items-start gap-3 rounded-lg border p-4',
-        isBarca
-          ? 'border-transparent text-white'
-          : 'border-stone-200 bg-white dark:border-stone-800 dark:bg-stone-900',
+        'group flex items-start gap-3 rounded-lg p-4',
+        !isBarca && 'border',
+        !isBarca && ROYAL_BLUE_BG,
       )}
       style={
-        isBarca ? { background: getBarcelonaMatchBackground(isDark) } : undefined
+        isBarca
+          ? { background: getBarcelonaMatchBackground(isDark) }
+          : undefined
       }
     >
       <div className="mt-0.5">
         <Calendar
-          className={cn('h-5 w-5', isBarca ? 'text-white' : 'text-blue-500')}
+          className={cn(
+            'h-5 w-5',
+            isBarca ? 'text-white/80' : 'text-blue-600 dark:text-blue-400',
+          )}
         />
       </div>
       <div className="flex-1">
         <div
-          className={cn(
-            'text-sm font-medium',
-            !isBarca && 'text-stone-900 dark:text-stone-100',
-          )}
+          className="text-sm font-medium text-stone-900 dark:text-stone-100"
           style={isBarca ? { color: BARCELONA_MATCH_TITLE_COLOR } : undefined}
         >
           {event.title}
@@ -93,33 +103,17 @@ export function EventItem({ event, onEdit, onDelete }: EventItemProps) {
         <div
           className={cn(
             'mt-2 flex items-center gap-4 text-xs',
-            isBarca ? 'text-white/90' : 'text-muted-foreground',
+            isBarca ? 'text-white/80' : 'text-muted-foreground',
           )}
         >
           <EventDateTime event={event} />
-          {event.category && (
-            <span
-              className={cn(
-                'rounded-md px-2 py-0.5',
-                !isBarca && EVENT_CATEGORY_COLORS[event.category],
-                isBarca && 'bg-white/20',
-              )}
-              style={
-                isBarca ? { color: BARCELONA_MATCH_TITLE_COLOR } : undefined
-              }
-            >
-              {isBarca ? 'Barca' : EVENT_CATEGORY_LABELS[event.category]}
+          {categoryLabel && (
+            <span className="rounded-md px-2 py-0.5 text-muted-foreground">
+              {categoryLabel}
             </span>
           )}
           {event.allDay && (
-            <span
-              className={cn(
-                'rounded-md px-2 py-0.5',
-                isBarca
-                  ? 'bg-white/20 text-white'
-                  : 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-300',
-              )}
-            >
+            <span className="rounded-md px-2 py-0.5 text-muted-foreground">
               終日
             </span>
           )}

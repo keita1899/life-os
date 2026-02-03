@@ -220,7 +220,7 @@ export const EventForm = ({
                       key={category.value || 'none'}
                       value={category.value || 'none'}
                     >
-                      {category.label}
+                      {category.emoji ? `${category.emoji} ${category.label}` : category.label}
                     </SelectItem>
                   ))}
                 </SelectContent>

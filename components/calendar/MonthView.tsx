@@ -34,7 +34,6 @@ import {
   BARCELONA_MATCH_TEXT_COLOR,
   BARCELONA_MATCH_TITLE_COLOR,
 } from '@/lib/football'
-import { EVENT_CATEGORY_COLORS } from '@/lib/events/constants'
 
 function EventPopoverWrapper({
   event,
@@ -99,9 +98,7 @@ function EventPopoverWrapper({
             'w-full truncate rounded px-1 text-left text-xs hover:opacity-80',
             isBarca
               ? BARCELONA_MATCH_TEXT_COLOR
-              : event.category
-                ? EVENT_CATEGORY_COLORS[event.category]
-                : 'bg-green-100 text-green-900 dark:bg-green-900/30 dark:text-green-300',
+              : 'border border-blue-900/20 bg-blue-900/10 text-stone-900 dark:border-blue-800/30 dark:bg-blue-900/20 dark:text-stone-100',
           )}
           style={
             isBarca

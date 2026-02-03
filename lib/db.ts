@@ -714,6 +714,10 @@ async function initializeAllTables(): Promise<void> {
     )
   }
 
+  await db.execute(
+    "UPDATE events SET category = 'barca' WHERE category = 'sports' AND title LIKE '%FC Barcelona%'",
+  )
+
   try {
     const bucketListItemsColumnRows = await db.select<
       { name?: string; NAME?: string }[]

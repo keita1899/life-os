@@ -293,9 +293,7 @@ export async function deleteBarcelonaMatches(): Promise<void> {
   const db = await getDatabase()
 
   try {
-    await db.execute(
-      "DELETE FROM events WHERE category = 'sports' AND title LIKE '%FC Barcelona%'",
-    )
+    await db.execute("DELETE FROM events WHERE category = 'barca'")
   } catch (err) {
     handleDbError(err, 'delete Barcelona matches')
   }

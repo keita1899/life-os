@@ -6,10 +6,12 @@ export type EventCategory =
   | 'play'
   | 'hobby'
   | 'health'
+  | 'travel'
+  | 'sports'
+  | 'barca'
   | 'procedure'
   | 'birthday'
   | 'anniversary'
-  | 'sports'
   | null
 
 export type RecurrenceRule = 'daily' | 'weekly' | 'monthly'
