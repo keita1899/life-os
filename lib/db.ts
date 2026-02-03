@@ -66,6 +66,8 @@ async function initializeAllTables(): Promise<void> {
       all_day INTEGER NOT NULL DEFAULT 0,
       category TEXT,
       description TEXT,
+      recurrence_rule TEXT,
+      recurrence_end_date TEXT,
       created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
       updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
     )
@@ -679,6 +681,36 @@ async function initializeAllTables(): Promise<void> {
   if (!userSettingsColumns.has('initial_balance')) {
     await db.execute(
       'ALTER TABLE user_settings ADD COLUMN initial_balance INTEGER',
+    )
+  }
+
+  const eventsColumnRows = await db.select<{ name: string }[]>(
+    "SELECT name FROM pragma_table_info('events')",
+  )
+  const eventsColumns = new Set(eventsColumnRows.map((r) => r.name))
+  if (!eventsColumns.has('recurrence_rule')) {
+    await db.execute(
+      'ALTER TABLE events ADD COLUMN recurrence_rule TEXT',
+    )
+  }
+  if (!eventsColumns.has('recurrence_end_date')) {
+    await db.execute(
+      'ALTER TABLE events ADD COLUMN recurrence_end_date TEXT',
+    )
+  }
+  if (!eventsColumns.has('recurrence_day_of_week')) {
+    await db.execute(
+      'ALTER TABLE events ADD COLUMN recurrence_day_of_week INTEGER',
+    )
+  }
+  if (!eventsColumns.has('recurrence_day_of_month')) {
+    await db.execute(
+      'ALTER TABLE events ADD COLUMN recurrence_day_of_month INTEGER',
+    )
+  }
+  if (!eventsColumns.has('recurrence_days_of_week')) {
+    await db.execute(
+      'ALTER TABLE events ADD COLUMN recurrence_days_of_week TEXT',
     )
   }
 

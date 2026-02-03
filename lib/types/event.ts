@@ -12,6 +12,8 @@ export type EventCategory =
   | 'sports'
   | null
 
+export type RecurrenceRule = 'daily' | 'weekly' | 'monthly'
+
 export interface Event {
   id: number
   title: string
@@ -20,6 +22,10 @@ export interface Event {
   allDay: boolean
   category: EventCategory
   description: string | null
+  recurrenceRule: RecurrenceRule | null
+  recurrenceDaysOfWeek: number[] | null
+  recurrenceDayOfMonth: number | null
+  recurrenceEndDate: string | null
   createdAt: string
   updatedAt: string
 }
@@ -31,6 +37,10 @@ export interface CreateEventInput {
   allDay?: boolean
   category?: EventCategory
   description?: string | null
+  recurrenceRule?: RecurrenceRule | null
+  recurrenceDaysOfWeek?: number[] | null
+  recurrenceDayOfMonth?: number | null
+  recurrenceEndDate?: string | null
 }
 
 export interface UpdateEventInput {
@@ -40,4 +50,8 @@ export interface UpdateEventInput {
   allDay?: boolean
   category?: EventCategory
   description?: string | null
+  recurrenceRule?: RecurrenceRule | null
+  recurrenceDaysOfWeek?: number[] | null
+  recurrenceDayOfMonth?: number | null
+  recurrenceEndDate?: string | null
 }
