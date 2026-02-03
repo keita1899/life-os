@@ -2,6 +2,7 @@
 
 import { useState, useMemo } from 'react'
 import Link from 'next/link'
+import { startOfMonth, endOfMonth, startOfWeek, endOfWeek } from 'date-fns'
 import { MonthView } from './MonthView'
 import { WeekView } from './WeekView'
 import { CalendarViewBase } from './CalendarViewBase'
@@ -19,6 +20,7 @@ import { TaskDialog } from '@/components/tasks/TaskDialog'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { DeleteConfirmDialog } from '@/components/ui/delete-confirm-dialog'
 import { ErrorMessage } from '@/components/ui/error-message'
+import { expandRecurringEvents } from '@/lib/events'
 import type { CreateEventInput, Event, UpdateEventInput } from '@/lib/types/event'
 import type { CreateTaskInput, Task, UpdateTaskInput } from '@/lib/types/task'
 
@@ -71,6 +73,19 @@ export function CalendarView({ initialDate }: CalendarViewProps) {
         item.targetMonth === month,
     )
   }, [bucketListItems, currentDate])
+
+  const weekStartsOn = (weekStartDay === 0 ? 0 : 1) as 0 | 1
+  const expandedEvents = useMemo(() => {
+    const rangeStart =
+      viewMode === 'month'
+        ? startOfMonth(currentDate)
+        : startOfWeek(currentDate, { weekStartsOn })
+    const rangeEnd =
+      viewMode === 'month'
+        ? endOfMonth(currentDate)
+        : endOfWeek(currentDate, { weekStartsOn })
+    return expandRecurringEvents(events, rangeStart, rangeEnd)
+  }, [events, currentDate, viewMode, weekStartDay])
   const [operationError, setOperationError] = useState<string | null>(null)
   const [isEventDialogOpen, setIsEventDialogOpen] = useState(false)
   const [editingEvent, setEditingEvent] = useState<Event | undefined>(undefined)
@@ -99,6 +114,10 @@ export function CalendarView({ initialDate }: CalendarViewProps) {
         allDay: input.allDay,
         category: input.category,
         description: input.description,
+        recurrenceRule: input.recurrenceRule,
+        recurrenceDaysOfWeek: input.recurrenceDaysOfWeek,
+        recurrenceDayOfMonth: input.recurrenceDayOfMonth,
+        recurrenceEndDate: input.recurrenceEndDate,
       }
       await updateEvent(editingEvent.id, updateInput)
       setIsEventDialogOpen(false)
@@ -205,7 +224,7 @@ export function CalendarView({ initialDate }: CalendarViewProps) {
           <MonthView
             currentDate={currentDate}
             monthlyGoals={monthlyGoals}
-            events={events}
+            events={expandedEvents}
             tasks={tasks}
             weekStartDay={weekStartDay}
             onEditEvent={handleEditEvent}
@@ -219,7 +238,7 @@ export function CalendarView({ initialDate }: CalendarViewProps) {
             currentDate={currentDate}
             monthlyGoals={monthlyGoals}
             weeklyGoals={weeklyGoals}
-            events={events}
+            events={expandedEvents}
             tasks={tasks}
             weekStartDay={weekStartDay}
             onEditEvent={handleEditEvent}
@@ -264,7 +283,11 @@ export function CalendarView({ initialDate }: CalendarViewProps) {
 
       <DeleteConfirmDialog
         open={!!deletingEvent}
-        message={`「${deletingEvent?.title}」を削除しますか？この操作は取り消せません。`}
+        message={
+          deletingEvent?.recurrenceRule
+            ? `「${deletingEvent.title}」の繰り返し予定をすべて削除しますか？この操作は取り消せません。`
+            : `「${deletingEvent?.title}」を削除しますか？この操作は取り消せません。`
+        }
         onConfirm={handleDeleteEvent}
         onCancel={() => setDeletingEvent(undefined)}
       />
