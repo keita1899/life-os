@@ -59,7 +59,7 @@ export function LogDiarySection({
   }
 
   return (
-    <Card>
+    <Card className="border-stone-200/60 dark:border-stone-700/40">
       <CardHeader>
         <CardTitle className="text-lg">日記</CardTitle>
       </CardHeader>
@@ -84,7 +84,7 @@ export function LogDiarySection({
                           textareaRef.current = e
                         }}
                         placeholder="今日の日記を書いてください..."
-                        className="min-h-[200px] resize-none overflow-hidden"
+                        className="min-h-[200px] resize-none overflow-hidden focus-visible:ring-0 focus-visible:ring-offset-0"
                       />
                     </FormControl>
                   </FormItem>

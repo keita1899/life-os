@@ -22,7 +22,7 @@ export function LogHabitsSection({
   }
 
   return (
-    <Card>
+    <Card className="border-stone-200/60 dark:border-stone-700/40">
       <CardHeader>
         <CardTitle className="text-lg">今日の習慣</CardTitle>
       </CardHeader>
