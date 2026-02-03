@@ -64,7 +64,7 @@ export function EventItem({ event, onEdit, onDelete }: EventItemProps) {
   const isBarca = isBarcelonaMatch(event)
 
   const ROYAL_BLUE_BG =
-    'border-blue-900/20 bg-blue-900/10 dark:border-blue-800/30 dark:bg-blue-900/20'
+    'bg-blue-900/10 dark:bg-blue-900/20'
 
   const categoryLabel = isBarca
     ? '⚽ Barca'
@@ -76,7 +76,6 @@ export function EventItem({ event, onEdit, onDelete }: EventItemProps) {
     <div
       className={cn(
         'group flex items-start gap-3 rounded-lg p-4',
-        !isBarca && 'border',
         !isBarca && ROYAL_BLUE_BG,
       )}
       style={

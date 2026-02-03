@@ -62,7 +62,7 @@ export function EventPopoverContent({
 
   const isBarca = isBarcelonaMatch(event)
   const ROYAL_BLUE_BG =
-    'rounded-md border border-blue-900/20 bg-blue-900/10 p-2 dark:border-blue-800/30 dark:bg-blue-900/20'
+    'rounded-md bg-blue-900/10 p-2 dark:bg-blue-900/20'
 
   const categoryLabel = isBarca
     ? '⚽ Barca'
@@ -74,7 +74,6 @@ export function EventPopoverContent({
     <div
       className={cn(
         'space-y-3 rounded-md p-2',
-        !isBarca && 'border',
         !isBarca && ROYAL_BLUE_BG,
       )}
       style={
