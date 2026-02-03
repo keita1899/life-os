@@ -95,10 +95,10 @@ function EventPopoverWrapper({
       <PopoverTrigger asChild>
         <button
           className={cn(
-            'w-full truncate rounded px-1 text-left text-xs hover:opacity-80',
+            'w-full truncate rounded px-1 py-0.5 text-left text-xs hover:opacity-80',
             isBarca
               ? BARCELONA_MATCH_TEXT_COLOR
-              : 'border border-blue-900/20 bg-blue-900/10 text-stone-900 dark:border-blue-800/30 dark:bg-blue-900/20 dark:text-stone-100',
+              : 'bg-blue-900/10 text-stone-900 dark:bg-blue-900/20 dark:text-stone-100',
           )}
           style={
             isBarca
@@ -172,10 +172,10 @@ function TaskPopoverWrapper({
       <PopoverTrigger asChild>
         <button
           className={cn(
-            'flex w-full items-center gap-1 truncate rounded px-1 text-left text-xs hover:opacity-80',
+            'flex w-full items-center gap-1 truncate rounded border px-1 py-0.5 text-left text-xs hover:opacity-80',
             task.completed
-              ? 'bg-stone-100 text-stone-600 dark:bg-stone-800 dark:text-stone-400'
-              : 'bg-orange-100 text-orange-900 dark:bg-orange-900/30 dark:text-orange-300',
+              ? 'border-stone-200/60 bg-stone-900/5 text-stone-600 dark:border-stone-700/40 dark:bg-stone-900/20 dark:text-stone-400'
+              : 'border-stone-200/60 bg-stone-900/10 text-stone-900 dark:border-stone-700/40 dark:bg-stone-900/20 dark:text-stone-100',
           )}
           title={task.title}
           onClick={(e) => {
@@ -302,12 +302,11 @@ function DateCell({
       onClick={navigateToDay}
       onKeyDown={handleKeyDown}
       className={cn(
-        'block min-h-[80px] bg-white p-1 dark:bg-stone-900',
-        'hover:bg-stone-50 dark:hover:bg-stone-800',
+        'block min-h-[80px] bg-stone-50 p-1 dark:bg-stone-950',
+        'hover:bg-stone-100 dark:hover:bg-stone-800',
         'transition-colors cursor-pointer',
         'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring',
-        !isCurrentMonthDay &&
-          'bg-stone-50 text-stone-400 dark:bg-stone-950 dark:text-stone-600',
+        !isCurrentMonthDay && 'text-stone-400 dark:text-stone-600',
         isTodayDate && 'ring-2 ring-blue-500 dark:ring-blue-400',
       )}
     >
@@ -318,7 +317,7 @@ function DateCell({
         )}
       >
         {isTodayDate ? (
-          <span className="flex h-6 w-6 items-center justify-center rounded-full bg-blue-500 font-semibold text-white dark:bg-blue-400">
+          <span className="flex h-6 w-6 items-center justify-center rounded-full bg-blue-500 font-semibold text-white/80 dark:bg-blue-400 dark:text-white/75">
             {formatDay(date)}
           </span>
         ) : (
