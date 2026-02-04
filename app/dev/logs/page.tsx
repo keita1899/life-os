@@ -8,7 +8,7 @@ import { parseISO, isValid, addDays, subDays } from 'date-fns'
 import { useMode } from '@/lib/contexts/ModeContext'
 import { useRouter } from 'next/navigation'
 import { Button } from '@/components/ui/button'
-import { ChevronLeft, ChevronRight, CheckSquare } from 'lucide-react'
+import { ChevronLeft, ChevronRight, CheckSquare, Focus } from 'lucide-react'
 import { useDevGoals } from '@/hooks/useDevGoals'
 import { useDevCalendarTasks } from '@/hooks/useDevCalendarTasks'
 import { useDevProjects } from '@/hooks/useDevProjects'
@@ -23,6 +23,20 @@ import { DevLogGoalsSection } from '@/components/dev/logs/DevLogGoalsSection'
 import { DevLogTasksSection } from '@/components/dev/logs/DevLogTasksSection'
 import { DevLogReportSection } from '@/components/dev/logs/DevLogReportSection'
 import { TaskDialog } from '@/components/tasks/TaskDialog'
+import { TaskForm } from '@/components/tasks/TaskForm'
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog'
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select'
 import { DeleteConfirmDialog } from '@/components/ui/delete-confirm-dialog'
 import { FloatingActionButtons } from '@/components/floating/FloatingActionButtons'
 import {
@@ -38,6 +52,22 @@ import Link from 'next/link'
 interface DevLogPageViewProps {
   logDate: Date
   date: string
+}
+
+type DevTaskTarget =
+  | { kind: 'type'; value: 'inbox' | 'learning' }
+  | { kind: 'project'; projectId: number }
+
+function parseDevTaskTarget(value: string): DevTaskTarget | null {
+  if (value === 'inbox' || value === 'learning') {
+    return { kind: 'type', value }
+  }
+  if (value.startsWith('project:')) {
+    const id = Number(value.slice('project:'.length))
+    if (!Number.isFinite(id)) return null
+    return { kind: 'project', projectId: id }
+  }
+  return null
 }
 
 function DevLogPageView({ logDate, date }: DevLogPageViewProps) {
@@ -58,6 +88,8 @@ function DevLogPageView({ logDate, date }: DevLogPageViewProps) {
   const { projects } = useDevProjects()
   const [isTaskDialogOpen, setIsTaskDialogOpen] = useState(false)
   const [editingTask, setEditingTask] = useState<Task | undefined>(undefined)
+  const [taskCreateTargetValue, setTaskCreateTargetValue] =
+    useState<string>('inbox')
   const [deletingTask, setDeletingTask] = useState<Task | undefined>(undefined)
   const [operationError, setOperationError] = useState<string | null>(null)
   const { userSettings } = useUserSettings()
@@ -148,6 +180,7 @@ function DevLogPageView({ logDate, date }: DevLogPageViewProps) {
 
   const handleOpenCreateTask = () => {
     setEditingTask(undefined)
+    setTaskCreateTargetValue('inbox')
     setIsTaskDialogOpen(true)
   }
 
@@ -159,14 +192,28 @@ function DevLogPageView({ logDate, date }: DevLogPageViewProps) {
   }
 
   const handleCreateTask = async (input: CreateTaskInput) => {
+    const target = parseDevTaskTarget(taskCreateTargetValue)
+    if (!target) {
+      setOperationError('タスクの作成先が無効です')
+      return
+    }
     try {
       setOperationError(null)
-      await createDevTask({
-        title: input.title,
-        projectId: null,
-        type: 'inbox',
-        executionDate: input.executionDate ?? date,
-      })
+      if (target.kind === 'type') {
+        await createDevTask({
+          title: input.title,
+          projectId: null,
+          type: target.value,
+          executionDate: input.executionDate ?? date,
+        })
+      } else {
+        await createDevTask({
+          title: input.title,
+          projectId: target.projectId,
+          type: 'inbox',
+          executionDate: input.executionDate ?? date,
+        })
+      }
       await mutate('dev-calendar-tasks')
       setIsTaskDialogOpen(false)
     } catch (err) {
@@ -323,12 +370,53 @@ function DevLogPageView({ logDate, date }: DevLogPageViewProps) {
           </div>
         )}
 
-        <TaskDialog
-          open={isTaskDialogOpen}
-          onOpenChange={handleDialogClose}
-          onSubmit={editingTask ? handleUpdateTask : handleCreateTask}
-          task={editingTask}
-        />
+        {editingTask ? (
+          <TaskDialog
+            open={isTaskDialogOpen}
+            onOpenChange={handleDialogClose}
+            onSubmit={handleUpdateTask}
+            task={editingTask}
+          />
+        ) : (
+          <Dialog open={isTaskDialogOpen} onOpenChange={handleDialogClose}>
+            <DialogContent>
+              <DialogHeader>
+                <DialogTitle>新しいタスクを作成</DialogTitle>
+              </DialogHeader>
+              <div className="space-y-4">
+                <div className="space-y-2">
+                  <div className="text-sm font-medium">作成先</div>
+                  <Select
+                    value={taskCreateTargetValue}
+                    onValueChange={(value) => {
+                      if (!parseDevTaskTarget(value)) return
+                      setTaskCreateTargetValue(value)
+                    }}
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder="作成先を選択" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="inbox">Inbox</SelectItem>
+                      <SelectItem value="learning">学習</SelectItem>
+                      {projects.map((p) => (
+                        <SelectItem key={p.id} value={`project:${p.id}`}>
+                          {p.name}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+                <TaskForm
+                  onSubmit={handleCreateTask}
+                  onCancel={() => handleDialogClose(false)}
+                  defaultExecutionDate={date}
+                  submitLabel="作成"
+                />
+              </div>
+            </DialogContent>
+          </Dialog>
+        )}
 
         <DeleteConfirmDialog
           open={!!deletingTask}
@@ -344,6 +432,12 @@ function DevLogPageView({ logDate, date }: DevLogPageViewProps) {
               label: 'タスクを作成',
               icon: <CheckSquare className="h-5 w-5" />,
               onClick: handleOpenCreateTask,
+            },
+            {
+              id: 'focus',
+              label: 'フォーカスモード',
+              icon: <Focus className="h-5 w-5" />,
+              onClick: () => router.push('/dev/focus'),
             },
           ]}
         />
