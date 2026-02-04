@@ -1,6 +1,7 @@
 'use client'
 
 import { useCallback, useState } from 'react'
+import { useRouter } from 'next/navigation'
 import { useHotkeys } from 'react-hotkeys-hook'
 import { useMode } from '@/lib/contexts/ModeContext'
 import { Header } from './Header'
@@ -26,8 +27,22 @@ function getInitialSidebarState(): boolean {
 }
 
 export function MainLayout({ children }: MainLayoutProps) {
+  const router = useRouter()
   const { mode } = useMode()
   const [isSidebarOpen, setIsSidebarOpen] = useState(getInitialSidebarState)
+
+  useHotkeys(
+    'mod+h',
+    () => router.push('/'),
+    { enableOnFormTags: false, preventDefault: true },
+    [router],
+  )
+  useHotkeys(
+    'd',
+    () => router.push(mode === 'development' ? '/dev/logs' : '/logs'),
+    { enableOnFormTags: false, preventDefault: true },
+    [mode, router],
+  )
 
   const handleOpenChange = useCallback((open: boolean): void => {
     setIsSidebarOpen(open)
