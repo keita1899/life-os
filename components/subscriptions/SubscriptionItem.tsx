@@ -48,8 +48,8 @@ export function SubscriptionItem({
       className={cn(
         'group flex items-start gap-3 rounded-lg border p-4',
         subscription.active
-          ? 'border-stone-200 bg-white dark:border-stone-800 dark:bg-stone-900'
-          : 'border-stone-200 bg-stone-50 dark:border-stone-800 dark:bg-stone-950',
+          ? 'border-stone-200/60 bg-stone-900/10 dark:border-stone-700/40 dark:bg-stone-900/20'
+          : 'border-stone-200/60 bg-stone-900/5 dark:border-stone-700/40 dark:bg-stone-900/20',
       )}
     >
       {onToggleActive && (
