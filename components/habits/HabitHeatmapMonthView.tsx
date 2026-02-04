@@ -12,6 +12,7 @@ interface HabitHeatmapMonthViewProps {
   todayDay: number | null
   completedHabitIdsToday: Set<number>
   onToggleToday?: (habit: Habit) => void
+  onToggleDate?: (habit: Habit, dateStr: string) => void
   onEdit?: (habit: Habit) => void
   onDelete?: (habit: Habit) => void
 }
@@ -23,6 +24,7 @@ export function HabitHeatmapMonthView({
   todayDay,
   completedHabitIdsToday,
   onToggleToday,
+  onToggleDate,
   onEdit,
   onDelete,
 }: HabitHeatmapMonthViewProps) {
@@ -66,6 +68,7 @@ export function HabitHeatmapMonthView({
               todayDay={todayDay}
               completedHabitIdsToday={completedHabitIdsToday}
               onToggleToday={onToggleToday}
+              onToggleDate={onToggleDate}
               onEdit={onEdit}
               onDelete={onDelete}
             />

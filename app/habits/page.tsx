@@ -13,6 +13,7 @@ import { ErrorMessage } from '@/components/ui/error-message'
 import { MainLayout } from '@/components/layout/MainLayout'
 import { useHabits } from '@/hooks/useHabits'
 import { useHabitCompletionsByDate } from '@/hooks/useHabitCompletions'
+import { getCompletionsByDate } from '@/lib/habits'
 import { useHabitHeatmapView } from '@/hooks/useHabitHeatmapView'
 import { useMode } from '@/lib/contexts/ModeContext'
 import type { Habit, CreateHabitInput } from '@/lib/types/habit'
@@ -161,6 +162,24 @@ export default function HabitsPage() {
     }
   }
 
+  const handleToggleDate = async (habit: Habit, dateStr: string) => {
+    try {
+      setOperationError(null)
+      const completions = await getCompletionsByDate(dateStr)
+      const isCompleted = completions.some((c) => c.habitId === habit.id)
+      
+      if (isCompleted) {
+        await deleteHabitCompletion(habit.id, dateStr)
+      } else {
+        await createHabitCompletion(habit.id, dateStr)
+      }
+    } catch (err) {
+      setOperationError(
+        err instanceof Error ? err.message : '習慣の完了状態の更新に失敗しました',
+      )
+    }
+  }
+
   return (
     <MainLayout>
       <div className="container mx-auto max-w-5xl py-8 px-4">
@@ -256,6 +275,7 @@ export default function HabitsPage() {
                 month={heatmapMonth}
                 completedHabitIdsToday={completedHabitIdsToday}
                 onToggleToday={handleToggleToday}
+                onToggleDate={handleToggleDate}
                 onEdit={handleEditHabit}
                 onDelete={handleDeleteClick}
               />

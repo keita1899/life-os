@@ -21,6 +21,7 @@ export interface HabitHeatmapRowProps {
   todayDay: number | null
   completedHabitIdsToday: Set<number>
   onToggleToday?: (habit: Habit) => void
+  onToggleDate?: (habit: Habit, dateStr: string) => void
   onEdit?: (habit: Habit) => void
   onDelete?: (habit: Habit) => void
 }
@@ -32,6 +33,7 @@ export function HabitHeatmapRow({
   todayDay,
   completedHabitIdsToday,
   onToggleToday,
+  onToggleDate,
   onEdit,
   onDelete,
 }: HabitHeatmapRowProps) {
@@ -107,11 +109,15 @@ export function HabitHeatmapRow({
         const completed = isToday
           ? completedHabitIdsToday.has(habit.id)
           : completedDateSet.has(dateStr)
-        const canToggleToday =
-          isViewingCurrentMonth &&
-          isToday &&
-          isDue &&
-          onToggleToday !== undefined
+        
+        const now = new Date()
+        const isFuture = date > now
+        const isPastOrToday = !isFuture
+        
+        const canToggle = isPastOrToday && isDue && (
+          (isToday && onToggleToday !== undefined) ||
+          (!isToday && onToggleDate !== undefined)
+        )
 
         return (
           <td
@@ -122,10 +128,16 @@ export function HabitHeatmapRow({
             )}
           >
             {isDue ? (
-              canToggleToday ? (
+              canToggle ? (
                 <button
                   type="button"
-                  onClick={() => onToggleToday(habit)}
+                  onClick={() => {
+                    if (isToday && onToggleToday) {
+                      onToggleToday(habit)
+                    } else if (!isToday && onToggleDate) {
+                      onToggleDate(habit, dateStr)
+                    }
+                  }}
                   aria-label={`${day}日: ${completed ? '完了' : '未完了'}`}
                   aria-pressed={completed}
                   className={cn(
@@ -134,7 +146,7 @@ export function HabitHeatmapRow({
                       ? 'bg-green-500 dark:bg-green-600'
                       : 'bg-stone-100 dark:bg-stone-800 hover:opacity-80',
                   )}
-                  title={`${day}日${completed ? ' 完了 (クリックで未完了)' : ' (クリックで完了)'}`}
+                  title={`${day}日${completed ? ' 完了 (クリックで切り替え)' : ' (クリックで完了)'}`}
                 />
               ) : (
                 <span
@@ -142,9 +154,11 @@ export function HabitHeatmapRow({
                     'block h-4 w-4 rounded-sm',
                     completed
                       ? 'bg-green-500 dark:bg-green-600'
-                      : 'bg-stone-100 dark:bg-stone-800',
+                      : isFuture
+                        ? 'bg-stone-50 dark:bg-stone-900/50 opacity-30'
+                        : 'bg-stone-100 dark:bg-stone-800',
                   )}
-                  title={`${day}日${completed ? ' 完了' : ''}${isToday ? ' (今日)' : ''}`}
+                  title={`${day}日${completed ? ' 完了' : ''}${isToday ? ' (今日)' : ''}${isFuture ? ' (未来)' : ''}`}
                 />
               )
             ) : (

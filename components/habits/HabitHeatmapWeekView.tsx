@@ -25,6 +25,7 @@ export interface HabitHeatmapWeekViewProps {
   secondaryMonth: number
   completedHabitIdsToday: Set<number>
   onToggleToday?: (habit: Habit) => void
+  onToggleDate?: (habit: Habit, dateStr: string) => void
   onEdit?: (habit: Habit) => void
   onDelete?: (habit: Habit) => void
 }
@@ -39,6 +40,7 @@ export function HabitHeatmapWeekView({
   secondaryMonth,
   completedHabitIdsToday,
   onToggleToday,
+  onToggleDate,
   onEdit,
   onDelete,
 }: HabitHeatmapWeekViewProps) {
@@ -93,6 +95,7 @@ export function HabitHeatmapWeekView({
           secondaryMonth={secondaryMonth}
           completedHabitIdsToday={completedHabitIdsToday}
           onToggleToday={onToggleToday}
+          onToggleDate={onToggleDate}
           onEdit={onEdit}
           onDelete={onDelete}
         />
@@ -111,6 +114,7 @@ interface HabitHeatmapWeekViewRowProps {
   secondaryMonth: number
   completedHabitIdsToday: Set<number>
   onToggleToday?: (habit: Habit) => void
+  onToggleDate?: (habit: Habit, dateStr: string) => void
   onEdit?: (habit: Habit) => void
   onDelete?: (habit: Habit) => void
 }
@@ -126,6 +130,7 @@ function HabitHeatmapWeekViewRow(props: HabitHeatmapWeekViewRowProps) {
     secondaryMonth,
     completedHabitIdsToday,
     onToggleToday,
+    onToggleDate,
     onEdit,
     onDelete,
   } = props
@@ -178,8 +183,15 @@ function HabitHeatmapWeekViewRow(props: HabitHeatmapWeekViewRowProps) {
         const completed = isToday
           ? completedHabitIdsToday.has(habit.id)
           : completedDateSet.has(dateStr)
-        const canToggleToday =
-          isToday && isDue && onToggleToday !== undefined
+        
+        const now = new Date()
+        const isFuture = date > now
+        const isPastOrToday = !isFuture
+        
+        const canToggle = isPastOrToday && isDue && (
+          (isToday && onToggleToday !== undefined) ||
+          (!isToday && onToggleDate !== undefined)
+        )
 
         return (
           <div
@@ -190,17 +202,23 @@ function HabitHeatmapWeekViewRow(props: HabitHeatmapWeekViewRowProps) {
             )}
           >
             {isDue ? (
-              canToggleToday ? (
+              canToggle ? (
                 <button
                   type="button"
-                  onClick={() => onToggleToday(habit)}
+                  onClick={() => {
+                    if (isToday && onToggleToday) {
+                      onToggleToday(habit)
+                    } else if (!isToday && onToggleDate) {
+                      onToggleDate(habit, dateStr)
+                    }
+                  }}
                   className={cn(
                     'block h-4 w-4 rounded-sm focus:outline-none',
                     completed
                       ? 'bg-green-500 dark:bg-green-600'
                       : 'bg-stone-100 dark:bg-stone-800 hover:opacity-80',
                   )}
-                  title={`${format(date, 'M/d')}${completed ? ' 完了 (クリックで未完了)' : ' (クリックで完了)'}`}
+                  title={`${format(date, 'M/d')}${completed ? ' 完了 (クリックで切り替え)' : ' (クリックで完了)'}`}
                 />
               ) : (
                 <span
@@ -208,9 +226,11 @@ function HabitHeatmapWeekViewRow(props: HabitHeatmapWeekViewRowProps) {
                     'block h-4 w-4 rounded-sm',
                     completed
                       ? 'bg-green-500 dark:bg-green-600'
-                      : 'bg-stone-100 dark:bg-stone-800',
+                      : isFuture
+                        ? 'bg-stone-50 dark:bg-stone-900/50 opacity-30'
+                        : 'bg-stone-100 dark:bg-stone-800',
                   )}
-                  title={`${format(date, 'M/d')}${completed ? ' 完了' : ''}${isToday ? ' (今日)' : ''}`}
+                  title={`${format(date, 'M/d')}${completed ? ' 完了' : ''}${isToday ? ' (今日)' : ''}${isFuture ? ' (未来)' : ''}`}
                 />
               )
             ) : (
