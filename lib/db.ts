@@ -718,6 +718,27 @@ async function initializeAllTables(): Promise<void> {
     "UPDATE events SET category = 'barca' WHERE category = 'sports' AND title LIKE '%FC Barcelona%'",
   )
 
+  const tasksColumnRows = await db.select<{ name?: string; NAME?: string }[]>(
+    "SELECT name FROM pragma_table_info('tasks')",
+  )
+  const tasksColumns = new Set(
+    tasksColumnRows.map((r) => r.name ?? r.NAME ?? ''),
+  )
+  if (!tasksColumns.has('recurrence_rule')) {
+    await db.execute('ALTER TABLE tasks ADD COLUMN recurrence_rule TEXT')
+  }
+  if (!tasksColumns.has('recurrence_days_of_week')) {
+    await db.execute('ALTER TABLE tasks ADD COLUMN recurrence_days_of_week TEXT')
+  }
+  if (!tasksColumns.has('recurrence_day_of_month')) {
+    await db.execute(
+      'ALTER TABLE tasks ADD COLUMN recurrence_day_of_month INTEGER',
+    )
+  }
+  if (!tasksColumns.has('recurrence_end_date')) {
+    await db.execute('ALTER TABLE tasks ADD COLUMN recurrence_end_date TEXT')
+  }
+
   try {
     const bucketListItemsColumnRows = await db.select<
       { name?: string; NAME?: string }[]

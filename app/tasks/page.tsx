@@ -21,7 +21,12 @@ import { FloatingActionButtons } from '@/components/floating/FloatingActionButto
 import { useTasks } from '@/hooks/useTasks'
 import { useMode } from '@/lib/contexts/ModeContext'
 import { groupTasks } from '@/lib/tasks/grouping'
+import {
+  toTasksWithNextOccurrenceOnly,
+  getNextOccurrenceAfter,
+} from '@/lib/tasks'
 import { getTodayDateString } from '@/lib/date/formats'
+import { parseISO } from 'date-fns'
 import type { CreateTaskInput, Task, UpdateTaskInput } from '@/lib/types/task'
 
 export default function TasksPage() {
@@ -57,7 +62,15 @@ export default function TasksPage() {
     return () => clearInterval(interval)
   }, [todayStr])
 
-  const groupedTasks = useMemo(() => groupTasks(tasks), [tasks, todayStr])
+  const tasksWithNextOnly = useMemo(() => {
+    const today = new Date()
+    return toTasksWithNextOccurrenceOnly(tasks, today)
+  }, [tasks])
+
+  const groupedTasks = useMemo(
+    () => groupTasks(tasksWithNextOnly),
+    [tasksWithNextOnly, todayStr],
+  )
 
   if (mode !== 'life') {
     return null
@@ -83,6 +96,10 @@ export default function TasksPage() {
       const updateInput: UpdateTaskInput = {
         title: input.title,
         executionDate: input.executionDate,
+        recurrenceRule: input.recurrenceRule,
+        recurrenceDaysOfWeek: input.recurrenceDaysOfWeek,
+        recurrenceDayOfMonth: input.recurrenceDayOfMonth,
+        recurrenceEndDate: input.recurrenceEndDate,
       }
       await updateTask(editingTask.id, updateInput)
       setIsDialogOpen(false)
@@ -127,6 +144,23 @@ export default function TasksPage() {
   const handleToggleCompletion = async (task: Task) => {
     try {
       setOperationError(null)
+      if (
+        task.recurrenceRule &&
+        !task.completed &&
+        task.executionDate
+      ) {
+        const nextDate = getNextOccurrenceAfter(
+          task,
+          parseISO(task.executionDate),
+        )
+        if (nextDate !== null) {
+          await updateTask(task.id, {
+            executionDate: nextDate,
+            completed: false,
+          })
+          return
+        }
+      }
       await toggleTaskCompletion(task.id, !task.completed)
     } catch (err) {
       setOperationError(
@@ -216,9 +250,11 @@ export default function TasksPage() {
                       <h2 className="text-lg font-semibold text-stone-900 dark:text-stone-100">
                         {group.title}
                       </h2>
-                      <span className="text-sm text-muted-foreground">
-                        ({group.tasks.length})
-                      </span>
+                      {group.tasks.length > 0 && (
+                        <span className="text-sm text-muted-foreground">
+                          {group.tasks.length}
+                        </span>
+                      )}
                     </div>
                     {group.key === 'overdue' && group.tasks.length > 0 && (
                       <Button
@@ -277,7 +313,11 @@ export default function TasksPage() {
 
       <DeleteConfirmDialog
         open={!!deletingTask}
-        message={`「${deletingTask?.title}」を削除しますか？この操作は取り消せません。`}
+        message={
+          deletingTask?.recurrenceRule
+            ? `「${deletingTask?.title}」は繰り返しタスクです。削除するとすべての発生が削除されます。この操作は取り消せません。`
+            : `「${deletingTask?.title}」を削除しますか？この操作は取り消せません。`
+        }
         onConfirm={handleDeleteTask}
         onCancel={() => setDeletingTask(undefined)}
       />

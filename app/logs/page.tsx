@@ -6,6 +6,10 @@ import { format, getYear, startOfDay, endOfDay } from 'date-fns'
 import { ja } from 'date-fns/locale/ja'
 import { parseISO, isValid, addDays, subDays } from 'date-fns'
 import { expandRecurringEvents } from '@/lib/events'
+import {
+  toTasksWithNextOccurrenceOnly,
+  getNextOccurrenceAfter,
+} from '@/lib/tasks'
 import { useMode } from '@/lib/contexts/ModeContext'
 import { useRouter } from 'next/navigation'
 import { Button } from '@/components/ui/button'
@@ -106,10 +110,10 @@ function LogPageView({ logDate, date }: LogPageViewProps) {
     () => getWeeklyGoalsForDate(allWeeklyGoals, logDate),
     [allWeeklyGoals, logDate],
   )
-  const tasks = useMemo(
-    () => getTasksForDate(allTasks, logDate),
-    [allTasks, logDate],
-  )
+  const tasks = useMemo(() => {
+    const withNextOnly = toTasksWithNextOccurrenceOnly(allTasks, logDate)
+    return getTasksForDate(withNextOnly, logDate)
+  }, [allTasks, logDate])
   const events = useMemo(() => {
     const rangeStart = startOfDay(logDate)
     const rangeEnd = endOfDay(logDate)
@@ -187,6 +191,10 @@ function LogPageView({ logDate, date }: LogPageViewProps) {
       const updateInput: UpdateTaskInput = {
         title: input.title,
         executionDate: input.executionDate,
+        recurrenceRule: input.recurrenceRule,
+        recurrenceDaysOfWeek: input.recurrenceDaysOfWeek,
+        recurrenceDayOfMonth: input.recurrenceDayOfMonth,
+        recurrenceEndDate: input.recurrenceEndDate,
       }
       await updateTask(editingTask.id, updateInput)
       setIsTaskDialogOpen(false)
@@ -267,6 +275,36 @@ function LogPageView({ logDate, date }: LogPageViewProps) {
 
   const handleDeleteClick = (task: Task) => {
     setDeletingTask(task)
+  }
+
+  const handleToggleTaskCompletion = async (task: Task) => {
+    try {
+      setOperationError(null)
+      if (
+        task.recurrenceRule &&
+        !task.completed &&
+        task.executionDate
+      ) {
+        const nextDate = getNextOccurrenceAfter(
+          task,
+          parseISO(task.executionDate),
+        )
+        if (nextDate !== null) {
+          await updateTask(task.id, {
+            executionDate: nextDate,
+            completed: false,
+          })
+          return
+        }
+      }
+      await toggleTaskCompletion(task.id, !task.completed)
+    } catch (err) {
+      setOperationError(
+        err instanceof Error
+          ? err.message
+          : 'タスクの完了状態の更新に失敗しました',
+      )
+    }
   }
 
   const handleDeleteTask = async () => {
@@ -393,9 +431,7 @@ function LogPageView({ logDate, date }: LogPageViewProps) {
             />
             <LogTasksSection
               tasks={tasks}
-              onToggleCompletion={(task) =>
-                toggleTaskCompletion(task.id, !task.completed)
-              }
+              onToggleCompletion={handleToggleTaskCompletion}
               onEdit={handleEditTask}
               onDelete={handleDeleteClick}
               onUpdateExecutionDate={handleUpdateExecutionDate}
@@ -453,7 +489,11 @@ function LogPageView({ logDate, date }: LogPageViewProps) {
 
       <DeleteConfirmDialog
         open={!!deletingTask}
-        message={`「${deletingTask?.title}」を削除しますか？この操作は取り消せません。`}
+        message={
+          deletingTask?.recurrenceRule
+            ? `「${deletingTask?.title}」は繰り返しタスクです。削除するとすべての発生が削除されます。この操作は取り消せません。`
+            : `「${deletingTask?.title}」を削除しますか？この操作は取り消せません。`
+        }
         onConfirm={handleDeleteTask}
         onCancel={() => setDeletingTask(undefined)}
       />

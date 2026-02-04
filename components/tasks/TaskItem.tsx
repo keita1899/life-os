@@ -8,6 +8,7 @@ import {
   Pencil,
   Trash2,
   Calendar,
+  Repeat,
 } from 'lucide-react'
 import { getDateLabel } from '@/lib/date/labels'
 import { Button } from '@/components/ui/button'
@@ -48,6 +49,28 @@ const DATE_LABEL_STYLES: Record<string, string> = {
 
 const DEFAULT_DATE_STYLE =
   'bg-stone-100 text-stone-700 dark:bg-stone-800 dark:text-stone-300'
+
+const WEEKDAY_LABELS = ['日', '月', '火', '水', '木', '金', '土'] as const
+
+function getRecurrenceLabel(task: Task): string {
+  if (!task.recurrenceRule) return ''
+  if (task.recurrenceRule === 'daily') return '毎日'
+  if (task.recurrenceRule === 'weekly') {
+    const days = task.recurrenceDaysOfWeek
+    if (days?.length) {
+      const labels = days.map((d) => WEEKDAY_LABELS[d]).join('・')
+      return `毎週 ${labels} 曜日`
+    }
+    return '毎週'
+  }
+  if (task.recurrenceRule === 'monthly') {
+    const dom = task.recurrenceDayOfMonth
+    if (dom === 0) return '毎月末'
+    if (dom != null) return `毎月${dom}日`
+    return '毎月'
+  }
+  return ''
+}
 
 export function TaskItem({
   task,
@@ -134,9 +157,15 @@ export function TaskItem({
         >
           {task.title}
         </div>
-        {task.actualTime > 0 && (
-          <div className="mt-2 flex gap-4 text-xs text-muted-foreground">
-            <div>実績: {task.actualTime}分</div>
+        {(task.recurrenceRule || task.actualTime > 0) && (
+          <div className="mt-1 flex flex-wrap items-center gap-2 text-xs text-muted-foreground">
+            {task.recurrenceRule && (
+              <span className="inline-flex items-center gap-1 text-muted-foreground">
+                <Repeat className="h-3 w-3 shrink-0 text-violet-600 dark:text-violet-400" />
+                {getRecurrenceLabel(task)}
+              </span>
+            )}
+            {task.actualTime > 0 && <span>実績: {task.actualTime}分</span>}
           </div>
         )}
       </div>
