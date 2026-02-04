@@ -64,6 +64,5 @@ export function useTasks() {
     toggleTaskCompletion: handleToggleTaskCompletion,
     deleteCompletedTasks: handleDeleteCompletedTasks,
     updateOverdueTasksToToday: handleUpdateOverdueTasksToToday,
-    refreshTasks: () => mutate(tasksKey),
   }
 }

@@ -29,7 +29,6 @@ interface UseDevTasksResult {
   toggleTaskCompletion: (id: number, completed: boolean) => Promise<void>
   deleteCompletedTasks: () => Promise<void>
   updateOverdueTasksToToday: () => Promise<void>
-  refreshTasks: () => Promise<DevTask[] | undefined>
 }
 
 export function useDevTasks(input: {
@@ -117,7 +116,6 @@ export function useDevTasks(input: {
     toggleTaskCompletion: handleToggleTaskCompletion,
     deleteCompletedTasks: handleDeleteCompletedTasks,
     updateOverdueTasksToToday: handleUpdateOverdueTasksToToday,
-    refreshTasks,
   }
 }
 
