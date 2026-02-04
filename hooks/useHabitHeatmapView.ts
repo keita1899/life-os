@@ -1,4 +1,5 @@
-import { useState, useEffect } from 'react'
+import { useState } from 'react'
+import { useHotkeys } from 'react-hotkeys-hook'
 import { useUserSettings } from '@/hooks/useUserSettings'
 import {
   formatMonthYear,
@@ -26,29 +27,18 @@ export function useHabitHeatmapView({
   const viewMode: HabitHeatmapViewMode = viewModeOverride ?? defaultHabitView
   const setViewMode = (next: HabitHeatmapViewMode) => setViewModeOverride(next)
 
-  useEffect(() => {
-    const handleKeyDown = (e: KeyboardEvent) => {
-      const target = e.target as HTMLElement
-      const isInputFocused =
-        target.tagName === 'INPUT' ||
-        target.tagName === 'TEXTAREA' ||
-        target.tagName === 'SELECT' ||
-        target.isContentEditable
-
-      if (isInputFocused) return
-
-      if (e.key === 'm' || e.key === 'M') {
-        e.preventDefault()
-        setViewMode('month')
-      } else if (e.key === 'w' || e.key === 'W') {
-        e.preventDefault()
-        setViewMode('week')
-      }
-    }
-
-    window.addEventListener('keydown', handleKeyDown)
-    return () => window.removeEventListener('keydown', handleKeyDown)
-  }, [])
+  useHotkeys(
+    'm',
+    () => setViewMode('month'),
+    { enableOnFormTags: false, preventDefault: true },
+    [],
+  )
+  useHotkeys(
+    'w',
+    () => setViewMode('week'),
+    { enableOnFormTags: false, preventDefault: true },
+    [],
+  )
 
   const handlePrev = () => {
     setCurrentDate((prev) =>

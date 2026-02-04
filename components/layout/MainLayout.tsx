@@ -1,6 +1,7 @@
 'use client'
 
-import { useCallback, useEffect, useState } from 'react'
+import { useCallback, useState } from 'react'
+import { useHotkeys } from 'react-hotkeys-hook'
 import { useMode } from '@/lib/contexts/ModeContext'
 import { Header } from './Header'
 import { Sidebar } from './Sidebar'
@@ -37,30 +38,15 @@ export function MainLayout({ children }: MainLayoutProps) {
     }
   }, [])
 
-  useEffect(() => {
-    const handleKeyDown = (e: KeyboardEvent) => {
-      const target = e.target as HTMLElement
-      const isInputFocused =
-        target.tagName === 'INPUT' ||
-        target.tagName === 'TEXTAREA' ||
-        target.tagName === 'SELECT' ||
-        target.isContentEditable
-
-      if (isInputFocused) {
-        return
-      }
-
-      if ((e.metaKey || e.ctrlKey) && e.key === 'b') {
-        e.preventDefault()
-        handleOpenChange(!isSidebarOpen)
-      }
-    }
-
-    window.addEventListener('keydown', handleKeyDown)
-    return () => {
-      window.removeEventListener('keydown', handleKeyDown)
-    }
-  }, [handleOpenChange, isSidebarOpen])
+  useHotkeys(
+    'mod+b',
+    () => handleOpenChange(!isSidebarOpen),
+    {
+      enableOnFormTags: false,
+      preventDefault: true,
+    },
+    [handleOpenChange, isSidebarOpen],
+  )
 
   const handleMenuClick = useCallback((): void => {
     handleOpenChange(!isSidebarOpen)

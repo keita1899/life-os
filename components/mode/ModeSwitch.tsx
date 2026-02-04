@@ -1,6 +1,7 @@
 'use client'
 
 import { useEffect } from 'react'
+import { useHotkeys } from 'react-hotkeys-hook'
 import { useMode } from '@/lib/contexts/ModeContext'
 import { Button } from '@/components/ui/button'
 import { usePathname, useRouter, useSearchParams } from 'next/navigation'
@@ -61,41 +62,32 @@ export function ModeSwitch() {
     router.push(isValidPathForMode(newMode, lastPath) ? lastPath : '/')
   }
 
-  useEffect(() => {
-    const handleKeyDown = (e: KeyboardEvent) => {
-      const target = e.target as HTMLElement
-      const isInputFocused =
-        target.tagName === 'INPUT' ||
-        target.tagName === 'TEXTAREA' ||
-        target.tagName === 'SELECT' ||
-        target.isContentEditable
-
-      if (isInputFocused) {
-        return
+  useHotkeys(
+    'l',
+    () => {
+      if (mode !== 'life') {
+        setMode('life')
+        const lastPath = safeGetLocalStorage(LAST_PATH_LIFE_KEY, '/')
+        router.push(isValidPathForMode('life', lastPath) ? lastPath : '/')
       }
-
-      if (e.key === 'l' || e.key === 'L') {
-        e.preventDefault()
-        if (mode !== 'life') {
-          setMode('life')
-          const lastPath = safeGetLocalStorage(LAST_PATH_LIFE_KEY, '/')
-          router.push(isValidPathForMode('life', lastPath) ? lastPath : '/')
-        }
-      } else if (e.key === 'd' || e.key === 'D') {
-        e.preventDefault()
-        if (mode !== 'development') {
-          setMode('development')
-          const lastPath = safeGetLocalStorage(LAST_PATH_DEV_KEY, '/')
-          router.push(isValidPathForMode('development', lastPath) ? lastPath : '/')
-        }
+    },
+    { enableOnFormTags: false, preventDefault: true },
+    [mode, router, setMode],
+  )
+  useHotkeys(
+    'd',
+    () => {
+      if (mode !== 'development') {
+        setMode('development')
+        const lastPath = safeGetLocalStorage(LAST_PATH_DEV_KEY, '/')
+        router.push(
+          isValidPathForMode('development', lastPath) ? lastPath : '/',
+        )
       }
-    }
-
-    window.addEventListener('keydown', handleKeyDown)
-    return () => {
-      window.removeEventListener('keydown', handleKeyDown)
-    }
-  }, [mode, router, setMode])
+    },
+    { enableOnFormTags: false, preventDefault: true },
+    [mode, router, setMode],
+  )
 
   return (
     <div className="flex items-center gap-2 rounded-lg border border-input bg-background p-1">
