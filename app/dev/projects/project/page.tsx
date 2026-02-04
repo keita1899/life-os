@@ -31,7 +31,7 @@ import {
   AccordionItem,
   AccordionTrigger,
 } from '@/components/ui/accordion'
-import { Trash2, Calendar, Focus } from 'lucide-react'
+import { Pencil, Trash2, Calendar, Focus } from 'lucide-react'
 
 const statusLabels: Record<ProjectStatus, string> = {
   draft: '下書き',
@@ -271,16 +271,22 @@ export default function DevProjectPage(): ReactElement | null {
           {data && (
             <div className="flex items-center gap-2">
               <Button
-                variant="outline"
+                variant="ghost"
+                size="icon"
                 onClick={() => setIsEditDialogOpen(true)}
+                className="text-muted-foreground hover:text-foreground"
+                aria-label="編集"
               >
-                編集
+                <Pencil className="h-4 w-4" />
               </Button>
               <Button
-                variant="destructive"
+                variant="ghost"
+                size="icon"
                 onClick={() => setIsDeleteDialogOpen(true)}
+                className="text-muted-foreground hover:text-red-600 hover:dark:text-red-400"
+                aria-label="削除"
               >
-                削除
+                <Trash2 className="h-4 w-4" />
               </Button>
             </div>
           )}
@@ -309,7 +315,7 @@ export default function DevProjectPage(): ReactElement | null {
         ) : (
           <div className="space-y-6">
             <section>
-              <div className="mt-3 rounded-lg border border-stone-200 bg-white p-4 dark:border-stone-800 dark:bg-stone-900">
+              <div className="mt-3 border-b border-stone-200 py-4 dark:border-stone-800">
                 <dl className="grid gap-4 sm:grid-cols-3">
                   <div>
                     <dt className="text-xs font-medium text-muted-foreground">
@@ -369,9 +375,11 @@ export default function DevProjectPage(): ReactElement | null {
                               <h3 className="text-lg font-semibold text-stone-900 dark:text-stone-100">
                                 {group.title}
                               </h3>
-                              <span className="text-sm text-muted-foreground">
-                                ({group.tasks.length})
-                              </span>
+                              {group.tasks.length > 0 && (
+                                <span className="text-sm text-muted-foreground">
+                                  {group.tasks.length}
+                                </span>
+                              )}
                             </div>
                             {group.key === 'overdue' && group.tasks.length > 0 && (
                               <span
