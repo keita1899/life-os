@@ -152,9 +152,11 @@ export default function EventsPage() {
                     <h2 className="text-lg font-semibold text-stone-900 dark:text-stone-100">
                       {group.title}
                     </h2>
-                    <span className="text-sm text-muted-foreground">
-                      ({group.events.length})
-                    </span>
+                    {group.events.length > 0 && (
+                      <span className="text-sm text-muted-foreground">
+                        {group.events.length}
+                      </span>
+                    )}
                   </div>
                 </AccordionTrigger>
               </AccordionHeader>

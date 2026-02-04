@@ -243,7 +243,7 @@ export default function BucketListPage() {
           onSelectCategory={setSelectedCategoryId}
         />
         <div className="min-h-0 flex-1 overflow-y-auto">
-          <div className="container mx-auto max-w-4xl py-8 px-4">
+          <div className="mx-auto max-w-3xl p-8">
             <div className="mb-6 flex items-center justify-between">
               <h1 className="text-3xl font-bold">{selectedCategoryName}</h1>
               <Button onClick={() => setIsDialogOpen(true)}>
@@ -321,9 +321,11 @@ export default function BucketListPage() {
                                 <span className="text-stone-900 dark:text-stone-100">
                                   {month}月
                                 </span>
-                                <span className="text-sm text-muted-foreground">
-                                  ({monthItems.length})
-                                </span>
+                                {monthItems.length > 0 && (
+                                  <span className="text-sm text-muted-foreground">
+                                    {monthItems.length}
+                                  </span>
+                                )}
                               </span>
                             </AccordionTrigger>
                           </AccordionHeader>
@@ -349,9 +351,11 @@ export default function BucketListPage() {
                             <span className="text-stone-900 dark:text-stone-100">
                               未定
                             </span>
-                            <span className="text-sm text-muted-foreground">
-                              ({incompleteByMonth.unset.length})
-                            </span>
+                            {incompleteByMonth.unset.length > 0 && (
+                              <span className="text-sm text-muted-foreground">
+                                {incompleteByMonth.unset.length}
+                              </span>
+                            )}
                           </span>
                         </AccordionTrigger>
                       </AccordionHeader>
@@ -372,9 +376,11 @@ export default function BucketListPage() {
                           <span className="text-stone-900 dark:text-stone-100">
                             完了済み
                           </span>
-                          <span className="text-sm text-muted-foreground">
-                            ({completedItems.length})
-                          </span>
+                          {completedItems.length > 0 && (
+                            <span className="text-sm text-muted-foreground">
+                              {completedItems.length}
+                            </span>
+                          )}
                         </span>
                       </AccordionTrigger>
                     </AccordionHeader>

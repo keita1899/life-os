@@ -231,9 +231,11 @@ export default function DevTasksPage() {
                         <h2 className="text-lg font-semibold text-stone-900 dark:text-stone-100">
                           {group.title}
                         </h2>
-                        <span className="text-sm text-muted-foreground">
-                          ({group.tasks.length})
-                        </span>
+                        {group.tasks.length > 0 && (
+                          <span className="text-sm text-muted-foreground">
+                            {group.tasks.length}
+                          </span>
+                        )}
                       </div>
                       {group.key === 'overdue' && group.tasks.length > 0 && (
                         <Button

@@ -219,7 +219,7 @@ export default function WishlistPage() {
           onSelectCategory={setSelectedCategoryId}
         />
         <div className="min-h-0 flex-1 overflow-y-auto">
-          <div className="container mx-auto max-w-4xl py-8 px-4">
+          <div className="mx-auto max-w-3xl p-8">
             <div className="mb-6 flex items-center justify-between">
               <h1 className="text-3xl font-bold">欲しいものリスト</h1>
               <Button onClick={() => setIsDialogOpen(true)}>
@@ -228,11 +228,13 @@ export default function WishlistPage() {
             </div>
 
             {totalPrice > 0 && (
-              <div className="mb-6 rounded-lg border border-stone-200 bg-white p-4 dark:border-stone-800 dark:bg-stone-900">
-                <div className="text-sm text-muted-foreground">未購入の合計金額</div>
-                <div className="text-2xl font-bold">
-                  {totalPrice.toLocaleString()}円
-                </div>
+              <div className="mb-6 border-b border-stone-200 py-4 dark:border-stone-800">
+                <p className="text-lg text-muted-foreground">
+                  未購入の合計金額:{' '}
+                  <span className="font-semibold text-foreground tabular-nums">
+                    {totalPrice.toLocaleString()}円
+                  </span>
+                </p>
               </div>
             )}
 
@@ -276,9 +278,11 @@ export default function WishlistPage() {
                           <h2 className="text-lg font-semibold text-stone-900 dark:text-stone-100">
                             未購入
                           </h2>
-                          <span className="text-sm text-muted-foreground">
-                            ({unpurchasedItems.length})
-                          </span>
+                          {unpurchasedItems.length > 0 && (
+                            <span className="text-sm text-muted-foreground">
+                              {unpurchasedItems.length}
+                            </span>
+                          )}
                         </div>
                       </AccordionTrigger>
                     </AccordionHeader>
@@ -300,9 +304,11 @@ export default function WishlistPage() {
                           <h2 className="text-lg font-semibold text-stone-900 dark:text-stone-100">
                             購入済
                           </h2>
-                          <span className="text-sm text-muted-foreground">
-                            ({purchasedItems.length})
-                          </span>
+                          {purchasedItems.length > 0 && (
+                            <span className="text-sm text-muted-foreground">
+                              {purchasedItems.length}
+                            </span>
+                          )}
                         </div>
                       </AccordionTrigger>
                     </AccordionHeader>

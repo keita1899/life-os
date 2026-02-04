@@ -605,7 +605,7 @@ export default function FocusPage() {
               <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
                 <div className="space-y-4">
                   <div className="text-lg font-semibold">
-                    今日のタスク ({availableTasks.length}件)
+                    今日のタスク{availableTasks.length > 0 ? ` ${availableTasks.length}件` : ''}
                   </div>
                   {availableTasks.length === 0 ? (
                     <EmptyListDroppable id="available-tasks-list">
@@ -656,7 +656,7 @@ export default function FocusPage() {
 
                 <div className="space-y-4">
                   <div className="text-lg font-semibold">
-                    フォーカスタスク ({focusTasks.length}件)
+                    フォーカスタスク{focusTasks.length > 0 ? ` ${focusTasks.length}件` : ''}
                   </div>
                   {focusTasks.length === 0 ? (
                     <EmptyListDroppable id="focus-tasks-list">
