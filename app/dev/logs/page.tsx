@@ -428,16 +428,16 @@ function DevLogPageView({ logDate, date }: DevLogPageViewProps) {
         <FloatingActionButtons
           actions={[
             {
-              id: 'create-task',
-              label: 'タスクを作成',
-              icon: <CheckSquare className="h-5 w-5" />,
-              onClick: handleOpenCreateTask,
-            },
-            {
               id: 'focus',
               label: 'フォーカスモード',
               icon: <Focus className="h-5 w-5" />,
               onClick: () => router.push('/dev/focus'),
+            },
+            {
+              id: 'create-task',
+              label: 'タスクを作成',
+              icon: <CheckSquare className="h-5 w-5" />,
+              onClick: handleOpenCreateTask,
             },
           ]}
         />
