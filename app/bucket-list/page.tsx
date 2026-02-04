@@ -16,6 +16,7 @@ import { BucketListCategorySidebar } from '@/components/bucket-list/BucketListCa
 import { DeleteConfirmDialog } from '@/components/ui/delete-confirm-dialog'
 import { Loading } from '@/components/ui/loading'
 import { ErrorMessage } from '@/components/ui/error-message'
+import { EmptyState } from '@/components/ui/empty-state'
 import { MainLayout } from '@/components/layout/MainLayout'
 import { useBucketList } from '@/hooks/useBucketList'
 import { useBucketListCategories } from '@/hooks/useBucketListCategories'
@@ -130,9 +131,9 @@ export default function BucketListPage() {
       .filter((month) => (incompleteByMonth.byMonth[month] ?? []).length > 0)
       .forEach((month) => values.push(`month-${month}`))
     if (incompleteByMonth.unset.length > 0) values.push('month-unset')
-    values.push('completed')
+    if (completedItems.length > 0) values.push('completed')
     return values
-  }, [incompleteByMonth])
+  }, [incompleteByMonth, completedItems.length])
 
   if (mode !== 'life') {
     return null
@@ -230,7 +231,7 @@ export default function BucketListPage() {
       setOperationError(
         err instanceof Error
           ? err.message
-          : '完了済みやりたいことの削除に失敗しました',
+          : '達成済みやりたいことの削除に失敗しました',
       )
     }
   }
@@ -281,6 +282,8 @@ export default function BucketListPage() {
                   </div>
                 )}
               </div>
+            ) : filteredItems.length === 0 ? (
+              <EmptyState message="やりたいことがありません" />
             ) : (
               <>
                 <div className="mb-4 flex justify-end">
@@ -369,30 +372,28 @@ export default function BucketListPage() {
                       </AccordionContent>
                     </AccordionItem>
                   )}
-                  <AccordionItem value="completed" className="border-none">
-                    <AccordionHeader>
-                      <AccordionTrigger className="hover:no-underline py-2">
-                        <span className="inline-flex items-center gap-1">
-                          <span className="text-stone-900 dark:text-stone-100">
-                            完了済み
-                          </span>
-                          {completedItems.length > 0 && (
+                  {completedItems.length > 0 && (
+                    <AccordionItem value="completed" className="border-none">
+                      <AccordionHeader>
+                        <AccordionTrigger className="hover:no-underline py-2">
+                          <span className="inline-flex items-center gap-1">
+                            <span className="text-stone-900 dark:text-stone-100">
+                              達成済み
+                            </span>
                             <span className="text-sm text-muted-foreground">
                               {completedItems.length}
                             </span>
-                          )}
-                        </span>
-                      </AccordionTrigger>
-                    </AccordionHeader>
-                    <AccordionContent className="pt-2">
-                      <div className="space-y-4">
-                        <BucketListList
-                          items={completedItems}
-                          onEdit={handleEditItem}
-                          onDelete={handleDeleteClick}
-                          onToggleCompletion={handleToggleCompletion}
-                        />
-                        {completedItems.length > 0 && (
+                          </span>
+                        </AccordionTrigger>
+                      </AccordionHeader>
+                      <AccordionContent className="pt-2">
+                        <div className="space-y-4">
+                          <BucketListList
+                            items={completedItems}
+                            onEdit={handleEditItem}
+                            onDelete={handleDeleteClick}
+                            onToggleCompletion={handleToggleCompletion}
+                          />
                           <div className="flex justify-end">
                             <Button
                               type="button"
@@ -402,13 +403,13 @@ export default function BucketListPage() {
                               onClick={handleDeleteCompletedItemsClick}
                             >
                               <Trash2 className="mr-2 h-4 w-4" />
-                              完了済みを一括削除
+                              達成済みを一括削除
                             </Button>
                           </div>
-                        )}
-                      </div>
-                    </AccordionContent>
-                  </AccordionItem>
+                        </div>
+                      </AccordionContent>
+                    </AccordionItem>
+                  )}
                 </Accordion>
               </>
             )}
@@ -437,7 +438,7 @@ export default function BucketListPage() {
 
             <DeleteConfirmDialog
               open={isDeletingCompletedDialogOpen}
-              message={`完了済みのやりたいこと（${completedItems.length}件）をすべて削除しますか？この操作は取り消せません。`}
+              message={`達成済みのやりたいこと（${completedItems.length}件）をすべて削除しますか？この操作は取り消せません。`}
               onConfirm={handleDeleteCompletedItems}
               onCancel={() => setIsDeletingCompletedDialogOpen(false)}
             />
