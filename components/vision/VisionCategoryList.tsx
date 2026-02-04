@@ -49,9 +49,8 @@ export function VisionCategoryList({
         <button
           onClick={() => onSelectCategory('all')}
           className={cn(
-            'w-full rounded-md py-2 px-2 text-left text-sm transition-colors hover:bg-accent hover:text-accent-foreground',
-            selectedCategoryId === 'all' &&
-              'bg-accent text-accent-foreground font-medium',
+            'w-full rounded-md py-2 px-2 text-left text-sm transition-colors hover:bg-stone-800',
+            selectedCategoryId === 'all' && 'bg-stone-800 font-medium',
           )}
         >
           すべて
@@ -75,9 +74,9 @@ export function VisionCategoryList({
               }
             }}
             className={cn(
-              'group flex items-center gap-2 rounded-md py-2 px-2 text-sm transition-colors hover:bg-accent hover:text-accent-foreground cursor-pointer',
+              'group flex items-center gap-2 rounded-md py-2 px-2 text-sm transition-colors hover:bg-stone-800 cursor-pointer',
               selectedCategoryId === category.id &&
-                'bg-accent text-accent-foreground font-medium',
+                'bg-stone-800 font-medium',
             )}
           >
             {editingCategoryId === category.id ? (

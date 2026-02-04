@@ -50,9 +50,8 @@ export function WishlistCategoryList({
           <button
             onClick={() => onSelectCategory('all')}
             className={cn(
-              'w-full rounded-md py-2 px-2 text-left text-sm transition-colors hover:bg-accent hover:text-accent-foreground',
-              selectedCategoryId === 'all' &&
-                'bg-accent text-accent-foreground font-medium',
+              'w-full rounded-md py-2 px-2 text-left text-sm transition-colors hover:bg-stone-800',
+              selectedCategoryId === 'all' && 'bg-stone-800 font-medium',
             )}
           >
             すべて
@@ -60,9 +59,8 @@ export function WishlistCategoryList({
           <button
             onClick={() => onSelectCategory('none')}
             className={cn(
-              'w-full rounded-md py-2 px-2 text-left text-sm transition-colors hover:bg-accent hover:text-accent-foreground',
-              selectedCategoryId === 'none' &&
-                'bg-accent text-accent-foreground font-medium',
+              'w-full rounded-md py-2 px-2 text-left text-sm transition-colors hover:bg-stone-800',
+              selectedCategoryId === 'none' && 'bg-stone-800 font-medium',
             )}
           >
             未分類
@@ -70,7 +68,7 @@ export function WishlistCategoryList({
         </div>
 
         <div className="space-y-0.5">
-          <p className="px-2 py-1 text-xs font-medium text-muted-foreground">
+          <p className="px-2 py-1 text-xs font-medium text-stone-400">
             カテゴリー
           </p>
           {categories.map((category) => (
@@ -91,9 +89,9 @@ export function WishlistCategoryList({
                 }
               }}
               className={cn(
-                'group flex items-center gap-2 rounded-md py-2 px-2 text-sm transition-colors hover:bg-accent hover:text-accent-foreground cursor-pointer',
+                'group flex items-center gap-2 rounded-md py-2 px-2 text-sm transition-colors hover:bg-stone-800 cursor-pointer',
                 selectedCategoryId === category.id.toString() &&
-                  'bg-accent text-accent-foreground font-medium',
+                  'bg-stone-800 font-medium',
               )}
             >
               {editingCategoryId === category.id ? (

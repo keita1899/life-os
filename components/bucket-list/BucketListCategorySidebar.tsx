@@ -81,14 +81,14 @@ export function BucketListCategorySidebar({
 
   if (isLoading) {
     return (
-      <div className="w-64 border-r border-stone-200 bg-muted/40 p-4 dark:border-stone-800">
+      <div className="w-64 border-r border-stone-200/60 bg-stone-900/10 p-4 text-foreground dark:border-stone-700/40 dark:bg-stone-900/20">
         <Loading />
       </div>
     )
   }
 
   return (
-    <div className="flex h-full w-64 flex-col border-r border-stone-200 bg-muted/40 dark:border-stone-800">
+    <div className="flex h-full w-64 flex-col border-r border-stone-200/60 bg-stone-900/10 text-foreground dark:border-stone-700/40 dark:bg-stone-900/20">
       <div className="flex-1 overflow-y-auto p-4">
         <h2 className="mb-4 text-lg font-semibold">やりたいことリスト</h2>
 
@@ -106,7 +106,7 @@ export function BucketListCategorySidebar({
         />
       </div>
 
-      <div className="border-t border-stone-200 p-4 dark:border-stone-800">
+      <div className="border-t border-stone-700/60 p-4">
         <BucketListCategoryCreateForm onSubmit={handleCreateCategory} />
       </div>
     </div>
