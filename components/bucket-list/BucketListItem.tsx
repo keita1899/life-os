@@ -7,6 +7,8 @@ import {
   MoreVertical,
   Pencil,
   Trash2,
+  Calendar,
+  CheckSquare,
 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import {
@@ -25,6 +27,8 @@ interface BucketListItemProps {
   onEdit?: (item: BucketListItemType) => void
   onDelete?: (item: BucketListItemType) => void
   onToggleCompletion?: (item: BucketListItemType) => void
+  onConvertToEvent?: (item: BucketListItemType) => void
+  onConvertToTask?: (item: BucketListItemType) => void
 }
 
 export function BucketListItem({
@@ -32,6 +36,8 @@ export function BucketListItem({
   onEdit,
   onDelete,
   onToggleCompletion,
+  onConvertToEvent,
+  onConvertToTask,
 }: BucketListItemProps) {
   const { userSettings } = useUserSettings()
   const birthday = userSettings?.birthday ?? null
@@ -142,6 +148,18 @@ export function BucketListItem({
               <DropdownMenuItem onClick={() => onEdit(item)}>
                 <Pencil className="mr-2 h-4 w-4" />
                 <span>編集</span>
+              </DropdownMenuItem>
+            )}
+            {!item.completed && onConvertToEvent && (
+              <DropdownMenuItem onClick={() => onConvertToEvent(item)}>
+                <Calendar className="mr-2 h-4 w-4" />
+                <span>予定に変換</span>
+              </DropdownMenuItem>
+            )}
+            {!item.completed && onConvertToTask && (
+              <DropdownMenuItem onClick={() => onConvertToTask(item)}>
+                <CheckSquare className="mr-2 h-4 w-4" />
+                <span>タスクに変換</span>
               </DropdownMenuItem>
             )}
             {onDelete && (

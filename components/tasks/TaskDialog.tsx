@@ -9,6 +9,7 @@ interface TaskDialogProps {
   onOpenChange: (open: boolean) => void
   onSubmit: (input: CreateTaskInput) => Promise<void>
   task?: Task
+  defaultTitle?: string
   defaultExecutionDate?: string
 }
 
@@ -17,6 +18,7 @@ export const TaskDialog = ({
   onOpenChange,
   onSubmit,
   task,
+  defaultTitle,
   defaultExecutionDate,
 }: TaskDialogProps) => {
   return (
@@ -30,7 +32,7 @@ export const TaskDialog = ({
         edit: 'タスクを編集',
       }}
       formComponent={TaskForm}
-      formProps={{ defaultExecutionDate }}
+      formProps={{ defaultTitle, defaultExecutionDate }}
     />
   )
 }

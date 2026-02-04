@@ -77,6 +77,7 @@ interface EventFormProps {
   onSubmit: (data: CreateEventInput) => Promise<void>
   onCancel?: () => void
   initialData?: Event
+  defaultTitle?: string
   defaultStartDate?: string
   submitLabel?: string
 }
@@ -85,13 +86,18 @@ export const EventForm = ({
   onSubmit,
   onCancel,
   initialData,
+  defaultTitle,
   defaultStartDate,
   submitLabel = '作成',
 }: EventFormProps) => {
   const baseValues = getEventFormValues(initialData) as EventFormValues
   const values =
-    !initialData && defaultStartDate
-      ? { ...baseValues, startDate: defaultStartDate }
+    !initialData && (defaultTitle || defaultStartDate)
+      ? {
+          ...baseValues,
+          ...(defaultTitle && { title: defaultTitle }),
+          ...(defaultStartDate && { startDate: defaultStartDate }),
+        }
       : baseValues
 
   const form = useForm<EventFormValues>({

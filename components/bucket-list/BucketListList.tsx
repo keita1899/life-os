@@ -9,6 +9,8 @@ interface BucketListListProps {
   onEdit?: (item: BucketListItemType) => void
   onDelete?: (item: BucketListItemType) => void
   onToggleCompletion?: (item: BucketListItemType) => void
+  onConvertToEvent?: (item: BucketListItemType) => void
+  onConvertToTask?: (item: BucketListItemType) => void
 }
 
 export function BucketListList({
@@ -16,6 +18,8 @@ export function BucketListList({
   onEdit,
   onDelete,
   onToggleCompletion,
+  onConvertToEvent,
+  onConvertToTask,
 }: BucketListListProps) {
   if (items.length === 0) {
     return <EmptyState message="やりたいことがありません" />
@@ -30,6 +34,8 @@ export function BucketListList({
           onEdit={onEdit}
           onDelete={onDelete}
           onToggleCompletion={onToggleCompletion}
+          onConvertToEvent={onConvertToEvent}
+          onConvertToTask={onConvertToTask}
         />
       ))}
     </div>

@@ -20,7 +20,12 @@ import { EmptyState } from '@/components/ui/empty-state'
 import { MainLayout } from '@/components/layout/MainLayout'
 import { useBucketList } from '@/hooks/useBucketList'
 import { useBucketListCategories } from '@/hooks/useBucketListCategories'
+import { useEvents } from '@/hooks/useEvents'
+import { useTasks } from '@/hooks/useTasks'
 import { useMode } from '@/lib/contexts/ModeContext'
+import { getDateFromBucketItem } from '@/lib/bucket-list/conversion'
+import { EventDialog } from '@/components/events/EventDialog'
+import { TaskDialog } from '@/components/tasks/TaskDialog'
 import {
   Select,
   SelectContent,
@@ -33,6 +38,8 @@ import type {
   BucketListItem,
   UpdateBucketListItemInput,
 } from '@/lib/types/bucket-list-item'
+import type { CreateEventInput, UpdateEventInput } from '@/lib/types/event'
+import type { CreateTaskInput, UpdateTaskInput } from '@/lib/types/task'
 
 export default function BucketListPage() {
   const { mode } = useMode()
@@ -47,6 +54,8 @@ export default function BucketListPage() {
     deleteBucketListItemsByIds,
   } = useBucketList()
   const { categories } = useBucketListCategories()
+  const { createEvent } = useEvents()
+  const { createTask } = useTasks()
   const [selectedCategoryId, setSelectedCategoryId] = useState<string>('all')
   const [selectedYear, setSelectedYear] = useState<string>('all')
   const [isDialogOpen, setIsDialogOpen] = useState(false)
@@ -58,6 +67,12 @@ export default function BucketListPage() {
   )
   const [isDeletingCompletedDialogOpen, setIsDeletingCompletedDialogOpen] =
     useState(false)
+  const [convertingToEventItem, setConvertingToEventItem] = useState<
+    BucketListItem | undefined
+  >(undefined)
+  const [convertingToTaskItem, setConvertingToTaskItem] = useState<
+    BucketListItem | undefined
+  >(undefined)
   const [operationError, setOperationError] = useState<string | null>(null)
 
   const availableYears = useMemo(() => {
@@ -236,6 +251,44 @@ export default function BucketListPage() {
     }
   }
 
+  const handleConvertToEvent = (item: BucketListItem) => {
+    setConvertingToEventItem(item)
+  }
+
+  const handleConvertToTask = (item: BucketListItem) => {
+    setConvertingToTaskItem(item)
+  }
+
+  const handleCreateEventFromBucketItem = async (input: CreateEventInput) => {
+    if (!convertingToEventItem) return
+
+    try {
+      setOperationError(null)
+      await createEvent(input)
+      await deleteBucketListItem(convertingToEventItem.id)
+      setConvertingToEventItem(undefined)
+    } catch (err) {
+      setOperationError(
+        err instanceof Error ? err.message : '予定の作成に失敗しました',
+      )
+    }
+  }
+
+  const handleCreateTaskFromBucketItem = async (input: CreateTaskInput) => {
+    if (!convertingToTaskItem) return
+
+    try {
+      setOperationError(null)
+      await createTask(input)
+      await deleteBucketListItem(convertingToTaskItem.id)
+      setConvertingToTaskItem(undefined)
+    } catch (err) {
+      setOperationError(
+        err instanceof Error ? err.message : 'タスクの作成に失敗しました',
+      )
+    }
+  }
+
   return (
     <MainLayout>
       <div className="flex h-[calc(100vh-3.5rem)]">
@@ -266,6 +319,8 @@ export default function BucketListPage() {
                   onEdit={handleEditItem}
                   onDelete={handleDeleteClick}
                   onToggleCompletion={handleToggleCompletion}
+                  onConvertToEvent={handleConvertToEvent}
+                  onConvertToTask={handleConvertToTask}
                 />
                 {filteredItems.length > 0 && (
                   <div className="flex justify-end">
@@ -338,6 +393,8 @@ export default function BucketListPage() {
                               onEdit={handleEditItem}
                               onDelete={handleDeleteClick}
                               onToggleCompletion={handleToggleCompletion}
+                              onConvertToEvent={handleConvertToEvent}
+                              onConvertToTask={handleConvertToTask}
                             />
                           </AccordionContent>
                         </AccordionItem>
@@ -368,6 +425,8 @@ export default function BucketListPage() {
                           onEdit={handleEditItem}
                           onDelete={handleDeleteClick}
                           onToggleCompletion={handleToggleCompletion}
+                          onConvertToEvent={handleConvertToEvent}
+                          onConvertToTask={handleConvertToTask}
                         />
                       </AccordionContent>
                     </AccordionItem>
@@ -393,6 +452,8 @@ export default function BucketListPage() {
                             onEdit={handleEditItem}
                             onDelete={handleDeleteClick}
                             onToggleCompletion={handleToggleCompletion}
+                            onConvertToEvent={handleConvertToEvent}
+                            onConvertToTask={handleConvertToTask}
                           />
                           <div className="flex justify-end">
                             <Button
@@ -441,6 +502,34 @@ export default function BucketListPage() {
               message={`達成済みのやりたいこと（${completedItems.length}件）をすべて削除しますか？この操作は取り消せません。`}
               onConfirm={handleDeleteCompletedItems}
               onCancel={() => setIsDeletingCompletedDialogOpen(false)}
+            />
+
+            <EventDialog
+              open={!!convertingToEventItem}
+              onOpenChange={(open) => {
+                if (!open) setConvertingToEventItem(undefined)
+              }}
+              onSubmit={handleCreateEventFromBucketItem}
+              defaultTitle={convertingToEventItem?.title}
+              defaultStartDate={
+                convertingToEventItem
+                  ? getDateFromBucketItem(convertingToEventItem)
+                  : undefined
+              }
+            />
+
+            <TaskDialog
+              open={!!convertingToTaskItem}
+              onOpenChange={(open) => {
+                if (!open) setConvertingToTaskItem(undefined)
+              }}
+              onSubmit={handleCreateTaskFromBucketItem}
+              defaultTitle={convertingToTaskItem?.title}
+              defaultExecutionDate={
+                convertingToTaskItem
+                  ? getDateFromBucketItem(convertingToTaskItem)
+                  : undefined
+              }
             />
           </div>
         </div>
