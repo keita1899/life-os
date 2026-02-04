@@ -25,15 +25,17 @@ export function VisionList({
   readOnly = false,
 }: VisionListProps) {
   const [isCreating, setIsCreating] = useState(false)
+  const [createKey, setCreateKey] = useState(0)
 
   const handleCreate = async (title: string) => {
     await onCreate(title)
-    setIsCreating(false)
+    setCreateKey((prev) => prev + 1)
   }
 
   const addButton = showCreateForm && (
     isCreating ? (
       <VisionForm
+        key={createKey}
         onSubmit={handleCreate}
         onCancel={() => setIsCreating(false)}
       />
