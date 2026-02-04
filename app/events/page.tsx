@@ -46,6 +46,14 @@ export default function EventsPage() {
 
   const groupedEvents = useMemo(() => groupEvents(expandedEvents), [expandedEvents])
 
+  const visibleGroups = useMemo(
+    () =>
+      groupedEvents.filter(
+        (group) => group.key === 'today' || group.events.length > 0,
+      ),
+    [groupedEvents],
+  )
+
   const handleCreateEvent = async (input: CreateEventInput) => {
     try {
       setOperationError(null)
@@ -142,9 +150,9 @@ export default function EventsPage() {
         <Accordion
           type="multiple"
           className="w-full"
-          defaultValue={groupedEvents.map((group) => group.key)}
+          defaultValue={visibleGroups.map((group) => group.key)}
         >
-          {groupedEvents.map((group) => (
+          {visibleGroups.map((group) => (
             <AccordionItem key={group.key} value={group.key}>
               <AccordionHeader>
                 <AccordionTrigger className="hover:no-underline">

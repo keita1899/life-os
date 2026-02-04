@@ -69,7 +69,15 @@ export default function TasksPage() {
 
   const groupedTasks = useMemo(
     () => groupTasks(tasksWithNextOnly),
-    [tasksWithNextOnly, todayStr],
+    [tasksWithNextOnly],
+  )
+
+  const visibleGroups = useMemo(
+    () =>
+      groupedTasks.filter(
+        (group) => group.key === 'today' || group.tasks.length > 0,
+      ),
+    [groupedTasks],
   )
 
   if (mode !== 'life') {
@@ -239,9 +247,9 @@ export default function TasksPage() {
         <Accordion
           type="multiple"
           className="w-full"
-          defaultValue={groupedTasks.map((group) => group.key)}
+          defaultValue={visibleGroups.map((group) => group.key)}
         >
-          {groupedTasks.map((group) => (
+          {visibleGroups.map((group) => (
             <AccordionItem key={group.key} value={group.key}>
               <AccordionHeader>
                 <AccordionTrigger className="hover:no-underline">
