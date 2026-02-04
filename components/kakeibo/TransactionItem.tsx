@@ -39,7 +39,7 @@ export function TransactionItem({
   const typeLabel = transaction.type === 'income' ? '収入' : '支出'
 
   return (
-    <div className="group flex items-start gap-3 rounded-lg border border-stone-200 bg-white p-4 dark:border-stone-800 dark:bg-stone-900">
+    <div className="group flex items-start gap-3 rounded-lg border border-stone-200/60 bg-stone-900/10 p-4 dark:border-stone-700/40 dark:bg-stone-900/20">
       <div className="flex-1">
         <div className="flex items-center gap-2">
           <div className="text-sm font-medium text-stone-900 dark:text-stone-100">

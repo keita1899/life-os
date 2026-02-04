@@ -166,6 +166,14 @@ export default function KakeiboPage() {
     }
   }, [periodType])
 
+  const shouldShowInitialBalanceDialog = useMemo(() => {
+    if (!userSettings) return false
+    return (
+      userSettings.initialBalance === null &&
+      allTransactions.length === 0
+    )
+  }, [userSettings, allTransactions.length])
+
   if (mode !== 'life') {
     return null
   }
@@ -254,14 +262,6 @@ export default function KakeiboPage() {
     }
   }
 
-  const shouldShowInitialBalanceDialog = useMemo(() => {
-    if (!userSettings) return false
-    return (
-      userSettings.initialBalance === null &&
-      allTransactions.length === 0
-    )
-  }, [userSettings, allTransactions.length])
-
   const handleInitialBalanceConfirm = async (balance: number) => {
     await updateUserSettings({ initialBalance: balance })
   }
@@ -303,7 +303,7 @@ export default function KakeiboPage() {
 
         <div className="mb-4 flex items-center justify-between">
           <div className="text-sm text-muted-foreground">
-            取引一覧（{filteredTransactions.length}件）
+            取引一覧{filteredTransactions.length > 0 ? ` ${filteredTransactions.length}` : ''}
           </div>
           <Button onClick={() => setIsDialogOpen(true)}>
             取引を追加
@@ -327,7 +327,13 @@ export default function KakeiboPage() {
           />
         </div>
 
-        <div className="rounded-lg border border-stone-200 bg-white p-4 dark:border-stone-800 dark:bg-stone-900">
+        <div
+          className={
+            isLoading || filteredTransactions.length === 0
+              ? 'rounded-lg border border-stone-200 p-4 dark:border-stone-800'
+              : undefined
+          }
+        >
           {isLoading ? (
             <Loading />
           ) : (
