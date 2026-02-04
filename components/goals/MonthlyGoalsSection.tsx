@@ -1,8 +1,14 @@
 'use client'
 
 import { useMemo } from 'react'
-import { Pencil, Trash2, CheckCircle2, Circle } from 'lucide-react'
+import { Pencil, Trash2, MoreVertical } from 'lucide-react'
 import { Button } from '@/components/ui/button'
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu'
 import { Card, CardHeader, CardTitle } from '@/components/ui/card'
 import { EmptyState } from '@/components/ui/empty-state'
 import {
@@ -12,7 +18,6 @@ import {
   AccordionItem,
   AccordionTrigger,
 } from '@/components/ui/accordion'
-import { cn } from '@/lib/utils'
 import type { MonthlyGoal } from '@/lib/types/monthly-goal'
 
 interface MonthlyGoalsSectionProps {
@@ -21,69 +26,51 @@ interface MonthlyGoalsSectionProps {
   onCreateClick: () => void
   onEditClick: (goal: MonthlyGoal) => void
   onDeleteClick: (e: React.MouseEvent, goal: MonthlyGoal) => void
-  onToggleAchievement?: (goal: MonthlyGoal) => void
 }
 
 function MonthlyGoalCard({
   goal,
   onEditClick,
   onDeleteClick,
-  onToggleAchievement,
 }: {
   goal: MonthlyGoal
   onEditClick: (goal: MonthlyGoal) => void
   onDeleteClick: (e: React.MouseEvent, goal: MonthlyGoal) => void
-  onToggleAchievement?: (goal: MonthlyGoal) => void
 }) {
   return (
     <Card className="group relative border-stone-200 dark:border-stone-800">
       <CardHeader className="pr-20">
-        <div className="flex items-start gap-3">
-          {onToggleAchievement && (
-            <button
-              type="button"
-              onClick={() => onToggleAchievement(goal)}
-              aria-label={goal.achieved ? '未達成にする' : '達成にする'}
-              aria-pressed={goal.achieved}
-              className="mt-0.5 focus-visible:ring-2 focus-visible:ring-offset-1 focus-visible:ring-indigo-500 focus:outline-none"
-            >
-              {goal.achieved ? (
-                <CheckCircle2 className="h-5 w-5 text-green-500" />
-              ) : (
-                <Circle className="h-5 w-5 text-stone-400" />
-              )}
-            </button>
-          )}
-          <CardTitle
-            className={cn(
-              'text-stone-900 dark:text-stone-100 line-clamp-2 break-words flex-1',
-              goal.achieved &&
-                'line-through text-stone-500 dark:text-stone-400',
-            )}
-          >
-            {goal.title}
-          </CardTitle>
-        </div>
+        <CardTitle className="text-stone-900 dark:text-stone-100 line-clamp-2 break-words">
+          {goal.title}
+        </CardTitle>
       </CardHeader>
-      <div className="absolute right-4 top-4 flex gap-1 opacity-0 transition-opacity group-hover:opacity-100">
-        <Button
-          variant="ghost"
-          size="icon"
-          onClick={() => onEditClick(goal)}
-          className="h-8 w-8"
-        >
-          <Pencil className="h-4 w-4" />
-          <span className="sr-only">編集</span>
-        </Button>
-        <Button
-          variant="ghost"
-          size="icon"
-          onClick={(e) => onDeleteClick(e, goal)}
-          className="h-8 w-8 text-destructive hover:text-destructive hover:bg-destructive/10"
-        >
-          <Trash2 className="h-4 w-4" />
-          <span className="sr-only">削除</span>
-        </Button>
+      <div className="absolute right-4 top-4 flex items-center justify-end opacity-0 transition-opacity group-hover:opacity-100">
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <Button
+              type="button"
+              variant="ghost"
+              size="sm"
+              className="h-8 w-8 p-0"
+            >
+              <MoreVertical className="h-4 w-4" />
+              <span className="sr-only">メニュー</span>
+            </Button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="end">
+            <DropdownMenuItem onClick={() => onEditClick(goal)}>
+              <Pencil className="mr-2 h-4 w-4" />
+              <span>編集</span>
+            </DropdownMenuItem>
+            <DropdownMenuItem
+              onClick={(e) => onDeleteClick(e, goal)}
+              className="text-destructive focus:text-destructive"
+            >
+              <Trash2 className="mr-2 h-4 w-4" />
+              <span>削除</span>
+            </DropdownMenuItem>
+          </DropdownMenuContent>
+        </DropdownMenu>
       </div>
     </Card>
   )
@@ -95,7 +82,6 @@ export const MonthlyGoalsSection = ({
   onCreateClick,
   onEditClick,
   onDeleteClick,
-  onToggleAchievement,
 }: MonthlyGoalsSectionProps) => {
   const currentDate = useMemo(() => new Date(), [])
   const currentYear = currentDate.getFullYear()
@@ -141,7 +127,6 @@ export const MonthlyGoalsSection = ({
                   goal={goal}
                   onEditClick={onEditClick}
                   onDeleteClick={onDeleteClick}
-                  onToggleAchievement={onToggleAchievement}
                 />
               ))}
             </div>
@@ -183,7 +168,6 @@ export const MonthlyGoalsSection = ({
                         goal={goal}
                         onEditClick={onEditClick}
                         onDeleteClick={onDeleteClick}
-                        onToggleAchievement={onToggleAchievement}
                       />
                     ))}
                   </div>

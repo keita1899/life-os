@@ -1,10 +1,15 @@
 'use client'
 
-import { Pencil, Trash2, CheckCircle2, Circle } from 'lucide-react'
+import { Pencil, Trash2, MoreVertical } from 'lucide-react'
 import { Button } from '@/components/ui/button'
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { EmptyState } from '@/components/ui/empty-state'
-import { cn } from '@/lib/utils'
 import type { DevYearlyGoal } from '@/lib/types/dev-yearly-goal'
 
 interface YearlyGoalsSectionProps {
@@ -12,7 +17,6 @@ interface YearlyGoalsSectionProps {
   onCreateClick: () => void
   onEditClick: (goal: DevYearlyGoal) => void
   onDeleteClick: (e: React.MouseEvent, goal: DevYearlyGoal) => void
-  onToggleAchievement?: (goal: DevYearlyGoal) => void
 }
 
 export const YearlyGoalsSection = ({
@@ -20,7 +24,6 @@ export const YearlyGoalsSection = ({
   onCreateClick,
   onEditClick,
   onDeleteClick,
-  onToggleAchievement,
 }: YearlyGoalsSectionProps) => {
   return (
     <div className="rounded-lg border border-zinc-200 bg-zinc-50/30 p-6 dark:border-zinc-800 dark:bg-zinc-950/30">
@@ -40,55 +43,41 @@ export const YearlyGoalsSection = ({
               className="group relative bg-white border-zinc-200 dark:bg-white dark:border-zinc-200"
             >
               <CardHeader className="pr-20">
-                <div className="flex items-start gap-3">
-                  {onToggleAchievement && (
-                    <button
-                      type="button"
-                      onClick={() => onToggleAchievement(goal)}
-                      aria-label={`${goal.achieved ? '未達成にする' : '達成にする'}: ${goal.title}`}
-                      aria-pressed={goal.achieved}
-                      className="mt-0.5 focus-visible:ring-2 focus-visible:ring-offset-1 focus-visible:ring-indigo-500 focus:outline-none"
-                    >
-                      {goal.achieved ? (
-                        <CheckCircle2 className="h-5 w-5 text-green-500" />
-                      ) : (
-                        <Circle className="h-5 w-5 text-stone-400" />
-                      )}
-                    </button>
-                  )}
-                  <CardTitle
-                    className={cn(
-                      'text-black dark:text-black line-clamp-2 break-words flex-1',
-                      goal.achieved && 'line-through text-stone-500 dark:text-stone-400',
-                    )}
-                  >
-                    {goal.title}
-                  </CardTitle>
-                </div>
+                <CardTitle className="text-black dark:text-black line-clamp-2 break-words">
+                  {goal.title}
+                </CardTitle>
               </CardHeader>
               <CardContent>
                 <div className="space-y-2 text-sm">
                 </div>
               </CardContent>
-              <div className="absolute right-4 top-4 z-10 flex gap-1 opacity-0 transition-opacity group-hover:opacity-100">
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  onClick={() => onEditClick(goal)}
-                  className="h-8 w-8"
-                >
-                  <Pencil className="h-4 w-4" />
-                  <span className="sr-only">編集</span>
-                </Button>
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  onClick={(e) => onDeleteClick(e, goal)}
-                  className="h-8 w-8 text-destructive hover:text-destructive hover:bg-destructive/10 z-10"
-                >
-                  <Trash2 className="h-4 w-4" />
-                  <span className="sr-only">削除</span>
-                </Button>
+              <div className="absolute right-4 top-4 z-10 flex items-center justify-end opacity-0 transition-opacity group-hover:opacity-100">
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="sm"
+                      className="h-8 w-8 p-0"
+                    >
+                      <MoreVertical className="h-4 w-4" />
+                      <span className="sr-only">メニュー</span>
+                    </Button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent align="end">
+                    <DropdownMenuItem onClick={() => onEditClick(goal)}>
+                      <Pencil className="mr-2 h-4 w-4" />
+                      <span>編集</span>
+                    </DropdownMenuItem>
+                    <DropdownMenuItem
+                      onClick={(e) => onDeleteClick(e, goal)}
+                      className="text-destructive focus:text-destructive"
+                    >
+                      <Trash2 className="mr-2 h-4 w-4" />
+                      <span>削除</span>
+                    </DropdownMenuItem>
+                  </DropdownMenuContent>
+                </DropdownMenu>
               </div>
             </Card>
           ))}
