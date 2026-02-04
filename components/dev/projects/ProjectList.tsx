@@ -2,6 +2,7 @@
 
 import type { ReactElement } from 'react'
 import { useMemo } from 'react'
+import { EmptyState } from '@/components/ui/empty-state'
 import { ProjectCard } from './ProjectCard'
 import type { DevProject } from '@/lib/types/dev-project'
 
@@ -40,15 +41,15 @@ export function ProjectList({
 
   if (filteredProjects.length === 0) {
     return (
-      <div className="rounded-lg border border-stone-200 bg-stone-50/30 p-8 text-center dark:border-stone-800 dark:bg-stone-950/30">
-        <p className="text-muted-foreground">
-          {statusFilter === 'all'
+      <EmptyState
+        message={
+          statusFilter === 'all'
             ? 'プロジェクトがありません'
             : statusFilter === 'unreleased'
               ? '未リリースのプロジェクトがありません'
-              : 'リリース済みのプロジェクトがありません'}
-        </p>
-      </div>
+              : 'リリース済みのプロジェクトがありません'
+        }
+      />
     )
   }
 

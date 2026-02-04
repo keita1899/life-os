@@ -4,6 +4,7 @@ import { useMemo } from 'react'
 import { Pencil, Trash2, CheckCircle2, Circle } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import { EmptyState } from '@/components/ui/empty-state'
 import {
   Accordion,
   AccordionContent,
@@ -94,9 +95,7 @@ export const MonthlyGoalsSection = ({
               </AccordionHeader>
               <AccordionContent>
                 {monthGoals.length === 0 ? (
-                  <p className="text-sm text-muted-foreground">
-                    この月の目標はありません
-                  </p>
+                  <EmptyState message="この月の目標はありません" />
                 ) : (
                   <div className="grid gap-4 grid-cols-1">
                     {monthGoals.map((goal) => (

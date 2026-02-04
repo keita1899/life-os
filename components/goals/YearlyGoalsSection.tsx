@@ -3,6 +3,7 @@
 import { Pencil, Trash2, CheckCircle2, Circle } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import { EmptyState } from '@/components/ui/empty-state'
 import { cn } from '@/lib/utils'
 import type { YearlyGoal } from '@/lib/types/yearly-goal'
 
@@ -93,9 +94,7 @@ export const YearlyGoalsSection = ({
           ))}
         </div>
       ) : (
-        <p className="text-sm text-muted-foreground py-4">
-          年間目標はありません
-        </p>
+        <EmptyState message="年間目標はありません" />
       )}
     </div>
   )

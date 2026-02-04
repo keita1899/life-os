@@ -7,6 +7,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { HabitDialog } from '@/components/habits/HabitDialog'
 import { HabitHeatmap } from '@/components/habits/HabitHeatmap'
 import { DeleteConfirmDialog } from '@/components/ui/delete-confirm-dialog'
+import { EmptyState } from '@/components/ui/empty-state'
 import { Loading } from '@/components/ui/loading'
 import { ErrorMessage } from '@/components/ui/error-message'
 import { MainLayout } from '@/components/layout/MainLayout'
@@ -176,15 +177,16 @@ export default function HabitsPage() {
         {isLoading ? (
           <Loading />
         ) : sortedHabits.length === 0 ? (
-          <div className="rounded-lg border border-stone-200 bg-stone-50/30 p-8 text-center dark:border-stone-800 dark:bg-stone-950/30">
-            <p className="text-muted-foreground">習慣がありません</p>
-            <Button
-              variant="outline"
-              className="mt-4"
-              onClick={handleOpenCreate}
-            >
-              習慣を追加
-            </Button>
+          <div className="text-center">
+            <EmptyState message="習慣がありません">
+              <Button
+                variant="outline"
+                className="mt-4"
+                onClick={handleOpenCreate}
+              >
+                習慣を追加
+              </Button>
+            </EmptyState>
           </div>
         ) : (
           <Card className="border-stone-200/60 dark:border-stone-700/40">

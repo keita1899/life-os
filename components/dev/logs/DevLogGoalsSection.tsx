@@ -1,6 +1,7 @@
 'use client'
 
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import { EmptyState } from '@/components/ui/empty-state'
 import { cn } from '@/lib/utils'
 import type { DevYearlyGoal } from '@/lib/types/dev-yearly-goal'
 import type { DevMonthlyGoal } from '@/lib/types/dev-monthly-goal'
@@ -97,9 +98,7 @@ export function DevLogGoalsSection({
             )}
           </div>
         ) : (
-          <p className="py-4 text-center text-sm text-muted-foreground">
-            目標がありません
-          </p>
+          <EmptyState message="目標がありません" />
         )}
       </CardContent>
     </Card>

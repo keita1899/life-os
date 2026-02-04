@@ -1,5 +1,6 @@
 'use client'
 
+import { EmptyState } from '@/components/ui/empty-state'
 import { WishlistItem } from './WishlistItem'
 import type { WishlistItem as WishlistItemType } from '@/lib/types/wishlist-item'
 
@@ -17,11 +18,7 @@ export function WishlistList({
   onToggleCompletion,
 }: WishlistListProps) {
   if (items.length === 0) {
-    return (
-      <div className="rounded-lg border border-stone-200 bg-stone-50/30 p-8 text-center dark:border-stone-800 dark:bg-stone-950/30">
-        <p className="text-muted-foreground">欲しいものがありません</p>
-      </div>
-    )
+    return <EmptyState message="欲しいものがありません" />
   }
 
   return (
