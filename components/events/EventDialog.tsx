@@ -9,6 +9,7 @@ interface EventDialogProps {
   onOpenChange: (open: boolean) => void
   onSubmit: (input: CreateEventInput) => Promise<void>
   event?: Event
+  defaultStartDate?: string
 }
 
 export const EventDialog = ({
@@ -16,6 +17,7 @@ export const EventDialog = ({
   onOpenChange,
   onSubmit,
   event,
+  defaultStartDate,
 }: EventDialogProps) => {
   return (
     <FormDialog
@@ -28,6 +30,7 @@ export const EventDialog = ({
         edit: '予定を編集',
       }}
       formComponent={EventForm}
+      formProps={{ defaultStartDate }}
       contentClassName="max-w-2xl max-h-[90vh] overflow-y-auto"
     />
   )

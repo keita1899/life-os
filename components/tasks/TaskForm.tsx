@@ -61,6 +61,7 @@ interface TaskFormProps {
   onSubmit: (data: CreateTaskInput) => Promise<void>
   onCancel?: () => void
   initialData?: Task
+  defaultExecutionDate?: string
   submitLabel?: string
 }
 
@@ -68,6 +69,7 @@ export const TaskForm = ({
   onSubmit,
   onCancel,
   initialData,
+  defaultExecutionDate,
   submitLabel = '作成',
 }: TaskFormProps) => {
   const { mode } = useMode()
@@ -87,7 +89,7 @@ export const TaskForm = ({
         }
       : {
           title: '',
-          executionDate: getTodayDateString(),
+          executionDate: defaultExecutionDate ?? getTodayDateString(),
           recurrenceRule: null,
           recurrenceDaysOfWeek: [],
           recurrenceDayOfMonth: null,

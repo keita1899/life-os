@@ -23,6 +23,7 @@ import {
   SelectValue,
 } from '@/components/ui/select'
 import { Textarea } from '@/components/ui/textarea'
+import { getTodayDateString } from '@/lib/date/formats'
 import { EVENT_CATEGORIES } from '@/lib/events/constants'
 import { getEventFormValues } from '@/lib/events/form'
 import type {
@@ -76,6 +77,7 @@ interface EventFormProps {
   onSubmit: (data: CreateEventInput) => Promise<void>
   onCancel?: () => void
   initialData?: Event
+  defaultStartDate?: string
   submitLabel?: string
 }
 
@@ -83,19 +85,18 @@ export const EventForm = ({
   onSubmit,
   onCancel,
   initialData,
+  defaultStartDate,
   submitLabel = '作成',
 }: EventFormProps) => {
-  const getTodayDate = () => {
-    const today = new Date()
-    const year = today.getFullYear()
-    const month = String(today.getMonth() + 1).padStart(2, '0')
-    const day = String(today.getDate()).padStart(2, '0')
-    return `${year}-${month}-${day}`
-  }
+  const baseValues = getEventFormValues(initialData) as EventFormValues
+  const values =
+    !initialData && defaultStartDate
+      ? { ...baseValues, startDate: defaultStartDate }
+      : baseValues
 
   const form = useForm<EventFormValues>({
     resolver: zodResolver(eventFormSchema),
-    values: getEventFormValues(initialData) as EventFormValues,
+    values,
   })
 
   const allDay = form.watch('allDay')
@@ -129,7 +130,7 @@ export const EventForm = ({
 
   const handleSubmit = async (data: EventFormValues) => {
     const startDate =
-      data.startDate && data.startDate !== '' ? data.startDate : getTodayDate()
+      data.startDate && data.startDate !== '' ? data.startDate : getTodayDateString()
 
     const startDatetime = data.allDay
       ? `${startDate}T00:00:00`
