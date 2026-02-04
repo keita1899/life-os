@@ -14,6 +14,7 @@ async function initializeAllTables(): Promise<void> {
       title TEXT NOT NULL,
       year INTEGER NOT NULL,
       achieved INTEGER NOT NULL DEFAULT 0,
+      checklist TEXT,
       created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
       updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
     )
@@ -26,6 +27,7 @@ async function initializeAllTables(): Promise<void> {
       year INTEGER NOT NULL,
       month INTEGER NOT NULL,
       achieved INTEGER NOT NULL DEFAULT 0,
+      checklist TEXT,
       created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
       updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
     )
@@ -249,6 +251,7 @@ async function initializeAllTables(): Promise<void> {
       title TEXT NOT NULL,
       year INTEGER NOT NULL,
       achieved INTEGER NOT NULL DEFAULT 0,
+      checklist TEXT,
       created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
       updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,
       UNIQUE(year)
@@ -262,6 +265,7 @@ async function initializeAllTables(): Promise<void> {
       year INTEGER NOT NULL,
       month INTEGER NOT NULL,
       achieved INTEGER NOT NULL DEFAULT 0,
+      checklist TEXT,
       created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
       updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,
       UNIQUE(year, month)
@@ -769,6 +773,70 @@ async function initializeAllTables(): Promise<void> {
         console.error('[DB] bucket_list_items target_month migration:', alterErr)
         throw alterErr
       }
+    }
+  }
+
+  try {
+    const yearlyGoalColumnRows = await db.select<{ name: string }[]>(
+      "SELECT name FROM pragma_table_info('yearly_goals')",
+    )
+    const yearlyGoalColumns = new Set(yearlyGoalColumnRows.map((r) => r.name))
+    if (!yearlyGoalColumns.has('checklist')) {
+      await db.execute('ALTER TABLE yearly_goals ADD COLUMN checklist TEXT')
+    }
+  } catch (alterErr) {
+    const msg = alterErr instanceof Error ? alterErr.message : String(alterErr)
+    if (!msg.includes('duplicate column name')) {
+      console.error('[DB] yearly_goals checklist migration:', alterErr)
+      throw alterErr
+    }
+  }
+
+  try {
+    const monthlyGoalColumnRows = await db.select<{ name: string }[]>(
+      "SELECT name FROM pragma_table_info('monthly_goals')",
+    )
+    const monthlyGoalColumns = new Set(monthlyGoalColumnRows.map((r) => r.name))
+    if (!monthlyGoalColumns.has('checklist')) {
+      await db.execute('ALTER TABLE monthly_goals ADD COLUMN checklist TEXT')
+    }
+  } catch (alterErr) {
+    const msg = alterErr instanceof Error ? alterErr.message : String(alterErr)
+    if (!msg.includes('duplicate column name')) {
+      console.error('[DB] monthly_goals checklist migration:', alterErr)
+      throw alterErr
+    }
+  }
+
+  try {
+    const devYearlyGoalColumnRows = await db.select<{ name: string }[]>(
+      "SELECT name FROM pragma_table_info('dev_yearly_goals')",
+    )
+    const devYearlyGoalColumns = new Set(devYearlyGoalColumnRows.map((r) => r.name))
+    if (!devYearlyGoalColumns.has('checklist')) {
+      await db.execute('ALTER TABLE dev_yearly_goals ADD COLUMN checklist TEXT')
+    }
+  } catch (alterErr) {
+    const msg = alterErr instanceof Error ? alterErr.message : String(alterErr)
+    if (!msg.includes('duplicate column name')) {
+      console.error('[DB] dev_yearly_goals checklist migration:', alterErr)
+      throw alterErr
+    }
+  }
+
+  try {
+    const devMonthlyGoalColumnRows = await db.select<{ name: string }[]>(
+      "SELECT name FROM pragma_table_info('dev_monthly_goals')",
+    )
+    const devMonthlyGoalColumns = new Set(devMonthlyGoalColumnRows.map((r) => r.name))
+    if (!devMonthlyGoalColumns.has('checklist')) {
+      await db.execute('ALTER TABLE dev_monthly_goals ADD COLUMN checklist TEXT')
+    }
+  } catch (alterErr) {
+    const msg = alterErr instanceof Error ? alterErr.message : String(alterErr)
+    if (!msg.includes('duplicate column name')) {
+      console.error('[DB] dev_monthly_goals checklist migration:', alterErr)
+      throw alterErr
     }
   }
 
