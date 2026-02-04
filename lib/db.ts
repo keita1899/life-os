@@ -684,6 +684,12 @@ async function initializeAllTables(): Promise<void> {
     )
   }
 
+  if (!userSettingsColumns.has('default_habit_view')) {
+    await db.execute(
+      "ALTER TABLE user_settings ADD COLUMN default_habit_view TEXT DEFAULT 'month'",
+    )
+  }
+
   const eventsColumnRows = await db.select<{ name: string }[]>(
     "SELECT name FROM pragma_table_info('events')",
   )
