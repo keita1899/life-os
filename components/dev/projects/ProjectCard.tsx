@@ -34,7 +34,7 @@ export function ProjectCard({ project }: ProjectCardProps) {
   const endDate = formatDate(project.endDate)
 
   return (
-    <div className="w-full rounded-lg border border-stone-200 bg-white p-4 dark:border-stone-800 dark:bg-stone-900">
+    <div className="w-full rounded-lg border border-stone-200 p-4 dark:border-stone-800">
       <div className="flex min-w-0 items-start justify-between gap-3">
         <Link
           href={`/dev/projects/project?id=${project.id}`}

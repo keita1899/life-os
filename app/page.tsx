@@ -35,7 +35,7 @@ export default function Home() {
         {mode === 'life' && (
           <div className="flex flex-col gap-6">
             {!isLoading && yearlyGoal && (
-              <Card className="border-stone-200 bg-stone-50/50 p-4 dark:border-stone-800 dark:bg-stone-900/50">
+              <Card className="border-stone-200 p-4 dark:border-stone-800">
                 <div className="flex items-center gap-3">
                   <div className="flex h-10 w-10 items-center justify-center rounded-md bg-blue-100 text-blue-600 dark:bg-blue-900/30 dark:text-blue-400">
                     <Target className="h-5 w-5" />
@@ -59,7 +59,7 @@ export default function Home() {
         {mode === 'development' && (
           <div className="flex flex-col gap-6">
             {!isDevLoading && devYearlyGoal && (
-              <Card className="border-stone-200 bg-stone-50/50 p-4 dark:border-stone-800 dark:bg-stone-900/50">
+              <Card className="border-stone-200 bg-transparent p-4 dark:border-stone-800">
                 <div className="flex items-center gap-3">
                   <div className="flex h-10 w-10 items-center justify-center rounded-md bg-blue-100 text-blue-600 dark:bg-blue-900/30 dark:text-blue-400">
                     <Target className="h-5 w-5" />

@@ -176,6 +176,7 @@ export function DevCalendarView({ initialDate }: DevCalendarViewProps) {
         onPrev={handlePrev}
         onNext={handleNext}
         isLoading={isLoading}
+        cardClassName="bg-transparent"
       >
         {viewMode === 'month' && (
           <MonthlyGoalCalendarForm
