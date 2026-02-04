@@ -39,9 +39,13 @@ export function BucketListItem({
   const yearLabel = useMemo(() => {
     if (item.targetYear == null) return null
     if (!birthday) return `${item.targetYear}年`
-    const age = calculateAgeAtYear(birthday, item.targetYear)
+    const age = calculateAgeAtYear(
+      birthday,
+      item.targetYear,
+      item.targetMonth ?? null,
+    )
     return age !== null ? `${item.targetYear}年（${age}歳）` : `${item.targetYear}年`
-  }, [birthday, item.targetYear])
+  }, [birthday, item.targetYear, item.targetMonth])
 
   const monthLabel = useMemo(() => {
     if (item.targetMonth == null) return null
