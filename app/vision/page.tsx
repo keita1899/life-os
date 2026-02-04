@@ -138,10 +138,7 @@ export default function VisionPage() {
         />
         <div className="flex-1 overflow-y-auto">
           <div className="mx-auto max-w-3xl p-8">
-            <h1 className="mb-6 text-3xl font-bold">ビジョン</h1>
-            <div className="mb-4 text-muted-foreground">
-              {selectedCategoryName}
-            </div>
+            <h1 className="mb-6 text-3xl font-bold">{selectedCategoryName}</h1>
 
             <ErrorMessage message={error || operationError || ''} />
 
