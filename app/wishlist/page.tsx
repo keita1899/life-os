@@ -269,7 +269,11 @@ export default function WishlistPage() {
                 <Accordion
                   type="multiple"
                   className="w-full"
-                  defaultValue={['unpurchased', 'purchased']}
+                  defaultValue={
+                    purchasedItems.length > 0
+                      ? ['unpurchased', 'purchased']
+                      : ['unpurchased']
+                  }
                 >
                   <AccordionItem value="unpurchased">
                     <AccordionHeader>
@@ -297,30 +301,28 @@ export default function WishlistPage() {
                       </div>
                     </AccordionContent>
                   </AccordionItem>
-                  <AccordionItem value="purchased">
-                    <AccordionHeader>
-                      <AccordionTrigger className="hover:no-underline">
-                        <div className="flex items-center gap-2">
-                          <h2 className="text-lg font-semibold text-stone-900 dark:text-stone-100">
-                            購入済
-                          </h2>
-                          {purchasedItems.length > 0 && (
+                  {purchasedItems.length > 0 && (
+                    <AccordionItem value="purchased">
+                      <AccordionHeader>
+                        <AccordionTrigger className="hover:no-underline">
+                          <div className="flex items-center gap-2">
+                            <h2 className="text-lg font-semibold text-stone-900 dark:text-stone-100">
+                              購入済
+                            </h2>
                             <span className="text-sm text-muted-foreground">
                               {purchasedItems.length}
                             </span>
-                          )}
-                        </div>
-                      </AccordionTrigger>
-                    </AccordionHeader>
-                    <AccordionContent>
-                      <div className="space-y-4">
-                        <WishlistList
-                          items={purchasedItems}
-                          onEdit={handleEditItem}
-                          onDelete={handleDeleteClick}
-                          onToggleCompletion={handleTogglePurchased}
-                        />
-                        {purchasedItems.length > 0 && (
+                          </div>
+                        </AccordionTrigger>
+                      </AccordionHeader>
+                      <AccordionContent>
+                        <div className="space-y-4">
+                          <WishlistList
+                            items={purchasedItems}
+                            onEdit={handleEditItem}
+                            onDelete={handleDeleteClick}
+                            onToggleCompletion={handleTogglePurchased}
+                          />
                           <div className="flex justify-end">
                             <Button
                               type="button"
@@ -333,10 +335,10 @@ export default function WishlistPage() {
                               購入済みを一括削除
                             </Button>
                           </div>
-                        )}
-                      </div>
-                    </AccordionContent>
-                  </AccordionItem>
+                        </div>
+                      </AccordionContent>
+                    </AccordionItem>
+                  )}
                 </Accordion>
               </>
             )}
