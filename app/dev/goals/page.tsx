@@ -12,6 +12,8 @@ import { MonthlyGoalDialog } from '@/components/dev/goals/MonthlyGoalDialog'
 import { DeleteConfirmDialog } from '@/components/ui/delete-confirm-dialog'
 import { YearlyGoalsSection } from '@/components/dev/goals/YearlyGoalsSection'
 import { MonthlyGoalsSection } from '@/components/dev/goals/MonthlyGoalsSection'
+import { updateDevYearlyGoal } from '@/lib/dev/goals/yearly'
+import { updateDevMonthlyGoal } from '@/lib/dev/goals/monthly'
 import type {
   DevYearlyGoal,
   CreateDevYearlyGoalInput,
@@ -71,6 +73,7 @@ export default function DevGoalsPage() {
       await updateYearlyGoal(editingYearlyGoal.id, {
         title: input.title,
         year: input.year,
+        checklist: input.checklist,
       })
       setIsYearlyDialogOpen(false)
       setEditingYearlyGoal(undefined)
@@ -138,6 +141,52 @@ export default function DevGoalsPage() {
     })
   }
 
+  const handleToggleYearlyGoalChecklistItem = async (
+    goal: DevYearlyGoal,
+    itemId: string,
+    completed: boolean,
+  ) => {
+    try {
+      setOperationError(null)
+      const updatedChecklist = goal.checklist.map((item) =>
+        item.id === itemId ? { ...item, completed } : item,
+      )
+      await updateDevYearlyGoal(goal.id, {
+        checklist: updatedChecklist,
+      })
+      await refreshGoals()
+    } catch (err) {
+      setOperationError(
+        err instanceof Error
+          ? err.message
+          : 'チェックリスト項目の更新に失敗しました',
+      )
+    }
+  }
+
+  const handleToggleMonthlyGoalChecklistItem = async (
+    goal: DevMonthlyGoal,
+    itemId: string,
+    completed: boolean,
+  ) => {
+    try {
+      setOperationError(null)
+      const updatedChecklist = goal.checklist.map((item) =>
+        item.id === itemId ? { ...item, completed } : item,
+      )
+      await updateDevMonthlyGoal(goal.id, {
+        checklist: updatedChecklist,
+      })
+      await refreshGoals()
+    } catch (err) {
+      setOperationError(
+        err instanceof Error
+          ? err.message
+          : 'チェックリスト項目の更新に失敗しました',
+      )
+    }
+  }
+
 
   const handleCreateMonthlyGoal = async (input: CreateDevMonthlyGoalInput) => {
     try {
@@ -159,6 +208,7 @@ export default function DevGoalsPage() {
         title: input.title,
         year: input.year,
         month: input.month,
+        checklist: input.checklist,
       })
       await refreshGoals()
       setIsMonthlyDialogOpen(false)
@@ -218,7 +268,10 @@ export default function DevGoalsPage() {
               }}
               onEditClick={handleEditClick}
               onDeleteClick={handleDeleteClick}
+              onToggleChecklistItem={handleToggleYearlyGoalChecklistItem}
             />
+
+            <div className="border-t border-stone-200 dark:border-stone-800" />
 
             <MonthlyGoalsSection
               goals={monthlyGoals}
@@ -229,6 +282,7 @@ export default function DevGoalsPage() {
               }}
               onEditClick={handleEditClick}
               onDeleteClick={handleDeleteClick}
+              onToggleChecklistItem={handleToggleMonthlyGoalChecklistItem}
             />
           </div>
         )}

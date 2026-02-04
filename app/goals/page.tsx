@@ -79,6 +79,7 @@ const GoalsPage = () => {
       await updateYearlyGoal(editingYearlyGoal.id, {
         title: input.title,
         year: input.year,
+        checklist: input.checklist,
       })
       await refreshGoals()
       setIsYearlyDialogOpen(false)
@@ -98,6 +99,7 @@ const GoalsPage = () => {
         title: input.title,
         year: input.year,
         month: input.month,
+        checklist: input.checklist,
       })
       await refreshGoals()
       setIsMonthlyDialogOpen(false)
@@ -166,6 +168,52 @@ const GoalsPage = () => {
     })
   }
 
+  const handleToggleYearlyGoalChecklistItem = async (
+    goal: YearlyGoal,
+    itemId: string,
+    completed: boolean,
+  ) => {
+    try {
+      setOperationError(null)
+      const updatedChecklist = goal.checklist.map((item) =>
+        item.id === itemId ? { ...item, completed } : item,
+      )
+      await updateYearlyGoal(goal.id, {
+        checklist: updatedChecklist,
+      })
+      await refreshGoals()
+    } catch (err) {
+      setOperationError(
+        err instanceof Error
+          ? err.message
+          : 'チェックリスト項目の更新に失敗しました',
+      )
+    }
+  }
+
+  const handleToggleMonthlyGoalChecklistItem = async (
+    goal: MonthlyGoal,
+    itemId: string,
+    completed: boolean,
+  ) => {
+    try {
+      setOperationError(null)
+      const updatedChecklist = goal.checklist.map((item) =>
+        item.id === itemId ? { ...item, completed } : item,
+      )
+      await updateMonthlyGoal(goal.id, {
+        checklist: updatedChecklist,
+      })
+      await refreshGoals()
+    } catch (err) {
+      setOperationError(
+        err instanceof Error
+          ? err.message
+          : 'チェックリスト項目の更新に失敗しました',
+      )
+    }
+  }
+
 
   const handleYearlyDialogClose = (open: boolean) => {
     setIsYearlyDialogOpen(open)
@@ -215,7 +263,10 @@ const GoalsPage = () => {
             }}
             onEditClick={handleEditClick}
             onDeleteClick={handleDeleteClick}
+            onToggleChecklistItem={handleToggleYearlyGoalChecklistItem}
           />
+
+          <div className="border-t border-stone-200 dark:border-stone-800" />
 
           <MonthlyGoalsSection
             goals={allMonthlyGoals}
@@ -226,6 +277,7 @@ const GoalsPage = () => {
             }}
             onEditClick={handleEditClick}
             onDeleteClick={handleDeleteClick}
+            onToggleChecklistItem={handleToggleMonthlyGoalChecklistItem}
           />
         </div>
       )}
