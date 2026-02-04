@@ -478,6 +478,7 @@ function LogPageView({ logDate, date }: LogPageViewProps) {
         }}
         onSubmit={editingEvent ? handleUpdateEvent : handleCreateEvent}
         event={editingEvent}
+        defaultStartDate={date}
       />
 
       <TaskDialog
@@ -485,6 +486,7 @@ function LogPageView({ logDate, date }: LogPageViewProps) {
         onOpenChange={handleDialogClose}
         onSubmit={editingTask ? handleUpdateTask : handleCreateTask}
         task={editingTask}
+        defaultExecutionDate={date}
       />
 
       <DeleteConfirmDialog
