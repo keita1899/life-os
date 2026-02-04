@@ -63,7 +63,7 @@ export function ModeSwitch() {
   }
 
   useHotkeys(
-    'l',
+    'mod+l',
     () => {
       if (mode !== 'life') {
         setMode('life')
@@ -75,7 +75,7 @@ export function ModeSwitch() {
     [mode, router, setMode],
   )
   useHotkeys(
-    'd',
+    'mod+d',
     () => {
       if (mode !== 'development') {
         setMode('development')
