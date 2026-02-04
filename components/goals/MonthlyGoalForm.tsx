@@ -1,5 +1,6 @@
 'use client'
 
+import { useState } from 'react'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import * as z from 'zod'
@@ -13,10 +14,12 @@ import {
 } from '@/components/ui/form'
 import { Input } from '@/components/ui/input'
 import { Button } from '@/components/ui/button'
+import { ChecklistEditor } from './ChecklistEditor'
 import type {
   MonthlyGoal,
   CreateMonthlyGoalInput,
 } from '@/lib/types/monthly-goal'
+import type { ChecklistItem } from '@/lib/types/checklist-item'
 
 const monthlyGoalFormSchema = z.object({
   title: z.string().min(1, 'タイトルは必須です'),
@@ -50,6 +53,9 @@ export const MonthlyGoalForm = ({
   selectedYear,
 }: MonthlyGoalFormProps) => {
   const isEditMode = !!initialData
+  const [checklist, setChecklist] = useState<ChecklistItem[]>(
+    initialData?.checklist ?? [],
+  )
 
   const form = useForm<MonthlyGoalFormValues>({
     resolver: zodResolver(monthlyGoalFormSchema),
@@ -71,6 +77,7 @@ export const MonthlyGoalForm = ({
       title: data.title,
       year: data.year ?? selectedYear ?? new Date().getFullYear(),
       month: data.month,
+      checklist: checklist.length > 0 ? checklist : undefined,
     })
     if (!isEditMode) {
       form.reset({
@@ -78,6 +85,7 @@ export const MonthlyGoalForm = ({
         year: selectedYear ?? new Date().getFullYear(),
         month: new Date().getMonth() + 1,
       })
+      setChecklist([])
     }
   }
 
@@ -143,6 +151,8 @@ export const MonthlyGoalForm = ({
             </FormItem>
           )}
         />
+
+        <ChecklistEditor items={checklist} onChange={setChecklist} />
 
         <div className="flex justify-end gap-2">
           {onCancel && (
