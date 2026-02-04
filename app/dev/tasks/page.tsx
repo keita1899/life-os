@@ -54,6 +54,14 @@ export default function DevTasksPage() {
 
   const groupedTasks = useMemo(() => groupTasks(tasks), [tasks])
 
+  const visibleGroups = useMemo(
+    () =>
+      groupedTasks.filter(
+        (group) => group.key === 'today' || group.tasks.length > 0,
+      ),
+    [groupedTasks],
+  )
+
   if (mode !== 'development') {
     return null
   }
@@ -220,9 +228,9 @@ export default function DevTasksPage() {
           <Accordion
             type="multiple"
             className="w-full"
-            defaultValue={groupedTasks.map((group) => group.key)}
+            defaultValue={visibleGroups.map((group) => group.key)}
           >
-            {groupedTasks.map((group) => (
+            {visibleGroups.map((group) => (
               <AccordionItem key={group.key} value={group.key}>
                 <AccordionHeader>
                   <AccordionTrigger className="hover:no-underline">
