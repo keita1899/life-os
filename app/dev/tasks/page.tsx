@@ -52,7 +52,25 @@ export default function DevTasksPage() {
     useState(false)
   const [operationError, setOperationError] = useState<string | null>(null)
 
-  const groupedTasks = useMemo(() => groupTasks(tasks), [tasks])
+  const convertedTasks: Task[] = useMemo(() => {
+    return tasks.map((t) => ({
+      id: t.id,
+      title: t.title,
+      executionDate: t.executionDate,
+      completed: t.completed,
+      order: t.order,
+      actualTime: t.actualTime,
+      recurrenceRule: null,
+      recurrenceDaysOfWeek: null,
+      recurrenceDayOfMonth: null,
+      recurrenceEndDate: null,
+      recurrenceExcludedDates: [],
+      createdAt: t.createdAt,
+      updatedAt: t.updatedAt,
+    }))
+  }, [tasks])
+
+  const groupedTasks = useMemo(() => groupTasks(convertedTasks), [convertedTasks])
 
   const visibleGroups = useMemo(
     () =>

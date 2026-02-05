@@ -3,7 +3,7 @@
 import type { ReactElement } from 'react'
 import Link from 'next/link'
 import { useRouter, useSearchParams } from 'next/navigation'
-import { useMemo } from 'react'
+import { useMemo, Suspense } from 'react'
 import useSWR from 'swr'
 import { mutate } from 'swr'
 import { MainLayout } from '@/components/layout/MainLayout'
@@ -54,7 +54,7 @@ function formatDate(date: string | null): string | null {
   })
 }
 
-export default function DevProjectPage(): ReactElement | null {
+function DevProjectPageContent(): ReactElement | null {
   const { mode } = useMode()
   const router = useRouter()
   const searchParams = useSearchParams()
@@ -94,7 +94,25 @@ export default function DevProjectPage(): ReactElement | null {
     useState(false)
   const [taskOperationError, setTaskOperationError] = useState<string | null>(null)
 
-  const groupedTasks = useMemo(() => groupTasks(tasks), [tasks])
+  const convertedTasks: Task[] = useMemo(() => {
+    return tasks.map((t) => ({
+      id: t.id,
+      title: t.title,
+      executionDate: t.executionDate,
+      completed: t.completed,
+      order: t.order,
+      actualTime: t.actualTime,
+      recurrenceRule: null,
+      recurrenceDaysOfWeek: null,
+      recurrenceDayOfMonth: null,
+      recurrenceEndDate: null,
+      recurrenceExcludedDates: [],
+      createdAt: t.createdAt,
+      updatedAt: t.updatedAt,
+    }))
+  }, [tasks])
+
+  const groupedTasks = useMemo(() => groupTasks(convertedTasks), [convertedTasks])
 
   const visibleGroups = useMemo(
     () =>
@@ -498,6 +516,14 @@ export default function DevProjectPage(): ReactElement | null {
         )}
       </div>
     </MainLayout>
+  )
+}
+
+export default function DevProjectPage(): ReactElement | null {
+  return (
+    <Suspense fallback={<Loading />}>
+      <DevProjectPageContent />
+    </Suspense>
   )
 }
 
