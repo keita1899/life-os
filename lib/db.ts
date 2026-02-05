@@ -723,6 +723,11 @@ async function initializeAllTables(): Promise<void> {
       'ALTER TABLE events ADD COLUMN recurrence_days_of_week TEXT',
     )
   }
+  if (!eventsColumns.has('recurrence_excluded_dates')) {
+    await db.execute(
+      'ALTER TABLE events ADD COLUMN recurrence_excluded_dates TEXT',
+    )
+  }
 
   await db.execute(
     "UPDATE events SET category = 'barca' WHERE category = 'sports' AND title LIKE '%FC Barcelona%'",
@@ -747,6 +752,9 @@ async function initializeAllTables(): Promise<void> {
   }
   if (!tasksColumns.has('recurrence_end_date')) {
     await db.execute('ALTER TABLE tasks ADD COLUMN recurrence_end_date TEXT')
+  }
+  if (!tasksColumns.has('recurrence_excluded_dates')) {
+    await db.execute('ALTER TABLE tasks ADD COLUMN recurrence_excluded_dates TEXT')
   }
 
   try {

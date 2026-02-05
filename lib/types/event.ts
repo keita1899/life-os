@@ -28,6 +28,7 @@ export interface Event {
   recurrenceDaysOfWeek: number[] | null
   recurrenceDayOfMonth: number | null
   recurrenceEndDate: string | null
+  recurrenceExcludedDates: string[]
   createdAt: string
   updatedAt: string
 }
@@ -56,4 +57,5 @@ export interface UpdateEventInput {
   recurrenceDaysOfWeek?: number[] | null
   recurrenceDayOfMonth?: number | null
   recurrenceEndDate?: string | null
+  recurrenceExcludedDates?: string[]
 }
