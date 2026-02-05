@@ -14,6 +14,7 @@ import {
 import { TaskList } from '@/components/tasks/TaskList'
 import { TaskDialog } from '@/components/tasks/TaskDialog'
 import { DeleteConfirmDialog } from '@/components/ui/delete-confirm-dialog'
+import { RecurringTaskDeleteDialog } from '@/components/tasks/RecurringTaskDeleteDialog'
 import { Loading } from '@/components/ui/loading'
 import { ErrorMessage } from '@/components/ui/error-message'
 import { MainLayout } from '@/components/layout/MainLayout'
@@ -131,12 +132,21 @@ export default function TasksPage() {
     }
   }
 
-  const handleDeleteTask = async () => {
+  const handleDeleteTask = async (mode?: 'single' | 'all') => {
     if (!deletingTask) return
 
     try {
       setOperationError(null)
-      await deleteTask(deletingTask.id)
+      if (deletingTask.recurrenceRule && mode === 'single' && deletingTask.executionDate) {
+        const currentExcludedDates = deletingTask.recurrenceExcludedDates || []
+        if (!currentExcludedDates.includes(deletingTask.executionDate)) {
+          await updateTask(deletingTask.id, {
+            recurrenceExcludedDates: [...currentExcludedDates, deletingTask.executionDate],
+          })
+        }
+      } else {
+        await deleteTask(deletingTask.id)
+      }
       setDeletingTask(undefined)
     } catch (err) {
       setOperationError(
@@ -319,16 +329,21 @@ export default function TasksPage() {
         task={editingTask}
       />
 
-      <DeleteConfirmDialog
-        open={!!deletingTask}
-        message={
-          deletingTask?.recurrenceRule
-            ? `「${deletingTask?.title}」は繰り返しタスクです。削除するとすべての発生が削除されます。この操作は取り消せません。`
-            : `「${deletingTask?.title}」を削除しますか？この操作は取り消せません。`
-        }
-        onConfirm={handleDeleteTask}
-        onCancel={() => setDeletingTask(undefined)}
-      />
+      {deletingTask?.recurrenceRule ? (
+        <RecurringTaskDeleteDialog
+          open={!!deletingTask}
+          taskTitle={deletingTask.title}
+          onConfirm={handleDeleteTask}
+          onCancel={() => setDeletingTask(undefined)}
+        />
+      ) : (
+        <DeleteConfirmDialog
+          open={!!deletingTask}
+          message={`「${deletingTask?.title}」を削除しますか？この操作は取り消せません。`}
+          onConfirm={() => handleDeleteTask()}
+          onCancel={() => setDeletingTask(undefined)}
+        />
+      )}
 
       <DeleteConfirmDialog
         open={isDeletingCompletedDialogOpen}

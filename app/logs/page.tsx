@@ -31,6 +31,8 @@ import { LogDiarySection } from '@/components/logs/LogDiarySection'
 import { TaskDialog } from '@/components/tasks/TaskDialog'
 import { EventDialog } from '@/components/events/EventDialog'
 import { DeleteConfirmDialog } from '@/components/ui/delete-confirm-dialog'
+import { RecurringTaskDeleteDialog } from '@/components/tasks/RecurringTaskDeleteDialog'
+import { RecurringEventDeleteDialog } from '@/components/events/RecurringEventDeleteDialog'
 import {
   getYearlyGoalsForDate,
   getMonthlyGoalsForDate,
@@ -259,12 +261,22 @@ function LogPageView({ logDate, date }: LogPageViewProps) {
     setDeletingEvent(event)
   }
 
-  const handleDeleteEvent = async () => {
+  const handleDeleteEvent = async (mode?: 'single' | 'all') => {
     if (!deletingEvent) return
 
     try {
       setOperationError(null)
-      await deleteEvent(deletingEvent.id)
+      if (deletingEvent.recurrenceRule && mode === 'single' && deletingEvent.startDatetime) {
+        const eventDate = deletingEvent.startDatetime.split('T')[0]
+        const currentExcludedDates = deletingEvent.recurrenceExcludedDates || []
+        if (!currentExcludedDates.includes(eventDate)) {
+          await updateEvent(deletingEvent.id, {
+            recurrenceExcludedDates: [...currentExcludedDates, eventDate],
+          })
+        }
+      } else {
+        await deleteEvent(deletingEvent.id)
+      }
       setDeletingEvent(undefined)
     } catch (err) {
       setOperationError(
@@ -307,12 +319,21 @@ function LogPageView({ logDate, date }: LogPageViewProps) {
     }
   }
 
-  const handleDeleteTask = async () => {
+  const handleDeleteTask = async (mode?: 'single' | 'all') => {
     if (!deletingTask) return
 
     try {
       setOperationError(null)
-      await deleteTask(deletingTask.id)
+      if (deletingTask.recurrenceRule && mode === 'single' && deletingTask.executionDate) {
+        const currentExcludedDates = deletingTask.recurrenceExcludedDates || []
+        if (!currentExcludedDates.includes(deletingTask.executionDate)) {
+          await updateTask(deletingTask.id, {
+            recurrenceExcludedDates: [...currentExcludedDates, deletingTask.executionDate],
+          })
+        }
+      } else {
+        await deleteTask(deletingTask.id)
+      }
       setDeletingTask(undefined)
     } catch (err) {
       setOperationError(
@@ -489,27 +510,37 @@ function LogPageView({ logDate, date }: LogPageViewProps) {
         defaultExecutionDate={date}
       />
 
-      <DeleteConfirmDialog
-        open={!!deletingTask}
-        message={
-          deletingTask?.recurrenceRule
-            ? `「${deletingTask?.title}」は繰り返しタスクです。削除するとすべての発生が削除されます。この操作は取り消せません。`
-            : `「${deletingTask?.title}」を削除しますか？この操作は取り消せません。`
-        }
-        onConfirm={handleDeleteTask}
-        onCancel={() => setDeletingTask(undefined)}
-      />
+      {deletingTask?.recurrenceRule ? (
+        <RecurringTaskDeleteDialog
+          open={!!deletingTask}
+          taskTitle={deletingTask.title}
+          onConfirm={handleDeleteTask}
+          onCancel={() => setDeletingTask(undefined)}
+        />
+      ) : (
+        <DeleteConfirmDialog
+          open={!!deletingTask}
+          message={`「${deletingTask?.title}」を削除しますか？この操作は取り消せません。`}
+          onConfirm={() => handleDeleteTask()}
+          onCancel={() => setDeletingTask(undefined)}
+        />
+      )}
 
-      <DeleteConfirmDialog
-        open={!!deletingEvent}
-        message={
-          deletingEvent?.recurrenceRule
-            ? `「${deletingEvent.title}」の繰り返し予定をすべて削除しますか？この操作は取り消せません。`
-            : `「${deletingEvent?.title}」を削除しますか？この操作は取り消せません。`
-        }
-        onConfirm={handleDeleteEvent}
-        onCancel={() => setDeletingEvent(undefined)}
-      />
+      {deletingEvent?.recurrenceRule ? (
+        <RecurringEventDeleteDialog
+          open={!!deletingEvent}
+          eventTitle={deletingEvent.title}
+          onConfirm={handleDeleteEvent}
+          onCancel={() => setDeletingEvent(undefined)}
+        />
+      ) : (
+        <DeleteConfirmDialog
+          open={!!deletingEvent}
+          message={`「${deletingEvent?.title}」を削除しますか？この操作は取り消せません。`}
+          onConfirm={() => handleDeleteEvent()}
+          onCancel={() => setDeletingEvent(undefined)}
+        />
+      )}
       </div>
     </MainLayout>
   )
