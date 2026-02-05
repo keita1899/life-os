@@ -49,13 +49,13 @@ export function HabitHeatmapRow({
   if (error) {
     return (
       <tr>
-        <td className="w-12 shrink-0 border-b border-stone-200 px-2 py-1.5 dark:border-stone-800" />
-        <td className="border-b border-stone-200 px-2 py-1.5 text-sm dark:border-stone-800">
+        <td className="w-12 shrink-0 border-b border-stone-200 px-2 py-3 dark:border-stone-800" />
+        <td className="border-b border-stone-200 px-2 py-3 text-sm dark:border-stone-800">
           {habit.name}
         </td>
         <td
           colSpan={lastDay + 2}
-          className="border-b border-stone-200 px-2 py-1.5 text-xs text-destructive dark:border-stone-800"
+          className="border-b border-stone-200 px-2 py-3 text-xs text-destructive dark:border-stone-800"
         >
           取得エラー: {error}
         </td>
@@ -66,13 +66,13 @@ export function HabitHeatmapRow({
   if (isLoading) {
     return (
       <tr>
-        <td className="w-12 shrink-0 border-b border-stone-200 px-2 py-1.5 dark:border-stone-800" />
-        <td className="border-b border-stone-200 px-2 py-1.5 text-sm dark:border-stone-800">
+        <td className="w-12 shrink-0 border-b border-stone-200 px-2 py-3 dark:border-stone-800" />
+        <td className="border-b border-stone-200 px-2 py-3 text-sm dark:border-stone-800">
           {habit.name}
         </td>
         <td
           colSpan={lastDay + 2}
-          className="border-b border-stone-200 px-2 py-1.5 text-xs text-muted-foreground dark:border-stone-800"
+          className="border-b border-stone-200 px-2 py-3 text-xs text-muted-foreground dark:border-stone-800"
         >
           読み込み中...
         </td>
@@ -95,10 +95,10 @@ export function HabitHeatmapRow({
 
   return (
     <tr className="group">
-      <td className="w-12 shrink-0 border-b border-stone-200 px-2 py-1.5 text-right text-xs tabular-nums text-muted-foreground dark:border-stone-800">
+      <td className="w-12 shrink-0 border-b border-stone-200 px-2 py-3 text-right text-xs tabular-nums text-muted-foreground dark:border-stone-800">
         {formatHabitScheduledTime(habit.scheduledTime) || '−'}
       </td>
-      <td className="max-w-[140px] truncate border-b border-stone-200 px-2 py-1.5 text-sm dark:border-stone-800">
+      <td className="max-w-[140px] truncate border-b border-stone-200 px-2 py-3 text-sm dark:border-stone-800">
         {habit.name}
       </td>
       {Array.from({ length: lastDay }, (_, i) => i + 1).map((day) => {
@@ -167,7 +167,7 @@ export function HabitHeatmapRow({
           </td>
         )
       })}
-      <td className="w-14 shrink-0 border-b border-stone-200 px-2 py-1.5 text-right text-xs tabular-nums text-muted-foreground dark:border-stone-800">
+      <td className="w-14 shrink-0 border-b border-stone-200 px-2 py-3 text-right text-xs tabular-nums text-muted-foreground dark:border-stone-800">
         {rate !== null ? `${rate}%` : '−'}
       </td>
       <td className="w-12 shrink-0 border-b border-stone-200 p-1 dark:border-stone-800">

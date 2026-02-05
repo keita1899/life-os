@@ -265,7 +265,7 @@ export default function HabitsPage() {
                 </div>
               </div>
             </CardHeader>
-            <CardContent>
+            <CardContent className="p-0">
               <HabitHeatmap
                 habits={sortedHabits}
                 viewMode={viewMode}

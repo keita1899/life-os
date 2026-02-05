@@ -31,7 +31,7 @@ export function HabitHeatmapMonthView({
   const lastDay = getDate(endOfMonth(new Date(year, month - 1)))
 
   return (
-    <div className="overflow-x-auto rounded-lg border border-stone-200 dark:border-stone-800">
+    <div className="overflow-x-auto">
       <table className="w-full min-w-[200px] border-collapse text-left">
         <thead>
           <tr>

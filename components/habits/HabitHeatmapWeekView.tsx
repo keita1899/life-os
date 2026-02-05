@@ -50,12 +50,12 @@ export function HabitHeatmapWeekView({
     'grid-cols-[5rem_1fr_4.5rem_4.5rem_4.5rem_4.5rem_4.5rem_4.5rem_4.5rem_4rem_3rem]'
 
   return (
-    <div className="rounded-lg border border-stone-200 dark:border-stone-800">
+    <div>
       <div className={cn('grid gap-0', gridCols)}>
-        <div className="border-b border-stone-200 bg-stone-50 px-3 py-3 text-right text-xs font-medium text-muted-foreground dark:border-stone-800 dark:bg-stone-950">
+        <div className="flex items-center justify-end border-b border-stone-200 bg-stone-50 px-3 py-3 text-xs font-medium text-muted-foreground dark:border-stone-800 dark:bg-stone-950">
           時間
         </div>
-        <div className="border-b border-stone-200 bg-stone-50 px-3 py-3 text-xs font-medium text-muted-foreground dark:border-stone-800 dark:bg-stone-950">
+        <div className="flex items-center border-b border-stone-200 bg-stone-50 px-3 py-3 text-xs font-medium text-muted-foreground dark:border-stone-800 dark:bg-stone-950">
           習慣
         </div>
         {weekDates.map((date) => {
@@ -78,7 +78,7 @@ export function HabitHeatmapWeekView({
             </div>
           )
         })}
-        <div className="border-b border-stone-200 bg-stone-50 px-3 py-3 text-right text-xs font-medium text-muted-foreground dark:border-stone-800 dark:bg-stone-950">
+        <div className="flex items-center justify-end border-b border-stone-200 bg-stone-50 px-3 py-3 text-xs font-medium text-muted-foreground dark:border-stone-800 dark:bg-stone-950">
           達成率
         </div>
         <div className="border-b border-stone-200 bg-stone-50 dark:border-stone-800 dark:bg-stone-950" />
@@ -149,8 +149,8 @@ function HabitHeatmapWeekViewRow(props: HabitHeatmapWeekViewRowProps) {
   if (isLoading) {
     return (
       <div className="grid grid-cols-[5rem_1fr_4.5rem_4.5rem_4.5rem_4.5rem_4.5rem_4.5rem_4.5rem_4rem_3rem] gap-0">
-        <div className="border-b border-stone-200 px-3 py-3 dark:border-stone-800" />
-        <div className="col-span-9 border-b border-stone-200 px-3 py-3 text-sm text-muted-foreground dark:border-stone-800">
+        <div className="flex items-center border-b border-stone-200 px-3 py-3 dark:border-stone-800" />
+        <div className="col-span-9 flex items-center border-b border-stone-200 px-3 py-3 text-sm text-muted-foreground dark:border-stone-800">
           {habit.name} 読み込み中...
         </div>
       </div>
@@ -170,10 +170,10 @@ function HabitHeatmapWeekViewRow(props: HabitHeatmapWeekViewRowProps) {
 
   return (
     <div className="group grid grid-cols-[5rem_1fr_4.5rem_4.5rem_4.5rem_4.5rem_4.5rem_4.5rem_4.5rem_4rem_3rem] gap-0">
-      <div className="border-b border-stone-200 px-3 py-3 text-right text-sm tabular-nums text-muted-foreground dark:border-stone-800">
+      <div className="flex items-center justify-end border-b border-stone-200 px-3 py-3 text-sm tabular-nums text-muted-foreground dark:border-stone-800">
         {formatHabitScheduledTime(habit.scheduledTime) || '−'}
       </div>
-      <div className="border-b border-stone-200 px-3 py-3 text-sm font-medium dark:border-stone-800">
+      <div className="flex items-center border-b border-stone-200 px-3 py-3 text-sm font-medium dark:border-stone-800">
         {habit.name}
       </div>
       {weekDates.map((date, i) => {
