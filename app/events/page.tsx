@@ -13,6 +13,7 @@ import {
 import { EventList } from '@/components/events/EventList'
 import { EventDialog } from '@/components/events/EventDialog'
 import { DeleteConfirmDialog } from '@/components/ui/delete-confirm-dialog'
+import { RecurringEventDeleteDialog } from '@/components/events/RecurringEventDeleteDialog'
 import { Loading } from '@/components/ui/loading'
 import { ErrorMessage } from '@/components/ui/error-message'
 import { MainLayout } from '@/components/layout/MainLayout'
@@ -98,12 +99,22 @@ export default function EventsPage() {
     setIsDialogOpen(true)
   }
 
-  const handleDeleteEvent = async () => {
+  const handleDeleteEvent = async (mode?: 'single' | 'all') => {
     if (!deletingEvent) return
 
     try {
       setOperationError(null)
-      await deleteEvent(deletingEvent.id)
+      if (deletingEvent.recurrenceRule && mode === 'single' && deletingEvent.startDatetime) {
+        const eventDate = deletingEvent.startDatetime.split('T')[0]
+        const currentExcludedDates = deletingEvent.recurrenceExcludedDates || []
+        if (!currentExcludedDates.includes(eventDate)) {
+          await updateEvent(deletingEvent.id, {
+            recurrenceExcludedDates: [...currentExcludedDates, eventDate],
+          })
+        }
+      } else {
+        await deleteEvent(deletingEvent.id)
+      }
       setDeletingEvent(undefined)
     } catch (err) {
       setOperationError(
@@ -187,16 +198,21 @@ export default function EventsPage() {
         event={editingEvent}
       />
 
-      <DeleteConfirmDialog
-        open={!!deletingEvent}
-        message={
-          deletingEvent?.recurrenceRule
-            ? `「${deletingEvent.title}」の繰り返し予定をすべて削除しますか？この操作は取り消せません。`
-            : `「${deletingEvent?.title}」を削除しますか？この操作は取り消せません。`
-        }
-        onConfirm={handleDeleteEvent}
-        onCancel={() => setDeletingEvent(undefined)}
-      />
+      {deletingEvent?.recurrenceRule ? (
+        <RecurringEventDeleteDialog
+          open={!!deletingEvent}
+          eventTitle={deletingEvent.title}
+          onConfirm={handleDeleteEvent}
+          onCancel={() => setDeletingEvent(undefined)}
+        />
+      ) : (
+        <DeleteConfirmDialog
+          open={!!deletingEvent}
+          message={`「${deletingEvent?.title}」を削除しますか？この操作は取り消せません。`}
+          onConfirm={() => handleDeleteEvent()}
+          onCancel={() => setDeletingEvent(undefined)}
+        />
+      )}
       </div>
     </MainLayout>
   )
