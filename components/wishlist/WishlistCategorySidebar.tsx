@@ -81,14 +81,14 @@ export function WishlistCategorySidebar({
 
   if (isLoading) {
     return (
-      <div className="w-64 border-r border-stone-200/60 bg-stone-900/10 p-4 text-foreground dark:border-stone-700/40 dark:bg-stone-900/20">
+      <div className="h-full w-64 border-r border-stone-200/60 bg-stone-900/10 p-4 text-foreground dark:border-stone-700/40 dark:bg-stone-900/20">
         <Loading />
       </div>
     )
   }
 
   return (
-    <div className="flex h-full w-64 flex-col border-r border-stone-200/60 bg-stone-900/10 text-foreground dark:border-stone-700/40 dark:bg-stone-900/20">
+    <div className="flex h-full w-64 flex-col border-r border-stone-200/60 bg-stone-900/10 text-foreground dark:border-stone-700/40 dark:bg-stone-900/20 overflow-hidden">
       <div className="flex-1 overflow-y-auto p-4">
         <h2 className="mb-4 text-lg font-semibold">欲しいものリスト</h2>
 
