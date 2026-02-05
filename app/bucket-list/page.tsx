@@ -291,11 +291,13 @@ export default function BucketListPage() {
 
   return (
     <MainLayout>
-      <div className="flex h-[calc(100vh-3.5rem)]">
-        <BucketListCategorySidebar
-          selectedCategoryId={selectedCategoryId}
-          onSelectCategory={setSelectedCategoryId}
-        />
+      <div className="flex min-h-[calc(100vh-3.5rem)]">
+        <div className="sticky top-14 h-[calc(100vh-3.5rem)] self-start">
+          <BucketListCategorySidebar
+            selectedCategoryId={selectedCategoryId}
+            onSelectCategory={setSelectedCategoryId}
+          />
+        </div>
         <div className="min-h-0 flex-1 overflow-y-auto">
           <div className="mx-auto max-w-3xl p-8">
             <div className="mb-6 flex items-center justify-between">
