@@ -32,6 +32,7 @@ import {
   toTasksWithNextOccurrenceOnly,
   getNextOccurrenceAfter,
 } from '@/lib/tasks'
+import { getHolidaysForDateRange } from '@/lib/calendar/holidays'
 import type { CreateEventInput, Event, UpdateEventInput } from '@/lib/types/event'
 import type { CreateTaskInput, Task, UpdateTaskInput } from '@/lib/types/task'
 import type { BucketListItem, CreateBucketListItemInput, UpdateBucketListItemInput } from '@/lib/types/bucket-list-item'
@@ -112,6 +113,10 @@ export function CalendarView({ initialDate }: CalendarViewProps) {
   const expandedTasks = useMemo(
     () => toTasksWithNextOccurrenceOnly(tasks, rangeStart),
     [tasks, rangeStart],
+  )
+  const holidays = useMemo(
+    () => getHolidaysForDateRange(rangeStart, rangeEnd),
+    [rangeStart, rangeEnd],
   )
   const [operationError, setOperationError] = useState<string | null>(null)
   const [isEventDialogOpen, setIsEventDialogOpen] = useState(false)
@@ -321,6 +326,7 @@ export function CalendarView({ initialDate }: CalendarViewProps) {
             events={expandedEvents}
             tasks={expandedTasks}
             weekStartDay={weekStartDay}
+            holidays={holidays}
             onEditEvent={handleEditEvent}
             onDeleteEvent={handleDeleteEventClick}
             onEditTask={handleEditTask}
@@ -334,6 +340,7 @@ export function CalendarView({ initialDate }: CalendarViewProps) {
             events={expandedEvents}
             tasks={expandedTasks}
             weekStartDay={weekStartDay}
+            holidays={holidays}
             onEditEvent={handleEditEvent}
             onDeleteEvent={handleDeleteEventClick}
             onEditTask={handleEditTask}

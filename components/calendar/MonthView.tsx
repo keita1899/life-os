@@ -16,6 +16,7 @@ import {
   sortEventsByTime,
   getWeekdays,
 } from '@/lib/calendar/utils'
+import { getHolidayName } from '@/lib/calendar/holidays'
 import {
   Popover,
   PopoverContent,
@@ -248,6 +249,7 @@ function DateCell({
   allItems,
   dayEvents,
   dayTasks,
+  holidays,
   onEditEvent,
   onDeleteEvent,
   onEditTask,
@@ -266,6 +268,7 @@ function DateCell({
   }>
   dayEvents: Event[]
   dayTasks: Task[]
+  holidays: Map<string, string>
   onEditEvent?: (event: Event) => void
   onDeleteEvent?: (event: Event) => void
   onEditTask?: (task: Task) => void
@@ -275,6 +278,7 @@ function DateCell({
   const router = useRouter()
   const { mode } = useMode()
   const [hasOpenPopover, setHasOpenPopover] = useState(false)
+  const holidayName = getHolidayName(date, holidays)
 
   const navigateToDay = () => {
     if (!hasOpenPopover) {
@@ -311,7 +315,7 @@ function DateCell({
     >
       <div
         className={cn(
-          'mb-1 flex h-6 items-center text-sm',
+          'mb-1 flex h-6 items-center gap-1 text-sm',
           !isTodayDate && 'font-medium',
         )}
       >
@@ -321,6 +325,11 @@ function DateCell({
           </span>
         ) : (
           formatDay(date)
+        )}
+        {holidayName && (
+          <span className="text-xs text-red-600 dark:text-red-400">
+            {holidayName}
+          </span>
         )}
       </div>
       <div className="space-y-0.5">
@@ -371,6 +380,7 @@ interface MonthViewProps {
   events?: Event[]
   tasks?: Task[]
   weekStartDay?: number
+  holidays?: Map<string, string>
   onEditEvent?: (event: Event) => void
   onDeleteEvent?: (event: Event) => void
   onEditTask?: (task: Task) => void
@@ -383,6 +393,7 @@ export function MonthView({
   events = [],
   tasks = [],
   weekStartDay = 0,
+  holidays = new Map(),
   onEditEvent,
   onDeleteEvent,
   onEditTask,
@@ -438,6 +449,7 @@ export function MonthView({
                 allItems={allItems}
                 dayEvents={dayEvents}
                 dayTasks={dayTasks}
+                holidays={holidays}
                 onEditEvent={onEditEvent}
                 onDeleteEvent={onDeleteEvent}
                 onEditTask={onEditTask}

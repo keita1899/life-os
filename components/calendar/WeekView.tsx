@@ -15,6 +15,7 @@ import {
   sortEventsByTime,
   getWeekdays,
 } from '@/lib/calendar/utils'
+import { getHolidayName } from '@/lib/calendar/holidays'
 import { CheckCircle2, ChevronDown, ChevronUp, Circle } from 'lucide-react'
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover'
 import { EventPopoverContent } from './EventPopover'
@@ -247,6 +248,7 @@ function WeekDateCell({
   dayEvents,
   dayTasks,
   isExpanded,
+  holidays,
   onToggleExpand,
   onEditEvent,
   onDeleteEvent,
@@ -259,6 +261,7 @@ function WeekDateCell({
   dayEvents: Event[]
   dayTasks: Task[]
   isExpanded: boolean
+  holidays: Map<string, string>
   onToggleExpand: () => void
   onEditEvent?: (event: Event) => void
   onDeleteEvent?: (event: Event) => void
@@ -272,6 +275,7 @@ function WeekDateCell({
   const [hasOpenTaskPopover, setHasOpenTaskPopover] = useState(false)
   const visibleEvents = isExpanded ? dayEvents : dayEvents.slice(0, 3)
   const hasMoreEvents = dayEvents.length > 3
+  const holidayName = getHolidayName(date, holidays)
 
   const navigateToDay = () => {
     if (!hasOpenPopover && !hasOpenTaskPopover) {
@@ -307,7 +311,7 @@ function WeekDateCell({
     >
       <div
         className={cn(
-          'mb-2 flex h-7 items-center text-sm',
+          'mb-2 flex h-7 items-center gap-1 text-sm',
           !isTodayDate && 'font-medium',
         )}
       >
@@ -317,6 +321,11 @@ function WeekDateCell({
           </span>
         ) : (
           formatDay(date)
+        )}
+        {holidayName && (
+          <span className="text-xs text-red-600 dark:text-red-400">
+            {holidayName}
+          </span>
         )}
       </div>
       <div className="space-y-1.5">
@@ -376,6 +385,7 @@ interface WeekViewProps {
   tasks?: Task[]
   weekStartDay?: number
   showWeeklyGoalForm?: boolean
+  holidays?: Map<string, string>
   onEditEvent?: (event: Event) => void
   onDeleteEvent?: (event: Event) => void
   onEditTask?: (task: Task) => void
@@ -390,6 +400,7 @@ export function WeekView({
   tasks = [],
   weekStartDay = 0,
   showWeeklyGoalForm = true,
+  holidays = new Map(),
   onEditEvent,
   onDeleteEvent,
   onEditTask,
@@ -450,6 +461,7 @@ export function WeekView({
               dayEvents={dayEvents}
               dayTasks={dayTasks}
               isExpanded={isExpanded}
+              holidays={holidays}
               onToggleExpand={() => toggleDate(dateStr)}
               onEditEvent={onEditEvent}
               onDeleteEvent={onDeleteEvent}

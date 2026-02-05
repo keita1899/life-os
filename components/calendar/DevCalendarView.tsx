@@ -10,6 +10,8 @@ import { useDevCalendarTasks } from '@/hooks/useDevCalendarTasks'
 import { useDevProjects } from '@/hooks/useDevProjects'
 import { useCalendarView } from '@/hooks/useCalendarView'
 import { useMemo, useState } from 'react'
+import { startOfMonth, endOfMonth, startOfWeek, endOfWeek } from 'date-fns'
+import { getHolidaysForDateRange } from '@/lib/calendar/holidays'
 import type { Task } from '@/lib/types/task'
 import { TaskDialog } from '@/components/tasks/TaskDialog'
 import { DeleteConfirmDialog } from '@/components/ui/delete-confirm-dialog'
@@ -82,11 +84,36 @@ export function DevCalendarView({ initialDate }: DevCalendarViewProps) {
           completed: t.completed,
           order: t.order,
           actualTime: t.actualTime,
+          recurrenceRule: null,
+          recurrenceDaysOfWeek: null,
+          recurrenceDayOfMonth: null,
+          recurrenceEndDate: null,
+          recurrenceExcludedDates: [],
           createdAt: t.createdAt,
           updatedAt: t.updatedAt,
         }
       })
   }, [devTasks, projectNameById])
+
+  const weekStartsOn = (weekStartDay === 0 ? 0 : 1) as 0 | 1
+  const rangeStart = useMemo(
+    () =>
+      viewMode === 'month'
+        ? startOfMonth(currentDate)
+        : startOfWeek(currentDate, { weekStartsOn }),
+    [viewMode, currentDate, weekStartsOn],
+  )
+  const rangeEnd = useMemo(
+    () =>
+      viewMode === 'month'
+        ? endOfMonth(currentDate)
+        : endOfWeek(currentDate, { weekStartsOn }),
+    [viewMode, currentDate, weekStartsOn],
+  )
+  const holidays = useMemo(
+    () => getHolidaysForDateRange(rangeStart, rangeEnd),
+    [rangeStart, rangeEnd],
+  )
 
   const isLoading =
     isLoadingGoals || isLoadingTasks || isLoadingProjects || isLoadingSettings
@@ -107,6 +134,11 @@ export function DevCalendarView({ initialDate }: DevCalendarViewProps) {
       completed: devTask.completed,
       order: devTask.order,
       actualTime: devTask.actualTime,
+      recurrenceRule: null,
+      recurrenceDaysOfWeek: null,
+      recurrenceDayOfMonth: null,
+      recurrenceEndDate: null,
+      recurrenceExcludedDates: [],
       createdAt: devTask.createdAt,
       updatedAt: devTask.updatedAt,
     })
@@ -197,6 +229,7 @@ export function DevCalendarView({ initialDate }: DevCalendarViewProps) {
             events={[]}
             tasks={calendarTasks}
             weekStartDay={weekStartDay}
+            holidays={holidays}
             onEditTask={handleEditTask}
             onDeleteTask={handleDeleteTaskClick}
             onToggleTaskCompletion={handleToggleTaskCompletion}
@@ -209,6 +242,7 @@ export function DevCalendarView({ initialDate }: DevCalendarViewProps) {
             tasks={calendarTasks}
             weekStartDay={weekStartDay}
             showWeeklyGoalForm={false}
+            holidays={holidays}
             onEditTask={handleEditTask}
             onDeleteTask={handleDeleteTaskClick}
             onToggleTaskCompletion={handleToggleTaskCompletion}
