@@ -38,9 +38,7 @@ const subscriptionFormSchema = z.object({
       },
       '月額料金は0以上の数値で入力してください',
     ),
-  billingCycle: z.enum(['monthly', 'yearly', 'quarterly', 'other'], {
-    required_error: '支払い頻度を選択してください',
-  }),
+  billingCycle: z.enum(['monthly', 'yearly', 'quarterly', 'other']),
   nextBillingDate: z.string().min(1, '次回更新日は必須です'),
   startDate: z.string().optional(),
   cancellationUrl: z.string().url('有効なURLを入力してください').optional().or(z.literal('')),
@@ -68,7 +66,7 @@ export const SubscriptionForm = ({
       ? {
           name: initialData.name,
           monthlyPrice: initialData.monthlyPrice.toString(),
-          billingCycle: initialData.billingCycle,
+          billingCycle: initialData.billingCycle ?? 'monthly',
           nextBillingDate: formatDateForInput(initialData.nextBillingDate),
           startDate: initialData.startDate
             ? formatDateForInput(initialData.startDate)
@@ -79,7 +77,7 @@ export const SubscriptionForm = ({
       : {
           name: '',
           monthlyPrice: '',
-          billingCycle: undefined,
+          billingCycle: 'monthly',
           nextBillingDate: '',
           startDate: '',
           cancellationUrl: '',

@@ -34,7 +34,7 @@ import type {
 } from '@/lib/types/event'
 
 const EVENT_CATEGORY_VALUES = EVENT_CATEGORIES.filter(
-  (cat): cat is { value: NonNullable<EventCategory>; label: string } =>
+  (cat): cat is { value: NonNullable<EventCategory>; label: string; emoji: string } =>
     cat.value !== null,
 ).map((cat) => cat.value) as [
   NonNullable<EventCategory>,
@@ -150,9 +150,7 @@ export const EventForm = ({
         : null
 
     const recurrenceRule: RecurrenceRule | null =
-      data.recurrenceRule && data.recurrenceRule !== ''
-        ? (data.recurrenceRule as RecurrenceRule)
-        : null
+      data.recurrenceRule ?? null
     const recurrenceEndDate =
       data.recurrenceEndDate && data.recurrenceEndDate.trim() !== ''
         ? data.recurrenceEndDate

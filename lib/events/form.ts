@@ -12,7 +12,7 @@ export function getEventFormValues(data?: Event) {
       allDay: false,
       category: null,
       description: '',
-      recurrenceRule: null as const,
+      recurrenceRule: null,
       recurrenceDaysOfWeek: [] as number[],
       recurrenceDayOfMonth: null as number | null,
       recurrenceEndDate: '',
