@@ -15,6 +15,7 @@ interface DbTask {
   recurrence_days_of_week: string | null
   recurrence_day_of_month: number | null
   recurrence_end_date: string | null
+  recurrence_excluded_dates: string | null
   created_at: string
   updated_at: string
 }
@@ -28,6 +29,15 @@ function mapDbTaskToTask(dbTask: DbTask): Task {
       .filter((n) => !isNaN(n))
   }
 
+  let excludedDates: string[] = []
+  if (dbTask.recurrence_excluded_dates) {
+    try {
+      excludedDates = JSON.parse(dbTask.recurrence_excluded_dates)
+    } catch {
+      excludedDates = []
+    }
+  }
+
   return {
     id: dbTask.id,
     title: dbTask.title,
@@ -39,6 +49,7 @@ function mapDbTaskToTask(dbTask: DbTask): Task {
     recurrenceDaysOfWeek: daysOfWeek,
     recurrenceDayOfMonth: dbTask.recurrence_day_of_month,
     recurrenceEndDate: dbTask.recurrence_end_date,
+    recurrenceExcludedDates: excludedDates,
     createdAt: dbTask.created_at,
     updatedAt: dbTask.updated_at,
   }
@@ -65,8 +76,8 @@ export async function createTask(input: CreateTaskInput): Promise<Task> {
 
   try {
     await db.execute(
-      `INSERT INTO tasks (title, execution_date, "order", recurrence_rule, recurrence_days_of_week, recurrence_day_of_month, recurrence_end_date)
-       VALUES (?, ?, ?, ?, ?, ?, ?)`,
+      `INSERT INTO tasks (title, execution_date, "order", recurrence_rule, recurrence_days_of_week, recurrence_day_of_month, recurrence_end_date, recurrence_excluded_dates)
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
       [
         input.title,
         input.executionDate || null,
@@ -75,6 +86,7 @@ export async function createTask(input: CreateTaskInput): Promise<Task> {
         daysOfWeekStr,
         input.recurrenceDayOfMonth ?? null,
         input.recurrenceEndDate || null,
+        null,
       ],
     )
 
@@ -170,6 +182,15 @@ export async function updateTask(
   if (input.recurrenceEndDate !== undefined) {
     updateFields.push('recurrence_end_date = ?')
     updateValues.push(input.recurrenceEndDate || null)
+  }
+
+  if (input.recurrenceExcludedDates !== undefined) {
+    updateFields.push('recurrence_excluded_dates = ?')
+    updateValues.push(
+      input.recurrenceExcludedDates.length > 0
+        ? JSON.stringify(input.recurrenceExcludedDates)
+        : null,
+    )
   }
 
   if (updateFields.length === 0) {
