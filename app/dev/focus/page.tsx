@@ -1,6 +1,6 @@
 'use client'
 
-import { useMemo, useState, useEffect } from 'react'
+import { useMemo, useState, useEffect, Suspense } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { ArrowLeft, X, CheckCircle2, Play, GripVertical } from 'lucide-react'
 import { Button } from '@/components/ui/button'
@@ -234,7 +234,7 @@ function DraggableAvailableDevTaskItem({
   )
 }
 
-export default function DevFocusPage() {
+function DevFocusPageContent() {
   const { mode } = useMode()
   const router = useRouter()
   const searchParams = useSearchParams()
@@ -805,5 +805,13 @@ export default function DevFocusPage() {
         </DialogContent>
       </Dialog>
     </MainLayout>
+  )
+}
+
+export default function DevFocusPage() {
+  return (
+    <Suspense fallback={<Loading />}>
+      <DevFocusPageContent />
+    </Suspense>
   )
 }

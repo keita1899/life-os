@@ -578,7 +578,7 @@ function LogPageContent() {
 
 export default function LogPage() {
   return (
-    <Suspense fallback={<div className="container mx-auto max-w-4xl py-8 px-4">読み込み中...</div>}>
+    <Suspense fallback={<Loading />}>
       <LogPageContent />
     </Suspense>
   )

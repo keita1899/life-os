@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect } from 'react'
+import { useEffect, Suspense } from 'react'
 import { useHotkeys } from 'react-hotkeys-hook'
 import { useMode } from '@/lib/contexts/ModeContext'
 import { Button } from '@/components/ui/button'
@@ -38,7 +38,7 @@ function safeSetLocalStorage(key: string, value: string): void {
   }
 }
 
-export function ModeSwitch() {
+function ModeSwitchContent() {
   const { mode, setMode } = useMode()
   const router = useRouter()
   const pathname = usePathname()
@@ -118,5 +118,17 @@ export function ModeSwitch() {
         Dev
       </Button>
     </div>
+  )
+}
+
+export function ModeSwitch() {
+  return (
+    <Suspense fallback={
+      <div className="flex items-center gap-2 rounded-lg border border-input bg-background p-1">
+        <div className="h-8 w-16 animate-pulse rounded bg-muted" />
+      </div>
+    }>
+      <ModeSwitchContent />
+    </Suspense>
   )
 }
