@@ -20,6 +20,7 @@ interface DbEvent {
   recurrence_days_of_week: string | null
   recurrence_day_of_month: number | null
   recurrence_end_date: string | null
+  recurrence_excluded_dates: string | null
   created_at: string
   updated_at: string
 }
@@ -42,6 +43,15 @@ function parseDaysOfWeek(
 }
 
 function mapDbEventToEvent(dbEvent: DbEvent): Event {
+  let excludedDates: string[] = []
+  if (dbEvent.recurrence_excluded_dates) {
+    try {
+      excludedDates = JSON.parse(dbEvent.recurrence_excluded_dates)
+    } catch {
+      excludedDates = []
+    }
+  }
+
   return {
     id: dbEvent.id,
     title: dbEvent.title,
@@ -57,6 +67,7 @@ function mapDbEventToEvent(dbEvent: DbEvent): Event {
     ),
     recurrenceDayOfMonth: dbEvent.recurrence_day_of_month ?? null,
     recurrenceEndDate: dbEvent.recurrence_end_date || null,
+    recurrenceExcludedDates: excludedDates,
     createdAt: dbEvent.created_at,
     updatedAt: dbEvent.updated_at,
   }
@@ -72,8 +83,8 @@ export async function createEvent(input: CreateEventInput): Promise<Event> {
         : null
 
     await db.execute(
-      `INSERT INTO events (title, start_datetime, end_datetime, all_day, category, description, recurrence_rule, recurrence_day_of_week, recurrence_days_of_week, recurrence_day_of_month, recurrence_end_date)
-       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+      `INSERT INTO events (title, start_datetime, end_datetime, all_day, category, description, recurrence_rule, recurrence_day_of_week, recurrence_days_of_week, recurrence_day_of_month, recurrence_end_date, recurrence_excluded_dates)
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
       [
         input.title,
         input.startDatetime,
@@ -86,6 +97,7 @@ export async function createEvent(input: CreateEventInput): Promise<Event> {
         recurrenceDaysOfWeekStr,
         input.recurrenceDayOfMonth ?? null,
         input.recurrenceEndDate || null,
+        null,
       ],
     )
 
@@ -223,6 +235,15 @@ export async function updateEvent(
   if (input.recurrenceEndDate !== undefined) {
     updateFields.push('recurrence_end_date = ?')
     updateValues.push(input.recurrenceEndDate || null)
+  }
+
+  if (input.recurrenceExcludedDates !== undefined) {
+    updateFields.push('recurrence_excluded_dates = ?')
+    updateValues.push(
+      input.recurrenceExcludedDates.length > 0
+        ? JSON.stringify(input.recurrenceExcludedDates)
+        : null,
+    )
   }
 
   if (updateFields.length === 0) {

@@ -27,10 +27,12 @@ function getOccurrenceDates(
   recurrenceEndDate: string | null,
   daysOfWeek: number[] | null,
   dayOfMonth: number | null,
+  excludedDates: string[] = [],
 ): Date[] {
   const endLimit = recurrenceEndDate
     ? parseISO(recurrenceEndDate + 'T23:59:59')
     : null
+  const excludedDatesSet = new Set(excludedDates)
   const dates: Date[] = []
 
   if (rule === 'daily') {
@@ -41,7 +43,10 @@ function getOccurrenceDates(
     }
     while (!isAfter(current, rangeEnd)) {
       if (endLimit && isAfter(current, endLimit)) break
-      dates.push(new Date(current))
+      const dateStr = format(current, 'yyyy-MM-dd')
+      if (!excludedDatesSet.has(dateStr)) {
+        dates.push(new Date(current))
+      }
       current = addDays(current, 1)
     }
     return dates
@@ -64,7 +69,10 @@ function getOccurrenceDates(
       }
       while (!isAfter(current, rangeEnd)) {
         if (endLimit && isAfter(current, endLimit)) break
-        dates.push(new Date(current))
+        const dateStr = format(current, 'yyyy-MM-dd')
+        if (!excludedDatesSet.has(dateStr)) {
+          dates.push(new Date(current))
+        }
         current = addDays(current, 7)
       }
     }
@@ -95,7 +103,10 @@ function getOccurrenceDates(
     }
     while (!isAfter(current, rangeEnd)) {
       if (endLimit && isAfter(current, endLimit)) break
-      dates.push(new Date(current))
+      const dateStr = format(current, 'yyyy-MM-dd')
+      if (!excludedDatesSet.has(dateStr)) {
+        dates.push(new Date(current))
+      }
       current = addMonths(current, 1)
       current = clampToMonth(current, rawDom)
     }
@@ -146,6 +157,7 @@ export function expandRecurringEvents(
       event.recurrenceEndDate,
       event.recurrenceDaysOfWeek,
       event.recurrenceDayOfMonth,
+      event.recurrenceExcludedDates || [],
     )
 
     const durationMs = event.endDatetime
