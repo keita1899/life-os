@@ -10,7 +10,7 @@ interface DbTask {
   execution_date: string | null
   completed: number
   order: number
-  actual_time: number
+  scheduled_time: string | null
   recurrence_rule: string | null
   recurrence_days_of_week: string | null
   recurrence_day_of_month: number | null
@@ -44,7 +44,7 @@ function mapDbTaskToTask(dbTask: DbTask): Task {
     executionDate: dbTask.execution_date,
     completed: dbTask.completed === 1,
     order: dbTask.order,
-    actualTime: dbTask.actual_time,
+    scheduledTime: dbTask.scheduled_time,
     recurrenceRule: dbTask.recurrence_rule as RecurrenceRule | null,
     recurrenceDaysOfWeek: daysOfWeek,
     recurrenceDayOfMonth: dbTask.recurrence_day_of_month,
@@ -76,12 +76,13 @@ export async function createTask(input: CreateTaskInput): Promise<Task> {
 
   try {
     await db.execute(
-      `INSERT INTO tasks (title, execution_date, "order", recurrence_rule, recurrence_days_of_week, recurrence_day_of_month, recurrence_end_date, recurrence_excluded_dates)
-       VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
+      `INSERT INTO tasks (title, execution_date, "order", scheduled_time, recurrence_rule, recurrence_days_of_week, recurrence_day_of_month, recurrence_end_date, recurrence_excluded_dates)
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
       [
         input.title,
         input.executionDate || null,
         newOrder,
+        input.scheduledTime || null,
         input.recurrenceRule || null,
         daysOfWeekStr,
         input.recurrenceDayOfMonth ?? null,
@@ -155,9 +156,9 @@ export async function updateTask(
     updateValues.push(input.order)
   }
 
-  if (input.actualTime !== undefined) {
-    updateFields.push('actual_time = ?')
-    updateValues.push(input.actualTime)
+  if (input.scheduledTime !== undefined) {
+    updateFields.push('scheduled_time = ?')
+    updateValues.push(input.scheduledTime || null)
   }
 
   if (input.recurrenceRule !== undefined) {
