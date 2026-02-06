@@ -107,6 +107,7 @@ function DevProjectPageContent(): ReactElement | null {
       recurrenceDayOfMonth: null,
       recurrenceEndDate: null,
       recurrenceExcludedDates: [],
+      memo: t.memo,
       createdAt: t.createdAt,
       updatedAt: t.updatedAt,
     }))
@@ -164,6 +165,7 @@ function DevProjectPageContent(): ReactElement | null {
         projectId,
         type: 'inbox',
         executionDate: input.executionDate,
+        memo: input.memo,
       })
       setIsTaskDialogOpen(false)
     } catch (err) {
@@ -181,6 +183,7 @@ function DevProjectPageContent(): ReactElement | null {
       await updateTask(editingTask.id, {
         title: input.title,
         executionDate: input.executionDate,
+        memo: input.memo,
       })
       setIsTaskDialogOpen(false)
       setEditingTask(undefined)

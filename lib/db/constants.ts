@@ -185,6 +185,7 @@ export const DB_COLUMNS = {
     'completed',
     'order',
     'actual_time',
+    'memo',
     'created_at',
     'updated_at',
   ],

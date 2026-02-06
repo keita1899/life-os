@@ -12,6 +12,7 @@ export interface Task {
   recurrenceDayOfMonth: number | null
   recurrenceEndDate: string | null
   recurrenceExcludedDates: string[]
+  memo?: string | null
   createdAt: string
   updatedAt: string
 }
@@ -23,6 +24,7 @@ export interface CreateTaskInput {
   recurrenceDaysOfWeek?: number[] | null
   recurrenceDayOfMonth?: number | null
   recurrenceEndDate?: string | null
+  memo?: string | null
 }
 
 export interface UpdateTaskInput {
@@ -36,4 +38,5 @@ export interface UpdateTaskInput {
   recurrenceDayOfMonth?: number | null
   recurrenceEndDate?: string | null
   recurrenceExcludedDates?: string[]
+  memo?: string | null
 }

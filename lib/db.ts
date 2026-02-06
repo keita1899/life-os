@@ -307,6 +307,7 @@ async function initializeAllTables(): Promise<void> {
       completed INTEGER NOT NULL DEFAULT 0,
       "order" INTEGER NOT NULL DEFAULT 0,
       actual_time INTEGER NOT NULL DEFAULT 0,
+      memo TEXT,
       created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
       updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,
       FOREIGN KEY (project_id) REFERENCES dev_projects(id) ON DELETE SET NULL
@@ -402,6 +403,7 @@ async function initializeAllTables(): Promise<void> {
         completed INTEGER NOT NULL DEFAULT 0,
         "order" INTEGER NOT NULL DEFAULT 0,
         actual_time INTEGER NOT NULL DEFAULT 0,
+        memo TEXT,
         created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
         updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,
         FOREIGN KEY (project_id) REFERENCES dev_projects(id) ON DELETE SET NULL
@@ -428,6 +430,7 @@ async function initializeAllTables(): Promise<void> {
         completed,
         "order",
         actual_time,
+        memo,
         created_at,
         updated_at
       )
@@ -440,6 +443,7 @@ async function initializeAllTables(): Promise<void> {
         completed,
         "order",
         actual_time,
+        NULL as memo,
         created_at,
         updated_at
       FROM dev_tasks_old`,
@@ -452,6 +456,10 @@ async function initializeAllTables(): Promise<void> {
     await db.execute(
       "ALTER TABLE dev_tasks ADD COLUMN type TEXT NOT NULL DEFAULT 'inbox'",
     )
+  }
+
+  if (!devTaskColumns.has('memo')) {
+    await db.execute('ALTER TABLE dev_tasks ADD COLUMN memo TEXT')
   }
 
   const yearlyGoalColumnRows = await db.select<{ name: string }[]>(

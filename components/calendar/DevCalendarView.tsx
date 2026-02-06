@@ -89,6 +89,7 @@ export function DevCalendarView({ initialDate }: DevCalendarViewProps) {
           recurrenceDayOfMonth: null,
           recurrenceEndDate: null,
           recurrenceExcludedDates: [],
+          memo: t.memo,
           createdAt: t.createdAt,
           updatedAt: t.updatedAt,
         }
@@ -139,6 +140,7 @@ export function DevCalendarView({ initialDate }: DevCalendarViewProps) {
       recurrenceDayOfMonth: null,
       recurrenceEndDate: null,
       recurrenceExcludedDates: [],
+      memo: devTask.memo,
       createdAt: devTask.createdAt,
       updatedAt: devTask.updatedAt,
     })
@@ -153,6 +155,7 @@ export function DevCalendarView({ initialDate }: DevCalendarViewProps) {
       await updateDevTask(editingTask.id, {
         title: input.title,
         executionDate: input.executionDate,
+        memo: input.memo,
       })
       await mutate('dev-calendar-tasks')
       setIsTaskDialogOpen(false)

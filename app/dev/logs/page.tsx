@@ -147,6 +147,7 @@ function DevLogPageView({ logDate, date }: DevLogPageViewProps) {
         recurrenceDayOfMonth: null,
         recurrenceEndDate: null,
         recurrenceExcludedDates: [],
+        memo: t.memo,
         createdAt: t.createdAt,
         updatedAt: t.updatedAt,
       }
@@ -179,6 +180,7 @@ function DevLogPageView({ logDate, date }: DevLogPageViewProps) {
     setEditingTask({
       ...task,
       title: titleWithoutPrefix,
+      memo: devTask.memo,
     })
     setIsTaskDialogOpen(true)
   }
@@ -210,6 +212,7 @@ function DevLogPageView({ logDate, date }: DevLogPageViewProps) {
           projectId: null,
           type: target.value,
           executionDate: input.executionDate ?? date,
+          memo: input.memo,
         })
       } else {
         await createDevTask({
@@ -217,6 +220,7 @@ function DevLogPageView({ logDate, date }: DevLogPageViewProps) {
           projectId: target.projectId,
           type: 'inbox',
           executionDate: input.executionDate ?? date,
+          memo: input.memo,
         })
       }
       await mutate('dev-calendar-tasks')
@@ -239,6 +243,7 @@ function DevLogPageView({ logDate, date }: DevLogPageViewProps) {
       await updateDevTask(editingTask.id, {
         title: input.title,
         executionDate: input.executionDate,
+        memo: input.memo,
       })
       await mutate('dev-calendar-tasks')
       setIsTaskDialogOpen(false)

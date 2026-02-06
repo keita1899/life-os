@@ -7,6 +7,7 @@ export interface DevTask {
   completed: boolean
   order: number
   actualTime: number
+  memo: string | null
   createdAt: string
   updatedAt: string
 }
@@ -16,6 +17,7 @@ export interface CreateDevTaskInput {
   projectId: number | null
   type: 'inbox' | 'learning'
   executionDate?: string | null
+  memo?: string | null
 }
 
 export interface UpdateDevTaskInput {
@@ -26,5 +28,6 @@ export interface UpdateDevTaskInput {
   completed?: boolean
   order?: number
   actualTime?: number
+  memo?: string | null
 }
 

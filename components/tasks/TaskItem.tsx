@@ -9,6 +9,7 @@ import {
   Trash2,
   Calendar,
   Repeat,
+  FileText,
 } from 'lucide-react'
 import { getDateLabel } from '@/lib/date/labels'
 import { Button } from '@/components/ui/button'
@@ -23,6 +24,12 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from '@/components/ui/popover'
+import {
+  Accordion,
+  AccordionContent,
+  AccordionItem,
+  AccordionTrigger,
+} from '@/components/ui/accordion'
 import { Input } from '@/components/ui/input'
 import { cn } from '@/lib/utils'
 import {
@@ -30,6 +37,7 @@ import {
   getTomorrowDateString,
   formatDateForInput,
 } from '@/lib/date/formats'
+import { useMode } from '@/lib/contexts/ModeContext'
 import type { Task } from '@/lib/types/task'
 
 interface TaskItemProps {
@@ -79,6 +87,7 @@ export function TaskItem({
   onToggleCompletion,
   onUpdateExecutionDate,
 }: TaskItemProps) {
+  const { mode } = useMode()
   const dateLabel = useMemo(
     () => getDateLabel(task.executionDate),
     [task.executionDate],
@@ -166,6 +175,25 @@ export function TaskItem({
               </span>
             )}
             {task.actualTime > 0 && <span>実績: {task.actualTime}分</span>}
+          </div>
+        )}
+        {mode === 'development' && task.memo && (
+          <div className="mt-2">
+            <Accordion type="single" collapsible className="w-full">
+              <AccordionItem value="memo" className="border-none">
+                <AccordionTrigger className="py-1 text-xs text-muted-foreground hover:no-underline">
+                  <div className="flex items-center gap-1">
+                    <FileText className="h-3 w-3 shrink-0" />
+                    <span>メモ</span>
+                  </div>
+                </AccordionTrigger>
+                <AccordionContent className="pt-1 pb-0">
+                  <div className="text-xs text-muted-foreground whitespace-pre-wrap break-words">
+                    {task.memo}
+                  </div>
+                </AccordionContent>
+              </AccordionItem>
+            </Accordion>
           </div>
         )}
       </div>

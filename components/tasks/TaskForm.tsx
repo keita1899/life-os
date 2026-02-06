@@ -21,8 +21,10 @@ import {
   SelectValue,
 } from '@/components/ui/select'
 import { Input } from '@/components/ui/input'
+import { Textarea } from '@/components/ui/textarea'
 import { Button } from '@/components/ui/button'
 import { useMode } from '@/lib/contexts/ModeContext'
+import { useAutoResizeTextarea } from '@/hooks/useAutoResizeTextarea'
 import type { Task, CreateTaskInput } from '@/lib/types/task'
 import type { RecurrenceRule } from '@/lib/types/event'
 import {
@@ -53,6 +55,7 @@ const taskFormSchema = z.object({
   recurrenceDaysOfWeek: z.array(z.number().min(0).max(6)).optional(),
   recurrenceDayOfMonth: z.number().min(0).max(31).nullable().optional(),
   recurrenceEndDate: z.string().optional(),
+  memo: z.string().optional(),
 })
 
 type TaskFormValues = z.infer<typeof taskFormSchema>
@@ -88,6 +91,7 @@ export const TaskForm = ({
           recurrenceDaysOfWeek: initialData.recurrenceDaysOfWeek ?? [],
           recurrenceDayOfMonth: initialData.recurrenceDayOfMonth,
           recurrenceEndDate: initialData.recurrenceEndDate ?? '',
+          memo: (initialData as any).memo ?? '',
         }
       : {
           title: defaultTitle ?? '',
@@ -96,11 +100,15 @@ export const TaskForm = ({
           recurrenceDaysOfWeek: [],
           recurrenceDayOfMonth: null,
           recurrenceEndDate: '',
+          memo: '',
         },
   })
 
   const executionDate = form.watch('executionDate')
   const recurrenceRule = form.watch('recurrenceRule')
+  const memoValue = form.watch('memo')
+  const { textareaRef: memoTextareaRef, handleChange: handleMemoChange } =
+    useAutoResizeTextarea(memoValue)
   const [datePresetOverride, setDatePresetOverride] = useState<
     'none' | 'today' | 'tomorrow' | 'custom' | null
   >(null)
@@ -183,6 +191,7 @@ export const TaskForm = ({
       recurrenceDaysOfWeek,
       recurrenceDayOfMonth,
       recurrenceEndDate,
+      memo: mode === 'development' ? (data.memo || null) : undefined,
     })
     if (!isEditMode) {
       form.reset()
@@ -394,6 +403,34 @@ export const TaskForm = ({
               />
             )}
           </>
+        )}
+
+        {mode === 'development' && (
+          <FormField
+            control={form.control}
+            name="memo"
+            render={({ field }) => {
+              const { ref, ...fieldProps } = field
+              return (
+                <FormItem>
+                  <FormLabel>メモ</FormLabel>
+                  <FormControl>
+                    <Textarea
+                      ref={memoTextareaRef}
+                      placeholder="メモを入力（任意）"
+                      {...fieldProps}
+                      value={field.value ?? ''}
+                      onChange={(e) => {
+                        field.onChange(e)
+                        handleMemoChange(e)
+                      }}
+                    />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )
+            }}
+          />
         )}
 
         <div className="flex justify-end gap-2">

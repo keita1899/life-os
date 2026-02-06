@@ -65,6 +65,7 @@ export default function DevTasksPage() {
       recurrenceDayOfMonth: null,
       recurrenceEndDate: null,
       recurrenceExcludedDates: [],
+      memo: t.memo,
       createdAt: t.createdAt,
       updatedAt: t.updatedAt,
     }))
@@ -99,6 +100,7 @@ export default function DevTasksPage() {
         projectId: null,
         type: activeType,
         executionDate: input.executionDate,
+        memo: input.memo,
       })
       setIsDialogOpen(false)
     } catch (err) {
@@ -116,6 +118,7 @@ export default function DevTasksPage() {
       await updateTask(editingTask.id, {
         title: input.title,
         executionDate: input.executionDate,
+        memo: input.memo,
       })
       setIsDialogOpen(false)
       setEditingTask(undefined)
