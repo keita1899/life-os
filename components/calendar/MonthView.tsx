@@ -24,10 +24,12 @@ import {
 } from '@/components/ui/popover'
 import { EventPopoverContent } from './EventPopover'
 import { TaskPopoverContent } from './TaskPopover'
-import { CheckCircle2, Circle } from 'lucide-react'
+import { SubscriptionPopoverContent } from './SubscriptionPopover'
+import { CheckCircle2, Circle, CreditCard } from 'lucide-react'
 import type { Event } from '@/lib/types/event'
 import type { Task } from '@/lib/types/task'
-import { getTasksForDate } from '@/lib/logs/utils'
+import type { Subscription } from '@/lib/types/subscription'
+import { getTasksForDate, getSubscriptionsForDate } from '@/lib/logs/utils'
 import {
   isBarcelonaMatch,
   getBarcelonaMatchBackground,
@@ -242,6 +244,66 @@ function TaskPopoverWrapper({
   )
 }
 
+function SubscriptionPopoverWrapper({
+  subscription,
+  onEdit,
+  onDelete,
+  onOpenChange,
+}: {
+  subscription: Subscription
+  onEdit?: (subscription: Subscription) => void
+  onDelete?: (subscription: Subscription) => void
+  onOpenChange?: (open: boolean) => void
+}) {
+  const [isOpen, setIsOpen] = useState(false)
+
+  const handleOpenChange = (open: boolean) => {
+    setIsOpen(open)
+    onOpenChange?.(open)
+  }
+
+  return (
+    <Popover open={isOpen} onOpenChange={handleOpenChange}>
+      <PopoverTrigger asChild>
+        <button
+          className={cn(
+            'flex w-full items-center gap-1 truncate rounded border px-1 py-0.5 text-left text-xs hover:opacity-80',
+            'border-purple-200/60 bg-purple-50/50 text-purple-900 dark:border-purple-800/40 dark:bg-purple-950/20 dark:text-purple-100',
+          )}
+          title={subscription.name}
+          onClick={(e) => {
+            e.stopPropagation()
+          }}
+        >
+          <CreditCard className="h-3 w-3 shrink-0 text-purple-600 dark:text-purple-400" />
+          <span className="min-w-0 flex-1 truncate">更新日 {subscription.name}</span>
+        </button>
+      </PopoverTrigger>
+      <PopoverContent>
+        <SubscriptionPopoverContent
+          subscription={subscription}
+          onEdit={
+            onEdit
+              ? (s) => {
+                  handleOpenChange(false)
+                  onEdit(s)
+                }
+              : undefined
+          }
+          onDelete={
+            onDelete
+              ? (s) => {
+                  handleOpenChange(false)
+                  onDelete(s)
+                }
+              : undefined
+          }
+        />
+      </PopoverContent>
+    </Popover>
+  )
+}
+
 function DateCell({
   date,
   isCurrentMonthDay,
@@ -249,12 +311,15 @@ function DateCell({
   allItems,
   dayEvents,
   dayTasks,
+  daySubscriptions,
   holidays,
   onEditEvent,
   onDeleteEvent,
   onEditTask,
   onDeleteTask,
   onToggleTaskCompletion,
+  onEditSubscription,
+  onDeleteSubscription,
 }: {
   date: Date
   isCurrentMonthDay: boolean
@@ -268,12 +333,15 @@ function DateCell({
   }>
   dayEvents: Event[]
   dayTasks: Task[]
+  daySubscriptions: Subscription[]
   holidays: Map<string, string>
   onEditEvent?: (event: Event) => void
   onDeleteEvent?: (event: Event) => void
   onEditTask?: (task: Task) => void
   onDeleteTask?: (task: Task) => void
   onToggleTaskCompletion?: (task: Task) => void
+  onEditSubscription?: (subscription: Subscription) => void
+  onDeleteSubscription?: (subscription: Subscription) => void
 }) {
   const router = useRouter()
   const { mode } = useMode()
@@ -370,6 +438,21 @@ function DateCell({
             </div>
           </>
         )}
+        {daySubscriptions.length > 0 && (
+          <>
+            <div className="mt-1.5 space-y-0.5">
+              {daySubscriptions.map((subscription) => (
+                <SubscriptionPopoverWrapper
+                  key={subscription.id}
+                  subscription={subscription}
+                  onEdit={onEditSubscription}
+                  onDelete={onDeleteSubscription}
+                  onOpenChange={(open) => setHasOpenPopover(open)}
+                />
+              ))}
+            </div>
+          </>
+        )}
       </div>
     </div>
   )
@@ -379,6 +462,7 @@ interface MonthViewProps {
   currentDate: Date
   events?: Event[]
   tasks?: Task[]
+  subscriptions?: Subscription[]
   weekStartDay?: number
   holidays?: Map<string, string>
   onEditEvent?: (event: Event) => void
@@ -386,12 +470,15 @@ interface MonthViewProps {
   onEditTask?: (task: Task) => void
   onDeleteTask?: (task: Task) => void
   onToggleTaskCompletion?: (task: Task) => void
+  onEditSubscription?: (subscription: Subscription) => void
+  onDeleteSubscription?: (subscription: Subscription) => void
 }
 
 export function MonthView({
   currentDate,
   events = [],
   tasks = [],
+  subscriptions = [],
   weekStartDay = 0,
   holidays = new Map(),
   onEditEvent,
@@ -399,6 +486,8 @@ export function MonthView({
   onEditTask,
   onDeleteTask,
   onToggleTaskCompletion,
+  onEditSubscription,
+  onDeleteSubscription,
 }: MonthViewProps) {
   const calendarDays = useMemo(
     () => getCalendarDays(currentDate, weekStartDay),
@@ -432,6 +521,7 @@ export function MonthView({
             const isTodayDate = isToday(date)
             const dayEvents = sortEventsByTime(getEventsForDate(events, date))
             const dayTasks = getTasksForDate(tasks, date)
+            const daySubscriptions = getSubscriptionsForDate(subscriptions, date)
             const allItems = dayEvents.slice(0, 1).map((event) => ({
               type: 'event' as const,
               id: event.id,
@@ -449,12 +539,15 @@ export function MonthView({
                 allItems={allItems}
                 dayEvents={dayEvents}
                 dayTasks={dayTasks}
+                daySubscriptions={daySubscriptions}
                 holidays={holidays}
                 onEditEvent={onEditEvent}
                 onDeleteEvent={onDeleteEvent}
                 onEditTask={onEditTask}
                 onDeleteTask={onDeleteTask}
                 onToggleTaskCompletion={onToggleTaskCompletion}
+                onEditSubscription={onEditSubscription}
+                onDeleteSubscription={onDeleteSubscription}
               />
             )
           }),

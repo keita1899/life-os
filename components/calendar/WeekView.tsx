@@ -20,11 +20,14 @@ import { CheckCircle2, ChevronDown, ChevronUp, Circle } from 'lucide-react'
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover'
 import { EventPopoverContent } from './EventPopover'
 import { TaskPopoverContent } from './TaskPopover'
+import { SubscriptionPopoverContent } from './SubscriptionPopover'
 import { WeeklyGoalForm } from '@/components/goals/WeeklyGoalForm'
+import { CreditCard } from 'lucide-react'
 import type { WeeklyGoal } from '@/lib/types/weekly-goal'
 import type { Event } from '@/lib/types/event'
 import type { Task } from '@/lib/types/task'
-import { getTasksForDate } from '@/lib/logs/utils'
+import type { Subscription } from '@/lib/types/subscription'
+import { getTasksForDate, getSubscriptionsForDate } from '@/lib/logs/utils'
 import {
   isBarcelonaMatch,
   getBarcelonaMatchBackground,
@@ -242,11 +245,72 @@ function TaskPopoverWrapper({
   )
 }
 
+function SubscriptionPopoverWrapper({
+  subscription,
+  onEdit,
+  onDelete,
+  onOpenChange,
+}: {
+  subscription: Subscription
+  onEdit?: (subscription: Subscription) => void
+  onDelete?: (subscription: Subscription) => void
+  onOpenChange?: (open: boolean) => void
+}) {
+  const [isOpen, setIsOpen] = useState(false)
+
+  const handleOpenChange = (open: boolean) => {
+    setIsOpen(open)
+    onOpenChange?.(open)
+  }
+
+  return (
+    <Popover open={isOpen} onOpenChange={handleOpenChange}>
+      <PopoverTrigger asChild>
+        <button
+          className={cn(
+            'flex w-full items-center gap-1 rounded border px-2 py-1.5 text-left text-xs hover:opacity-80',
+            'border-purple-200/60 bg-purple-50/50 text-purple-900 dark:border-purple-800/40 dark:bg-purple-950/20 dark:text-purple-100',
+          )}
+          title={subscription.name}
+          onClick={(e) => {
+            e.stopPropagation()
+          }}
+        >
+          <CreditCard className="h-3 w-3 shrink-0 text-purple-600 dark:text-purple-400" />
+          <span className="min-w-0 flex-1 font-medium line-clamp-2">更新日 {subscription.name}</span>
+        </button>
+      </PopoverTrigger>
+      <PopoverContent>
+        <SubscriptionPopoverContent
+          subscription={subscription}
+          onEdit={
+            onEdit
+              ? (s) => {
+                  handleOpenChange(false)
+                  onEdit(s)
+                }
+              : undefined
+          }
+          onDelete={
+            onDelete
+              ? (s) => {
+                  handleOpenChange(false)
+                  onDelete(s)
+                }
+              : undefined
+          }
+        />
+      </PopoverContent>
+    </Popover>
+  )
+}
+
 function WeekDateCell({
   date,
   isTodayDate,
   dayEvents,
   dayTasks,
+  daySubscriptions,
   isExpanded,
   holidays,
   onToggleExpand,
@@ -255,11 +319,14 @@ function WeekDateCell({
   onEditTask,
   onDeleteTask,
   onToggleTaskCompletion,
+  onEditSubscription,
+  onDeleteSubscription,
 }: {
   date: Date
   isTodayDate: boolean
   dayEvents: Event[]
   dayTasks: Task[]
+  daySubscriptions: Subscription[]
   isExpanded: boolean
   holidays: Map<string, string>
   onToggleExpand: () => void
@@ -268,17 +335,20 @@ function WeekDateCell({
   onEditTask?: (task: Task) => void
   onDeleteTask?: (task: Task) => void
   onToggleTaskCompletion?: (task: Task) => void
+  onEditSubscription?: (subscription: Subscription) => void
+  onDeleteSubscription?: (subscription: Subscription) => void
 }) {
   const router = useRouter()
   const { mode } = useMode()
   const [hasOpenPopover, setHasOpenPopover] = useState(false)
   const [hasOpenTaskPopover, setHasOpenTaskPopover] = useState(false)
+  const [hasOpenSubscriptionPopover, setHasOpenSubscriptionPopover] = useState(false)
   const visibleEvents = isExpanded ? dayEvents : dayEvents.slice(0, 3)
   const hasMoreEvents = dayEvents.length > 3
   const holidayName = getHolidayName(date, holidays)
 
   const navigateToDay = () => {
-    if (!hasOpenPopover && !hasOpenTaskPopover) {
+    if (!hasOpenPopover && !hasOpenTaskPopover && !hasOpenSubscriptionPopover) {
       const dateStr = format(date, 'yyyy-MM-dd')
       if (mode === 'development') {
         router.push(`/dev/logs?date=${dateStr}`)
@@ -352,6 +422,19 @@ function WeekDateCell({
             ))}
           </div>
         )}
+        {daySubscriptions.length > 0 && (
+          <div className="mt-2 space-y-1.5">
+            {daySubscriptions.map((subscription) => (
+              <SubscriptionPopoverWrapper
+                key={subscription.id}
+                subscription={subscription}
+                onEdit={onEditSubscription}
+                onDelete={onDeleteSubscription}
+                onOpenChange={(open) => setHasOpenSubscriptionPopover(open)}
+              />
+            ))}
+          </div>
+        )}
         {hasMoreEvents && (
           <button
             onClick={(e) => {
@@ -383,6 +466,7 @@ interface WeekViewProps {
   weeklyGoals: WeeklyGoal[]
   events?: Event[]
   tasks?: Task[]
+  subscriptions?: Subscription[]
   weekStartDay?: number
   showWeeklyGoalForm?: boolean
   holidays?: Map<string, string>
@@ -391,6 +475,8 @@ interface WeekViewProps {
   onEditTask?: (task: Task) => void
   onDeleteTask?: (task: Task) => void
   onToggleTaskCompletion?: (task: Task) => void
+  onEditSubscription?: (subscription: Subscription) => void
+  onDeleteSubscription?: (subscription: Subscription) => void
 }
 
 export function WeekView({
@@ -398,6 +484,7 @@ export function WeekView({
   weeklyGoals,
   events = [],
   tasks = [],
+  subscriptions = [],
   weekStartDay = 0,
   showWeeklyGoalForm = true,
   holidays = new Map(),
@@ -406,6 +493,8 @@ export function WeekView({
   onEditTask,
   onDeleteTask,
   onToggleTaskCompletion,
+  onEditSubscription,
+  onDeleteSubscription,
 }: WeekViewProps) {
   const weekDays = useMemo(
     () => getWeekDays(currentDate, weekStartDay),
@@ -450,6 +539,7 @@ export function WeekView({
           const isTodayDate = isToday(date)
           const dayEvents = sortEventsByTime(getEventsForDate(events, date))
           const dayTasks = getTasksForDate(tasks, date)
+          const daySubscriptions = getSubscriptionsForDate(subscriptions, date)
           const dateStr = date.toISOString()
           const isExpanded = expandedDates.has(dateStr)
 
@@ -460,6 +550,7 @@ export function WeekView({
               isTodayDate={isTodayDate}
               dayEvents={dayEvents}
               dayTasks={dayTasks}
+              daySubscriptions={daySubscriptions}
               isExpanded={isExpanded}
               holidays={holidays}
               onToggleExpand={() => toggleDate(dateStr)}
@@ -468,6 +559,8 @@ export function WeekView({
               onEditTask={onEditTask}
               onDeleteTask={onDeleteTask}
               onToggleTaskCompletion={onToggleTaskCompletion}
+              onEditSubscription={onEditSubscription}
+              onDeleteSubscription={onDeleteSubscription}
             />
           )
         })}
