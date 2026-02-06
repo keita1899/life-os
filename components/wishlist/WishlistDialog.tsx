@@ -26,7 +26,7 @@ export const WishlistDialog = ({
       onSubmit={onSubmit}
       initialData={item}
       title={{
-        create: '新しい欲しいものを追加',
+        create: '新しい欲しいものを作成',
         edit: '欲しいものを編集',
       }}
       formComponent={WishlistItemForm}
