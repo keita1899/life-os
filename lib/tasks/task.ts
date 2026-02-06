@@ -158,7 +158,11 @@ export async function updateTask(
 
   if (input.scheduledTime !== undefined) {
     updateFields.push('scheduled_time = ?')
-    updateValues.push(input.scheduledTime || null)
+    updateValues.push(
+      input.scheduledTime && input.scheduledTime.trim() !== ''
+        ? input.scheduledTime.trim()
+        : null,
+    )
   }
 
   if (input.recurrenceRule !== undefined) {

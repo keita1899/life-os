@@ -190,7 +190,7 @@ export const TaskForm = ({
     await onSubmit({
       title: data.title,
       executionDate: data.executionDate || null,
-      scheduledTime: data.scheduledTime || null,
+      scheduledTime: data.scheduledTime?.trim() || null,
       recurrenceRule,
       recurrenceDaysOfWeek,
       recurrenceDayOfMonth,
