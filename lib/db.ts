@@ -321,10 +321,13 @@ async function initializeAllTables(): Promise<void> {
     'CREATE UNIQUE INDEX IF NOT EXISTS dev_tasks_order_unique_notnull ON dev_tasks (project_id, type, "order") WHERE project_id IS NOT NULL',
   )
 
-  const taskColumnRows = await db.select<{ name: string }[]>(
-    "SELECT name FROM pragma_table_info('tasks')",
-  )
+  const taskColumnRows = await db.select<
+    { cid: number; name: string; type: string; notnull: number; dflt_value: string | null; pk: number }[]
+  >("SELECT * FROM pragma_table_info('tasks')")
   const taskColumns = new Set(taskColumnRows.map((r) => r.name))
+  const scheduledTimeColumn = taskColumnRows.find(
+    (r) => r.name === 'scheduled_time',
+  )
 
   if (taskColumns.has('actual_time') && !taskColumns.has('estimated_time') && !taskColumns.has('scheduled_time')) {
     await db.execute('ALTER TABLE tasks RENAME COLUMN actual_time TO estimated_time')
@@ -336,6 +339,54 @@ async function initializeAllTables(): Promise<void> {
 
   if (!taskColumns.has('scheduled_time')) {
     await db.execute('ALTER TABLE tasks ADD COLUMN scheduled_time TEXT')
+  } else if (
+    scheduledTimeColumn &&
+    scheduledTimeColumn.notnull === 1
+  ) {
+    const hasMemo = taskColumns.has('memo')
+    try {
+      await db.execute('ALTER TABLE tasks RENAME TO tasks_old')
+      await db.execute(`
+        CREATE TABLE tasks (
+          id INTEGER PRIMARY KEY AUTOINCREMENT,
+          title TEXT NOT NULL,
+          execution_date DATE,
+          completed INTEGER NOT NULL DEFAULT 0,
+          "order" INTEGER NOT NULL DEFAULT 0,
+          scheduled_time TEXT,
+          recurrence_rule TEXT,
+          recurrence_days_of_week TEXT,
+          recurrence_day_of_month INTEGER,
+          recurrence_end_date TEXT,
+          recurrence_excluded_dates TEXT,
+          ${hasMemo ? 'memo TEXT,' : ''}
+          created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+          updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
+        )
+      `)
+      await db.execute(`
+        INSERT INTO tasks (
+          id, title, execution_date, completed, "order", scheduled_time,
+          recurrence_rule, recurrence_days_of_week, recurrence_day_of_month,
+          recurrence_end_date, recurrence_excluded_dates${hasMemo ? ', memo' : ''}, created_at, updated_at
+        )
+        SELECT 
+          id, title, execution_date, completed, "order", scheduled_time,
+          recurrence_rule, recurrence_days_of_week, recurrence_day_of_month,
+          recurrence_end_date, recurrence_excluded_dates${hasMemo ? ', memo' : ''}, created_at, updated_at
+        FROM tasks_old
+      `)
+      await db.execute('DROP TABLE tasks_old')
+    } catch (err) {
+      const oldTableExists = await db.select<{ name: string }[]>(
+        "SELECT name FROM sqlite_master WHERE type='table' AND name='tasks_old'",
+      )
+      if (oldTableExists.length > 0) {
+        await db.execute('DROP TABLE IF EXISTS tasks')
+        await db.execute('ALTER TABLE tasks_old RENAME TO tasks')
+      }
+      throw err
+    }
   }
 
   const wishlistItemColumnRows = await db.select<{ name: string }[]>(
