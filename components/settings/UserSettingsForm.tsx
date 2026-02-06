@@ -1,7 +1,9 @@
 'use client'
 
-import { useMemo } from 'react'
+import { useMemo, useCallback } from 'react'
 import { useForm } from 'react-hook-form'
+import { useFormSubmitShortcut } from '@/hooks/useFormSubmitShortcut'
+import { formatSubmitLabelWithShortcut } from '@/lib/utils/shortcut'
 import { zodResolver } from '@hookform/resolvers/zod'
 import * as z from 'zod'
 import {
@@ -66,7 +68,7 @@ export const UserSettingsForm = ({
     values: formValues,
   })
 
-  const handleSubmit = async (data: UserSettingsFormValues) => {
+  const handleSubmit = useCallback(async (data: UserSettingsFormValues) => {
     await onSubmit({
       birthday: data.birthday || null,
       defaultCalendarView: data.defaultCalendarView,
@@ -76,7 +78,12 @@ export const UserSettingsForm = ({
       barcelonaIcalUrl: data.barcelonaIcalUrl || null,
       defaultHabitView: data.defaultHabitView,
     })
-  }
+  }, [onSubmit])
+
+  useFormSubmitShortcut({
+    form,
+    onSubmit: handleSubmit,
+  })
 
   return (
     <Form {...form}>
@@ -240,7 +247,7 @@ export const UserSettingsForm = ({
 
         <div className="flex justify-end">
           <Button type="submit" disabled={isSubmitting || form.formState.isSubmitting}>
-            {isSubmitting || form.formState.isSubmitting ? '保存中...' : '保存'}
+            {isSubmitting || form.formState.isSubmitting ? '保存中...' : formatSubmitLabelWithShortcut('保存')}
           </Button>
         </div>
       </form>
