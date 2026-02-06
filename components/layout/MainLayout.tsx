@@ -68,10 +68,10 @@ export function MainLayout({ children }: MainLayoutProps) {
   }, [handleOpenChange, isSidebarOpen])
 
   return (
-    <div className="flex min-h-screen flex-col">
-      <Header onMenuClick={handleMenuClick} />
-      <div className="flex flex-1">
-        <Sidebar open={isSidebarOpen} onOpenChange={handleOpenChange} />
+    <div className="flex min-h-screen">
+      <Sidebar open={isSidebarOpen} onOpenChange={handleOpenChange} />
+      <div className="flex flex-1 flex-col min-w-0">
+        <Header onMenuClick={handleMenuClick} />
         <main
           className={cn(
             'flex-1',

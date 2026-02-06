@@ -4,7 +4,6 @@ import Link from 'next/link'
 import { Menu } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { ModeSwitch } from '@/components/mode/ModeSwitch'
-import { SettingsIcon } from '@/components/settings/SettingsIcon'
 
 interface HeaderProps {
   onMenuClick: () => void
@@ -32,7 +31,6 @@ export function Header({ onMenuClick }: HeaderProps) {
           </Link>
         </div>
         <div className="flex items-center gap-2">
-          <SettingsIcon />
           <ModeSwitch />
         </div>
       </div>
