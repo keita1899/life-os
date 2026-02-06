@@ -262,15 +262,50 @@ export async function updateOverdueTasksToToday(): Promise<number> {
   const today = new Date().toISOString().split('T')[0]
 
   try {
-    const result = await db.execute(
-      `UPDATE tasks 
-       SET execution_date = ?, updated_at = CURRENT_TIMESTAMP 
+    const overdueTasks = await db.select<DbTask[]>(
+      `SELECT ${DB_COLUMNS.TASKS.map((col) =>
+        col === 'order' ? '"order"' : col,
+      ).join(', ')} FROM tasks 
        WHERE completed = 0 
        AND execution_date IS NOT NULL 
        AND execution_date < ?`,
-      [today, today],
+      [today],
     )
-    return result.rowsAffected
+
+    let updatedCount = 0
+
+    for (const dbTask of overdueTasks) {
+      const task = mapDbTaskToTask(dbTask)
+      
+      if (task.recurrenceRule) {
+        const currentExcludedDates = task.recurrenceExcludedDates || []
+        if (task.executionDate && !currentExcludedDates.includes(task.executionDate)) {
+          const newExcludedDates = [...currentExcludedDates, task.executionDate]
+          await db.execute(
+            `UPDATE tasks 
+             SET recurrence_excluded_dates = ?, updated_at = CURRENT_TIMESTAMP 
+             WHERE id = ?`,
+            [
+              newExcludedDates.length > 0
+                ? JSON.stringify(newExcludedDates)
+                : null,
+              task.id,
+            ],
+          )
+          updatedCount++
+        }
+      } else {
+        await db.execute(
+          `UPDATE tasks 
+           SET execution_date = ?, updated_at = CURRENT_TIMESTAMP 
+           WHERE id = ?`,
+          [today, task.id],
+        )
+        updatedCount++
+      }
+    }
+
+    return updatedCount
   } catch (err) {
     handleDbError(err, 'update overdue tasks to today')
   }

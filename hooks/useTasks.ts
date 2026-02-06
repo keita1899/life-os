@@ -45,9 +45,10 @@ export function useTasks() {
     await mutate(tasksKey)
   }
 
-  const handleUpdateOverdueTasksToToday = async () => {
-    await updateOverdueTasksToToday()
+  const handleUpdateOverdueTasksToToday = async (): Promise<number> => {
+    const count = await updateOverdueTasksToToday()
     await mutate(tasksKey)
+    return count
   }
 
   return {

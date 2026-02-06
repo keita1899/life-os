@@ -25,6 +25,7 @@ import { groupTasks } from '@/lib/tasks/grouping'
 import {
   toTasksWithNextOccurrenceOnly,
   getNextOccurrenceAfter,
+  getNextOccurrenceDate,
 } from '@/lib/tasks'
 import { getTodayDateString } from '@/lib/date/formats'
 import { parseISO } from 'date-fns'
@@ -224,7 +225,39 @@ export default function TasksPage() {
   const handleUpdateOverdueTasksToToday = async () => {
     try {
       setOperationError(null)
-      await updateOverdueTasksToToday()
+      const overdueGroup = groupedTasks.find((g) => g.key === 'overdue')
+      if (!overdueGroup || overdueGroup.tasks.length === 0) {
+        setOperationError('更新する期限切れタスクがありませんでした')
+        return
+      }
+
+      const today = getTodayDateString()
+      const todayDate = new Date()
+      let updatedCount = 0
+
+      for (const displayTask of overdueGroup.tasks) {
+        const originalTask = tasks.find((t) => t.id === displayTask.id)
+        if (!originalTask) continue
+
+        if (originalTask.recurrenceRule) {
+          const nextOccurrence = getNextOccurrenceDate(originalTask, todayDate)
+          if (nextOccurrence) {
+            await updateTask(originalTask.id, {
+              executionDate: nextOccurrence,
+            })
+            updatedCount++
+          }
+        } else {
+          await updateTask(originalTask.id, {
+            executionDate: today,
+          })
+          updatedCount++
+        }
+      }
+
+      if (updatedCount === 0) {
+        setOperationError('更新する期限切れタスクがありませんでした')
+      }
     } catch (err) {
       setOperationError(
         err instanceof Error

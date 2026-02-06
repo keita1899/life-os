@@ -11,5 +11,6 @@ export {
   toTasksWithNextOccurrenceOnly,
   getNextOccurrenceDate,
   getNextOccurrenceAfter,
+  getPastOccurrenceDates,
 } from './recurrence'
 export type { Task, CreateTaskInput, UpdateTaskInput } from '../types/task'
