@@ -1,9 +1,10 @@
 'use client'
 
-import { useMemo, useState } from 'react'
+import { useMemo, useState, useCallback } from 'react'
 import { useRouter } from 'next/navigation'
-import { Trash2, Calendar, Focus } from 'lucide-react'
+import { Trash2, Calendar, Focus, Plus } from 'lucide-react'
 import { Button } from '@/components/ui/button'
+import { useCreateShortcut } from '@/hooks/useCreateShortcut'
 import {
   Accordion,
   AccordionContent,
@@ -141,6 +142,16 @@ export default function DevTasksPage() {
     }
   }
 
+  const handleCreateClick = useCallback(() => {
+    setEditingTask(undefined)
+    setIsDialogOpen(true)
+  }, [])
+
+  useCreateShortcut({
+    onCreate: handleCreateClick,
+    enabled: !isDialogOpen,
+  })
+
   const handleDeleteTask = async (): Promise<void> => {
     if (!deletingTask) return
 
@@ -225,7 +236,8 @@ export default function DevTasksPage() {
             <div>
               <h1 className="text-3xl font-bold">タスク</h1>
             </div>
-            <Button onClick={() => setIsDialogOpen(true)}>
+            <Button onClick={handleCreateClick}>
+              <Plus className="mr-2 h-4 w-4" />
               タスクを作成
             </Button>
           </div>
