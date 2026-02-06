@@ -80,6 +80,12 @@ function getRecurrenceLabel(task: Task): string {
   return ''
 }
 
+function isValidTimeFormat(time: string | null): boolean {
+  if (!time || time.trim() === '') return false
+  const trimmed = time.trim()
+  return /^\d{2}:\d{2}$/.test(trimmed)
+}
+
 export function TaskItem({
   task,
   onEdit,
@@ -91,6 +97,11 @@ export function TaskItem({
   const dateLabel = useMemo(
     () => getDateLabel(task.executionDate),
     [task.executionDate],
+  )
+
+  const isValidScheduledTime = useMemo(
+    () => isValidTimeFormat(task.scheduledTime),
+    [task.scheduledTime],
   )
 
   const [isDateMenuOpen, setIsDateMenuOpen] = useState(false)
@@ -166,7 +177,7 @@ export function TaskItem({
         >
           {task.title}
         </div>
-        {(task.recurrenceRule || task.scheduledTime) && (
+        {(task.recurrenceRule || isValidScheduledTime) && (
           <div className="mt-1 flex flex-wrap items-center gap-2 text-xs text-muted-foreground">
             {task.recurrenceRule && (
               <span className="inline-flex items-center gap-1 text-muted-foreground">
@@ -174,7 +185,9 @@ export function TaskItem({
                 {getRecurrenceLabel(task)}
               </span>
             )}
-            {task.scheduledTime && <span>開始予定: {task.scheduledTime}</span>}
+            {isValidScheduledTime && (
+              <span>開始予定: {task.scheduledTime}</span>
+            )}
           </div>
         )}
         {mode === 'development' && task.memo && (
