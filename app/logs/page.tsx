@@ -193,6 +193,7 @@ function LogPageView({ logDate, date }: LogPageViewProps) {
       const updateInput: UpdateTaskInput = {
         title: input.title,
         executionDate: input.executionDate,
+        scheduledTime: input.scheduledTime,
         recurrenceRule: input.recurrenceRule,
         recurrenceDaysOfWeek: input.recurrenceDaysOfWeek,
         recurrenceDayOfMonth: input.recurrenceDayOfMonth,
@@ -357,20 +358,6 @@ function LogPageView({ logDate, date }: LogPageViewProps) {
     }
   }
 
-  const handleUpdateExecutionDate = async (
-    task: Task,
-    executionDate: string | null,
-  ) => {
-    try {
-      setOperationError(null)
-      await updateTask(task.id, { executionDate })
-    } catch (err) {
-      setOperationError(
-        err instanceof Error ? err.message : 'タスクの実行日の更新に失敗しました',
-      )
-    }
-  }
-
   const handleToggleHabit = async (habit: { id: number }) => {
     const completed = completedHabitIds.has(habit.id)
     try {
@@ -398,7 +385,7 @@ function LogPageView({ logDate, date }: LogPageViewProps) {
 
   return (
     <MainLayout>
-      <div className="container mx-auto max-w-4xl py-8 px-4">
+      <div className="container mx-auto max-w-7xl py-8 px-4">
         <div className="mb-6">
           <div className="flex items-center justify-between">
             <h1 className="text-3xl font-bold">{formattedDate}のログ</h1>
@@ -433,36 +420,37 @@ function LogPageView({ logDate, date }: LogPageViewProps) {
       {isLoading ? (
         <Loading />
       ) : (
-        <div className="space-y-6">
-          <LogGoalsSection
-            yearlyGoals={yearlyGoals}
-            monthlyGoals={monthlyGoals}
-            weeklyGoals={weeklyGoals}
-          />
-          <LogHabitsSection
-            habits={habitsForDate}
-            completedHabitIds={completedHabitIds}
-            onToggle={handleToggleHabit}
-          />
-          <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
+        <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
+          <div className="space-y-6">
+            <LogGoalsSection
+              yearlyGoals={yearlyGoals}
+              monthlyGoals={monthlyGoals}
+              weeklyGoals={weeklyGoals}
+            />
+            <LogDiarySection
+              dailyLog={dailyLog}
+              isLoading={isLoadingDailyLog}
+              onUpdate={handleUpdateDiary}
+            />
+          </div>
+          <div className="space-y-6">
             <LogEventsSection
               events={events}
               onEdit={handleEditEvent}
               onDelete={handleDeleteEventClick}
+            />
+            <LogHabitsSection
+              habits={habitsForDate}
+              completedHabitIds={completedHabitIds}
+              onToggle={handleToggleHabit}
             />
             <LogTasksSection
               tasks={tasks}
               onToggleCompletion={handleToggleTaskCompletion}
               onEdit={handleEditTask}
               onDelete={handleDeleteClick}
-              onUpdateExecutionDate={handleUpdateExecutionDate}
             />
           </div>
-          <LogDiarySection
-            dailyLog={dailyLog}
-            isLoading={isLoadingDailyLog}
-            onUpdate={handleUpdateDiary}
-          />
         </div>
       )}
 
