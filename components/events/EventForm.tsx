@@ -1,7 +1,8 @@
 'use client'
 
-import { useEffect } from 'react'
+import { useEffect, useCallback } from 'react'
 import { useForm } from 'react-hook-form'
+import { useFormSubmitShortcut } from '@/hooks/useFormSubmitShortcut'
 import { zodResolver } from '@hookform/resolvers/zod'
 import * as z from 'zod'
 import { parseISO, getDay, getDate } from 'date-fns'
@@ -141,7 +142,7 @@ export const EventForm = ({
     form.setValue('recurrenceDaysOfWeek', next)
   }
 
-  const handleSubmit = async (data: EventFormValues) => {
+  const handleSubmit = useCallback(async (data: EventFormValues) => {
     const startDate =
       data.startDate && data.startDate !== '' ? data.startDate : getTodayDateString()
 
@@ -188,7 +189,12 @@ export const EventForm = ({
     } catch (error) {
       throw error
     }
-  }
+  }, [onSubmit])
+
+  useFormSubmitShortcut({
+    form,
+    onSubmit: handleSubmit,
+  })
 
   return (
     <Form {...form}>
@@ -478,7 +484,7 @@ export const EventForm = ({
           )}
           <Button type="submit" disabled={form.formState.isSubmitting}>
             {form.formState.isSubmitting
-              ? `${submitLabel === '作成' ? '作成中...' : '更新中...'}`
+              ? `${submitLabel.startsWith('作成') ? '作成中...' : '更新中...'}`
               : submitLabel}
           </Button>
         </div>

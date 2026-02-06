@@ -1,10 +1,11 @@
 'use client'
 
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useMemo, useState, useCallback } from 'react'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import * as z from 'zod'
 import { parseISO, getDay, getDate } from 'date-fns'
+import { useFormSubmitShortcut } from '@/hooks/useFormSubmitShortcut'
 import {
   Form,
   FormControl,
@@ -166,7 +167,7 @@ export const TaskForm = ({
     }
   }
 
-  const handleSubmit = async (data: TaskFormValues) => {
+  const handleSubmit = useCallback(async (data: TaskFormValues) => {
     const recurrenceRule: RecurrenceRule | null = showRecurrence
       ? (data.recurrenceRule ?? null)
       : null
@@ -200,7 +201,12 @@ export const TaskForm = ({
     if (!isEditMode) {
       form.reset()
     }
-  }
+  }, [showRecurrence, onSubmit, mode, isEditMode, form])
+
+  useFormSubmitShortcut({
+    form,
+    onSubmit: handleSubmit,
+  })
 
   return (
     <Form {...form}>
@@ -464,7 +470,7 @@ export const TaskForm = ({
           )}
           <Button type="submit" disabled={form.formState.isSubmitting}>
             {form.formState.isSubmitting
-              ? `${submitLabel === '作成' ? '作成中...' : '更新中...'}`
+              ? `${submitLabel.startsWith('作成') ? '作成中...' : '更新中...'}`
               : submitLabel}
           </Button>
         </div>

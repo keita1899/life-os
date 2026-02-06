@@ -1,7 +1,8 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { useForm } from 'react-hook-form'
+import { useFormSubmitShortcut } from '@/hooks/useFormSubmitShortcut'
 import { zodResolver } from '@hookform/resolvers/zod'
 import * as z from 'zod'
 import {
@@ -109,7 +110,7 @@ export const BucketListItemForm = ({
     }
   }
 
-  const handleSubmit = async (data: BucketListItemFormValues) => {
+  const handleSubmit = useCallback(async (data: BucketListItemFormValues) => {
     await onSubmit({
       title: data.title,
       categoryId:
@@ -125,7 +126,12 @@ export const BucketListItemForm = ({
           ? null
           : Number(data.targetMonth),
     })
-  }
+  }, [onSubmit])
+
+  useFormSubmitShortcut({
+    form,
+    onSubmit: handleSubmit,
+  })
 
   return (
     <>
@@ -414,7 +420,7 @@ export const BucketListItemForm = ({
             )}
             <Button type="submit" disabled={form.formState.isSubmitting}>
               {form.formState.isSubmitting
-                ? `${submitLabel === '作成' ? '作成中...' : '更新中...'}`
+                ? `${submitLabel.startsWith('作成') ? '作成中...' : '更新中...'}`
                 : submitLabel}
             </Button>
           </div>

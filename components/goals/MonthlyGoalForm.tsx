@@ -1,7 +1,8 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useCallback } from 'react'
 import { useForm } from 'react-hook-form'
+import { useFormSubmitShortcut } from '@/hooks/useFormSubmitShortcut'
 import { zodResolver } from '@hookform/resolvers/zod'
 import * as z from 'zod'
 import {
@@ -72,7 +73,7 @@ export const MonthlyGoalForm = ({
         },
   })
 
-  const handleSubmit = async (data: MonthlyGoalFormValues) => {
+  const handleSubmit = useCallback(async (data: MonthlyGoalFormValues) => {
     await onSubmit({
       title: data.title,
       year: data.year ?? selectedYear ?? new Date().getFullYear(),
@@ -87,7 +88,12 @@ export const MonthlyGoalForm = ({
       })
       setChecklist([])
     }
-  }
+  }, [onSubmit, selectedYear, checklist, isEditMode, form])
+
+  useFormSubmitShortcut({
+    form,
+    onSubmit: handleSubmit,
+  })
 
   return (
     <Form {...form}>
@@ -162,7 +168,7 @@ export const MonthlyGoalForm = ({
           )}
           <Button type="submit" disabled={form.formState.isSubmitting}>
             {form.formState.isSubmitting
-              ? `${submitLabel === '作成' ? '作成中...' : '更新中...'}`
+              ? `${submitLabel.startsWith('作成') ? '作成中...' : '更新中...'}`
               : submitLabel}
           </Button>
         </div>

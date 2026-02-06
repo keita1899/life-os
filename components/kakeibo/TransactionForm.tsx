@@ -1,7 +1,8 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { useForm } from 'react-hook-form'
+import { useFormSubmitShortcut } from '@/hooks/useFormSubmitShortcut'
 import { zodResolver } from '@hookform/resolvers/zod'
 import * as z from 'zod'
 import {
@@ -127,7 +128,7 @@ export const TransactionForm = ({
     }
   }
 
-  const handleSubmit = async (data: TransactionFormValues) => {
+  const handleSubmit = useCallback(async (data: TransactionFormValues) => {
     await onSubmit({
       date: data.date,
       type: data.type,
@@ -146,7 +147,12 @@ export const TransactionForm = ({
         isFixed: false,
       })
     }
-  }
+  }, [onSubmit, initialData, form])
+
+  useFormSubmitShortcut({
+    form,
+    onSubmit: handleSubmit,
+  })
 
   return (
     <Form {...form}>
@@ -407,7 +413,7 @@ export const TransactionForm = ({
           )}
           <Button type="submit" disabled={form.formState.isSubmitting}>
             {form.formState.isSubmitting
-              ? `${submitLabel === '作成' ? '作成中...' : '更新中...'}`
+              ? `${submitLabel.startsWith('作成') ? '作成中...' : '更新中...'}`
               : submitLabel}
           </Button>
         </div>

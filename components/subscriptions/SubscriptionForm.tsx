@@ -1,6 +1,8 @@
 'use client'
 
+import { useCallback } from 'react'
 import { useForm } from 'react-hook-form'
+import { useFormSubmitShortcut } from '@/hooks/useFormSubmitShortcut'
 import { zodResolver } from '@hookform/resolvers/zod'
 import * as z from 'zod'
 import {
@@ -85,7 +87,7 @@ export const SubscriptionForm = ({
         },
   })
 
-  const handleSubmit = async (data: SubscriptionFormValues) => {
+  const handleSubmit = useCallback(async (data: SubscriptionFormValues) => {
     await onSubmit({
       name: data.name,
       monthlyPrice: Number(data.monthlyPrice),
@@ -98,7 +100,12 @@ export const SubscriptionForm = ({
     if (!initialData) {
       form.reset()
     }
-  }
+  }, [onSubmit, initialData, form])
+
+  useFormSubmitShortcut({
+    form,
+    onSubmit: handleSubmit,
+  })
 
   return (
     <Form {...form}>
@@ -227,7 +234,7 @@ export const SubscriptionForm = ({
           )}
           <Button type="submit" disabled={form.formState.isSubmitting}>
             {form.formState.isSubmitting
-              ? `${submitLabel === '作成' ? '作成中...' : '更新中...'}`
+              ? `${submitLabel.startsWith('作成') ? '作成中...' : '更新中...'}`
               : submitLabel}
           </Button>
         </div>
