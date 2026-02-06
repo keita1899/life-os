@@ -1,7 +1,9 @@
 'use client'
 
-import { useState, useMemo, useEffect } from 'react'
+import { useState, useMemo, useEffect, useCallback } from 'react'
 import { useForm } from 'react-hook-form'
+import { useFormSubmitShortcut } from '@/hooks/useFormSubmitShortcut'
+import { formatSubmitLabelWithShortcut } from '@/lib/utils/shortcut'
 import { zodResolver } from '@hookform/resolvers/zod'
 import * as z from 'zod'
 import {
@@ -79,7 +81,7 @@ export function WeeklyGoalForm({
     return () => clearTimeout(timeoutId)
   }, [currentWeeklyGoal])
 
-  const handleSubmit = async (data: WeeklyGoalFormValues) => {
+  const handleSubmit = useCallback(async (data: WeeklyGoalFormValues) => {
     const trimmedValue = data.title.trim()
     if (!trimmedValue) {
       if (currentWeeklyGoal) {
@@ -110,7 +112,13 @@ export function WeeklyGoalForm({
     } catch (err) {
       console.error('Failed to save weekly goal:', err)
     }
-  }
+  }, [currentWeeklyGoal, handleDelete, updateWeeklyGoal, createWeeklyGoal, weekStartDateString])
+
+  useFormSubmitShortcut({
+    form,
+    onSubmit: handleSubmit,
+    enabled: isEditing,
+  })
 
   const handleDelete = async () => {
     if (!currentWeeklyGoal) return
@@ -183,7 +191,7 @@ export function WeeklyGoalForm({
               disabled={form.formState.isSubmitting}
               size="default"
             >
-              保存
+              {formatSubmitLabelWithShortcut('保存')}
             </Button>
             {currentWeeklyGoal && (
               <Button
