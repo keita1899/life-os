@@ -106,6 +106,7 @@ export default function TasksPage() {
       const updateInput: UpdateTaskInput = {
         title: input.title,
         executionDate: input.executionDate,
+        scheduledTime: input.scheduledTime,
         recurrenceRule: input.recurrenceRule,
         recurrenceDaysOfWeek: input.recurrenceDaysOfWeek,
         recurrenceDayOfMonth: input.recurrenceDayOfMonth,
