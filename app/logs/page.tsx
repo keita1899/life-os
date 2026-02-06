@@ -24,10 +24,9 @@ import { Loading } from '@/components/ui/loading'
 import { ErrorMessage } from '@/components/ui/error-message'
 import { MainLayout } from '@/components/layout/MainLayout'
 import { LogGoalsSection } from '@/components/logs/LogGoalsSection'
-import { LogHabitsSection } from '@/components/logs/LogHabitsSection'
-import { LogTasksSection } from '@/components/logs/LogTasksSection'
-import { LogEventsSection } from '@/components/logs/LogEventsSection'
 import { LogDiarySection } from '@/components/logs/LogDiarySection'
+import { TimelineSection } from '@/components/logs/TimelineSection'
+import { createTimelineItems } from '@/lib/logs/timeline'
 import { TaskDialog } from '@/components/tasks/TaskDialog'
 import { EventDialog } from '@/components/events/EventDialog'
 import { DeleteConfirmDialog } from '@/components/ui/delete-confirm-dialog'
@@ -124,24 +123,17 @@ function LogPageView({ logDate, date }: LogPageViewProps) {
   }, [allEvents, logDate])
 
   const habitsForDate = useMemo(() => {
-    const filtered = allHabits.filter((h) => isHabitDueOnDate(h, logDate))
-    const normalizeTime = (t: string | null): string => {
-      if (!t?.trim()) return '99:99'
-      const parts = t.trim().split(':')
-      const h = (parts[0] ?? '0').padStart(2, '0')
-      const m = (parts[1] ?? '0').padStart(2, '0')
-      return `${h}:${m}`
-    }
-    return [...filtered].sort((a, b) =>
-      normalizeTime(a.scheduledTime).localeCompare(
-        normalizeTime(b.scheduledTime),
-      ),
-    )
+    return allHabits.filter((h) => isHabitDueOnDate(h, logDate))
   }, [allHabits, logDate])
 
   const completedHabitIds = useMemo(
     () => new Set(habitCompletions.map((c) => c.habitId)),
     [habitCompletions],
+  )
+
+  const timelineItems = useMemo(
+    () => createTimelineItems(events, habitsForDate, tasks, completedHabitIds),
+    [events, habitsForDate, tasks, completedHabitIds],
   )
 
   const formattedDate = format(logDate, 'yyyy年M月d日(E)', { locale: ja })
@@ -426,6 +418,7 @@ function LogPageView({ logDate, date }: LogPageViewProps) {
               yearlyGoals={yearlyGoals}
               monthlyGoals={monthlyGoals}
               weeklyGoals={weeklyGoals}
+              currentDate={logDate}
             />
             <LogDiarySection
               dailyLog={dailyLog}
@@ -434,21 +427,18 @@ function LogPageView({ logDate, date }: LogPageViewProps) {
             />
           </div>
           <div className="space-y-6">
-            <LogEventsSection
+            <TimelineSection
+              items={timelineItems}
               events={events}
-              onEdit={handleEditEvent}
-              onDelete={handleDeleteEventClick}
-            />
-            <LogHabitsSection
               habits={habitsForDate}
-              completedHabitIds={completedHabitIds}
-              onToggle={handleToggleHabit}
-            />
-            <LogTasksSection
               tasks={tasks}
-              onToggleCompletion={handleToggleTaskCompletion}
-              onEdit={handleEditTask}
-              onDelete={handleDeleteClick}
+              completedHabitIds={completedHabitIds}
+              onEditEvent={handleEditEvent}
+              onDeleteEvent={handleDeleteEventClick}
+              onToggleHabit={handleToggleHabit}
+              onToggleTask={handleToggleTaskCompletion}
+              onEditTask={handleEditTask}
+              onDeleteTask={handleDeleteClick}
             />
           </div>
         </div>
