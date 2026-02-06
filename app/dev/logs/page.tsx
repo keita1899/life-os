@@ -141,7 +141,7 @@ function DevLogPageView({ logDate, date }: DevLogPageViewProps) {
         executionDate: t.executionDate,
         completed: t.completed,
         order: t.order,
-        actualTime: t.actualTime,
+        scheduledTime: null,
         recurrenceRule: null,
         recurrenceDaysOfWeek: null,
         recurrenceDayOfMonth: null,

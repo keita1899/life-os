@@ -484,7 +484,6 @@ export default function FocusPage() {
       setSessionError(null)
       await updateTask(currentTask.id, {
         completed: true,
-        actualTime: elapsedMinutes,
       })
 
       const newCompletedTasks = [...completedTasks, { task: currentTask, timeMinutes: elapsedMinutes }]
