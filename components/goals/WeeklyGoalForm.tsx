@@ -81,6 +81,17 @@ export function WeeklyGoalForm({
     return () => clearTimeout(timeoutId)
   }, [currentWeeklyGoal])
 
+  const handleDelete = useCallback(async () => {
+    if (!currentWeeklyGoal) return
+
+    try {
+      await deleteWeeklyGoal(currentWeeklyGoal.id)
+      setIsEditing(false)
+    } catch (err) {
+      console.error('Failed to delete weekly goal:', err)
+    }
+  }, [currentWeeklyGoal, deleteWeeklyGoal])
+
   const handleSubmit = useCallback(async (data: WeeklyGoalFormValues) => {
     const trimmedValue = data.title.trim()
     if (!trimmedValue) {
@@ -119,17 +130,6 @@ export function WeeklyGoalForm({
     onSubmit: handleSubmit,
     enabled: isEditing,
   })
-
-  const handleDelete = async () => {
-    if (!currentWeeklyGoal) return
-
-    try {
-      await deleteWeeklyGoal(currentWeeklyGoal.id)
-      setIsEditing(false)
-    } catch (err) {
-      console.error('Failed to delete weekly goal:', err)
-    }
-  }
 
   const handleDoubleClick = () => {
     if (!isEditing) {

@@ -240,7 +240,7 @@ export function Sidebar({ open, onOpenChange }: SidebarProps) {
   return (
     <>
       {open ? (
-        <aside className="hidden md:flex md:w-72 md:flex-shrink-0 md:flex-col md:border-r md:border-stone-200 md:bg-muted/40 md:transition-all md:duration-300 md:ease-in-out md:overflow-y-auto dark:md:border-stone-800">
+        <aside suppressHydrationWarning className="hidden md:flex md:w-72 md:flex-shrink-0 md:flex-col md:border-r md:border-stone-200 md:bg-muted/40 md:transition-all md:duration-300 md:ease-in-out md:overflow-y-auto dark:md:border-stone-800">
           <div className="p-4 w-full">
             <div className="mb-4 flex items-center justify-between">
               <Button
@@ -257,7 +257,7 @@ export function Sidebar({ open, onOpenChange }: SidebarProps) {
           </div>
         </aside>
       ) : (
-        <div className="hidden md:flex md:flex-shrink-0 md:flex-col md:items-start md:border-r md:border-stone-200 dark:md:border-stone-800">
+        <div suppressHydrationWarning className="hidden md:flex md:flex-shrink-0 md:flex-col md:items-start md:border-r md:border-stone-200 dark:md:border-stone-800">
           <div className="sticky top-14 pt-4">
             <Button
               variant="ghost"
