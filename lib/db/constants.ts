@@ -22,7 +22,7 @@ export const DB_COLUMNS = {
     'execution_date',
     'completed',
     'order',
-    'actual_time',
+    'scheduled_time',
     'recurrence_rule',
     'recurrence_days_of_week',
     'recurrence_day_of_month',

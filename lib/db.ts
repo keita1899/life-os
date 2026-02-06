@@ -53,7 +53,7 @@ async function initializeAllTables(): Promise<void> {
       execution_date DATE,
       completed INTEGER NOT NULL DEFAULT 0,
       "order" INTEGER NOT NULL DEFAULT 0,
-      actual_time INTEGER NOT NULL DEFAULT 0,
+      scheduled_time TEXT,
       created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
       updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
     )
@@ -326,46 +326,16 @@ async function initializeAllTables(): Promise<void> {
   )
   const taskColumns = new Set(taskColumnRows.map((r) => r.name))
 
-  if (taskColumns.has('estimated_time')) {
-    await db.execute('ALTER TABLE tasks RENAME TO tasks_old')
+  if (taskColumns.has('actual_time') && !taskColumns.has('estimated_time') && !taskColumns.has('scheduled_time')) {
+    await db.execute('ALTER TABLE tasks RENAME COLUMN actual_time TO estimated_time')
+  }
 
-    await db.execute(`
-      CREATE TABLE tasks (
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
-        title TEXT NOT NULL,
-        execution_date DATE,
-        completed INTEGER NOT NULL DEFAULT 0,
-        "order" INTEGER NOT NULL DEFAULT 0,
-        actual_time INTEGER NOT NULL DEFAULT 0,
-        created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-        updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
-      )
-    `)
+  if (taskColumns.has('estimated_time') && !taskColumns.has('scheduled_time')) {
+    await db.execute('ALTER TABLE tasks RENAME COLUMN estimated_time TO scheduled_time')
+  }
 
-    await db.execute(
-      `INSERT INTO tasks (
-        id,
-        title,
-        execution_date,
-        completed,
-        "order",
-        actual_time,
-        created_at,
-        updated_at
-      )
-      SELECT
-        id,
-        title,
-        execution_date,
-        completed,
-        "order",
-        actual_time,
-        created_at,
-        updated_at
-      FROM tasks_old`,
-    )
-
-    await db.execute('DROP TABLE tasks_old')
+  if (!taskColumns.has('scheduled_time')) {
+    await db.execute('ALTER TABLE tasks ADD COLUMN scheduled_time TEXT')
   }
 
   const wishlistItemColumnRows = await db.select<{ name: string }[]>(

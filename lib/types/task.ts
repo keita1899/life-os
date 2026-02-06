@@ -6,7 +6,7 @@ export interface Task {
   executionDate: string | null
   completed: boolean
   order: number
-  actualTime: number
+  scheduledTime: string | null
   recurrenceRule: RecurrenceRule | null
   recurrenceDaysOfWeek: number[] | null
   recurrenceDayOfMonth: number | null
@@ -20,6 +20,7 @@ export interface Task {
 export interface CreateTaskInput {
   title: string
   executionDate?: string | null
+  scheduledTime?: string | null
   recurrenceRule?: RecurrenceRule | null
   recurrenceDaysOfWeek?: number[] | null
   recurrenceDayOfMonth?: number | null
@@ -32,7 +33,7 @@ export interface UpdateTaskInput {
   executionDate?: string | null
   completed?: boolean
   order?: number
-  actualTime?: number
+  scheduledTime?: string | null
   recurrenceRule?: RecurrenceRule | null
   recurrenceDaysOfWeek?: number[] | null
   recurrenceDayOfMonth?: number | null
