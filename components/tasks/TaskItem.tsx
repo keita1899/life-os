@@ -166,7 +166,7 @@ export function TaskItem({
         >
           {task.title}
         </div>
-        {(task.recurrenceRule || task.actualTime > 0) && (
+        {(task.recurrenceRule || task.scheduledTime) && (
           <div className="mt-1 flex flex-wrap items-center gap-2 text-xs text-muted-foreground">
             {task.recurrenceRule && (
               <span className="inline-flex items-center gap-1 text-muted-foreground">
@@ -174,7 +174,7 @@ export function TaskItem({
                 {getRecurrenceLabel(task)}
               </span>
             )}
-            {task.actualTime > 0 && <span>実績: {task.actualTime}分</span>}
+            {task.scheduledTime && <span>開始予定: {task.scheduledTime}</span>}
           </div>
         )}
         {mode === 'development' && task.memo && (

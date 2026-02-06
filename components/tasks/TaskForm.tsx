@@ -48,6 +48,7 @@ const LAST_DAY_OF_MONTH = 0
 const taskFormSchema = z.object({
   title: z.string().min(1, 'タイトルは必須です'),
   executionDate: z.string().optional(),
+  scheduledTime: z.string().optional(),
   recurrenceRule: z
     .enum(['daily', 'weekly', 'monthly'])
     .nullable()
@@ -87,6 +88,7 @@ export const TaskForm = ({
       ? {
           title: initialData.title,
           executionDate: formatDateForInput(initialData.executionDate),
+          scheduledTime: initialData.scheduledTime ?? '',
           recurrenceRule: initialData.recurrenceRule,
           recurrenceDaysOfWeek: initialData.recurrenceDaysOfWeek ?? [],
           recurrenceDayOfMonth: initialData.recurrenceDayOfMonth,
@@ -96,6 +98,7 @@ export const TaskForm = ({
       : {
           title: defaultTitle ?? '',
           executionDate: defaultExecutionDate ?? getTodayDateString(),
+          scheduledTime: '',
           recurrenceRule: null,
           recurrenceDaysOfWeek: [],
           recurrenceDayOfMonth: null,
@@ -187,6 +190,7 @@ export const TaskForm = ({
     await onSubmit({
       title: data.title,
       executionDate: data.executionDate || null,
+      scheduledTime: data.scheduledTime || null,
       recurrenceRule,
       recurrenceDaysOfWeek,
       recurrenceDayOfMonth,
@@ -261,6 +265,25 @@ export const TaskForm = ({
                     <Input type="date" {...field} value={field.value || ''} />
                   )}
                 </div>
+              </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+
+        <FormField
+          control={form.control}
+          name="scheduledTime"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>開始予定時刻</FormLabel>
+              <FormControl>
+                <Input
+                  type="time"
+                  placeholder="開始予定時刻を入力（任意）"
+                  {...field}
+                  value={field.value ?? ''}
+                />
               </FormControl>
               <FormMessage />
             </FormItem>
