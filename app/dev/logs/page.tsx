@@ -345,38 +345,42 @@ function DevLogPageView({ logDate, date }: DevLogPageViewProps) {
         {isLoading ? (
           <Loading />
         ) : (
-          <div className="space-y-6">
-            <DevLogGoalsSection
-              yearlyGoals={yearlyGoals}
-              monthlyGoals={monthlyGoals}
-              weeklyGoals={weeklyGoals}
-            />
-            <DevLogTasksSection
-              tasks={tasks}
-              onToggleCompletion={async (task) => {
-                try {
-                  setOperationError(null)
-                  const devTask = allDevTasks.find((t) => t.id === task.id)
-                  if (!devTask) return
-                  await updateDevTask(task.id, { completed: !task.completed })
-                  await mutate('dev-calendar-tasks')
-                } catch (err) {
-                  setOperationError(
-                    err instanceof Error
-                      ? err.message
-                      : 'タスクの完了状態の更新に失敗しました',
-                  )
-                }
-              }}
-              onEdit={handleEditTask}
-              onDelete={handleDeleteClick}
-              onUpdateExecutionDate={handleUpdateExecutionDate}
-            />
-            <DevLogReportSection
-              devDailyLog={devDailyLog}
-              isLoading={isLoadingDailyLog}
-              onUpdate={handleUpdateReport}
-            />
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            <div className="space-y-6">
+              <DevLogGoalsSection
+                yearlyGoals={yearlyGoals}
+                monthlyGoals={monthlyGoals}
+                weeklyGoals={weeklyGoals}
+              />
+              <DevLogReportSection
+                devDailyLog={devDailyLog}
+                isLoading={isLoadingDailyLog}
+                onUpdate={handleUpdateReport}
+              />
+            </div>
+            <div>
+              <DevLogTasksSection
+                tasks={tasks}
+                onToggleCompletion={async (task) => {
+                  try {
+                    setOperationError(null)
+                    const devTask = allDevTasks.find((t) => t.id === task.id)
+                    if (!devTask) return
+                    await updateDevTask(task.id, { completed: !task.completed })
+                    await mutate('dev-calendar-tasks')
+                  } catch (err) {
+                    setOperationError(
+                      err instanceof Error
+                        ? err.message
+                        : 'タスクの完了状態の更新に失敗しました',
+                    )
+                  }
+                }}
+                onEdit={handleEditTask}
+                onDelete={handleDeleteClick}
+                onUpdateExecutionDate={handleUpdateExecutionDate}
+              />
+            </div>
           </div>
         )}
 
