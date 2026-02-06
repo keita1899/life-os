@@ -1,7 +1,7 @@
 'use client'
 
 import { useEffect, useState } from 'react'
-import { Calendar, MoreVertical, Pencil, Trash2 } from 'lucide-react'
+import { Calendar, MoreVertical, Pencil, Trash2, FileText } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import {
   DropdownMenu,
@@ -9,6 +9,12 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
+import {
+  Accordion,
+  AccordionContent,
+  AccordionItem,
+  AccordionTrigger,
+} from '@/components/ui/accordion'
 import { cn } from '@/lib/utils'
 import {
   EVENT_CATEGORY_LABELS,
@@ -118,13 +124,32 @@ export function EventItem({ event, onEdit, onDelete }: EventItemProps) {
           )}
         </div>
         {event.description && (
-          <div
-            className={cn(
-              'mt-2 text-xs',
-              isBarca ? 'text-white/80' : 'text-muted-foreground',
-            )}
-          >
-            {event.description}
+          <div className="mt-2">
+            <Accordion type="single" collapsible className="w-full">
+              <AccordionItem value="description" className="border-none">
+                <AccordionTrigger
+                  className={cn(
+                    'py-1 text-xs hover:no-underline',
+                    isBarca ? 'text-white/80' : 'text-muted-foreground',
+                  )}
+                >
+                  <div className="flex items-center gap-1">
+                    <FileText className="h-3 w-3 shrink-0" />
+                    <span>説明</span>
+                  </div>
+                </AccordionTrigger>
+                <AccordionContent className="pt-1 pb-0">
+                  <div
+                    className={cn(
+                      'text-xs whitespace-pre-wrap break-words',
+                      isBarca ? 'text-white/80' : 'text-muted-foreground',
+                    )}
+                  >
+                    {event.description}
+                  </div>
+                </AccordionContent>
+              </AccordionItem>
+            </Accordion>
           </div>
         )}
       </div>

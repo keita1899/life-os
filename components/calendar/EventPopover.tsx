@@ -1,7 +1,7 @@
 'use client'
 
 import { useEffect, useState } from 'react'
-import { Calendar } from 'lucide-react'
+import { Calendar, FileText } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import {
   EVENT_CATEGORY_LABELS,
@@ -16,6 +16,12 @@ import { EventDateTime } from '@/components/events/EventDateTime'
 import type { Event } from '@/lib/types/event'
 import { Button } from '@/components/ui/button'
 import { Pencil, Trash2 } from 'lucide-react'
+import {
+  Accordion,
+  AccordionContent,
+  AccordionItem,
+  AccordionTrigger,
+} from '@/components/ui/accordion'
 
 interface EventPopoverContentProps {
   event: Event
@@ -142,14 +148,31 @@ export function EventPopoverContent({
         )}
         {event.description && (
           <div className="pt-1">
-            <p
-              className={cn(
-                'text-xs',
-                isBarca ? 'text-white/80' : 'text-stone-600 dark:text-stone-400',
-              )}
-            >
-              {event.description}
-            </p>
+            <Accordion type="single" collapsible className="w-full">
+              <AccordionItem value="description" className="border-none">
+                <AccordionTrigger
+                  className={cn(
+                    'py-1 text-xs hover:no-underline',
+                    isBarca ? 'text-white/80' : 'text-muted-foreground',
+                  )}
+                >
+                  <div className="flex items-center gap-1">
+                    <FileText className="h-3 w-3 shrink-0" />
+                    <span>説明</span>
+                  </div>
+                </AccordionTrigger>
+                <AccordionContent className="pt-1 pb-0">
+                  <div
+                    className={cn(
+                      'text-xs whitespace-pre-wrap break-words',
+                      isBarca ? 'text-white/80' : 'text-stone-600 dark:text-stone-400',
+                    )}
+                  >
+                    {event.description}
+                  </div>
+                </AccordionContent>
+              </AccordionItem>
+            </Accordion>
           </div>
         )}
       </div>
