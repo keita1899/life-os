@@ -250,28 +250,3 @@ export function expandRecurringTasks(
   return result
 }
 
-export function getPastOccurrenceDates(
-  task: Task,
-  beforeDate: Date,
-): string[] {
-  if (!task.recurrenceRule || !task.executionDate) return []
-  const startDate = parseISO(task.executionDate)
-  const rangeStart = startOfDay(startDate)
-  const rangeEnd = startOfDay(beforeDate)
-  const endLimit = task.recurrenceEndDate
-    ? parseISO(task.recurrenceEndDate + 'T23:59:59')
-    : null
-
-  const dates = getOccurrenceDates(
-    task.recurrenceRule,
-    startDate,
-    rangeStart,
-    rangeEnd,
-    task.recurrenceEndDate,
-    task.recurrenceDaysOfWeek,
-    task.recurrenceDayOfMonth,
-    task.recurrenceExcludedDates || [],
-  )
-
-  return dates.map((date) => format(date, 'yyyy-MM-dd'))
-}
