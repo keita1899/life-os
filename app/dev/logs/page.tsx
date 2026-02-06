@@ -310,7 +310,7 @@ function DevLogPageView({ logDate, date }: DevLogPageViewProps) {
 
   return (
     <MainLayout>
-      <div className="container mx-auto max-w-4xl py-8 px-4">
+      <div className="container mx-auto max-w-7xl py-8 px-4">
         <div className="mb-6">
           <div className="flex items-center justify-between">
             <h1 className="text-3xl font-bold">{formattedDate}のログ</h1>
@@ -351,6 +351,7 @@ function DevLogPageView({ logDate, date }: DevLogPageViewProps) {
                 yearlyGoals={yearlyGoals}
                 monthlyGoals={monthlyGoals}
                 weeklyGoals={weeklyGoals}
+                currentDate={logDate}
               />
               <DevLogReportSection
                 devDailyLog={devDailyLog}
@@ -469,7 +470,7 @@ function DevLogPageContent() {
   const logDate = parseISO(date)
   if (!isValid(logDate)) {
     return (
-      <div className="container mx-auto max-w-4xl py-8 px-4">
+      <div className="container mx-auto max-w-7xl py-8 px-4">
         <div className="text-center">
           <h1 className="text-2xl font-bold text-destructive">無効な日付です</h1>
           <Link
