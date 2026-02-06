@@ -23,6 +23,7 @@ import {
   SelectValue,
 } from '@/components/ui/select'
 import { Textarea } from '@/components/ui/textarea'
+import { useAutoResizeTextarea } from '@/hooks/useAutoResizeTextarea'
 import { getTodayDateString } from '@/lib/date/formats'
 import { EVENT_CATEGORIES } from '@/lib/events/constants'
 import { getEventFormValues } from '@/lib/events/form'
@@ -108,6 +109,12 @@ export const EventForm = ({
   const allDay = form.watch('allDay')
   const recurrenceRule = form.watch('recurrenceRule')
   const startDate = form.watch('startDate')
+  const descriptionValue = form.watch('description')
+
+  const {
+    textareaRef: descriptionTextareaRef,
+    handleChange: handleDescriptionChange,
+  } = useAutoResizeTextarea(descriptionValue)
 
   useEffect(() => {
     if (!startDate) return
@@ -441,19 +448,26 @@ export const EventForm = ({
         <FormField
           control={form.control}
           name="description"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>説明</FormLabel>
-              <FormControl>
-                <Textarea
-                  placeholder="説明を入力（任意）"
-                  {...field}
-                  rows={3}
-                />
-              </FormControl>
-              <FormMessage />
-            </FormItem>
-          )}
+          render={({ field }) => {
+            const { ref, ...fieldProps } = field
+            return (
+              <FormItem>
+                <FormLabel>説明</FormLabel>
+                <FormControl>
+                  <Textarea
+                    ref={descriptionTextareaRef}
+                    placeholder="説明を入力（任意）"
+                    {...fieldProps}
+                    onChange={(e) => {
+                      field.onChange(e)
+                      handleDescriptionChange(e)
+                    }}
+                  />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )
+          }}
         />
 
         <div className="flex justify-end gap-2">
