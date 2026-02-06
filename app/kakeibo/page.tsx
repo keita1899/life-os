@@ -1,7 +1,9 @@
 'use client'
 
-import { useState, useMemo, useEffect } from 'react'
+import { useState, useMemo, useEffect, useCallback } from 'react'
+import { Plus } from 'lucide-react'
 import { MainLayout } from '@/components/layout/MainLayout'
+import { useCreateShortcut } from '@/hooks/useCreateShortcut'
 import { useMode } from '@/lib/contexts/ModeContext'
 import { Button } from '@/components/ui/button'
 import { TransactionDialog } from '@/components/kakeibo/TransactionDialog'
@@ -266,6 +268,16 @@ export default function KakeiboPage() {
     await updateUserSettings({ initialBalance: balance })
   }
 
+  const handleCreateClick = useCallback(() => {
+    setEditingTransaction(undefined)
+    setIsDialogOpen(true)
+  }, [])
+
+  useCreateShortcut({
+    onCreate: handleCreateClick,
+    enabled: !isDialogOpen,
+  })
+
   return (
     <MainLayout>
       <div className="container mx-auto max-w-4xl py-8 px-4">
@@ -305,8 +317,9 @@ export default function KakeiboPage() {
           <div className="text-sm text-muted-foreground">
             取引一覧{filteredTransactions.length > 0 ? ` ${filteredTransactions.length}` : ''}
           </div>
-          <Button onClick={() => setIsDialogOpen(true)}>
-            取引を追加
+          <Button onClick={handleCreateClick}>
+            <Plus className="mr-2 h-4 w-4" />
+            取引を作成
           </Button>
         </div>
 

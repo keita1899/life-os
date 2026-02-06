@@ -1,7 +1,9 @@
 'use client'
 
-import { useState, useMemo } from 'react'
+import { useState, useMemo, useCallback } from 'react'
+import { Plus } from 'lucide-react'
 import { Button } from '@/components/ui/button'
+import { useCreateShortcut } from '@/hooks/useCreateShortcut'
 import {
   Accordion,
   AccordionContent,
@@ -156,14 +158,25 @@ export default function SubscriptionsPage() {
     }
   }
 
+  const handleCreateClick = useCallback(() => {
+    setEditingSubscription(undefined)
+    setIsDialogOpen(true)
+  }, [])
+
+  useCreateShortcut({
+    onCreate: handleCreateClick,
+    enabled: !isDialogOpen,
+  })
+
   return (
     <MainLayout>
       <div className="container mx-auto max-w-4xl py-8 px-4">
         <div className="mb-6">
           <div className="flex items-center justify-between">
             <h1 className="text-3xl font-bold">サブスク</h1>
-            <Button onClick={() => setIsDialogOpen(true)}>
-              サブスクを追加
+            <Button onClick={handleCreateClick}>
+              <Plus className="mr-2 h-4 w-4" />
+              サブスクを作成
             </Button>
           </div>
         </div>

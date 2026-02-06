@@ -1,8 +1,9 @@
 'use client'
 
-import { useState, useMemo } from 'react'
-import { Trash2 } from 'lucide-react'
+import { useState, useMemo, useCallback } from 'react'
+import { Trash2, Plus } from 'lucide-react'
 import { Button } from '@/components/ui/button'
+import { useCreateShortcut } from '@/hooks/useCreateShortcut'
 import {
   Accordion,
   AccordionContent,
@@ -38,8 +39,8 @@ import type {
   BucketListItem,
   UpdateBucketListItemInput,
 } from '@/lib/types/bucket-list-item'
-import type { CreateEventInput, UpdateEventInput } from '@/lib/types/event'
-import type { CreateTaskInput, UpdateTaskInput } from '@/lib/types/task'
+import type { CreateEventInput } from '@/lib/types/event'
+import type { CreateTaskInput } from '@/lib/types/task'
 
 export default function BucketListPage() {
   const { mode } = useMode()
@@ -199,6 +200,16 @@ export default function BucketListPage() {
     }
   }
 
+  const handleCreateClick = useCallback(() => {
+    setEditingItem(undefined)
+    setIsDialogOpen(true)
+  }, [])
+
+  useCreateShortcut({
+    onCreate: handleCreateClick,
+    enabled: !isDialogOpen,
+  })
+
   const handleDeleteItem = async () => {
     if (!deletingItem) return
 
@@ -302,7 +313,8 @@ export default function BucketListPage() {
           <div className="mx-auto max-w-3xl p-8">
             <div className="mb-6 flex items-center justify-between">
               <h1 className="text-3xl font-bold">{selectedCategoryName}</h1>
-              <Button onClick={() => setIsDialogOpen(true)}>
+              <Button onClick={handleCreateClick}>
+                <Plus className="mr-2 h-4 w-4" />
                 やりたいことを作成
               </Button>
             </div>

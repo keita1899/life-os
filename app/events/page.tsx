@@ -1,8 +1,10 @@
 'use client'
 
-import { useState, useMemo } from 'react'
+import { useState, useMemo, useCallback } from 'react'
 import { startOfDay, subYears, addMonths } from 'date-fns'
+import { Plus } from 'lucide-react'
 import { Button } from '@/components/ui/button'
+import { useCreateShortcut } from '@/hooks/useCreateShortcut'
 import {
   Accordion,
   AccordionContent,
@@ -134,6 +136,16 @@ export default function EventsPage() {
     }
   }
 
+  const handleCreateClick = useCallback(() => {
+    setEditingEvent(undefined)
+    setIsDialogOpen(true)
+  }, [])
+
+  useCreateShortcut({
+    onCreate: handleCreateClick,
+    enabled: !isDialogOpen,
+  })
+
   if (mode !== 'life') {
     return null
   }
@@ -146,7 +158,10 @@ export default function EventsPage() {
             <div>
               <h1 className="text-3xl font-bold">予定</h1>
             </div>
-            <Button onClick={() => setIsDialogOpen(true)}>予定を作成</Button>
+            <Button onClick={handleCreateClick}>
+              <Plus className="mr-2 h-4 w-4" />
+              予定を作成
+            </Button>
           </div>
         </div>
 

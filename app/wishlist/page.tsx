@@ -1,8 +1,9 @@
 'use client'
 
-import { useState, useMemo } from 'react'
-import { Trash2 } from 'lucide-react'
+import { useState, useMemo, useCallback } from 'react'
+import { Trash2, Plus } from 'lucide-react'
 import { Button } from '@/components/ui/button'
+import { useCreateShortcut } from '@/hooks/useCreateShortcut'
 import {
   Accordion,
   AccordionContent,
@@ -161,6 +162,16 @@ export default function WishlistPage() {
     }
   }
 
+  const handleCreateClick = useCallback(() => {
+    setEditingItem(undefined)
+    setIsDialogOpen(true)
+  }, [])
+
+  useCreateShortcut({
+    onCreate: handleCreateClick,
+    enabled: !isDialogOpen,
+  })
+
   const handleDeleteItem = async () => {
     if (!deletingItem) return
 
@@ -224,8 +235,9 @@ export default function WishlistPage() {
           <div className="mx-auto max-w-3xl p-8">
             <div className="mb-6 flex items-center justify-between">
               <h1 className="text-3xl font-bold">欲しいものリスト</h1>
-              <Button onClick={() => setIsDialogOpen(true)}>
-                欲しいものを追加
+              <Button onClick={handleCreateClick}>
+                <Plus className="mr-2 h-4 w-4" />
+                欲しいものを作成
               </Button>
             </div>
 

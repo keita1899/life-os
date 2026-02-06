@@ -1,8 +1,10 @@
 'use client'
 
-import { useState, useMemo } from 'react'
+import { useState, useMemo, useCallback } from 'react'
 import { format } from 'date-fns'
+import { Plus } from 'lucide-react'
 import { Button } from '@/components/ui/button'
+import { useCreateShortcut } from '@/hooks/useCreateShortcut'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { HabitDialog } from '@/components/habits/HabitDialog'
 import { HabitHeatmap } from '@/components/habits/HabitHeatmap'
@@ -141,10 +143,15 @@ export default function HabitsPage() {
     }
   }
 
-  const handleOpenCreate = () => {
+  const handleOpenCreate = useCallback(() => {
     setEditingHabit(undefined)
     setIsDialogOpen(true)
-  }
+  }, [])
+
+  useCreateShortcut({
+    onCreate: handleOpenCreate,
+    enabled: !isDialogOpen,
+  })
 
   const handleToggleToday = async (habit: Habit) => {
     const completed = completedHabitIdsToday.has(habit.id)
@@ -185,7 +192,10 @@ export default function HabitsPage() {
       <div className="container mx-auto max-w-5xl py-8 px-4">
         <div className="mb-6 flex items-center justify-between">
           <h1 className="text-3xl font-bold">習慣</h1>
-          <Button onClick={handleOpenCreate}>習慣を追加</Button>
+          <Button onClick={handleOpenCreate}>
+            <Plus className="mr-2 h-4 w-4" />
+            習慣を作成
+          </Button>
         </div>
 
         <ErrorMessage
@@ -203,7 +213,8 @@ export default function HabitsPage() {
                 className="mt-4"
                 onClick={handleOpenCreate}
               >
-                習慣を追加
+                <Plus className="mr-2 h-4 w-4" />
+                習慣を作成
               </Button>
             </EmptyState>
           </div>
