@@ -8,6 +8,7 @@ import {
   DialogTitle,
 } from '@/components/ui/dialog'
 import { ErrorMessage } from '@/components/ui/error-message'
+import { formatSubmitLabelWithShortcut } from '@/lib/utils/shortcut'
 
 interface FormDialogProps<
   TData,
@@ -75,6 +76,9 @@ export function FormDialog<
   }
 
   const isEditMode = !!initialData
+  const submitLabel = formatSubmitLabelWithShortcut(
+    isEditMode ? '更新' : '作成',
+  )
 
   return (
     <Dialog open={open} onOpenChange={handleOpenChange}>
@@ -93,7 +97,7 @@ export function FormDialog<
             onSubmit: handleSubmit,
             onCancel: () => handleOpenChange(false),
             initialData,
-            submitLabel: isEditMode ? '更新' : '作成',
+            submitLabel,
             ...formProps,
           } as React.ComponentProps<typeof FormComponent>)}
         />
