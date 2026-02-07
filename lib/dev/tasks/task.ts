@@ -15,6 +15,7 @@ interface DbDevTask {
   completed: number
   order: number
   actual_time: number
+  memo: string | null
   created_at: string
   updated_at: string
 }
@@ -43,6 +44,7 @@ function mapDbDevTaskToDevTask(dbTask: DbDevTask): DevTask {
     completed: dbTask.completed === 1,
     order: dbTask.order,
     actualTime: dbTask.actual_time,
+    memo: dbTask.memo,
     createdAt: dbTask.created_at,
     updatedAt: dbTask.updated_at,
   }
@@ -88,14 +90,15 @@ export async function createDevTask(input: CreateDevTaskInput): Promise<DevTask>
 
     try {
       await db.execute(
-        `INSERT INTO dev_tasks (title, project_id, type, execution_date, "order")
-         VALUES (?, ?, ?, ?, ?)`,
+        `INSERT INTO dev_tasks (title, project_id, type, execution_date, "order", memo)
+         VALUES (?, ?, ?, ?, ?, ?)`,
         [
           input.title,
           input.projectId,
           input.type,
           input.executionDate || null,
           newOrder,
+          input.memo || null,
         ],
       )
 
@@ -206,6 +209,11 @@ export async function updateDevTask(
   if (input.actualTime !== undefined) {
     updateFields.push('actual_time = ?')
     updateValues.push(input.actualTime)
+  }
+
+  if (input.memo !== undefined) {
+    updateFields.push('memo = ?')
+    updateValues.push(input.memo || null)
   }
 
   if (updateFields.length === 0) {

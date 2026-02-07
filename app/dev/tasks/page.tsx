@@ -1,9 +1,10 @@
 'use client'
 
-import { useMemo, useState } from 'react'
+import { useMemo, useState, useCallback } from 'react'
 import { useRouter } from 'next/navigation'
-import { Trash2, Calendar, Focus } from 'lucide-react'
+import { Trash2, Calendar, Focus, Plus } from 'lucide-react'
 import { Button } from '@/components/ui/button'
+import { useCreateShortcut } from '@/hooks/useCreateShortcut'
 import {
   Accordion,
   AccordionContent,
@@ -52,7 +53,34 @@ export default function DevTasksPage() {
     useState(false)
   const [operationError, setOperationError] = useState<string | null>(null)
 
-  const groupedTasks = useMemo(() => groupTasks(tasks), [tasks])
+  const convertedTasks: Task[] = useMemo(() => {
+    return tasks.map((t) => ({
+      id: t.id,
+      title: t.title,
+      executionDate: t.executionDate,
+      completed: t.completed,
+      order: t.order,
+      scheduledTime: null,
+      recurrenceRule: null,
+      recurrenceDaysOfWeek: null,
+      recurrenceDayOfMonth: null,
+      recurrenceEndDate: null,
+      recurrenceExcludedDates: [],
+      memo: t.memo,
+      createdAt: t.createdAt,
+      updatedAt: t.updatedAt,
+    }))
+  }, [tasks])
+
+  const groupedTasks = useMemo(() => groupTasks(convertedTasks), [convertedTasks])
+
+  const visibleGroups = useMemo(
+    () =>
+      groupedTasks.filter(
+        (group) => group.key === 'today' || group.tasks.length > 0,
+      ),
+    [groupedTasks],
+  )
 
   if (mode !== 'development') {
     return null
@@ -73,6 +101,7 @@ export default function DevTasksPage() {
         projectId: null,
         type: activeType,
         executionDate: input.executionDate,
+        memo: input.memo,
       })
       setIsDialogOpen(false)
     } catch (err) {
@@ -90,6 +119,7 @@ export default function DevTasksPage() {
       await updateTask(editingTask.id, {
         title: input.title,
         executionDate: input.executionDate,
+        memo: input.memo,
       })
       setIsDialogOpen(false)
       setEditingTask(undefined)
@@ -111,6 +141,16 @@ export default function DevTasksPage() {
       setEditingTask(undefined)
     }
   }
+
+  const handleCreateClick = useCallback(() => {
+    setEditingTask(undefined)
+    setIsDialogOpen(true)
+  }, [])
+
+  useCreateShortcut({
+    onCreate: handleCreateClick,
+    enabled: !isDialogOpen,
+  })
 
   const handleDeleteTask = async (): Promise<void> => {
     if (!deletingTask) return
@@ -196,7 +236,8 @@ export default function DevTasksPage() {
             <div>
               <h1 className="text-3xl font-bold">タスク</h1>
             </div>
-            <Button onClick={() => setIsDialogOpen(true)}>
+            <Button onClick={handleCreateClick}>
+              <Plus className="mr-2 h-4 w-4" />
               タスクを作成
             </Button>
           </div>
@@ -220,9 +261,9 @@ export default function DevTasksPage() {
           <Accordion
             type="multiple"
             className="w-full"
-            defaultValue={groupedTasks.map((group) => group.key)}
+            defaultValue={visibleGroups.map((group) => group.key)}
           >
-            {groupedTasks.map((group) => (
+            {visibleGroups.map((group) => (
               <AccordionItem key={group.key} value={group.key}>
                 <AccordionHeader>
                   <AccordionTrigger className="hover:no-underline">
@@ -231,9 +272,11 @@ export default function DevTasksPage() {
                         <h2 className="text-lg font-semibold text-stone-900 dark:text-stone-100">
                           {group.title}
                         </h2>
-                        <span className="text-sm text-muted-foreground">
-                          ({group.tasks.length})
-                        </span>
+                        {group.tasks.length > 0 && (
+                          <span className="text-sm text-muted-foreground">
+                            {group.tasks.length}
+                          </span>
+                        )}
                       </div>
                       {group.key === 'overdue' && group.tasks.length > 0 && (
                         <Button

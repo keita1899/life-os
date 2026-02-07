@@ -5,6 +5,7 @@ import type {
   CreateMonthlyGoalInput,
   UpdateMonthlyGoalInput,
 } from '../types/monthly-goal'
+import type { ChecklistItem } from '../types/checklist-item'
 
 interface DbMonthlyGoal {
   id: number
@@ -12,8 +13,19 @@ interface DbMonthlyGoal {
   year: number
   month: number
   achieved: number
+  checklist: string | null
   created_at: string
   updated_at: string
+}
+
+function parseChecklist(checklistJson: string | null): ChecklistItem[] {
+  if (!checklistJson) return []
+  try {
+    const parsed = JSON.parse(checklistJson)
+    return Array.isArray(parsed) ? parsed : []
+  } catch {
+    return []
+  }
 }
 
 function mapDbMonthlyGoalToMonthlyGoal(dbGoal: DbMonthlyGoal): MonthlyGoal {
@@ -23,6 +35,7 @@ function mapDbMonthlyGoalToMonthlyGoal(dbGoal: DbMonthlyGoal): MonthlyGoal {
     year: dbGoal.year,
     month: dbGoal.month,
     achieved: dbGoal.achieved === 1,
+    checklist: parseChecklist(dbGoal.checklist),
     createdAt: dbGoal.created_at,
     updatedAt: dbGoal.updated_at,
   }
@@ -72,10 +85,13 @@ export async function createMonthlyGoal(
   await validateMonthlyLimit(year, month)
 
   try {
+    const checklistJson = input.checklist
+      ? JSON.stringify(input.checklist)
+      : null
     await db.execute(
-      `INSERT INTO monthly_goals (title, year, month)
-       VALUES (?, ?, ?)`,
-      [input.title, year, month],
+      `INSERT INTO monthly_goals (title, year, month, checklist)
+       VALUES (?, ?, ?, ?)`,
+      [input.title, year, month, checklistJson],
     )
 
     const result = await db.select<DbMonthlyGoal[]>(
@@ -182,6 +198,10 @@ export async function updateMonthlyGoal(
   if (input.month !== undefined) {
     updates.push('month = ?')
     values.push(input.month)
+  }
+  if (input.checklist !== undefined) {
+    updates.push('checklist = ?')
+    values.push(input.checklist ? JSON.stringify(input.checklist) : null)
   }
 
   if (updates.length === 0) {

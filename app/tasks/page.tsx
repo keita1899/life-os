@@ -1,9 +1,10 @@
 'use client'
 
-import { useState, useMemo, useEffect } from 'react'
+import { useState, useMemo, useEffect, useCallback } from 'react'
 import { useRouter } from 'next/navigation'
-import { Trash2, Calendar, Focus } from 'lucide-react'
+import { Trash2, Calendar, Focus, Plus } from 'lucide-react'
 import { Button } from '@/components/ui/button'
+import { useCreateShortcut } from '@/hooks/useCreateShortcut'
 import {
   Accordion,
   AccordionContent,
@@ -14,6 +15,7 @@ import {
 import { TaskList } from '@/components/tasks/TaskList'
 import { TaskDialog } from '@/components/tasks/TaskDialog'
 import { DeleteConfirmDialog } from '@/components/ui/delete-confirm-dialog'
+import { RecurringTaskDeleteDialog } from '@/components/tasks/RecurringTaskDeleteDialog'
 import { Loading } from '@/components/ui/loading'
 import { ErrorMessage } from '@/components/ui/error-message'
 import { MainLayout } from '@/components/layout/MainLayout'
@@ -21,7 +23,13 @@ import { FloatingActionButtons } from '@/components/floating/FloatingActionButto
 import { useTasks } from '@/hooks/useTasks'
 import { useMode } from '@/lib/contexts/ModeContext'
 import { groupTasks } from '@/lib/tasks/grouping'
+import {
+  toTasksWithNextOccurrenceOnly,
+  getNextOccurrenceAfter,
+  getNextOccurrenceDate,
+} from '@/lib/tasks'
 import { getTodayDateString } from '@/lib/date/formats'
+import { parseISO } from 'date-fns'
 import type { CreateTaskInput, Task, UpdateTaskInput } from '@/lib/types/task'
 
 export default function TasksPage() {
@@ -57,7 +65,23 @@ export default function TasksPage() {
     return () => clearInterval(interval)
   }, [todayStr])
 
-  const groupedTasks = useMemo(() => groupTasks(tasks), [tasks, todayStr])
+  const tasksWithNextOnly = useMemo(() => {
+    const today = new Date()
+    return toTasksWithNextOccurrenceOnly(tasks, today)
+  }, [tasks])
+
+  const groupedTasks = useMemo(
+    () => groupTasks(tasksWithNextOnly),
+    [tasksWithNextOnly],
+  )
+
+  const visibleGroups = useMemo(
+    () =>
+      groupedTasks.filter(
+        (group) => group.key === 'today' || group.tasks.length > 0,
+      ),
+    [groupedTasks],
+  )
 
   if (mode !== 'life') {
     return null
@@ -83,6 +107,11 @@ export default function TasksPage() {
       const updateInput: UpdateTaskInput = {
         title: input.title,
         executionDate: input.executionDate,
+        scheduledTime: input.scheduledTime,
+        recurrenceRule: input.recurrenceRule,
+        recurrenceDaysOfWeek: input.recurrenceDaysOfWeek,
+        recurrenceDayOfMonth: input.recurrenceDayOfMonth,
+        recurrenceEndDate: input.recurrenceEndDate,
       }
       await updateTask(editingTask.id, updateInput)
       setIsDialogOpen(false)
@@ -106,12 +135,31 @@ export default function TasksPage() {
     }
   }
 
-  const handleDeleteTask = async () => {
+  const handleCreateClick = useCallback(() => {
+    setEditingTask(undefined)
+    setIsDialogOpen(true)
+  }, [])
+
+  useCreateShortcut({
+    onCreate: handleCreateClick,
+    enabled: !isDialogOpen,
+  })
+
+  const handleDeleteTask = async (mode?: 'single' | 'all') => {
     if (!deletingTask) return
 
     try {
       setOperationError(null)
-      await deleteTask(deletingTask.id)
+      if (deletingTask.recurrenceRule && mode === 'single' && deletingTask.executionDate) {
+        const currentExcludedDates = deletingTask.recurrenceExcludedDates || []
+        if (!currentExcludedDates.includes(deletingTask.executionDate)) {
+          await updateTask(deletingTask.id, {
+            recurrenceExcludedDates: [...currentExcludedDates, deletingTask.executionDate],
+          })
+        }
+      } else {
+        await deleteTask(deletingTask.id)
+      }
       setDeletingTask(undefined)
     } catch (err) {
       setOperationError(
@@ -127,6 +175,23 @@ export default function TasksPage() {
   const handleToggleCompletion = async (task: Task) => {
     try {
       setOperationError(null)
+      if (
+        task.recurrenceRule &&
+        !task.completed &&
+        task.executionDate
+      ) {
+        const nextDate = getNextOccurrenceAfter(
+          task,
+          parseISO(task.executionDate),
+        )
+        if (nextDate !== null) {
+          await updateTask(task.id, {
+            executionDate: nextDate,
+            completed: false,
+          })
+          return
+        }
+      }
       await toggleTaskCompletion(task.id, !task.completed)
     } catch (err) {
       setOperationError(
@@ -172,7 +237,39 @@ export default function TasksPage() {
   const handleUpdateOverdueTasksToToday = async () => {
     try {
       setOperationError(null)
-      await updateOverdueTasksToToday()
+      const overdueGroup = groupedTasks.find((g) => g.key === 'overdue')
+      if (!overdueGroup || overdueGroup.tasks.length === 0) {
+        setOperationError('更新する期限切れタスクがありませんでした')
+        return
+      }
+
+      const today = getTodayDateString()
+      const todayDate = new Date()
+      let updatedCount = 0
+
+      for (const displayTask of overdueGroup.tasks) {
+        const originalTask = tasks.find((t) => t.id === displayTask.id)
+        if (!originalTask) continue
+
+        if (originalTask.recurrenceRule) {
+          const nextOccurrence = getNextOccurrenceDate(originalTask, todayDate)
+          if (nextOccurrence) {
+            await updateTask(originalTask.id, {
+              executionDate: nextOccurrence,
+            })
+            updatedCount++
+          }
+        } else {
+          await updateTask(originalTask.id, {
+            executionDate: today,
+          })
+          updatedCount++
+        }
+      }
+
+      if (updatedCount === 0) {
+        setOperationError('更新する期限切れタスクがありませんでした')
+      }
     } catch (err) {
       setOperationError(
         err instanceof Error
@@ -190,7 +287,10 @@ export default function TasksPage() {
             <div>
               <h1 className="text-3xl font-bold">タスク</h1>
             </div>
-            <Button onClick={() => setIsDialogOpen(true)}>タスクを作成</Button>
+            <Button onClick={handleCreateClick}>
+              <Plus className="mr-2 h-4 w-4" />
+              タスクを作成
+            </Button>
           </div>
         </div>
 
@@ -205,9 +305,9 @@ export default function TasksPage() {
         <Accordion
           type="multiple"
           className="w-full"
-          defaultValue={groupedTasks.map((group) => group.key)}
+          defaultValue={visibleGroups.map((group) => group.key)}
         >
-          {groupedTasks.map((group) => (
+          {visibleGroups.map((group) => (
             <AccordionItem key={group.key} value={group.key}>
               <AccordionHeader>
                 <AccordionTrigger className="hover:no-underline">
@@ -216,9 +316,11 @@ export default function TasksPage() {
                       <h2 className="text-lg font-semibold text-stone-900 dark:text-stone-100">
                         {group.title}
                       </h2>
-                      <span className="text-sm text-muted-foreground">
-                        ({group.tasks.length})
-                      </span>
+                      {group.tasks.length > 0 && (
+                        <span className="text-sm text-muted-foreground">
+                          {group.tasks.length}
+                        </span>
+                      )}
                     </div>
                     {group.key === 'overdue' && group.tasks.length > 0 && (
                       <Button
@@ -275,12 +377,21 @@ export default function TasksPage() {
         task={editingTask}
       />
 
-      <DeleteConfirmDialog
-        open={!!deletingTask}
-        message={`「${deletingTask?.title}」を削除しますか？この操作は取り消せません。`}
-        onConfirm={handleDeleteTask}
-        onCancel={() => setDeletingTask(undefined)}
-      />
+      {deletingTask?.recurrenceRule ? (
+        <RecurringTaskDeleteDialog
+          open={!!deletingTask}
+          taskTitle={deletingTask.title}
+          onConfirm={handleDeleteTask}
+          onCancel={() => setDeletingTask(undefined)}
+        />
+      ) : (
+        <DeleteConfirmDialog
+          open={!!deletingTask}
+          message={`「${deletingTask?.title}」を削除しますか？この操作は取り消せません。`}
+          onConfirm={() => handleDeleteTask()}
+          onCancel={() => setDeletingTask(undefined)}
+        />
+      )}
 
       <DeleteConfirmDialog
         open={isDeletingCompletedDialogOpen}

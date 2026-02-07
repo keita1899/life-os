@@ -1,6 +1,7 @@
 'use client'
 
-import { useEffect } from 'react'
+import { useEffect, Suspense } from 'react'
+import { useHotkeys } from 'react-hotkeys-hook'
 import { useMode } from '@/lib/contexts/ModeContext'
 import { Button } from '@/components/ui/button'
 import { usePathname, useRouter, useSearchParams } from 'next/navigation'
@@ -37,7 +38,7 @@ function safeSetLocalStorage(key: string, value: string): void {
   }
 }
 
-export function ModeSwitch() {
+function ModeSwitchContent() {
   const { mode, setMode } = useMode()
   const router = useRouter()
   const pathname = usePathname()
@@ -61,41 +62,32 @@ export function ModeSwitch() {
     router.push(isValidPathForMode(newMode, lastPath) ? lastPath : '/')
   }
 
-  useEffect(() => {
-    const handleKeyDown = (e: KeyboardEvent) => {
-      const target = e.target as HTMLElement
-      const isInputFocused =
-        target.tagName === 'INPUT' ||
-        target.tagName === 'TEXTAREA' ||
-        target.tagName === 'SELECT' ||
-        target.isContentEditable
-
-      if (isInputFocused) {
-        return
+  useHotkeys(
+    'mod+l',
+    () => {
+      if (mode !== 'life') {
+        setMode('life')
+        const lastPath = safeGetLocalStorage(LAST_PATH_LIFE_KEY, '/')
+        router.push(isValidPathForMode('life', lastPath) ? lastPath : '/')
       }
-
-      if (e.key === 'l' || e.key === 'L') {
-        e.preventDefault()
-        if (mode !== 'life') {
-          setMode('life')
-          const lastPath = safeGetLocalStorage(LAST_PATH_LIFE_KEY, '/')
-          router.push(isValidPathForMode('life', lastPath) ? lastPath : '/')
-        }
-      } else if (e.key === 'd' || e.key === 'D') {
-        e.preventDefault()
-        if (mode !== 'development') {
-          setMode('development')
-          const lastPath = safeGetLocalStorage(LAST_PATH_DEV_KEY, '/')
-          router.push(isValidPathForMode('development', lastPath) ? lastPath : '/')
-        }
+    },
+    { enableOnFormTags: false, preventDefault: true },
+    [mode, router, setMode],
+  )
+  useHotkeys(
+    'mod+d',
+    () => {
+      if (mode !== 'development') {
+        setMode('development')
+        const lastPath = safeGetLocalStorage(LAST_PATH_DEV_KEY, '/')
+        router.push(
+          isValidPathForMode('development', lastPath) ? lastPath : '/',
+        )
       }
-    }
-
-    window.addEventListener('keydown', handleKeyDown)
-    return () => {
-      window.removeEventListener('keydown', handleKeyDown)
-    }
-  }, [mode, router, setMode])
+    },
+    { enableOnFormTags: false, preventDefault: true },
+    [mode, router, setMode],
+  )
 
   return (
     <div className="flex items-center gap-2 rounded-lg border border-input bg-background p-1">
@@ -106,14 +98,11 @@ export function ModeSwitch() {
         className={cn(
           'flex-1 transition-all',
           mode === 'life'
-            ? 'bg-primary text-primary-foreground hover:bg-primary/90'
-            : 'hover:bg-accent',
+            ? 'bg-white text-black hover:bg-white/90 dark:bg-white dark:text-black dark:hover:bg-white/90'
+            : 'bg-black text-white hover:bg-black/90 dark:bg-black dark:text-white dark:hover:bg-black/90',
         )}
       >
-        <span className="flex items-center justify-between w-full">
-          <span>ライフモード</span>
-          <span className="ml-2 text-xs opacity-60">L</span>
-        </span>
+        Life
       </Button>
       <Button
         variant="ghost"
@@ -122,15 +111,24 @@ export function ModeSwitch() {
         className={cn(
           'flex-1 transition-all',
           mode === 'development'
-            ? 'bg-primary text-primary-foreground hover:bg-primary/90'
-            : 'hover:bg-accent',
+            ? 'bg-white text-black hover:bg-white/90 dark:bg-white dark:text-black dark:hover:bg-white/90'
+            : 'bg-slate-800 text-slate-100 hover:bg-slate-700 dark:bg-slate-800 dark:text-slate-100 dark:hover:bg-slate-700',
         )}
       >
-        <span className="flex items-center justify-between w-full">
-          <span>開発モード</span>
-          <span className="ml-2 text-xs opacity-60">D</span>
-        </span>
+        Dev
       </Button>
     </div>
+  )
+}
+
+export function ModeSwitch() {
+  return (
+    <Suspense fallback={
+      <div className="flex items-center gap-2 rounded-lg border border-input bg-background p-1">
+        <div className="h-8 w-16 animate-pulse rounded bg-muted" />
+      </div>
+    }>
+      <ModeSwitchContent />
+    </Suspense>
   )
 }

@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useRef } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import * as z from 'zod'
@@ -12,9 +12,10 @@ import {
 } from '@/components/ui/form'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Textarea } from '@/components/ui/textarea'
-import { Button } from '@/components/ui/button'
 import { Loader2 } from 'lucide-react'
 import type { DailyLog, UpdateDailyLogInput } from '@/lib/types/daily-log'
+
+const AUTO_SAVE_DELAY_MS = 800
 
 const diaryFormSchema = z.object({
   diary: z.string().optional(),
@@ -34,6 +35,13 @@ export function LogDiarySection({
   onUpdate,
 }: LogDiarySectionProps) {
   const textareaRef = useRef<HTMLTextAreaElement>(null)
+  const lastSavedRef = useRef<string>(dailyLog?.diary ?? '')
+  const onUpdateRef = useRef(onUpdate)
+  const [isSaving, setIsSaving] = useState(false)
+  const [savedMessage, setSavedMessage] = useState(false)
+
+  onUpdateRef.current = onUpdate
+
   const form = useForm<DiaryFormValues>({
     resolver: zodResolver(diaryFormSchema),
     values: {
@@ -42,6 +50,35 @@ export function LogDiarySection({
   })
 
   const diaryValue = form.watch('diary')
+
+  useEffect(() => {
+    lastSavedRef.current = dailyLog?.diary ?? ''
+  }, [dailyLog?.diary])
+
+  useEffect(() => {
+    const value = diaryValue ?? ''
+    if (value === lastSavedRef.current) return
+
+    const timeoutId = setTimeout(async () => {
+      const normalized = value.trim() || null
+      setIsSaving(true)
+      try {
+        await onUpdateRef.current({ diary: normalized })
+        lastSavedRef.current = normalized ?? ''
+        setSavedMessage(true)
+      } finally {
+        setIsSaving(false)
+      }
+    }, AUTO_SAVE_DELAY_MS)
+
+    return () => clearTimeout(timeoutId)
+  }, [diaryValue])
+
+  useEffect(() => {
+    if (!savedMessage) return
+    const id = setTimeout(() => setSavedMessage(false), 2000)
+    return () => clearTimeout(id)
+  }, [savedMessage])
 
   useEffect(() => {
     const textarea = textareaRef.current
@@ -53,15 +90,21 @@ export function LogDiarySection({
     textarea.style.height = `${Math.max(scrollHeight, minHeight)}px`
   }, [diaryValue, dailyLog])
 
-  const handleSubmit = async (data: DiaryFormValues) => {
-    const normalizedDiary = data.diary?.trim() || null
-    await onUpdate({ diary: normalizedDiary })
-  }
-
   return (
-    <Card>
+    <Card className="border-stone-200/60 dark:border-stone-700/40">
       <CardHeader>
-        <CardTitle className="text-lg">日記</CardTitle>
+        <div className="flex items-center justify-between">
+          <CardTitle className="text-lg">日記</CardTitle>
+          {isSaving && (
+            <span className="flex items-center gap-1 text-sm text-muted-foreground">
+              <Loader2 className="h-4 w-4 animate-spin" />
+              保存中...
+            </span>
+          )}
+          {savedMessage && !isSaving && (
+            <span className="text-sm text-muted-foreground">保存しました</span>
+          )}
+        </div>
       </CardHeader>
       <CardContent>
         {isLoadingLog ? (
@@ -70,7 +113,7 @@ export function LogDiarySection({
           </div>
         ) : (
           <Form {...form}>
-            <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-4">
+            <form className="space-y-4">
               <FormField
                 control={form.control}
                 name="diary"
@@ -84,28 +127,12 @@ export function LogDiarySection({
                           textareaRef.current = e
                         }}
                         placeholder="今日の日記を書いてください..."
-                        className="min-h-[200px] resize-none overflow-hidden"
+                        className="min-h-[200px] resize-none overflow-hidden focus-visible:ring-0 focus-visible:ring-offset-0"
                       />
                     </FormControl>
                   </FormItem>
                 )}
               />
-              <div className="flex justify-end">
-                <Button
-                  type="submit"
-                  disabled={!form.formState.isDirty || form.formState.isSubmitting}
-                  size="sm"
-                >
-                  {form.formState.isSubmitting ? (
-                    <>
-                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                      保存中...
-                    </>
-                  ) : (
-                    '保存'
-                  )}
-                </Button>
-              </div>
             </form>
           </Form>
         )}

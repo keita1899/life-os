@@ -6,6 +6,7 @@ export interface BucketListItem {
   categoryId: number | null
   category: BucketListCategory | null
   targetYear: number | null
+  targetMonth: number | null
   achievedDate: string | null
   completed: boolean
   order: number
@@ -17,12 +18,14 @@ export interface CreateBucketListItemInput {
   title: string
   categoryId?: number | null
   targetYear?: number | null
+  targetMonth?: number | null
 }
 
 export interface UpdateBucketListItemInput {
   title?: string
   categoryId?: number | null
   targetYear?: number | null
+  targetMonth?: number | null
   achievedDate?: string | null
   completed?: boolean
   order?: number

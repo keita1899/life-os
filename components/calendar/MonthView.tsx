@@ -16,6 +16,7 @@ import {
   sortEventsByTime,
   getWeekdays,
 } from '@/lib/calendar/utils'
+import { getHolidayName } from '@/lib/calendar/holidays'
 import {
   Popover,
   PopoverContent,
@@ -23,17 +24,18 @@ import {
 } from '@/components/ui/popover'
 import { EventPopoverContent } from './EventPopover'
 import { TaskPopoverContent } from './TaskPopover'
-import { CheckCircle2, Circle } from 'lucide-react'
-import type { MonthlyGoal } from '@/lib/types/monthly-goal'
+import { SubscriptionPopoverContent } from './SubscriptionPopover'
+import { CheckCircle2, Circle, CreditCard } from 'lucide-react'
 import type { Event } from '@/lib/types/event'
 import type { Task } from '@/lib/types/task'
-import { getTasksForDate } from '@/lib/logs/utils'
+import type { Subscription } from '@/lib/types/subscription'
+import { getTasksForDate, getSubscriptionsForDate } from '@/lib/logs/utils'
 import {
   isBarcelonaMatch,
   getBarcelonaMatchBackground,
   BARCELONA_MATCH_TEXT_COLOR,
+  BARCELONA_MATCH_TITLE_COLOR,
 } from '@/lib/football'
-import { EVENT_CATEGORY_COLORS } from '@/lib/events/constants'
 
 function EventPopoverWrapper({
   event,
@@ -95,12 +97,10 @@ function EventPopoverWrapper({
       <PopoverTrigger asChild>
         <button
           className={cn(
-            'w-full truncate rounded px-1 text-left text-xs hover:opacity-80',
+            'w-full truncate rounded px-1 py-0.5 text-left text-xs hover:opacity-80',
             isBarca
               ? BARCELONA_MATCH_TEXT_COLOR
-              : event.category
-                ? EVENT_CATEGORY_COLORS[event.category]
-                : 'bg-green-100 text-green-900 dark:bg-green-900/30 dark:text-green-300',
+              : 'bg-blue-900/10 text-stone-900 dark:bg-blue-900/20 dark:text-stone-100',
           )}
           style={
             isBarca
@@ -117,7 +117,11 @@ function EventPopoverWrapper({
           {!event.allDay && time && (
             <span className="mr-1 text-[10px] opacity-70">{time}</span>
           )}
-          {title}
+          {isBarca ? (
+            <span style={{ color: BARCELONA_MATCH_TITLE_COLOR }}>{title}</span>
+          ) : (
+            title
+          )}
         </button>
       </PopoverTrigger>
       <PopoverContent>
@@ -170,10 +174,10 @@ function TaskPopoverWrapper({
       <PopoverTrigger asChild>
         <button
           className={cn(
-            'flex w-full items-center gap-1 truncate rounded px-1 text-left text-xs hover:opacity-80',
+            'flex w-full items-center gap-1 truncate rounded border px-1 py-0.5 text-left text-xs hover:opacity-80',
             task.completed
-              ? 'bg-stone-100 text-stone-600 dark:bg-stone-800 dark:text-stone-400'
-              : 'bg-orange-100 text-orange-900 dark:bg-orange-900/30 dark:text-orange-300',
+              ? 'border-stone-200/60 bg-stone-900/5 text-stone-600 dark:border-stone-700/40 dark:bg-stone-900/20 dark:text-stone-400'
+              : 'border-stone-200/60 bg-stone-900/10 text-stone-900 dark:border-stone-700/40 dark:bg-stone-900/20 dark:text-stone-100',
           )}
           title={task.title}
           onClick={(e) => {
@@ -240,6 +244,66 @@ function TaskPopoverWrapper({
   )
 }
 
+function SubscriptionPopoverWrapper({
+  subscription,
+  onEdit,
+  onDelete,
+  onOpenChange,
+}: {
+  subscription: Subscription
+  onEdit?: (subscription: Subscription) => void
+  onDelete?: (subscription: Subscription) => void
+  onOpenChange?: (open: boolean) => void
+}) {
+  const [isOpen, setIsOpen] = useState(false)
+
+  const handleOpenChange = (open: boolean) => {
+    setIsOpen(open)
+    onOpenChange?.(open)
+  }
+
+  return (
+    <Popover open={isOpen} onOpenChange={handleOpenChange}>
+      <PopoverTrigger asChild>
+        <button
+          className={cn(
+            'flex w-full items-center gap-1 truncate rounded border px-1 py-0.5 text-left text-xs hover:opacity-80',
+            'border-purple-200/60 bg-purple-50/50 text-purple-900 dark:border-purple-800/40 dark:bg-purple-950/20 dark:text-purple-100',
+          )}
+          title={subscription.name}
+          onClick={(e) => {
+            e.stopPropagation()
+          }}
+        >
+          <CreditCard className="h-3 w-3 shrink-0 text-purple-600 dark:text-purple-400" />
+          <span className="min-w-0 flex-1 truncate">更新日 {subscription.name}</span>
+        </button>
+      </PopoverTrigger>
+      <PopoverContent>
+        <SubscriptionPopoverContent
+          subscription={subscription}
+          onEdit={
+            onEdit
+              ? (s) => {
+                  handleOpenChange(false)
+                  onEdit(s)
+                }
+              : undefined
+          }
+          onDelete={
+            onDelete
+              ? (s) => {
+                  handleOpenChange(false)
+                  onDelete(s)
+                }
+              : undefined
+          }
+        />
+      </PopoverContent>
+    </Popover>
+  )
+}
+
 function DateCell({
   date,
   isCurrentMonthDay,
@@ -247,11 +311,15 @@ function DateCell({
   allItems,
   dayEvents,
   dayTasks,
+  daySubscriptions,
+  holidays,
   onEditEvent,
   onDeleteEvent,
   onEditTask,
   onDeleteTask,
   onToggleTaskCompletion,
+  onEditSubscription,
+  onDeleteSubscription,
 }: {
   date: Date
   isCurrentMonthDay: boolean
@@ -265,15 +333,20 @@ function DateCell({
   }>
   dayEvents: Event[]
   dayTasks: Task[]
+  daySubscriptions: Subscription[]
+  holidays: Map<string, string>
   onEditEvent?: (event: Event) => void
   onDeleteEvent?: (event: Event) => void
   onEditTask?: (task: Task) => void
   onDeleteTask?: (task: Task) => void
   onToggleTaskCompletion?: (task: Task) => void
+  onEditSubscription?: (subscription: Subscription) => void
+  onDeleteSubscription?: (subscription: Subscription) => void
 }) {
   const router = useRouter()
   const { mode } = useMode()
   const [hasOpenPopover, setHasOpenPopover] = useState(false)
+  const holidayName = getHolidayName(date, holidays)
 
   const navigateToDay = () => {
     if (!hasOpenPopover) {
@@ -300,27 +373,31 @@ function DateCell({
       onClick={navigateToDay}
       onKeyDown={handleKeyDown}
       className={cn(
-        'block min-h-[80px] bg-white p-1 dark:bg-stone-900',
-        'hover:bg-stone-50 dark:hover:bg-stone-800',
+        'block min-h-[80px] bg-stone-50 p-1 dark:bg-stone-950',
+        'hover:bg-stone-100 dark:hover:bg-stone-800',
         'transition-colors cursor-pointer',
         'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring',
-        !isCurrentMonthDay &&
-          'bg-stone-50 text-stone-400 dark:bg-stone-950 dark:text-stone-600',
+        !isCurrentMonthDay && 'text-stone-400 dark:text-stone-600',
         isTodayDate && 'ring-2 ring-blue-500 dark:ring-blue-400',
       )}
     >
       <div
         className={cn(
-          'mb-1 flex h-6 items-center text-sm',
+          'mb-1 flex h-6 items-center gap-1 text-sm',
           !isTodayDate && 'font-medium',
         )}
       >
         {isTodayDate ? (
-          <span className="flex h-6 w-6 items-center justify-center rounded-full bg-blue-500 font-semibold text-white dark:bg-blue-400">
+          <span className="flex h-6 w-6 items-center justify-center rounded-full bg-blue-500 font-semibold text-white/80 dark:bg-blue-400 dark:text-white/75">
             {formatDay(date)}
           </span>
         ) : (
           formatDay(date)
+        )}
+        {holidayName && (
+          <span className="text-xs text-red-600 dark:text-red-400">
+            {holidayName}
+          </span>
         )}
       </div>
       <div className="space-y-0.5">
@@ -361,6 +438,21 @@ function DateCell({
             </div>
           </>
         )}
+        {daySubscriptions.length > 0 && (
+          <>
+            <div className="mt-1.5 space-y-0.5">
+              {daySubscriptions.map((subscription) => (
+                <SubscriptionPopoverWrapper
+                  key={subscription.id}
+                  subscription={subscription}
+                  onEdit={onEditSubscription}
+                  onDelete={onDeleteSubscription}
+                  onOpenChange={(open) => setHasOpenPopover(open)}
+                />
+              ))}
+            </div>
+          </>
+        )}
       </div>
     </div>
   )
@@ -368,28 +460,34 @@ function DateCell({
 
 interface MonthViewProps {
   currentDate: Date
-  monthlyGoals: MonthlyGoal[]
   events?: Event[]
   tasks?: Task[]
+  subscriptions?: Subscription[]
   weekStartDay?: number
+  holidays?: Map<string, string>
   onEditEvent?: (event: Event) => void
   onDeleteEvent?: (event: Event) => void
   onEditTask?: (task: Task) => void
   onDeleteTask?: (task: Task) => void
   onToggleTaskCompletion?: (task: Task) => void
+  onEditSubscription?: (subscription: Subscription) => void
+  onDeleteSubscription?: (subscription: Subscription) => void
 }
 
 export function MonthView({
   currentDate,
-  monthlyGoals: _monthlyGoals,
   events = [],
   tasks = [],
+  subscriptions = [],
   weekStartDay = 0,
+  holidays = new Map(),
   onEditEvent,
   onDeleteEvent,
   onEditTask,
   onDeleteTask,
   onToggleTaskCompletion,
+  onEditSubscription,
+  onDeleteSubscription,
 }: MonthViewProps) {
   const calendarDays = useMemo(
     () => getCalendarDays(currentDate, weekStartDay),
@@ -423,6 +521,7 @@ export function MonthView({
             const isTodayDate = isToday(date)
             const dayEvents = sortEventsByTime(getEventsForDate(events, date))
             const dayTasks = getTasksForDate(tasks, date)
+            const daySubscriptions = getSubscriptionsForDate(subscriptions, date)
             const allItems = dayEvents.slice(0, 1).map((event) => ({
               type: 'event' as const,
               id: event.id,
@@ -440,11 +539,15 @@ export function MonthView({
                 allItems={allItems}
                 dayEvents={dayEvents}
                 dayTasks={dayTasks}
+                daySubscriptions={daySubscriptions}
+                holidays={holidays}
                 onEditEvent={onEditEvent}
                 onDeleteEvent={onDeleteEvent}
                 onEditTask={onEditTask}
                 onDeleteTask={onDeleteTask}
                 onToggleTaskCompletion={onToggleTaskCompletion}
+                onEditSubscription={onEditSubscription}
+                onDeleteSubscription={onDeleteSubscription}
               />
             )
           }),

@@ -12,6 +12,10 @@ export function getEventFormValues(data?: Event) {
       allDay: false,
       category: null,
       description: '',
+      recurrenceRule: null,
+      recurrenceDaysOfWeek: [] as number[],
+      recurrenceDayOfMonth: null as number | null,
+      recurrenceEndDate: '',
     }
   }
 
@@ -29,5 +33,9 @@ export function getEventFormValues(data?: Event) {
     allDay: data.allDay,
     category: data.category ?? null,
     description: data.description ?? '',
+    recurrenceRule: data.recurrenceRule ?? null,
+    recurrenceDaysOfWeek: data.recurrenceDaysOfWeek ?? [],
+    recurrenceDayOfMonth: data.recurrenceDayOfMonth ?? null,
+    recurrenceEndDate: data.recurrenceEndDate ?? '',
   }
 }

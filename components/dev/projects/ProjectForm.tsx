@@ -1,7 +1,8 @@
 'use client'
 
 import type { ReactElement } from 'react'
-import { useEffect } from 'react'
+import { useEffect, useCallback } from 'react'
+import { useFormSubmitShortcut } from '@/hooks/useFormSubmitShortcut'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import * as z from 'zod'
@@ -78,7 +79,7 @@ export function ProjectForm({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [initialData])
 
-  const handleSubmit = async (data: ProjectFormValues): Promise<void> => {
+  const handleSubmit = useCallback(async (data: ProjectFormValues): Promise<void> => {
     const name = data.name || ''
     if (!name || name.trim() === '') {
       form.setError('name', { message: 'プロジェクト名は必須です' })
@@ -91,7 +92,12 @@ export function ProjectForm({
       endDate: data.endDate || null,
       status: data.status || 'draft',
     })
-  }
+  }, [onSubmit, form])
+
+  useFormSubmitShortcut({
+    form,
+    onSubmit: handleSubmit,
+  })
 
   return (
     <Form {...form}>

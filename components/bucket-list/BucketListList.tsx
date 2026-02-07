@@ -1,5 +1,6 @@
 'use client'
 
+import { EmptyState } from '@/components/ui/empty-state'
 import { BucketListItem } from './BucketListItem'
 import type { BucketListItem as BucketListItemType } from '@/lib/types/bucket-list-item'
 
@@ -8,6 +9,8 @@ interface BucketListListProps {
   onEdit?: (item: BucketListItemType) => void
   onDelete?: (item: BucketListItemType) => void
   onToggleCompletion?: (item: BucketListItemType) => void
+  onConvertToEvent?: (item: BucketListItemType) => void
+  onConvertToTask?: (item: BucketListItemType) => void
 }
 
 export function BucketListList({
@@ -15,13 +18,11 @@ export function BucketListList({
   onEdit,
   onDelete,
   onToggleCompletion,
+  onConvertToEvent,
+  onConvertToTask,
 }: BucketListListProps) {
   if (items.length === 0) {
-    return (
-      <div className="rounded-lg border border-stone-200 bg-stone-50/30 p-8 text-center dark:border-stone-800 dark:bg-stone-950/30">
-        <p className="text-muted-foreground">やりたいことがありません</p>
-      </div>
-    )
+    return <EmptyState message="やりたいことがありません" />
   }
 
   return (
@@ -33,6 +34,8 @@ export function BucketListList({
           onEdit={onEdit}
           onDelete={onDelete}
           onToggleCompletion={onToggleCompletion}
+          onConvertToEvent={onConvertToEvent}
+          onConvertToTask={onConvertToTask}
         />
       ))}
     </div>

@@ -9,6 +9,7 @@ export interface UserSettings {
   eveningReviewTime: string | null
   barcelonaIcalUrl: string | null
   initialBalance: number | null
+  defaultHabitView: CalendarViewMode
   createdAt: string
   updatedAt: string
 }
@@ -21,4 +22,5 @@ export interface UpdateUserSettingsInput {
   eveningReviewTime?: string | null
   barcelonaIcalUrl?: string | null
   initialBalance?: number | null
+  defaultHabitView?: CalendarViewMode
 }

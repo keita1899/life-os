@@ -1,7 +1,10 @@
 'use client'
 
-import { useState, useMemo } from 'react'
+import { useState, useMemo, useCallback } from 'react'
+import { startOfDay, subYears, addMonths } from 'date-fns'
+import { Plus } from 'lucide-react'
 import { Button } from '@/components/ui/button'
+import { useCreateShortcut } from '@/hooks/useCreateShortcut'
 import {
   Accordion,
   AccordionContent,
@@ -12,11 +15,13 @@ import {
 import { EventList } from '@/components/events/EventList'
 import { EventDialog } from '@/components/events/EventDialog'
 import { DeleteConfirmDialog } from '@/components/ui/delete-confirm-dialog'
+import { RecurringEventDeleteDialog } from '@/components/events/RecurringEventDeleteDialog'
 import { Loading } from '@/components/ui/loading'
 import { ErrorMessage } from '@/components/ui/error-message'
 import { MainLayout } from '@/components/layout/MainLayout'
 import { useEvents } from '@/hooks/useEvents'
 import { useMode } from '@/lib/contexts/ModeContext'
+import { expandRecurringEvents } from '@/lib/events'
 import { groupEvents } from '@/lib/events/grouping'
 import type {
   CreateEventInput,
@@ -35,7 +40,22 @@ export default function EventsPage() {
   )
   const [operationError, setOperationError] = useState<string | null>(null)
 
-  const groupedEvents = useMemo(() => groupEvents(events), [events])
+  const expandedEvents = useMemo(() => {
+    const today = new Date()
+    const rangeStart = startOfDay(subYears(today, 1))
+    const rangeEnd = addMonths(today, 1)
+    return expandRecurringEvents(events, rangeStart, rangeEnd)
+  }, [events])
+
+  const groupedEvents = useMemo(() => groupEvents(expandedEvents), [expandedEvents])
+
+  const visibleGroups = useMemo(
+    () =>
+      groupedEvents.filter(
+        (group) => group.key === 'today' || group.events.length > 0,
+      ),
+    [groupedEvents],
+  )
 
   const handleCreateEvent = async (input: CreateEventInput) => {
     try {
@@ -61,6 +81,10 @@ export default function EventsPage() {
         allDay: input.allDay,
         category: input.category,
         description: input.description,
+        recurrenceRule: input.recurrenceRule,
+        recurrenceDaysOfWeek: input.recurrenceDaysOfWeek,
+        recurrenceDayOfMonth: input.recurrenceDayOfMonth,
+        recurrenceEndDate: input.recurrenceEndDate,
       }
       await updateEvent(editingEvent.id, updateInput)
       setIsDialogOpen(false)
@@ -77,12 +101,22 @@ export default function EventsPage() {
     setIsDialogOpen(true)
   }
 
-  const handleDeleteEvent = async () => {
+  const handleDeleteEvent = async (mode?: 'single' | 'all') => {
     if (!deletingEvent) return
 
     try {
       setOperationError(null)
-      await deleteEvent(deletingEvent.id)
+      if (deletingEvent.recurrenceRule && mode === 'single' && deletingEvent.startDatetime) {
+        const eventDate = deletingEvent.startDatetime.split('T')[0]
+        const currentExcludedDates = deletingEvent.recurrenceExcludedDates || []
+        if (!currentExcludedDates.includes(eventDate)) {
+          await updateEvent(deletingEvent.id, {
+            recurrenceExcludedDates: [...currentExcludedDates, eventDate],
+          })
+        }
+      } else {
+        await deleteEvent(deletingEvent.id)
+      }
       setDeletingEvent(undefined)
     } catch (err) {
       setOperationError(
@@ -102,6 +136,16 @@ export default function EventsPage() {
     }
   }
 
+  const handleCreateClick = useCallback(() => {
+    setEditingEvent(undefined)
+    setIsDialogOpen(true)
+  }, [])
+
+  useCreateShortcut({
+    onCreate: handleCreateClick,
+    enabled: !isDialogOpen,
+  })
+
   if (mode !== 'life') {
     return null
   }
@@ -114,7 +158,10 @@ export default function EventsPage() {
             <div>
               <h1 className="text-3xl font-bold">予定</h1>
             </div>
-            <Button onClick={() => setIsDialogOpen(true)}>予定を作成</Button>
+            <Button onClick={handleCreateClick}>
+              <Plus className="mr-2 h-4 w-4" />
+              予定を作成
+            </Button>
           </div>
         </div>
 
@@ -129,9 +176,9 @@ export default function EventsPage() {
         <Accordion
           type="multiple"
           className="w-full"
-          defaultValue={groupedEvents.map((group) => group.key)}
+          defaultValue={visibleGroups.map((group) => group.key)}
         >
-          {groupedEvents.map((group) => (
+          {visibleGroups.map((group) => (
             <AccordionItem key={group.key} value={group.key}>
               <AccordionHeader>
                 <AccordionTrigger className="hover:no-underline">
@@ -139,9 +186,11 @@ export default function EventsPage() {
                     <h2 className="text-lg font-semibold text-stone-900 dark:text-stone-100">
                       {group.title}
                     </h2>
-                    <span className="text-sm text-muted-foreground">
-                      ({group.events.length})
-                    </span>
+                    {group.events.length > 0 && (
+                      <span className="text-sm text-muted-foreground">
+                        {group.events.length}
+                      </span>
+                    )}
                   </div>
                 </AccordionTrigger>
               </AccordionHeader>
@@ -164,12 +213,21 @@ export default function EventsPage() {
         event={editingEvent}
       />
 
-      <DeleteConfirmDialog
-        open={!!deletingEvent}
-        message={`「${deletingEvent?.title}」を削除しますか？この操作は取り消せません。`}
-        onConfirm={handleDeleteEvent}
-        onCancel={() => setDeletingEvent(undefined)}
-      />
+      {deletingEvent?.recurrenceRule ? (
+        <RecurringEventDeleteDialog
+          open={!!deletingEvent}
+          eventTitle={deletingEvent.title}
+          onConfirm={handleDeleteEvent}
+          onCancel={() => setDeletingEvent(undefined)}
+        />
+      ) : (
+        <DeleteConfirmDialog
+          open={!!deletingEvent}
+          message={`「${deletingEvent?.title}」を削除しますか？この操作は取り消せません。`}
+          onConfirm={() => handleDeleteEvent()}
+          onCancel={() => setDeletingEvent(undefined)}
+        />
+      )}
       </div>
     </MainLayout>
   )

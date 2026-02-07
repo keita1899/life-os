@@ -1,21 +1,27 @@
 'use client'
 
 import { useEffect, useState } from 'react'
-import { Calendar } from 'lucide-react'
+import { Calendar, FileText } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import {
   EVENT_CATEGORY_LABELS,
-  EVENT_CATEGORY_COLORS,
+  EVENT_CATEGORY_EMOJI,
 } from '@/lib/events/constants'
 import {
   isBarcelonaMatch,
   getBarcelonaMatchBackground,
-  BARCELONA_MATCH_TEXT_COLOR,
+  BARCELONA_MATCH_TITLE_COLOR,
 } from '@/lib/football'
 import { EventDateTime } from '@/components/events/EventDateTime'
 import type { Event } from '@/lib/types/event'
 import { Button } from '@/components/ui/button'
 import { Pencil, Trash2 } from 'lucide-react'
+import {
+  Accordion,
+  AccordionContent,
+  AccordionItem,
+  AccordionTrigger,
+} from '@/components/ui/accordion'
 
 interface EventPopoverContentProps {
   event: Event
@@ -61,11 +67,32 @@ export function EventPopoverContent({
   }, [])
 
   const isBarca = isBarcelonaMatch(event)
+  const ROYAL_BLUE_BG =
+    'rounded-md bg-blue-900/10 p-2 dark:bg-blue-900/20'
+
+  const categoryLabel = isBarca
+    ? '⚽ Barca'
+    : event.category
+      ? `${EVENT_CATEGORY_EMOJI[event.category]} ${EVENT_CATEGORY_LABELS[event.category]}`
+      : null
 
   return (
-    <div className="space-y-3">
+    <div
+      className={cn(
+        'space-y-3 rounded-md p-2',
+        !isBarca && ROYAL_BLUE_BG,
+      )}
+      style={
+        isBarca
+          ? { background: getBarcelonaMatchBackground(isDark) }
+          : undefined
+      }
+    >
       <div className="flex items-start justify-between gap-2">
-        <h3 className="min-w-0 flex-1 text-sm font-semibold text-stone-900 dark:text-stone-100">
+        <h3
+          className="min-w-0 flex-1 text-sm font-semibold text-stone-900 dark:text-stone-100"
+          style={isBarca ? { color: BARCELONA_MATCH_TITLE_COLOR } : undefined}
+        >
           {event.title}
         </h3>
         {(onEdit || onDelete) && (
@@ -97,42 +124,55 @@ export function EventPopoverContent({
           </div>
         )}
       </div>
-      <div className="space-y-2 text-xs text-muted-foreground">
+      <div
+        className={cn(
+          'space-y-2 text-xs',
+          isBarca ? 'text-white/80' : 'text-muted-foreground',
+        )}
+      >
         <EventDateTime event={event} />
         {event.allDay && (
           <div className="flex items-center gap-2">
             <Calendar className="h-3 w-3" />
-            <span className="rounded-md bg-blue-100 px-2 py-0.5 text-blue-700 dark:bg-blue-900/30 dark:text-blue-300">
+            <span className="rounded-md px-2 py-0.5 text-muted-foreground">
               終日
             </span>
           </div>
         )}
-        {event.category && (
+        {categoryLabel && (
           <div className="flex items-center gap-2">
-            <span
-              className={cn(
-                'rounded-md px-2 py-0.5',
-                isBarca
-                  ? BARCELONA_MATCH_TEXT_COLOR
-                  : EVENT_CATEGORY_COLORS[event.category],
-              )}
-              style={
-                isBarca
-                  ? {
-                      background: getBarcelonaMatchBackground(isDark),
-                    }
-                  : undefined
-              }
-            >
-              {EVENT_CATEGORY_LABELS[event.category]}
+            <span className="rounded-md px-2 py-0.5 text-muted-foreground">
+              {categoryLabel}
             </span>
           </div>
         )}
         {event.description && (
           <div className="pt-1">
-            <p className="text-xs text-stone-600 dark:text-stone-400">
-              {event.description}
-            </p>
+            <Accordion type="single" collapsible className="w-full">
+              <AccordionItem value="description" className="border-none">
+                <AccordionTrigger
+                  className={cn(
+                    'py-1 text-xs hover:no-underline',
+                    isBarca ? 'text-white/80' : 'text-muted-foreground',
+                  )}
+                >
+                  <div className="flex items-center gap-1">
+                    <FileText className="h-3 w-3 shrink-0" />
+                    <span>説明</span>
+                  </div>
+                </AccordionTrigger>
+                <AccordionContent className="pt-1 pb-0">
+                  <div
+                    className={cn(
+                      'text-xs whitespace-pre-wrap break-words',
+                      isBarca ? 'text-white/80' : 'text-stone-600 dark:text-stone-400',
+                    )}
+                  >
+                    {event.description}
+                  </div>
+                </AccordionContent>
+              </AccordionItem>
+            </Accordion>
           </div>
         )}
       </div>

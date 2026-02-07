@@ -14,6 +14,7 @@ async function initializeAllTables(): Promise<void> {
       title TEXT NOT NULL,
       year INTEGER NOT NULL,
       achieved INTEGER NOT NULL DEFAULT 0,
+      checklist TEXT,
       created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
       updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
     )
@@ -26,6 +27,7 @@ async function initializeAllTables(): Promise<void> {
       year INTEGER NOT NULL,
       month INTEGER NOT NULL,
       achieved INTEGER NOT NULL DEFAULT 0,
+      checklist TEXT,
       created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
       updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
     )
@@ -51,7 +53,7 @@ async function initializeAllTables(): Promise<void> {
       execution_date DATE,
       completed INTEGER NOT NULL DEFAULT 0,
       "order" INTEGER NOT NULL DEFAULT 0,
-      actual_time INTEGER NOT NULL DEFAULT 0,
+      scheduled_time TEXT,
       created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
       updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
     )
@@ -66,6 +68,8 @@ async function initializeAllTables(): Promise<void> {
       all_day INTEGER NOT NULL DEFAULT 0,
       category TEXT,
       description TEXT,
+      recurrence_rule TEXT,
+      recurrence_end_date TEXT,
       created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
       updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
     )
@@ -100,6 +104,7 @@ async function initializeAllTables(): Promise<void> {
       title TEXT NOT NULL,
       category_id INTEGER,
       target_year INTEGER,
+      target_month INTEGER,
       achieved_date DATE,
       completed INTEGER NOT NULL DEFAULT 0,
       "order" INTEGER NOT NULL DEFAULT 0,
@@ -145,7 +150,9 @@ async function initializeAllTables(): Promise<void> {
       name TEXT NOT NULL,
       category_id INTEGER,
       target_year INTEGER,
+      target_month INTEGER,
       price INTEGER,
+      purchased INTEGER NOT NULL DEFAULT 0,
       "order" INTEGER NOT NULL DEFAULT 0,
       created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
       updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,
@@ -244,6 +251,7 @@ async function initializeAllTables(): Promise<void> {
       title TEXT NOT NULL,
       year INTEGER NOT NULL,
       achieved INTEGER NOT NULL DEFAULT 0,
+      checklist TEXT,
       created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
       updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,
       UNIQUE(year)
@@ -257,6 +265,7 @@ async function initializeAllTables(): Promise<void> {
       year INTEGER NOT NULL,
       month INTEGER NOT NULL,
       achieved INTEGER NOT NULL DEFAULT 0,
+      checklist TEXT,
       created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
       updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,
       UNIQUE(year, month)
@@ -298,6 +307,7 @@ async function initializeAllTables(): Promise<void> {
       completed INTEGER NOT NULL DEFAULT 0,
       "order" INTEGER NOT NULL DEFAULT 0,
       actual_time INTEGER NOT NULL DEFAULT 0,
+      memo TEXT,
       created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
       updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,
       FOREIGN KEY (project_id) REFERENCES dev_projects(id) ON DELETE SET NULL
@@ -311,51 +321,72 @@ async function initializeAllTables(): Promise<void> {
     'CREATE UNIQUE INDEX IF NOT EXISTS dev_tasks_order_unique_notnull ON dev_tasks (project_id, type, "order") WHERE project_id IS NOT NULL',
   )
 
-  const taskColumnRows = await db.select<{ name: string }[]>(
-    "SELECT name FROM pragma_table_info('tasks')",
-  )
+  const taskColumnRows = await db.select<
+    { cid: number; name: string; type: string; notnull: number; dflt_value: string | null; pk: number }[]
+  >("SELECT * FROM pragma_table_info('tasks')")
   const taskColumns = new Set(taskColumnRows.map((r) => r.name))
+  const scheduledTimeColumn = taskColumnRows.find(
+    (r) => r.name === 'scheduled_time',
+  )
 
-  if (taskColumns.has('estimated_time')) {
-    await db.execute('ALTER TABLE tasks RENAME TO tasks_old')
+  if (taskColumns.has('actual_time') && !taskColumns.has('estimated_time') && !taskColumns.has('scheduled_time')) {
+    await db.execute('ALTER TABLE tasks RENAME COLUMN actual_time TO estimated_time')
+  }
 
-    await db.execute(`
-      CREATE TABLE tasks (
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
-        title TEXT NOT NULL,
-        execution_date DATE,
-        completed INTEGER NOT NULL DEFAULT 0,
-        "order" INTEGER NOT NULL DEFAULT 0,
-        actual_time INTEGER NOT NULL DEFAULT 0,
-        created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-        updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
+  if (taskColumns.has('estimated_time') && !taskColumns.has('scheduled_time')) {
+    await db.execute('ALTER TABLE tasks RENAME COLUMN estimated_time TO scheduled_time')
+  }
+
+  if (!taskColumns.has('scheduled_time')) {
+    await db.execute('ALTER TABLE tasks ADD COLUMN scheduled_time TEXT')
+  } else if (
+    scheduledTimeColumn &&
+    scheduledTimeColumn.notnull === 1
+  ) {
+    const hasMemo = taskColumns.has('memo')
+    try {
+      await db.execute('ALTER TABLE tasks RENAME TO tasks_old')
+      await db.execute(`
+        CREATE TABLE tasks (
+          id INTEGER PRIMARY KEY AUTOINCREMENT,
+          title TEXT NOT NULL,
+          execution_date DATE,
+          completed INTEGER NOT NULL DEFAULT 0,
+          "order" INTEGER NOT NULL DEFAULT 0,
+          scheduled_time TEXT,
+          recurrence_rule TEXT,
+          recurrence_days_of_week TEXT,
+          recurrence_day_of_month INTEGER,
+          recurrence_end_date TEXT,
+          recurrence_excluded_dates TEXT,
+          ${hasMemo ? 'memo TEXT,' : ''}
+          created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+          updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
+        )
+      `)
+      await db.execute(`
+        INSERT INTO tasks (
+          id, title, execution_date, completed, "order", scheduled_time,
+          recurrence_rule, recurrence_days_of_week, recurrence_day_of_month,
+          recurrence_end_date, recurrence_excluded_dates${hasMemo ? ', memo' : ''}, created_at, updated_at
+        )
+        SELECT 
+          id, title, execution_date, completed, "order", scheduled_time,
+          recurrence_rule, recurrence_days_of_week, recurrence_day_of_month,
+          recurrence_end_date, recurrence_excluded_dates${hasMemo ? ', memo' : ''}, created_at, updated_at
+        FROM tasks_old
+      `)
+      await db.execute('DROP TABLE tasks_old')
+    } catch (err) {
+      const oldTableExists = await db.select<{ name: string }[]>(
+        "SELECT name FROM sqlite_master WHERE type='table' AND name='tasks_old'",
       )
-    `)
-
-    await db.execute(
-      `INSERT INTO tasks (
-        id,
-        title,
-        execution_date,
-        completed,
-        "order",
-        actual_time,
-        created_at,
-        updated_at
-      )
-      SELECT
-        id,
-        title,
-        execution_date,
-        completed,
-        "order",
-        actual_time,
-        created_at,
-        updated_at
-      FROM tasks_old`,
-    )
-
-    await db.execute('DROP TABLE tasks_old')
+      if (oldTableExists.length > 0) {
+        await db.execute('DROP TABLE IF EXISTS tasks')
+        await db.execute('ALTER TABLE tasks_old RENAME TO tasks')
+      }
+      throw err
+    }
   }
 
   const wishlistItemColumnRows = await db.select<{ name: string }[]>(
@@ -363,47 +394,16 @@ async function initializeAllTables(): Promise<void> {
   )
   const wishlistItemColumns = new Set(wishlistItemColumnRows.map((r) => r.name))
 
-  if (wishlistItemColumns.has('purchased')) {
-    await db.execute('ALTER TABLE wishlist_items RENAME TO wishlist_items_old')
-
-    await db.execute(`
-      CREATE TABLE wishlist_items (
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
-        name TEXT NOT NULL,
-        category_id INTEGER,
-        target_year INTEGER,
-        price INTEGER,
-        "order" INTEGER NOT NULL DEFAULT 0,
-        created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-        updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-        FOREIGN KEY (category_id) REFERENCES wishlist_categories(id) ON DELETE SET NULL
-      )
-    `)
-
+  if (!wishlistItemColumns.has('target_month')) {
     await db.execute(
-      `INSERT INTO wishlist_items (
-        id,
-        name,
-        category_id,
-        target_year,
-        price,
-        "order",
-        created_at,
-        updated_at
-      )
-      SELECT
-        id,
-        name,
-        category_id,
-        target_year,
-        price,
-        "order",
-        created_at,
-        updated_at
-      FROM wishlist_items_old`,
+      'ALTER TABLE wishlist_items ADD COLUMN target_month INTEGER',
     )
+  }
 
-    await db.execute('DROP TABLE wishlist_items_old')
+  if (!wishlistItemColumns.has('purchased')) {
+    await db.execute(
+      'ALTER TABLE wishlist_items ADD COLUMN purchased INTEGER NOT NULL DEFAULT 0',
+    )
   }
 
   const devTaskColumnRows = await db.select<{ name: string }[]>(
@@ -424,6 +424,7 @@ async function initializeAllTables(): Promise<void> {
         completed INTEGER NOT NULL DEFAULT 0,
         "order" INTEGER NOT NULL DEFAULT 0,
         actual_time INTEGER NOT NULL DEFAULT 0,
+        memo TEXT,
         created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
         updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,
         FOREIGN KEY (project_id) REFERENCES dev_projects(id) ON DELETE SET NULL
@@ -450,6 +451,7 @@ async function initializeAllTables(): Promise<void> {
         completed,
         "order",
         actual_time,
+        memo,
         created_at,
         updated_at
       )
@@ -462,6 +464,7 @@ async function initializeAllTables(): Promise<void> {
         completed,
         "order",
         actual_time,
+        NULL as memo,
         created_at,
         updated_at
       FROM dev_tasks_old`,
@@ -474,6 +477,10 @@ async function initializeAllTables(): Promise<void> {
     await db.execute(
       "ALTER TABLE dev_tasks ADD COLUMN type TEXT NOT NULL DEFAULT 'inbox'",
     )
+  }
+
+  if (!devTaskColumns.has('memo')) {
+    await db.execute('ALTER TABLE dev_tasks ADD COLUMN memo TEXT')
   }
 
   const yearlyGoalColumnRows = await db.select<{ name: string }[]>(
@@ -708,6 +715,166 @@ async function initializeAllTables(): Promise<void> {
     await db.execute(
       'ALTER TABLE user_settings ADD COLUMN initial_balance INTEGER',
     )
+  }
+
+  if (!userSettingsColumns.has('default_habit_view')) {
+    await db.execute(
+      "ALTER TABLE user_settings ADD COLUMN default_habit_view TEXT DEFAULT 'month'",
+    )
+  }
+
+  const eventsColumnRows = await db.select<{ name: string }[]>(
+    "SELECT name FROM pragma_table_info('events')",
+  )
+  const eventsColumns = new Set(eventsColumnRows.map((r) => r.name))
+  if (!eventsColumns.has('recurrence_rule')) {
+    await db.execute(
+      'ALTER TABLE events ADD COLUMN recurrence_rule TEXT',
+    )
+  }
+  if (!eventsColumns.has('recurrence_end_date')) {
+    await db.execute(
+      'ALTER TABLE events ADD COLUMN recurrence_end_date TEXT',
+    )
+  }
+  if (!eventsColumns.has('recurrence_day_of_week')) {
+    await db.execute(
+      'ALTER TABLE events ADD COLUMN recurrence_day_of_week INTEGER',
+    )
+  }
+  if (!eventsColumns.has('recurrence_day_of_month')) {
+    await db.execute(
+      'ALTER TABLE events ADD COLUMN recurrence_day_of_month INTEGER',
+    )
+  }
+  if (!eventsColumns.has('recurrence_days_of_week')) {
+    await db.execute(
+      'ALTER TABLE events ADD COLUMN recurrence_days_of_week TEXT',
+    )
+  }
+  if (!eventsColumns.has('recurrence_excluded_dates')) {
+    await db.execute(
+      'ALTER TABLE events ADD COLUMN recurrence_excluded_dates TEXT',
+    )
+  }
+
+  await db.execute(
+    "UPDATE events SET category = 'barca' WHERE category = 'sports' AND title LIKE '%FC Barcelona%'",
+  )
+
+  const tasksColumnRows = await db.select<{ name?: string; NAME?: string }[]>(
+    "SELECT name FROM pragma_table_info('tasks')",
+  )
+  const tasksColumns = new Set(
+    tasksColumnRows.map((r) => r.name ?? r.NAME ?? ''),
+  )
+  if (!tasksColumns.has('recurrence_rule')) {
+    await db.execute('ALTER TABLE tasks ADD COLUMN recurrence_rule TEXT')
+  }
+  if (!tasksColumns.has('recurrence_days_of_week')) {
+    await db.execute('ALTER TABLE tasks ADD COLUMN recurrence_days_of_week TEXT')
+  }
+  if (!tasksColumns.has('recurrence_day_of_month')) {
+    await db.execute(
+      'ALTER TABLE tasks ADD COLUMN recurrence_day_of_month INTEGER',
+    )
+  }
+  if (!tasksColumns.has('recurrence_end_date')) {
+    await db.execute('ALTER TABLE tasks ADD COLUMN recurrence_end_date TEXT')
+  }
+  if (!tasksColumns.has('recurrence_excluded_dates')) {
+    await db.execute('ALTER TABLE tasks ADD COLUMN recurrence_excluded_dates TEXT')
+  }
+
+  try {
+    const bucketListItemsColumnRows = await db.select<
+      { name?: string; NAME?: string }[]
+    >("SELECT name FROM pragma_table_info('bucket_list_items')")
+    const names = bucketListItemsColumnRows.map(
+      (r) => r.name ?? r.NAME ?? '',
+    )
+    const bucketListItemsColumns = new Set(names)
+    if (!bucketListItemsColumns.has('target_month')) {
+      await db.execute(
+        'ALTER TABLE bucket_list_items ADD COLUMN target_month INTEGER',
+      )
+    }
+  } catch {
+    try {
+      await db.execute(
+        'ALTER TABLE bucket_list_items ADD COLUMN target_month INTEGER',
+      )
+    } catch (alterErr) {
+      const msg = alterErr instanceof Error ? alterErr.message : String(alterErr)
+      if (!msg.includes('duplicate column name')) {
+        console.error('[DB] bucket_list_items target_month migration:', alterErr)
+        throw alterErr
+      }
+    }
+  }
+
+  try {
+    const yearlyGoalColumnRows = await db.select<{ name: string }[]>(
+      "SELECT name FROM pragma_table_info('yearly_goals')",
+    )
+    const yearlyGoalColumns = new Set(yearlyGoalColumnRows.map((r) => r.name))
+    if (!yearlyGoalColumns.has('checklist')) {
+      await db.execute('ALTER TABLE yearly_goals ADD COLUMN checklist TEXT')
+    }
+  } catch (alterErr) {
+    const msg = alterErr instanceof Error ? alterErr.message : String(alterErr)
+    if (!msg.includes('duplicate column name')) {
+      console.error('[DB] yearly_goals checklist migration:', alterErr)
+      throw alterErr
+    }
+  }
+
+  try {
+    const monthlyGoalColumnRows = await db.select<{ name: string }[]>(
+      "SELECT name FROM pragma_table_info('monthly_goals')",
+    )
+    const monthlyGoalColumns = new Set(monthlyGoalColumnRows.map((r) => r.name))
+    if (!monthlyGoalColumns.has('checklist')) {
+      await db.execute('ALTER TABLE monthly_goals ADD COLUMN checklist TEXT')
+    }
+  } catch (alterErr) {
+    const msg = alterErr instanceof Error ? alterErr.message : String(alterErr)
+    if (!msg.includes('duplicate column name')) {
+      console.error('[DB] monthly_goals checklist migration:', alterErr)
+      throw alterErr
+    }
+  }
+
+  try {
+    const devYearlyGoalColumnRows = await db.select<{ name: string }[]>(
+      "SELECT name FROM pragma_table_info('dev_yearly_goals')",
+    )
+    const devYearlyGoalColumns = new Set(devYearlyGoalColumnRows.map((r) => r.name))
+    if (!devYearlyGoalColumns.has('checklist')) {
+      await db.execute('ALTER TABLE dev_yearly_goals ADD COLUMN checklist TEXT')
+    }
+  } catch (alterErr) {
+    const msg = alterErr instanceof Error ? alterErr.message : String(alterErr)
+    if (!msg.includes('duplicate column name')) {
+      console.error('[DB] dev_yearly_goals checklist migration:', alterErr)
+      throw alterErr
+    }
+  }
+
+  try {
+    const devMonthlyGoalColumnRows = await db.select<{ name: string }[]>(
+      "SELECT name FROM pragma_table_info('dev_monthly_goals')",
+    )
+    const devMonthlyGoalColumns = new Set(devMonthlyGoalColumnRows.map((r) => r.name))
+    if (!devMonthlyGoalColumns.has('checklist')) {
+      await db.execute('ALTER TABLE dev_monthly_goals ADD COLUMN checklist TEXT')
+    }
+  } catch (alterErr) {
+    const msg = alterErr instanceof Error ? alterErr.message : String(alterErr)
+    if (!msg.includes('duplicate column name')) {
+      console.error('[DB] dev_monthly_goals checklist migration:', alterErr)
+      throw alterErr
+    }
   }
 
   const oldTableRows = await db.select<{ name: string }[]>(

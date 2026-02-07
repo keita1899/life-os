@@ -58,7 +58,7 @@ export default function SettingsPage() {
       {isLoading ? (
         <Loading />
       ) : (
-        <Card>
+        <Card className="border-stone-200/60 dark:border-stone-700/40">
           <CardHeader>
             <CardTitle>ユーザー設定</CardTitle>
           </CardHeader>

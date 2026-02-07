@@ -9,6 +9,7 @@ interface BucketListDialogProps {
   onOpenChange: (open: boolean) => void
   onSubmit: (input: CreateBucketListItemInput) => Promise<void>
   item?: BucketListItem
+  defaultCategoryId?: string
 }
 
 export const BucketListDialog = ({
@@ -16,6 +17,7 @@ export const BucketListDialog = ({
   onOpenChange,
   onSubmit,
   item,
+  defaultCategoryId,
 }: BucketListDialogProps) => {
   return (
     <FormDialog
@@ -28,6 +30,11 @@ export const BucketListDialog = ({
         edit: 'やりたいことを編集',
       }}
       formComponent={BucketListItemForm}
+      formProps={
+        item == null && defaultCategoryId != null
+          ? { defaultCategoryId }
+          : undefined
+      }
     />
   )
 }

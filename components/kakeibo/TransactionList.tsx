@@ -1,5 +1,6 @@
 'use client'
 
+import { EmptyState } from '@/components/ui/empty-state'
 import { TransactionItem } from './TransactionItem'
 import type { Transaction } from '@/lib/types/transaction'
 import { useTransactionCategories } from '@/hooks/useTransactionCategories'
@@ -31,11 +32,7 @@ export function TransactionList({
   }, [incomeCategories.categories, expenseCategories.categories])
 
   if (transactions.length === 0) {
-    return (
-      <div className="rounded-lg border border-stone-200 bg-stone-50/30 p-8 text-center dark:border-stone-800 dark:bg-stone-950/30">
-        <p className="text-muted-foreground">取引がありません</p>
-      </div>
-    )
+    return <EmptyState message="取引がありません" />
   }
 
   return (

@@ -1,7 +1,8 @@
 'use client'
 
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
-import { TaskList } from '@/components/tasks/TaskList'
+import { EmptyState } from '@/components/ui/empty-state'
+import { LogTaskItem } from '@/components/logs/LogTaskItem'
 import type { Task } from '@/lib/types/task'
 
 interface LogTasksSectionProps {
@@ -9,7 +10,6 @@ interface LogTasksSectionProps {
   onToggleCompletion?: (task: Task) => void
   onEdit?: (task: Task) => void
   onDelete?: (task: Task) => void
-  onUpdateExecutionDate?: (task: Task, executionDate: string | null) => void
 }
 
 export function LogTasksSection({
@@ -17,21 +17,28 @@ export function LogTasksSection({
   onToggleCompletion,
   onEdit,
   onDelete,
-  onUpdateExecutionDate,
 }: LogTasksSectionProps) {
   return (
-    <Card>
+    <Card className="border-stone-200/60 dark:border-stone-700/40">
       <CardHeader>
         <CardTitle className="text-lg">タスク</CardTitle>
       </CardHeader>
       <CardContent>
-        <TaskList
-          tasks={tasks}
-          onToggleCompletion={onToggleCompletion}
-          onEdit={onEdit}
-          onDelete={onDelete}
-          onUpdateExecutionDate={onUpdateExecutionDate}
-        />
+        {tasks.length === 0 ? (
+          <EmptyState message="タスクがありません" />
+        ) : (
+          <div className="space-y-2">
+            {tasks.map((task) => (
+              <LogTaskItem
+                key={task.id}
+                task={task}
+                onToggleCompletion={onToggleCompletion}
+                onEdit={onEdit}
+                onDelete={onDelete}
+              />
+            ))}
+          </div>
+        )}
       </CardContent>
     </Card>
   )

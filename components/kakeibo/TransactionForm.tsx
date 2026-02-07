@@ -1,6 +1,8 @@
 'use client'
 
+import { useState, useEffect, useCallback } from 'react'
 import { useForm } from 'react-hook-form'
+import { useFormSubmitShortcut } from '@/hooks/useFormSubmitShortcut'
 import { zodResolver } from '@hookform/resolvers/zod'
 import * as z from 'zod'
 import {
@@ -14,18 +16,14 @@ import {
 import { Input } from '@/components/ui/input'
 import { Button } from '@/components/ui/button'
 import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select'
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from '@/components/ui/popover'
+import { ChevronDown, Plus } from 'lucide-react'
 import { formatDateForInput, getTodayDateString } from '@/lib/date/formats'
 import { cn } from '@/lib/utils'
 import { useTransactionCategories } from '@/hooks/useTransactionCategories'
-import { TransactionCategoryDialog } from './TransactionCategoryDialog'
-import { useState, useEffect } from 'react'
-import type { CreateTransactionCategoryInput } from '@/lib/types/transaction-category'
 
 const transactionFormSchema = z.object({
   date: z.string().min(1, '日付は必須です'),
@@ -91,48 +89,46 @@ export const TransactionForm = ({
   const { categories, createTransactionCategory } = useTransactionCategories(
     transactionType || 'expense',
   )
-  const [isCategoryDialogOpen, setIsCategoryDialogOpen] = useState(false)
-  const [selectedCategoryId, setSelectedCategoryId] = useState<string | null>(
-    null,
-  )
+  const [categoryComboboxOpen, setCategoryComboboxOpen] = useState(false)
+  const [categorySearchQuery, setCategorySearchQuery] = useState('')
 
   useEffect(() => {
     if (transactionType) {
       form.setValue('categoryId', '')
-      setSelectedCategoryId(null)
+      setCategoryComboboxOpen(false)
+      setCategorySearchQuery('')
     }
   }, [transactionType, form])
 
   const handleCategoryChange = (value: string) => {
-    if (value === 'add-new') {
-      setIsCategoryDialogOpen(true)
-    } else if (value === 'none') {
+    if (value === 'none') {
       form.setValue('categoryId', '')
-      setSelectedCategoryId(null)
     } else {
       form.setValue('categoryId', value)
-      setSelectedCategoryId(value)
     }
+    setCategoryComboboxOpen(false)
+    setCategorySearchQuery('')
   }
 
-  const handleCategoryCreate = async (input: CreateTransactionCategoryInput) => {
-    if (!transactionType) return
+  const handleCreateCategory = async () => {
+    const newName = categorySearchQuery.trim()
+    if (!newName) return
 
     try {
-      const newCategory = await createTransactionCategory(input)
-      const categoryIdStr = newCategory.id.toString()
-      form.setValue('categoryId', categoryIdStr)
-      setSelectedCategoryId(categoryIdStr)
-      setIsCategoryDialogOpen(false)
+      const newCategory = await createTransactionCategory({ name: newName })
+      form.setValue('categoryId', newCategory.id.toString())
+      setCategoryComboboxOpen(false)
+      setCategorySearchQuery('')
     } catch (err) {
       form.setError('categoryId', {
         type: 'server',
-        message: err instanceof Error ? err.message : 'カテゴリーの作成に失敗しました',
+        message:
+          err instanceof Error ? err.message : 'カテゴリーの作成に失敗しました',
       })
     }
   }
 
-  const handleSubmit = async (data: TransactionFormValues) => {
+  const handleSubmit = useCallback(async (data: TransactionFormValues) => {
     await onSubmit({
       date: data.date,
       type: data.type,
@@ -151,7 +147,12 @@ export const TransactionForm = ({
         isFixed: false,
       })
     }
-  }
+  }, [onSubmit, initialData, form])
+
+  useFormSubmitShortcut({
+    form,
+    onSubmit: handleSubmit,
+  })
 
   return (
     <Form {...form}>
@@ -252,34 +253,114 @@ export const TransactionForm = ({
           <FormField
             control={form.control}
             name="categoryId"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>カテゴリー（任意）</FormLabel>
-                <Select
-                  value={field.value || 'none'}
-                  onValueChange={handleCategoryChange}
-                >
-                  <FormControl>
-                    <SelectTrigger>
-                      <SelectValue placeholder="カテゴリーを選択（オプション）" />
-                    </SelectTrigger>
-                  </FormControl>
-                  <SelectContent position="item-aligned">
-                    <SelectItem value="none">未分類</SelectItem>
-                    {categories.map((category) => (
-                      <SelectItem
-                        key={category.id}
-                        value={category.id.toString()}
-                      >
-                        {category.name}
-                      </SelectItem>
-                    ))}
-                    <SelectItem value="add-new">+ カテゴリーを追加</SelectItem>
-                  </SelectContent>
-                </Select>
-                <FormMessage />
-              </FormItem>
-            )}
+            render={({ field }) => {
+              const selectedCategory = categories.find(
+                (c) => c.id.toString() === field.value,
+              )
+              const displayValue =
+                field.value !== '' && field.value !== undefined
+                  ? selectedCategory?.name ?? field.value
+                  : null
+              const filteredCategories =
+                categorySearchQuery.trim() === ''
+                  ? categories
+                  : categories.filter((c) =>
+                      c.name
+                        .toLowerCase()
+                        .includes(categorySearchQuery.trim().toLowerCase()),
+                    )
+              const exactMatch = categories.find(
+                (c) =>
+                  c.name.toLowerCase() ===
+                  categorySearchQuery.trim().toLowerCase(),
+              )
+              return (
+                <FormItem>
+                  <FormLabel>カテゴリー（任意）</FormLabel>
+                  <Popover
+                    open={categoryComboboxOpen}
+                    onOpenChange={setCategoryComboboxOpen}
+                  >
+                    <FormControl>
+                      <PopoverTrigger asChild>
+                        <Button
+                          type="button"
+                          variant="outline"
+                          role="combobox"
+                          aria-expanded={categoryComboboxOpen}
+                          className="h-10 w-full justify-between font-normal"
+                        >
+                          {displayValue ?? 'カテゴリーを選択（オプション）'}
+                          <ChevronDown className="h-4 w-4 shrink-0 opacity-50" />
+                        </Button>
+                      </PopoverTrigger>
+                    </FormControl>
+                    <PopoverContent
+                      className="z-[110] w-72 p-0"
+                      align="start"
+                      sideOffset={4}
+                    >
+                      <div className="p-2 border-b">
+                        <Input
+                          placeholder="検索..."
+                          value={categorySearchQuery}
+                          onChange={(e) =>
+                            setCategorySearchQuery(e.target.value)
+                          }
+                          className="h-9"
+                        />
+                      </div>
+                      <div className="min-h-[100px] max-h-[300px] overflow-y-auto p-1">
+                        {!exactMatch && categorySearchQuery.trim() !== '' && (
+                          <button
+                            type="button"
+                            className="w-full flex items-center rounded-sm px-2 py-1.5 text-left text-sm hover:bg-accent hover:text-accent-foreground border-b mb-1"
+                            onClick={handleCreateCategory}
+                          >
+                            <Plus className="mr-2 h-4 w-4" />
+                            カテゴリー「{categorySearchQuery.trim()}」を作成
+                          </button>
+                        )}
+                        {categorySearchQuery.trim() === '' && (
+                          <button
+                            type="button"
+                            className="w-full rounded-sm px-2 py-1.5 text-left text-sm hover:bg-accent hover:text-accent-foreground"
+                            onClick={() => handleCategoryChange('none')}
+                          >
+                            未分類
+                          </button>
+                        )}
+                        {filteredCategories.map((category) => (
+                          <button
+                            key={category.id}
+                            type="button"
+                            className="w-full rounded-sm px-2 py-1.5 text-left text-sm hover:bg-accent hover:text-accent-foreground"
+                            onClick={() =>
+                              handleCategoryChange(category.id.toString())
+                            }
+                          >
+                            {category.name}
+                          </button>
+                        ))}
+                        {filteredCategories.length === 0 &&
+                          categorySearchQuery.trim() !== '' && (
+                            <div className="py-6 text-center text-sm text-muted-foreground">
+                              該当するカテゴリーが見つかりません
+                            </div>
+                          )}
+                        {categories.length === 0 &&
+                          categorySearchQuery.trim() === '' && (
+                            <div className="py-6 text-center text-sm text-muted-foreground">
+                              カテゴリーがありません
+                            </div>
+                          )}
+                      </div>
+                    </PopoverContent>
+                  </Popover>
+                  <FormMessage />
+                </FormItem>
+              )
+            }}
           />
         )}
 
@@ -332,20 +413,11 @@ export const TransactionForm = ({
           )}
           <Button type="submit" disabled={form.formState.isSubmitting}>
             {form.formState.isSubmitting
-              ? `${submitLabel === '作成' ? '作成中...' : '更新中...'}`
+              ? `${submitLabel.startsWith('作成') ? '作成中...' : '更新中...'}`
               : submitLabel}
           </Button>
         </div>
       </form>
-
-      {transactionType && (
-        <TransactionCategoryDialog
-          open={isCategoryDialogOpen}
-          onOpenChange={setIsCategoryDialogOpen}
-          onSubmit={handleCategoryCreate}
-          type={transactionType}
-        />
-      )}
     </Form>
   )
 }

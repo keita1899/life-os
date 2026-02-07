@@ -1,8 +1,11 @@
 'use client'
 
+import { useEffect, useCallback } from 'react'
 import { useForm } from 'react-hook-form'
+import { useFormSubmitShortcut } from '@/hooks/useFormSubmitShortcut'
 import { zodResolver } from '@hookform/resolvers/zod'
 import * as z from 'zod'
+import { parseISO, getDay, getDate } from 'date-fns'
 import {
   Form,
   FormControl,
@@ -21,17 +24,36 @@ import {
   SelectValue,
 } from '@/components/ui/select'
 import { Textarea } from '@/components/ui/textarea'
+import { useAutoResizeTextarea } from '@/hooks/useAutoResizeTextarea'
+import { getTodayDateString } from '@/lib/date/formats'
 import { EVENT_CATEGORIES } from '@/lib/events/constants'
 import { getEventFormValues } from '@/lib/events/form'
-import type { Event, CreateEventInput, EventCategory } from '@/lib/types/event'
+import type {
+  Event,
+  CreateEventInput,
+  EventCategory,
+  RecurrenceRule,
+} from '@/lib/types/event'
 
 const EVENT_CATEGORY_VALUES = EVENT_CATEGORIES.filter(
-  (cat): cat is { value: NonNullable<EventCategory>; label: string } =>
+  (cat): cat is { value: NonNullable<EventCategory>; label: string; emoji: string } =>
     cat.value !== null,
 ).map((cat) => cat.value) as [
   NonNullable<EventCategory>,
   ...NonNullable<EventCategory>[],
 ]
+
+const RECURRENCE_OPTIONS: { value: '' | RecurrenceRule; label: string }[] = [
+  { value: '', label: 'なし' },
+  { value: 'daily', label: '毎日' },
+  { value: 'weekly', label: '毎週' },
+  { value: 'monthly', label: '毎月' },
+]
+
+const WEEKDAY_LABELS = ['日', '月', '火', '水', '木', '金', '土'] as const
+
+const DAYS_OF_MONTH = Array.from({ length: 31 }, (_, i) => i + 1)
+const LAST_DAY_OF_MONTH = 0
 
 const eventFormSchema = z.object({
   title: z.string().min(1, 'タイトルは必須です'),
@@ -42,6 +64,13 @@ const eventFormSchema = z.object({
   allDay: z.boolean(),
   category: z.enum(EVENT_CATEGORY_VALUES).nullable().optional(),
   description: z.string().optional(),
+  recurrenceRule: z
+    .enum(['daily', 'weekly', 'monthly'])
+    .nullable()
+    .optional(),
+  recurrenceDaysOfWeek: z.array(z.number().min(0).max(6)).optional(),
+  recurrenceDayOfMonth: z.number().min(0).max(31).nullable().optional(),
+  recurrenceEndDate: z.string().optional(),
 })
 
 type EventFormValues = z.infer<typeof eventFormSchema>
@@ -50,6 +79,8 @@ interface EventFormProps {
   onSubmit: (data: CreateEventInput) => Promise<void>
   onCancel?: () => void
   initialData?: Event
+  defaultTitle?: string
+  defaultStartDate?: string
   submitLabel?: string
 }
 
@@ -57,36 +88,90 @@ export const EventForm = ({
   onSubmit,
   onCancel,
   initialData,
+  defaultTitle,
+  defaultStartDate,
   submitLabel = '作成',
 }: EventFormProps) => {
-  const getTodayDate = () => {
-    const today = new Date()
-    const year = today.getFullYear()
-    const month = String(today.getMonth() + 1).padStart(2, '0')
-    const day = String(today.getDate()).padStart(2, '0')
-    return `${year}-${month}-${day}`
-  }
+  const baseValues = getEventFormValues(initialData) as EventFormValues
+  const values =
+    !initialData && (defaultTitle || defaultStartDate)
+      ? {
+          ...baseValues,
+          ...(defaultTitle && { title: defaultTitle }),
+          ...(defaultStartDate && { startDate: defaultStartDate }),
+        }
+      : baseValues
 
   const form = useForm<EventFormValues>({
     resolver: zodResolver(eventFormSchema),
-    values: getEventFormValues(initialData) as EventFormValues,
+    values,
   })
 
   const allDay = form.watch('allDay')
+  const recurrenceRule = form.watch('recurrenceRule')
+  const startDate = form.watch('startDate')
+  const descriptionValue = form.watch('description')
 
-  const handleSubmit = async (data: EventFormValues) => {
+  const {
+    textareaRef: descriptionTextareaRef,
+    handleChange: handleDescriptionChange,
+  } = useAutoResizeTextarea(descriptionValue)
+
+  useEffect(() => {
+    if (!startDate) return
+    const date = parseISO(startDate)
+    if (recurrenceRule === 'weekly') {
+      const current = form.getValues('recurrenceDaysOfWeek')
+      if (!current?.length) {
+        form.setValue('recurrenceDaysOfWeek', [getDay(date)])
+      }
+    }
+    if (recurrenceRule === 'monthly') {
+      const currentDom = form.getValues('recurrenceDayOfMonth')
+      if (currentDom === null || currentDom === undefined) {
+        form.setValue('recurrenceDayOfMonth', getDate(date))
+      }
+    }
+  }, [recurrenceRule, startDate, form])
+
+  const toggleRecurrenceDayOfWeek = (day: number) => {
+    const current = form.getValues('recurrenceDaysOfWeek') ?? []
+    const next = current.includes(day)
+      ? current.filter((d) => d !== day)
+      : [...current, day].sort((a, b) => a - b)
+    form.setValue('recurrenceDaysOfWeek', next)
+  }
+
+  const handleSubmit = useCallback(async (data: EventFormValues) => {
     const startDate =
-      data.startDate && data.startDate !== '' ? data.startDate : getTodayDate()
+      data.startDate && data.startDate !== '' ? data.startDate : getTodayDateString()
 
     const startDatetime = data.allDay
       ? `${startDate}T00:00:00`
       : `${startDate}T${data.startTime || '00:00'}:00`
+    const endDateForEnd = data.endDate?.trim() || startDate
     const endDatetime =
-      data.endDate && data.endDate !== ''
+      data.endDate?.trim() || (data.endTime?.trim() && !data.allDay)
         ? data.allDay
-          ? `${data.endDate}T23:59:59`
-          : `${data.endDate}T${data.endTime || '00:00'}:00`
+          ? `${endDateForEnd}T23:59:59`
+          : `${endDateForEnd}T${data.endTime?.trim() || '00:00'}:00`
         : null
+
+    const recurrenceRule: RecurrenceRule | null =
+      data.recurrenceRule ?? null
+    const recurrenceEndDate =
+      data.recurrenceEndDate && data.recurrenceEndDate.trim() !== ''
+        ? data.recurrenceEndDate
+        : null
+
+    const recurrenceDaysOfWeek =
+      recurrenceRule === 'weekly'
+        ? (data.recurrenceDaysOfWeek?.length
+            ? data.recurrenceDaysOfWeek
+            : null)
+        : null
+    const recurrenceDayOfMonth =
+      recurrenceRule === 'monthly' ? (data.recurrenceDayOfMonth ?? null) : null
 
     try {
       await onSubmit({
@@ -96,11 +181,20 @@ export const EventForm = ({
         allDay: data.allDay,
         category: data.category || null,
         description: data.description || null,
+        recurrenceRule,
+        recurrenceDaysOfWeek,
+        recurrenceDayOfMonth,
+        recurrenceEndDate,
       })
     } catch (error) {
       throw error
     }
-  }
+  }, [onSubmit])
+
+  useFormSubmitShortcut({
+    form,
+    onSubmit: handleSubmit,
+  })
 
   return (
     <Form {...form}>
@@ -144,7 +238,7 @@ export const EventForm = ({
                       key={category.value || 'none'}
                       value={category.value || 'none'}
                     >
-                      {category.label}
+                      {category.emoji ? `${category.emoji} ${category.label}` : category.label}
                     </SelectItem>
                   ))}
                 </SelectContent>
@@ -238,20 +332,148 @@ export const EventForm = ({
 
         <FormField
           control={form.control}
-          name="description"
+          name="recurrenceRule"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>説明</FormLabel>
+              <FormLabel>繰り返し</FormLabel>
+              <Select
+                onValueChange={(value) =>
+                  field.onChange(value === 'none' ? null : value)
+                }
+                value={field.value ?? 'none'}
+              >
+                <FormControl>
+                  <SelectTrigger>
+                    <SelectValue />
+                  </SelectTrigger>
+                </FormControl>
+                <SelectContent>
+                  {RECURRENCE_OPTIONS.map((opt) => (
+                    <SelectItem
+                      key={opt.value || 'none'}
+                      value={opt.value || 'none'}
+                    >
+                      {opt.label}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+
+        {recurrenceRule === 'weekly' && (
+          <FormField
+            control={form.control}
+            name="recurrenceDaysOfWeek"
+            render={() => (
+              <FormItem>
+                <FormLabel>曜日</FormLabel>
+                <FormControl>
+                  <div className="flex flex-wrap gap-2">
+                    {WEEKDAY_LABELS.map((label, i) => {
+                      const selected =
+                        (form.watch('recurrenceDaysOfWeek') ?? []).indexOf(i) >=
+                        0
+                      return (
+                        <Button
+                          key={i}
+                          type="button"
+                          variant={selected ? 'default' : 'outline'}
+                          size="sm"
+                          onClick={() => toggleRecurrenceDayOfWeek(i)}
+                        >
+                          {label}
+                        </Button>
+                      )
+                    })}
+                  </div>
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+        )}
+
+        {recurrenceRule === 'monthly' && (
+          <FormField
+            control={form.control}
+            name="recurrenceDayOfMonth"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>日付</FormLabel>
+                <FormControl>
+                  <div className="space-y-2">
+                    <div className="grid grid-cols-8 gap-2">
+                      {DAYS_OF_MONTH.map((day) => (
+                        <Button
+                          key={day}
+                          type="button"
+                          variant={field.value === day ? 'default' : 'outline'}
+                          size="sm"
+                          className="min-w-0 px-2"
+                          onClick={() => field.onChange(day)}
+                        >
+                          {day}
+                        </Button>
+                      ))}
+                    </div>
+                    <Button
+                      type="button"
+                      variant={
+                        field.value === LAST_DAY_OF_MONTH ? 'default' : 'outline'
+                      }
+                      size="sm"
+                      onClick={() => field.onChange(LAST_DAY_OF_MONTH)}
+                    >
+                      月末
+                    </Button>
+                  </div>
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+        )}
+
+        <FormField
+          control={form.control}
+          name="recurrenceEndDate"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>繰り返し終了日（任意）</FormLabel>
               <FormControl>
-                <Textarea
-                  placeholder="説明を入力（任意）"
-                  {...field}
-                  rows={3}
-                />
+                <Input type="date" {...field} value={field.value ?? ''} />
               </FormControl>
               <FormMessage />
             </FormItem>
           )}
+        />
+
+        <FormField
+          control={form.control}
+          name="description"
+          render={({ field }) => {
+            const { ref, ...fieldProps } = field
+            return (
+              <FormItem>
+                <FormLabel>説明</FormLabel>
+                <FormControl>
+                  <Textarea
+                    ref={descriptionTextareaRef}
+                    placeholder="説明を入力（任意）"
+                    {...fieldProps}
+                    onChange={(e) => {
+                      field.onChange(e)
+                      handleDescriptionChange(e)
+                    }}
+                  />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )
+          }}
         />
 
         <div className="flex justify-end gap-2">
@@ -262,7 +484,7 @@ export const EventForm = ({
           )}
           <Button type="submit" disabled={form.formState.isSubmitting}>
             {form.formState.isSubmitting
-              ? `${submitLabel === '作成' ? '作成中...' : '更新中...'}`
+              ? `${submitLabel.startsWith('作成') ? '作成中...' : '更新中...'}`
               : submitLabel}
           </Button>
         </div>

@@ -13,6 +13,7 @@ interface DbUserSettings {
   evening_review_time: string | null
   barcelona_ical_url: string | null
   initial_balance: number | null
+  default_habit_view: string
   created_at: string
   updated_at: string
 }
@@ -26,6 +27,12 @@ function mapDbUserSettingsToUserSettings(
       ? dbSettings.default_calendar_view
       : 'month'
 
+  const validatedDefaultHabitView: 'month' | 'week' =
+    dbSettings.default_habit_view === 'month' ||
+    dbSettings.default_habit_view === 'week'
+      ? dbSettings.default_habit_view
+      : 'month'
+
   return {
     id: dbSettings.id,
     birthday: dbSettings.birthday,
@@ -35,6 +42,7 @@ function mapDbUserSettingsToUserSettings(
     eveningReviewTime: dbSettings.evening_review_time,
     barcelonaIcalUrl: dbSettings.barcelona_ical_url ?? null,
     initialBalance: dbSettings.initial_balance ?? null,
+    defaultHabitView: validatedDefaultHabitView,
     createdAt: dbSettings.created_at,
     updatedAt: dbSettings.updated_at,
   }
@@ -87,7 +95,7 @@ export async function updateUserSettings(
     } else {
       currentSettings = mapDbUserSettingsToUserSettings(result[0])
     }
-  } catch (err) {
+  } catch {
     currentSettings = await getUserSettings()
   }
 
@@ -127,6 +135,11 @@ export async function updateUserSettings(
   if (input.initialBalance !== undefined) {
     updateFields.push('initial_balance = ?')
     updateValues.push(input.initialBalance ?? null)
+  }
+
+  if (input.defaultHabitView !== undefined) {
+    updateFields.push('default_habit_view = ?')
+    updateValues.push(input.defaultHabitView)
   }
 
   if (updateFields.length === 0) {

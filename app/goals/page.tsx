@@ -1,7 +1,6 @@
 'use client'
 
-import { useState, useMemo } from 'react'
-import { CheckCircle2 } from 'lucide-react'
+import { useState } from 'react'
 import { useGoals } from '@/hooks/useGoals'
 import { YearlyGoalDialog } from '@/components/goals/YearlyGoalDialog'
 import { MonthlyGoalDialog } from '@/components/goals/MonthlyGoalDialog'
@@ -32,8 +31,6 @@ const GoalsPage = () => {
     createMonthlyGoal,
     deleteYearlyGoal,
     deleteMonthlyGoal,
-    toggleYearlyGoalAchievement,
-    toggleMonthlyGoalAchievement,
     refreshGoals,
   } = useGoals(selectedYear)
   const [isYearlyDialogOpen, setIsYearlyDialogOpen] = useState(false)
@@ -82,6 +79,7 @@ const GoalsPage = () => {
       await updateYearlyGoal(editingYearlyGoal.id, {
         title: input.title,
         year: input.year,
+        checklist: input.checklist,
       })
       await refreshGoals()
       setIsYearlyDialogOpen(false)
@@ -101,6 +99,7 @@ const GoalsPage = () => {
         title: input.title,
         year: input.year,
         month: input.month,
+        checklist: input.checklist,
       })
       await refreshGoals()
       setIsMonthlyDialogOpen(false)
@@ -169,31 +168,52 @@ const GoalsPage = () => {
     })
   }
 
-  const handleToggleYearlyGoalAchievement = async (goal: YearlyGoal) => {
+  const handleToggleYearlyGoalChecklistItem = async (
+    goal: YearlyGoal,
+    itemId: string,
+    completed: boolean,
+  ) => {
     try {
       setOperationError(null)
-      await toggleYearlyGoalAchievement(goal.id)
+      const updatedChecklist = goal.checklist.map((item) =>
+        item.id === itemId ? { ...item, completed } : item,
+      )
+      await updateYearlyGoal(goal.id, {
+        checklist: updatedChecklist,
+      })
+      await refreshGoals()
     } catch (err) {
       setOperationError(
         err instanceof Error
           ? err.message
-          : '年間目標の達成状態の更新に失敗しました',
+          : 'チェックリスト項目の更新に失敗しました',
       )
     }
   }
 
-  const handleToggleMonthlyGoalAchievement = async (goal: MonthlyGoal) => {
+  const handleToggleMonthlyGoalChecklistItem = async (
+    goal: MonthlyGoal,
+    itemId: string,
+    completed: boolean,
+  ) => {
     try {
       setOperationError(null)
-      await toggleMonthlyGoalAchievement(goal.id)
+      const updatedChecklist = goal.checklist.map((item) =>
+        item.id === itemId ? { ...item, completed } : item,
+      )
+      await updateMonthlyGoal(goal.id, {
+        checklist: updatedChecklist,
+      })
+      await refreshGoals()
     } catch (err) {
       setOperationError(
         err instanceof Error
           ? err.message
-          : '月間目標の達成状態の更新に失敗しました',
+          : 'チェックリスト項目の更新に失敗しました',
       )
     }
   }
+
 
   const handleYearlyDialogClose = (open: boolean) => {
     setIsYearlyDialogOpen(open)
@@ -210,29 +230,6 @@ const GoalsPage = () => {
   }
 
   const { mode } = useMode()
-
-  const activeYearlyGoals = useMemo(
-    () => yearlyGoals.filter((goal) => !goal.achieved),
-    [yearlyGoals],
-  )
-
-  const activeMonthlyGoals = useMemo(
-    () => allMonthlyGoals.filter((goal) => !goal.achieved),
-    [allMonthlyGoals],
-  )
-
-  const achievedYearlyGoals = useMemo(
-    () => yearlyGoals.filter((goal) => goal.achieved),
-    [yearlyGoals],
-  )
-
-  const achievedMonthlyGoals = useMemo(
-    () => allMonthlyGoals.filter((goal) => goal.achieved),
-    [allMonthlyGoals],
-  )
-
-  const hasAchievedGoals =
-    achievedYearlyGoals.length > 0 || achievedMonthlyGoals.length > 0
 
   if (mode !== 'life') {
     return null
@@ -259,18 +256,20 @@ const GoalsPage = () => {
       ) : (
         <div className="space-y-6">
           <YearlyGoalsSection
-            goals={activeYearlyGoals}
+            goals={yearlyGoals}
             onCreateClick={() => {
               setEditingYearlyGoal(undefined)
               setIsYearlyDialogOpen(true)
             }}
             onEditClick={handleEditClick}
             onDeleteClick={handleDeleteClick}
-            onToggleAchievement={handleToggleYearlyGoalAchievement}
+            onToggleChecklistItem={handleToggleYearlyGoalChecklistItem}
           />
 
+          <div className="border-t border-stone-200 dark:border-stone-800" />
+
           <MonthlyGoalsSection
-            goals={activeMonthlyGoals}
+            goals={allMonthlyGoals}
             selectedYear={selectedYear}
             onCreateClick={() => {
               setEditingMonthlyGoal(undefined)
@@ -278,89 +277,8 @@ const GoalsPage = () => {
             }}
             onEditClick={handleEditClick}
             onDeleteClick={handleDeleteClick}
-            onToggleAchievement={handleToggleMonthlyGoalAchievement}
+            onToggleChecklistItem={handleToggleMonthlyGoalChecklistItem}
           />
-
-          {hasAchievedGoals && (
-            <div className="rounded-lg border border-stone-200 bg-stone-50/30 p-6 dark:border-stone-800 dark:bg-stone-950/30">
-              <h2 className="mb-4 text-xl font-semibold text-stone-900 dark:text-stone-100">
-                達成した目標
-              </h2>
-              <div className="space-y-6">
-                {achievedYearlyGoals.length > 0 && (
-                  <div>
-                    <h3 className="mb-3 text-sm font-semibold text-muted-foreground uppercase tracking-wide">
-                      年間目標
-                    </h3>
-                    <div className="flex flex-col gap-4">
-                      {achievedYearlyGoals.map((goal) => (
-                        <div
-                          key={goal.id}
-                          className="rounded-lg border border-stone-200 bg-white p-4 dark:border-stone-800 dark:bg-stone-900"
-                        >
-                          <div className="flex items-start gap-3">
-                            <button
-                              type="button"
-                              onClick={() => handleToggleYearlyGoalAchievement(goal)}
-                              aria-label={`${goal.achieved ? '未達成にする' : '達成にする'}: ${goal.title}`}
-                              aria-pressed={goal.achieved}
-                              className="mt-0.5 focus-visible:ring-2 focus-visible:ring-offset-1 focus-visible:ring-indigo-500 focus:outline-none"
-                            >
-                              <CheckCircle2 className="h-5 w-5 text-green-500" />
-                            </button>
-                            <div className="flex-1">
-                              <h4 className="line-through text-stone-500 dark:text-stone-400">
-                                {goal.title}
-                              </h4>
-                              <p className="mt-1 text-xs text-muted-foreground">
-                                {goal.year}年
-                              </p>
-                            </div>
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                )}
-
-                {achievedMonthlyGoals.length > 0 && (
-                  <div>
-                    <h3 className="mb-3 text-sm font-semibold text-muted-foreground uppercase tracking-wide">
-                      月間目標
-                    </h3>
-                    <div className="flex flex-col gap-4">
-                      {achievedMonthlyGoals.map((goal) => (
-                        <div
-                          key={goal.id}
-                          className="rounded-lg border border-stone-200 bg-white p-4 dark:border-stone-800 dark:bg-stone-900"
-                        >
-                          <div className="flex items-start gap-3">
-                            <button
-                              type="button"
-                              onClick={() => handleToggleMonthlyGoalAchievement(goal)}
-                              aria-label={`${goal.achieved ? '未達成にする' : '達成にする'}: ${goal.title}`}
-                              aria-pressed={goal.achieved}
-                              className="mt-0.5 focus-visible:ring-2 focus-visible:ring-offset-1 focus-visible:ring-indigo-500 focus:outline-none"
-                            >
-                              <CheckCircle2 className="h-5 w-5 text-green-500" />
-                            </button>
-                            <div className="flex-1">
-                              <h4 className="line-through text-stone-500 dark:text-stone-400">
-                                {goal.title}
-                              </h4>
-                              <p className="mt-1 text-xs text-muted-foreground">
-                                {goal.year}年{goal.month}月
-                              </p>
-                            </div>
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                )}
-              </div>
-            </div>
-          )}
         </div>
       )}
 

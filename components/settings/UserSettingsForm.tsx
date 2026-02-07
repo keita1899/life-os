@@ -1,7 +1,9 @@
 'use client'
 
-import { useMemo } from 'react'
+import { useMemo, useCallback } from 'react'
 import { useForm } from 'react-hook-form'
+import { useFormSubmitShortcut } from '@/hooks/useFormSubmitShortcut'
+import { formatSubmitLabelWithShortcut } from '@/lib/utils/shortcut'
 import { zodResolver } from '@hookform/resolvers/zod'
 import * as z from 'zod'
 import {
@@ -32,6 +34,7 @@ const userSettingsFormSchema = z.object({
   morningReviewTime: z.string().optional(),
   eveningReviewTime: z.string().optional(),
   barcelonaIcalUrl: z.string().url().optional().or(z.literal('')),
+  defaultHabitView: z.enum(['month', 'week']),
 })
 
 type UserSettingsFormValues = z.infer<typeof userSettingsFormSchema>
@@ -56,6 +59,7 @@ export const UserSettingsForm = ({
       morningReviewTime: initialData?.morningReviewTime || '',
       eveningReviewTime: initialData?.eveningReviewTime || '',
       barcelonaIcalUrl: initialData?.barcelonaIcalUrl || '',
+      defaultHabitView: initialData?.defaultHabitView || 'month',
     }
   }, [initialData])
 
@@ -64,7 +68,7 @@ export const UserSettingsForm = ({
     values: formValues,
   })
 
-  const handleSubmit = async (data: UserSettingsFormValues) => {
+  const handleSubmit = useCallback(async (data: UserSettingsFormValues) => {
     await onSubmit({
       birthday: data.birthday || null,
       defaultCalendarView: data.defaultCalendarView,
@@ -72,8 +76,14 @@ export const UserSettingsForm = ({
       morningReviewTime: data.morningReviewTime || null,
       eveningReviewTime: data.eveningReviewTime || null,
       barcelonaIcalUrl: data.barcelonaIcalUrl || null,
+      defaultHabitView: data.defaultHabitView,
     })
-  }
+  }, [onSubmit])
+
+  useFormSubmitShortcut({
+    form,
+    onSubmit: handleSubmit,
+  })
 
   return (
     <Form {...form}>
@@ -117,6 +127,34 @@ export const UserSettingsForm = ({
               </Select>
               <FormDescription>
                 カレンダーページを開いたときの初期表示を設定します
+              </FormDescription>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+
+        <FormField
+          control={form.control}
+          name="defaultHabitView"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>習慣のデフォルト表示</FormLabel>
+              <Select
+                value={field.value}
+                onValueChange={field.onChange}
+              >
+                <FormControl>
+                  <SelectTrigger>
+                    <SelectValue />
+                  </SelectTrigger>
+                </FormControl>
+                <SelectContent>
+                  <SelectItem value="month">月表示</SelectItem>
+                  <SelectItem value="week">週表示</SelectItem>
+                </SelectContent>
+              </Select>
+              <FormDescription>
+                習慣ページを開いたときの初期表示を設定します
               </FormDescription>
               <FormMessage />
             </FormItem>
@@ -209,7 +247,7 @@ export const UserSettingsForm = ({
 
         <div className="flex justify-end">
           <Button type="submit" disabled={isSubmitting || form.formState.isSubmitting}>
-            {isSubmitting || form.formState.isSubmitting ? '保存中...' : '保存'}
+            {isSubmitting || form.formState.isSubmitting ? '保存中...' : formatSubmitLabelWithShortcut('保存')}
           </Button>
         </div>
       </form>

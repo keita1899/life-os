@@ -6,6 +6,7 @@ import type { MonthlyGoal } from '../types/monthly-goal'
 import type { WeeklyGoal } from '../types/weekly-goal'
 import type { Task } from '../types/task'
 import type { Event } from '../types/event'
+import type { Subscription } from '../types/subscription'
 
 export function getYearlyGoalsForDate(
   goals: YearlyGoal[],
@@ -27,7 +28,6 @@ export function getMonthlyGoalsForDate(
 export function getWeeklyGoalsForDate(
   goals: WeeklyGoal[],
   date: Date,
-  weekStartDay: number = 1,
 ): WeeklyGoal[] {
   const weekStartsOn = 1
   const weekStart = startOfWeek(date, { weekStartsOn })
@@ -54,4 +54,15 @@ export function getEventsForDateSorted(
   date: Date,
 ): Event[] {
   return sortEventsByTime(getEventsForDate(events, date))
+}
+
+export function getSubscriptionsForDate(
+  subscriptions: Subscription[],
+  date: Date,
+): Subscription[] {
+  const dateStr = formatDateISO(date)
+  return subscriptions.filter(
+    (subscription) =>
+      subscription.active && subscription.nextBillingDate === dateStr,
+  )
 }

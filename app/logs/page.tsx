@@ -2,9 +2,14 @@
 
 import { Suspense, useMemo, useState } from 'react'
 import { useSearchParams } from 'next/navigation'
-import { format, getYear } from 'date-fns'
+import { format, getYear, startOfDay, endOfDay } from 'date-fns'
 import { ja } from 'date-fns/locale/ja'
 import { parseISO, isValid, addDays, subDays } from 'date-fns'
+import { expandRecurringEvents } from '@/lib/events'
+import {
+  toTasksWithNextOccurrenceOnly,
+  getNextOccurrenceAfter,
+} from '@/lib/tasks'
 import { useMode } from '@/lib/contexts/ModeContext'
 import { useRouter } from 'next/navigation'
 import { Button } from '@/components/ui/button'
@@ -12,7 +17,6 @@ import { CalendarPlus, CheckSquare, ChevronLeft, ChevronRight, Focus } from 'luc
 import { useGoals } from '@/hooks/useGoals'
 import { useTasks } from '@/hooks/useTasks'
 import { useEvents } from '@/hooks/useEvents'
-import { useUserSettings } from '@/hooks/useUserSettings'
 import { useDailyLog } from '@/hooks/useDailyLog'
 import { useHabits } from '@/hooks/useHabits'
 import { useHabitCompletionsByDate } from '@/hooks/useHabitCompletions'
@@ -20,13 +24,14 @@ import { Loading } from '@/components/ui/loading'
 import { ErrorMessage } from '@/components/ui/error-message'
 import { MainLayout } from '@/components/layout/MainLayout'
 import { LogGoalsSection } from '@/components/logs/LogGoalsSection'
-import { LogHabitsSection } from '@/components/logs/LogHabitsSection'
-import { LogTasksSection } from '@/components/logs/LogTasksSection'
-import { LogEventsSection } from '@/components/logs/LogEventsSection'
 import { LogDiarySection } from '@/components/logs/LogDiarySection'
+import { TimelineSection } from '@/components/logs/TimelineSection'
+import { createTimelineItems } from '@/lib/logs/timeline'
 import { TaskDialog } from '@/components/tasks/TaskDialog'
 import { EventDialog } from '@/components/events/EventDialog'
 import { DeleteConfirmDialog } from '@/components/ui/delete-confirm-dialog'
+import { RecurringTaskDeleteDialog } from '@/components/tasks/RecurringTaskDeleteDialog'
+import { RecurringEventDeleteDialog } from '@/components/events/RecurringEventDeleteDialog'
 import {
   getYearlyGoalsForDate,
   getMonthlyGoalsForDate,
@@ -80,7 +85,6 @@ function LogPageView({ logDate, date }: LogPageViewProps) {
     updateEvent,
     deleteEvent,
   } = useEvents()
-  const { userSettings } = useUserSettings()
   const {
     dailyLog,
     isLoading: isLoadingDailyLog,
@@ -95,8 +99,6 @@ function LogPageView({ logDate, date }: LogPageViewProps) {
     deleteCompletion: deleteHabitCompletion,
   } = useHabitCompletionsByDate(date)
 
-  const weekStartDay = userSettings?.weekStartDay ?? 1
-
   const yearlyGoals = useMemo(
     () => getYearlyGoalsForDate(allYearlyGoals, logDate),
     [allYearlyGoals, logDate],
@@ -106,37 +108,32 @@ function LogPageView({ logDate, date }: LogPageViewProps) {
     [allMonthlyGoals, logDate],
   )
   const weeklyGoals = useMemo(
-    () => getWeeklyGoalsForDate(allWeeklyGoals, logDate, weekStartDay),
-    [allWeeklyGoals, logDate, weekStartDay],
+    () => getWeeklyGoalsForDate(allWeeklyGoals, logDate),
+    [allWeeklyGoals, logDate],
   )
-  const tasks = useMemo(
-    () => getTasksForDate(allTasks, logDate),
-    [allTasks, logDate],
-  )
-  const events = useMemo(
-    () => getEventsForDateSorted(allEvents, logDate),
-    [allEvents, logDate],
-  )
+  const tasks = useMemo(() => {
+    const withNextOnly = toTasksWithNextOccurrenceOnly(allTasks, logDate)
+    return getTasksForDate(withNextOnly, logDate)
+  }, [allTasks, logDate])
+  const events = useMemo(() => {
+    const rangeStart = startOfDay(logDate)
+    const rangeEnd = endOfDay(logDate)
+    const expanded = expandRecurringEvents(allEvents, rangeStart, rangeEnd)
+    return getEventsForDateSorted(expanded, logDate)
+  }, [allEvents, logDate])
 
   const habitsForDate = useMemo(() => {
-    const filtered = allHabits.filter((h) => isHabitDueOnDate(h, logDate))
-    const normalizeTime = (t: string | null): string => {
-      if (!t?.trim()) return '99:99'
-      const parts = t.trim().split(':')
-      const h = (parts[0] ?? '0').padStart(2, '0')
-      const m = (parts[1] ?? '0').padStart(2, '0')
-      return `${h}:${m}`
-    }
-    return [...filtered].sort((a, b) =>
-      normalizeTime(a.scheduledTime).localeCompare(
-        normalizeTime(b.scheduledTime),
-      ),
-    )
+    return allHabits.filter((h) => isHabitDueOnDate(h, logDate))
   }, [allHabits, logDate])
 
   const completedHabitIds = useMemo(
     () => new Set(habitCompletions.map((c) => c.habitId)),
     [habitCompletions],
+  )
+
+  const timelineItems = useMemo(
+    () => createTimelineItems(events, habitsForDate, tasks, completedHabitIds),
+    [events, habitsForDate, tasks, completedHabitIds],
   )
 
   const formattedDate = format(logDate, 'yyyy年M月d日(E)', { locale: ja })
@@ -188,6 +185,11 @@ function LogPageView({ logDate, date }: LogPageViewProps) {
       const updateInput: UpdateTaskInput = {
         title: input.title,
         executionDate: input.executionDate,
+        scheduledTime: input.scheduledTime,
+        recurrenceRule: input.recurrenceRule,
+        recurrenceDaysOfWeek: input.recurrenceDaysOfWeek,
+        recurrenceDayOfMonth: input.recurrenceDayOfMonth,
+        recurrenceEndDate: input.recurrenceEndDate,
       }
       await updateTask(editingTask.id, updateInput)
       setIsTaskDialogOpen(false)
@@ -233,6 +235,10 @@ function LogPageView({ logDate, date }: LogPageViewProps) {
         allDay: input.allDay,
         category: input.category,
         description: input.description,
+        recurrenceRule: input.recurrenceRule,
+        recurrenceDaysOfWeek: input.recurrenceDaysOfWeek,
+        recurrenceDayOfMonth: input.recurrenceDayOfMonth,
+        recurrenceEndDate: input.recurrenceEndDate,
       }
       await updateEvent(editingEvent.id, updateInput)
       setIsEventDialogOpen(false)
@@ -248,12 +254,22 @@ function LogPageView({ logDate, date }: LogPageViewProps) {
     setDeletingEvent(event)
   }
 
-  const handleDeleteEvent = async () => {
+  const handleDeleteEvent = async (mode?: 'single' | 'all') => {
     if (!deletingEvent) return
 
     try {
       setOperationError(null)
-      await deleteEvent(deletingEvent.id)
+      if (deletingEvent.recurrenceRule && mode === 'single' && deletingEvent.startDatetime) {
+        const eventDate = deletingEvent.startDatetime.split('T')[0]
+        const currentExcludedDates = deletingEvent.recurrenceExcludedDates || []
+        if (!currentExcludedDates.includes(eventDate)) {
+          await updateEvent(deletingEvent.id, {
+            recurrenceExcludedDates: [...currentExcludedDates, eventDate],
+          })
+        }
+      } else {
+        await deleteEvent(deletingEvent.id)
+      }
       setDeletingEvent(undefined)
     } catch (err) {
       setOperationError(
@@ -266,12 +282,51 @@ function LogPageView({ logDate, date }: LogPageViewProps) {
     setDeletingTask(task)
   }
 
-  const handleDeleteTask = async () => {
+  const handleToggleTaskCompletion = async (task: Task) => {
+    try {
+      setOperationError(null)
+      if (
+        task.recurrenceRule &&
+        !task.completed &&
+        task.executionDate
+      ) {
+        const nextDate = getNextOccurrenceAfter(
+          task,
+          parseISO(task.executionDate),
+        )
+        if (nextDate !== null) {
+          await updateTask(task.id, {
+            executionDate: nextDate,
+            completed: false,
+          })
+          return
+        }
+      }
+      await toggleTaskCompletion(task.id, !task.completed)
+    } catch (err) {
+      setOperationError(
+        err instanceof Error
+          ? err.message
+          : 'タスクの完了状態の更新に失敗しました',
+      )
+    }
+  }
+
+  const handleDeleteTask = async (mode?: 'single' | 'all') => {
     if (!deletingTask) return
 
     try {
       setOperationError(null)
-      await deleteTask(deletingTask.id)
+      if (deletingTask.recurrenceRule && mode === 'single' && deletingTask.executionDate) {
+        const currentExcludedDates = deletingTask.recurrenceExcludedDates || []
+        if (!currentExcludedDates.includes(deletingTask.executionDate)) {
+          await updateTask(deletingTask.id, {
+            recurrenceExcludedDates: [...currentExcludedDates, deletingTask.executionDate],
+          })
+        }
+      } else {
+        await deleteTask(deletingTask.id)
+      }
       setDeletingTask(undefined)
     } catch (err) {
       setOperationError(
@@ -291,20 +346,6 @@ function LogPageView({ logDate, date }: LogPageViewProps) {
     } catch (err) {
       setOperationError(
         err instanceof Error ? err.message : '日記の保存に失敗しました',
-      )
-    }
-  }
-
-  const handleUpdateExecutionDate = async (
-    task: Task,
-    executionDate: string | null,
-  ) => {
-    try {
-      setOperationError(null)
-      await updateTask(task.id, { executionDate })
-    } catch (err) {
-      setOperationError(
-        err instanceof Error ? err.message : 'タスクの実行日の更新に失敗しました',
       )
     }
   }
@@ -336,7 +377,7 @@ function LogPageView({ logDate, date }: LogPageViewProps) {
 
   return (
     <MainLayout>
-      <div className="container mx-auto max-w-4xl py-8 px-4">
+      <div className="container mx-auto max-w-7xl py-8 px-4">
         <div className="mb-6">
           <div className="flex items-center justify-between">
             <h1 className="text-3xl font-bold">{formattedDate}のログ</h1>
@@ -371,38 +412,35 @@ function LogPageView({ logDate, date }: LogPageViewProps) {
       {isLoading ? (
         <Loading />
       ) : (
-        <div className="space-y-6">
-          <LogGoalsSection
-            yearlyGoals={yearlyGoals}
-            monthlyGoals={monthlyGoals}
-            weeklyGoals={weeklyGoals}
-          />
-          <LogHabitsSection
-            habits={habitsForDate}
-            completedHabitIds={completedHabitIds}
-            onToggle={handleToggleHabit}
-          />
-          <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
-            <LogEventsSection
-              events={events}
-              onEdit={handleEditEvent}
-              onDelete={handleDeleteEventClick}
+        <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
+          <div className="space-y-6">
+            <LogGoalsSection
+              yearlyGoals={yearlyGoals}
+              monthlyGoals={monthlyGoals}
+              weeklyGoals={weeklyGoals}
+              currentDate={logDate}
             />
-            <LogTasksSection
-              tasks={tasks}
-              onToggleCompletion={(task) =>
-                toggleTaskCompletion(task.id, !task.completed)
-              }
-              onEdit={handleEditTask}
-              onDelete={handleDeleteClick}
-              onUpdateExecutionDate={handleUpdateExecutionDate}
+            <LogDiarySection
+              dailyLog={dailyLog}
+              isLoading={isLoadingDailyLog}
+              onUpdate={handleUpdateDiary}
             />
           </div>
-          <LogDiarySection
-            dailyLog={dailyLog}
-            isLoading={isLoadingDailyLog}
-            onUpdate={handleUpdateDiary}
-          />
+          <div className="space-y-6">
+            <TimelineSection
+              items={timelineItems}
+              events={events}
+              habits={habitsForDate}
+              tasks={tasks}
+              completedHabitIds={completedHabitIds}
+              onEditEvent={handleEditEvent}
+              onDeleteEvent={handleDeleteEventClick}
+              onToggleHabit={handleToggleHabit}
+              onToggleTask={handleToggleTaskCompletion}
+              onEditTask={handleEditTask}
+              onDeleteTask={handleDeleteClick}
+            />
+          </div>
         </div>
       )}
 
@@ -439,6 +477,7 @@ function LogPageView({ logDate, date }: LogPageViewProps) {
         }}
         onSubmit={editingEvent ? handleUpdateEvent : handleCreateEvent}
         event={editingEvent}
+        defaultStartDate={date}
       />
 
       <TaskDialog
@@ -446,21 +485,40 @@ function LogPageView({ logDate, date }: LogPageViewProps) {
         onOpenChange={handleDialogClose}
         onSubmit={editingTask ? handleUpdateTask : handleCreateTask}
         task={editingTask}
+        defaultExecutionDate={date}
       />
 
-      <DeleteConfirmDialog
-        open={!!deletingTask}
-        message={`「${deletingTask?.title}」を削除しますか？この操作は取り消せません。`}
-        onConfirm={handleDeleteTask}
-        onCancel={() => setDeletingTask(undefined)}
-      />
+      {deletingTask?.recurrenceRule ? (
+        <RecurringTaskDeleteDialog
+          open={!!deletingTask}
+          taskTitle={deletingTask.title}
+          onConfirm={handleDeleteTask}
+          onCancel={() => setDeletingTask(undefined)}
+        />
+      ) : (
+        <DeleteConfirmDialog
+          open={!!deletingTask}
+          message={`「${deletingTask?.title}」を削除しますか？この操作は取り消せません。`}
+          onConfirm={() => handleDeleteTask()}
+          onCancel={() => setDeletingTask(undefined)}
+        />
+      )}
 
-      <DeleteConfirmDialog
-        open={!!deletingEvent}
-        message={`「${deletingEvent?.title}」を削除しますか？この操作は取り消せません。`}
-        onConfirm={handleDeleteEvent}
-        onCancel={() => setDeletingEvent(undefined)}
-      />
+      {deletingEvent?.recurrenceRule ? (
+        <RecurringEventDeleteDialog
+          open={!!deletingEvent}
+          eventTitle={deletingEvent.title}
+          onConfirm={handleDeleteEvent}
+          onCancel={() => setDeletingEvent(undefined)}
+        />
+      ) : (
+        <DeleteConfirmDialog
+          open={!!deletingEvent}
+          message={`「${deletingEvent?.title}」を削除しますか？この操作は取り消せません。`}
+          onConfirm={() => handleDeleteEvent()}
+          onCancel={() => setDeletingEvent(undefined)}
+        />
+      )}
       </div>
     </MainLayout>
   )
@@ -498,7 +556,7 @@ function LogPageContent() {
 
 export default function LogPage() {
   return (
-    <Suspense fallback={<div className="container mx-auto max-w-4xl py-8 px-4">読み込み中...</div>}>
+    <Suspense fallback={<Loading />}>
       <LogPageContent />
     </Suspense>
   )

@@ -1,7 +1,8 @@
 'use client'
 
-import { useEffect } from 'react'
+import { useEffect, useCallback } from 'react'
 import { useForm } from 'react-hook-form'
+import { useFormSubmitShortcut } from '@/hooks/useFormSubmitShortcut'
 import { zodResolver } from '@hookform/resolvers/zod'
 import * as z from 'zod'
 import {
@@ -85,7 +86,7 @@ export function HabitForm({
 
   const frequencyType = form.watch('frequencyType')
 
-  const handleSubmit = async (data: HabitFormValues) => {
+  const handleSubmit = useCallback(async (data: HabitFormValues) => {
     let frequencyDays: string | null = null
     if (
       data.frequencyType === 'custom_days' &&
@@ -105,7 +106,12 @@ export function HabitForm({
     if (!isEditMode) {
       form.reset()
     }
-  }
+  }, [onSubmit, isEditMode, form])
+
+  useFormSubmitShortcut({
+    form,
+    onSubmit: handleSubmit,
+  })
 
   const toggleCustomDay = (day: number) => {
     const current = form.getValues('customDays') ?? []
@@ -219,7 +225,7 @@ export function HabitForm({
           )}
           <Button type="submit" disabled={form.formState.isSubmitting}>
             {form.formState.isSubmitting
-              ? `${submitLabel === '作成' ? '作成中...' : '更新中...'}`
+              ? `${submitLabel.startsWith('作成') ? '作成中...' : '更新中...'}`
               : submitLabel}
           </Button>
         </div>

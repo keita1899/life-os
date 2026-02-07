@@ -2,25 +2,54 @@ import { getDatabase, handleDbError } from '../db'
 import { DB_COLUMNS } from '../db/constants'
 import type { Task, CreateTaskInput, UpdateTaskInput } from '../types/task'
 
+import type { RecurrenceRule } from '../types/event'
+
 interface DbTask {
   id: number
   title: string
   execution_date: string | null
   completed: number
   order: number
-  actual_time: number
+  scheduled_time: string | null
+  recurrence_rule: string | null
+  recurrence_days_of_week: string | null
+  recurrence_day_of_month: number | null
+  recurrence_end_date: string | null
+  recurrence_excluded_dates: string | null
   created_at: string
   updated_at: string
 }
 
 function mapDbTaskToTask(dbTask: DbTask): Task {
+  let daysOfWeek: number[] | null = null
+  if (dbTask.recurrence_days_of_week) {
+    daysOfWeek = dbTask.recurrence_days_of_week
+      .split(',')
+      .map((s) => parseInt(s, 10))
+      .filter((n) => !isNaN(n))
+  }
+
+  let excludedDates: string[] = []
+  if (dbTask.recurrence_excluded_dates) {
+    try {
+      excludedDates = JSON.parse(dbTask.recurrence_excluded_dates)
+    } catch {
+      excludedDates = []
+    }
+  }
+
   return {
     id: dbTask.id,
     title: dbTask.title,
     executionDate: dbTask.execution_date,
     completed: dbTask.completed === 1,
     order: dbTask.order,
-    actualTime: dbTask.actual_time,
+    scheduledTime: dbTask.scheduled_time,
+    recurrenceRule: dbTask.recurrence_rule as RecurrenceRule | null,
+    recurrenceDaysOfWeek: daysOfWeek,
+    recurrenceDayOfMonth: dbTask.recurrence_day_of_month,
+    recurrenceEndDate: dbTask.recurrence_end_date,
+    recurrenceExcludedDates: excludedDates,
     createdAt: dbTask.created_at,
     updatedAt: dbTask.updated_at,
   }
@@ -40,11 +69,26 @@ export async function createTask(input: CreateTaskInput): Promise<Task> {
   const maxOrder = await getMaxOrder()
   const newOrder = maxOrder + 1
 
+  const daysOfWeekStr =
+    input.recurrenceDaysOfWeek?.length
+      ? input.recurrenceDaysOfWeek.join(',')
+      : null
+
   try {
     await db.execute(
-      `INSERT INTO tasks (title, execution_date, "order")
-       VALUES (?, ?, ?)`,
-      [input.title, input.executionDate || null, newOrder],
+      `INSERT INTO tasks (title, execution_date, "order", scheduled_time, recurrence_rule, recurrence_days_of_week, recurrence_day_of_month, recurrence_end_date, recurrence_excluded_dates)
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+      [
+        input.title,
+        input.executionDate || null,
+        newOrder,
+        input.scheduledTime || null,
+        input.recurrenceRule || null,
+        daysOfWeekStr,
+        input.recurrenceDayOfMonth ?? null,
+        input.recurrenceEndDate || null,
+        null,
+      ],
     )
 
     const result = await db.select<DbTask[]>(
@@ -112,9 +156,46 @@ export async function updateTask(
     updateValues.push(input.order)
   }
 
-  if (input.actualTime !== undefined) {
-    updateFields.push('actual_time = ?')
-    updateValues.push(input.actualTime)
+  if (input.scheduledTime !== undefined) {
+    updateFields.push('scheduled_time = ?')
+    updateValues.push(
+      input.scheduledTime && input.scheduledTime.trim() !== ''
+        ? input.scheduledTime.trim()
+        : null,
+    )
+  }
+
+  if (input.recurrenceRule !== undefined) {
+    updateFields.push('recurrence_rule = ?')
+    updateValues.push(input.recurrenceRule || null)
+  }
+
+  if (input.recurrenceDaysOfWeek !== undefined) {
+    updateFields.push('recurrence_days_of_week = ?')
+    updateValues.push(
+      input.recurrenceDaysOfWeek?.length
+        ? input.recurrenceDaysOfWeek.join(',')
+        : null,
+    )
+  }
+
+  if (input.recurrenceDayOfMonth !== undefined) {
+    updateFields.push('recurrence_day_of_month = ?')
+    updateValues.push(input.recurrenceDayOfMonth)
+  }
+
+  if (input.recurrenceEndDate !== undefined) {
+    updateFields.push('recurrence_end_date = ?')
+    updateValues.push(input.recurrenceEndDate || null)
+  }
+
+  if (input.recurrenceExcludedDates !== undefined) {
+    updateFields.push('recurrence_excluded_dates = ?')
+    updateValues.push(
+      input.recurrenceExcludedDates.length > 0
+        ? JSON.stringify(input.recurrenceExcludedDates)
+        : null,
+    )
   }
 
   if (updateFields.length === 0) {
@@ -186,15 +267,50 @@ export async function updateOverdueTasksToToday(): Promise<number> {
   const today = new Date().toISOString().split('T')[0]
 
   try {
-    const result = await db.execute(
-      `UPDATE tasks 
-       SET execution_date = ?, updated_at = CURRENT_TIMESTAMP 
+    const overdueTasks = await db.select<DbTask[]>(
+      `SELECT ${DB_COLUMNS.TASKS.map((col) =>
+        col === 'order' ? '"order"' : col,
+      ).join(', ')} FROM tasks 
        WHERE completed = 0 
        AND execution_date IS NOT NULL 
        AND execution_date < ?`,
-      [today, today],
+      [today],
     )
-    return result.rowsAffected
+
+    let updatedCount = 0
+
+    for (const dbTask of overdueTasks) {
+      const task = mapDbTaskToTask(dbTask)
+      
+      if (task.recurrenceRule) {
+        const currentExcludedDates = task.recurrenceExcludedDates || []
+        if (task.executionDate && !currentExcludedDates.includes(task.executionDate)) {
+          const newExcludedDates = [...currentExcludedDates, task.executionDate]
+          await db.execute(
+            `UPDATE tasks 
+             SET recurrence_excluded_dates = ?, updated_at = CURRENT_TIMESTAMP 
+             WHERE id = ?`,
+            [
+              newExcludedDates.length > 0
+                ? JSON.stringify(newExcludedDates)
+                : null,
+              task.id,
+            ],
+          )
+          updatedCount++
+        }
+      } else {
+        await db.execute(
+          `UPDATE tasks 
+           SET execution_date = ?, updated_at = CURRENT_TIMESTAMP 
+           WHERE id = ?`,
+          [today, task.id],
+        )
+        updatedCount++
+      }
+    }
+
+    return updatedCount
   } catch (err) {
     handleDbError(err, 'update overdue tasks to today')
   }

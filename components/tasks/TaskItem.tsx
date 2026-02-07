@@ -8,6 +8,8 @@ import {
   Pencil,
   Trash2,
   Calendar,
+  Repeat,
+  FileText,
 } from 'lucide-react'
 import { getDateLabel } from '@/lib/date/labels'
 import { Button } from '@/components/ui/button'
@@ -22,6 +24,12 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from '@/components/ui/popover'
+import {
+  Accordion,
+  AccordionContent,
+  AccordionItem,
+  AccordionTrigger,
+} from '@/components/ui/accordion'
 import { Input } from '@/components/ui/input'
 import { cn } from '@/lib/utils'
 import {
@@ -29,6 +37,7 @@ import {
   getTomorrowDateString,
   formatDateForInput,
 } from '@/lib/date/formats'
+import { useMode } from '@/lib/contexts/ModeContext'
 import type { Task } from '@/lib/types/task'
 
 interface TaskItemProps {
@@ -49,6 +58,34 @@ const DATE_LABEL_STYLES: Record<string, string> = {
 const DEFAULT_DATE_STYLE =
   'bg-stone-100 text-stone-700 dark:bg-stone-800 dark:text-stone-300'
 
+const WEEKDAY_LABELS = ['日', '月', '火', '水', '木', '金', '土'] as const
+
+function getRecurrenceLabel(task: Task): string {
+  if (!task.recurrenceRule) return ''
+  if (task.recurrenceRule === 'daily') return '毎日'
+  if (task.recurrenceRule === 'weekly') {
+    const days = task.recurrenceDaysOfWeek
+    if (days?.length) {
+      const labels = days.map((d) => WEEKDAY_LABELS[d]).join('・')
+      return `毎週 ${labels} 曜日`
+    }
+    return '毎週'
+  }
+  if (task.recurrenceRule === 'monthly') {
+    const dom = task.recurrenceDayOfMonth
+    if (dom === 0) return '毎月末'
+    if (dom != null) return `毎月${dom}日`
+    return '毎月'
+  }
+  return ''
+}
+
+function isValidTimeFormat(time: string | null): boolean {
+  if (!time || time.trim() === '') return false
+  const trimmed = time.trim()
+  return /^\d{2}:\d{2}$/.test(trimmed)
+}
+
 export function TaskItem({
   task,
   onEdit,
@@ -56,9 +93,15 @@ export function TaskItem({
   onToggleCompletion,
   onUpdateExecutionDate,
 }: TaskItemProps) {
+  const { mode } = useMode()
   const dateLabel = useMemo(
     () => getDateLabel(task.executionDate),
     [task.executionDate],
+  )
+
+  const isValidScheduledTime = useMemo(
+    () => isValidTimeFormat(task.scheduledTime),
+    [task.scheduledTime],
   )
 
   const [isDateMenuOpen, setIsDateMenuOpen] = useState(false)
@@ -100,8 +143,8 @@ export function TaskItem({
       className={cn(
         'group flex items-start gap-3 rounded-lg border p-4',
         task.completed
-          ? 'border-stone-200 bg-stone-50 dark:border-stone-800 dark:bg-stone-950'
-          : 'border-stone-200 bg-white dark:border-stone-800 dark:bg-stone-900',
+          ? 'border-stone-200/60 bg-stone-900/5 dark:border-stone-700/40 dark:bg-stone-900/20'
+          : 'border-stone-200/60 bg-stone-900/10 dark:border-stone-700/40 dark:bg-stone-900/20',
       )}
     >
       <div className="mt-0.5">
@@ -114,7 +157,7 @@ export function TaskItem({
             {task.completed ? (
               <CheckCircle2 className="h-5 w-5 text-green-500" />
             ) : (
-              <Circle className="h-5 w-5 text-stone-400" />
+              <Circle className="h-5 w-5 text-red-500/40 dark:text-red-500/50" />
             )}
           </button>
         ) : task.completed ? (
@@ -134,9 +177,36 @@ export function TaskItem({
         >
           {task.title}
         </div>
-        {task.actualTime > 0 && (
-          <div className="mt-2 flex gap-4 text-xs text-muted-foreground">
-            <div>実績: {task.actualTime}分</div>
+        {(task.recurrenceRule || isValidScheduledTime) && (
+          <div className="mt-1 flex flex-wrap items-center gap-2 text-xs text-muted-foreground">
+            {task.recurrenceRule && (
+              <span className="inline-flex items-center gap-1 text-muted-foreground">
+                <Repeat className="h-3 w-3 shrink-0 text-violet-600 dark:text-violet-400" />
+                {getRecurrenceLabel(task)}
+              </span>
+            )}
+            {isValidScheduledTime && (
+              <span>開始予定: {task.scheduledTime}</span>
+            )}
+          </div>
+        )}
+        {mode === 'development' && task.memo && (
+          <div className="mt-2">
+            <Accordion type="single" collapsible className="w-full">
+              <AccordionItem value="memo" className="border-none">
+                <AccordionTrigger className="py-1 text-xs text-muted-foreground hover:no-underline">
+                  <div className="flex items-center gap-1">
+                    <FileText className="h-3 w-3 shrink-0" />
+                    <span>メモ</span>
+                  </div>
+                </AccordionTrigger>
+                <AccordionContent className="pt-1 pb-0">
+                  <div className="text-xs text-muted-foreground whitespace-pre-wrap break-words">
+                    {task.memo}
+                  </div>
+                </AccordionContent>
+              </AccordionItem>
+            </Accordion>
           </div>
         )}
       </div>
@@ -151,7 +221,7 @@ export function TaskItem({
                   dateLabelStyle,
                 )}
               >
-                {dateLabel?.text ?? '日付なし'}
+                {dateLabel?.text ?? '未定'}
               </button>
             </PopoverTrigger>
             <PopoverContent className="w-48 p-1" align="end">
@@ -176,7 +246,7 @@ export function TaskItem({
                     className="flex w-full items-center rounded-sm px-2 py-1.5 text-sm hover:bg-stone-100 dark:hover:bg-stone-800"
                     onClick={() => handleDateSelect(null)}
                   >
-                    日付なし
+                    未定
                   </button>
                   <div className="my-1 h-px bg-stone-200 dark:bg-stone-700" />
                   <button

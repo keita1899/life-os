@@ -1,8 +1,8 @@
 'use client'
 
 import { useState } from 'react'
-import { Plus } from 'lucide-react'
 import { Button } from '@/components/ui/button'
+import { EmptyState } from '@/components/ui/empty-state'
 import { VisionItem } from './VisionItem'
 import { VisionForm } from './VisionForm'
 import type { VisionItem as VisionItemType } from '@/lib/types/vision-item'
@@ -25,66 +25,49 @@ export function VisionList({
   readOnly = false,
 }: VisionListProps) {
   const [isCreating, setIsCreating] = useState(false)
+  const [createKey, setCreateKey] = useState(0)
 
   const handleCreate = async (title: string) => {
     await onCreate(title)
-    setIsCreating(false)
+    setCreateKey((prev) => prev + 1)
   }
 
-  if (items.length === 0) {
-    return (
-      <div className="space-y-4">
-        <div className="rounded-lg bg-stone-50/30 p-8 text-center dark:bg-stone-950/30">
-          <p className="text-muted-foreground">ビジョンがありません</p>
-        </div>
-        {isCreating ? (
-          <VisionForm
-            onSubmit={handleCreate}
-            onCancel={() => setIsCreating(false)}
-          />
-        ) : (
-          <Button
-            variant="outline"
-            onClick={() => setIsCreating(true)}
-            className="w-full"
-          >
-            <Plus className="mr-2 h-4 w-4" />
-            ビジョンを追加
-          </Button>
-        )}
-      </div>
+  const addButton = showCreateForm && (
+    isCreating ? (
+      <VisionForm
+        key={createKey}
+        onSubmit={handleCreate}
+        onCancel={() => setIsCreating(false)}
+      />
+    ) : (
+      <Button
+        variant="ghost"
+        onClick={() => setIsCreating(true)}
+        className="w-full justify-center text-muted-foreground hover:text-foreground"
+      >
+        + ビジョンを追加
+      </Button>
     )
-  }
+  )
 
   return (
     <div className="space-y-3">
       <div className="space-y-1">
-        {items.map((item) => (
-          <VisionItem
-            key={item.id}
-            item={item}
-            onUpdate={onUpdate}
-            onDelete={onDelete}
-            readOnly={readOnly}
-          />
-        ))}
-      </div>
-      {showCreateForm &&
-        (isCreating ? (
-          <VisionForm
-            onSubmit={handleCreate}
-            onCancel={() => setIsCreating(false)}
-          />
+        {items.length === 0 ? (
+          <EmptyState message="ビジョンがありません" />
         ) : (
-          <Button
-            variant="outline"
-            onClick={() => setIsCreating(true)}
-            className="w-full"
-          >
-            <Plus className="mr-2 h-4 w-4" />
-            ビジョンを追加
-          </Button>
-        ))}
+          items.map((item) => (
+            <VisionItem
+              key={item.id}
+              item={item}
+              onUpdate={onUpdate}
+              onDelete={onDelete}
+              readOnly={readOnly}
+            />
+          ))
+        )}
+      </div>
+      {addButton}
     </div>
   )
 }

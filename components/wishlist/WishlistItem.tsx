@@ -2,6 +2,8 @@
 
 import { useMemo } from 'react'
 import {
+  CheckCircle2,
+  Circle,
   MoreVertical,
   Pencil,
   Trash2,
@@ -20,12 +22,14 @@ interface WishlistItemProps {
   item: WishlistItemType
   onEdit?: (item: WishlistItemType) => void
   onDelete?: (item: WishlistItemType) => void
+  onToggleCompletion?: (item: WishlistItemType) => void
 }
 
 export function WishlistItem({
   item,
   onEdit,
   onDelete,
+  onToggleCompletion,
 }: WishlistItemProps) {
   const priceLabel = useMemo(() => {
     if (item.price === null) return null
@@ -36,17 +40,47 @@ export function WishlistItem({
     <div
       className={cn(
         'group flex items-start gap-3 rounded-lg border p-4',
-        'border-stone-200 bg-white dark:border-stone-800 dark:bg-stone-900',
+        item.purchased
+          ? 'border-stone-200/60 bg-stone-900/5 dark:border-stone-700/40 dark:bg-stone-900/20'
+          : 'border-stone-200/60 bg-stone-900/10 dark:border-stone-700/40 dark:bg-stone-900/20',
       )}
     >
-      <div className="flex-1">
-        <div
-          className={cn(
-            'text-sm font-medium',
-            'text-stone-900 dark:text-stone-100',
+      <div className="mt-0.5">
+        {onToggleCompletion ? (
+          <button
+            type="button"
+            onClick={() => onToggleCompletion(item)}
+            className="focus:outline-none"
+          >
+            {item.purchased ? (
+              <CheckCircle2 className="h-5 w-5 text-green-500" />
+            ) : (
+              <Circle className="h-5 w-5 text-stone-400" />
+            )}
+          </button>
+        ) : item.purchased ? (
+          <CheckCircle2 className="h-5 w-5 text-green-500" />
+        ) : (
+          <Circle className="h-5 w-5 text-stone-400" />
+        )}
+      </div>
+      <div className="flex-1 min-w-0">
+        <div className="flex items-baseline gap-2">
+          <span
+            className={cn(
+              'text-sm font-medium',
+              item.purchased
+                ? 'text-stone-500 line-through dark:text-stone-400'
+                : 'text-stone-900 dark:text-stone-100',
+            )}
+          >
+            {item.name}
+          </span>
+          {priceLabel && (
+            <span className="text-sm text-muted-foreground shrink-0">
+              {priceLabel}
+            </span>
           )}
-        >
-          {item.name}
         </div>
         <div className="mt-2 flex flex-wrap gap-2 text-xs text-muted-foreground">
           {item.category && (
@@ -54,14 +88,14 @@ export function WishlistItem({
               {item.category.name}
             </span>
           )}
-          {item.targetYear && (
+          {item.targetYear != null && (
             <span className="rounded-md bg-stone-100 px-2 py-1 dark:bg-stone-800">
               {item.targetYear}年
             </span>
           )}
-          {priceLabel && (
-            <span className="rounded-md bg-blue-100 px-2 py-1 text-blue-700 dark:bg-blue-900/30 dark:text-blue-300">
-              {priceLabel}
+          {item.targetMonth != null && (
+            <span className="rounded-md bg-stone-100 px-2 py-1 dark:bg-stone-800">
+              {item.targetMonth}月
             </span>
           )}
         </div>
@@ -80,7 +114,7 @@ export function WishlistItem({
             </Button>
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end">
-            {onEdit && (
+            {!item.purchased && onEdit && (
               <DropdownMenuItem onClick={() => onEdit(item)}>
                 <Pencil className="mr-2 h-4 w-4" />
                 <span>編集</span>

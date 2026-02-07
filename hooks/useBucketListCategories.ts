@@ -62,6 +62,5 @@ export function useBucketListCategories() {
     createBucketListCategory: handleCreateBucketListCategory,
     updateBucketListCategory: handleUpdateBucketListCategory,
     deleteBucketListCategory: handleDeleteBucketListCategory,
-    refreshCategories: () => mutate(bucketListCategoriesKey),
   }
 }

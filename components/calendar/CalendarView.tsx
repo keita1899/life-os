@@ -1,22 +1,43 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useMemo } from 'react'
+import Link from 'next/link'
+import {
+  startOfMonth,
+  endOfMonth,
+  startOfWeek,
+  endOfWeek,
+  parseISO,
+} from 'date-fns'
 import { MonthView } from './MonthView'
 import { WeekView } from './WeekView'
 import { CalendarViewBase } from './CalendarViewBase'
 import { MonthlyGoalCalendarForm } from '@/components/goals/MonthlyGoalCalendarForm'
+import { BucketListList } from '@/components/bucket-list/BucketListList'
+import { BucketListDialog } from '@/components/bucket-list/BucketListDialog'
 import { useGoals } from '@/hooks/useGoals'
 import { useEvents } from '@/hooks/useEvents'
 import { useTasks } from '@/hooks/useTasks'
+import { useSubscriptions } from '@/hooks/useSubscriptions'
+import { useBucketList } from '@/hooks/useBucketList'
 import { useCalendarView } from '@/hooks/useCalendarView'
 import { useUserSettings } from '@/hooks/useUserSettings'
 import { useBarcelonaMatches } from '@/hooks/useBarcelonaMatches'
 import { EventDialog } from '@/components/events/EventDialog'
 import { TaskDialog } from '@/components/tasks/TaskDialog'
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { DeleteConfirmDialog } from '@/components/ui/delete-confirm-dialog'
 import { ErrorMessage } from '@/components/ui/error-message'
+import { expandRecurringEvents } from '@/lib/events'
+import {
+  toTasksWithNextOccurrenceOnly,
+  getNextOccurrenceAfter,
+} from '@/lib/tasks'
+import { getHolidaysForDateRange } from '@/lib/calendar/holidays'
 import type { CreateEventInput, Event, UpdateEventInput } from '@/lib/types/event'
 import type { CreateTaskInput, Task, UpdateTaskInput } from '@/lib/types/task'
+import type { Subscription } from '@/lib/types/subscription'
+import type { BucketListItem, CreateBucketListItemInput, UpdateBucketListItemInput } from '@/lib/types/bucket-list-item'
 
 interface CalendarViewProps {
   initialDate?: Date
@@ -55,8 +76,55 @@ export function CalendarView({ initialDate }: CalendarViewProps) {
     deleteTask,
     toggleTaskCompletion,
   } = useTasks()
+  const {
+    subscriptions,
+    isLoading: isLoadingSubscriptions,
+    deleteSubscription,
+  } = useSubscriptions()
   const { userSettings } = useUserSettings()
   useBarcelonaMatches(userSettings?.barcelonaIcalUrl ?? null)
+  const {
+    items: bucketListItems,
+    updateBucketListItem,
+    deleteBucketListItem,
+  } = useBucketList()
+  const bucketListItemsForMonth = useMemo(() => {
+    const year = currentDate.getFullYear()
+    const month = currentDate.getMonth() + 1
+    return bucketListItems.filter(
+      (item) =>
+        item.targetYear === year &&
+        item.targetMonth === month,
+    )
+  }, [bucketListItems, currentDate])
+
+  const weekStartsOn = (weekStartDay === 0 ? 0 : 1) as 0 | 1
+  const rangeStart = useMemo(
+    () =>
+      viewMode === 'month'
+        ? startOfMonth(currentDate)
+        : startOfWeek(currentDate, { weekStartsOn }),
+    [viewMode, currentDate, weekStartsOn],
+  )
+  const rangeEnd = useMemo(
+    () =>
+      viewMode === 'month'
+        ? endOfMonth(currentDate)
+        : endOfWeek(currentDate, { weekStartsOn }),
+    [viewMode, currentDate, weekStartsOn],
+  )
+  const expandedEvents = useMemo(
+    () => expandRecurringEvents(events, rangeStart, rangeEnd),
+    [events, rangeStart, rangeEnd],
+  )
+  const expandedTasks = useMemo(
+    () => toTasksWithNextOccurrenceOnly(tasks, rangeStart),
+    [tasks, rangeStart],
+  )
+  const holidays = useMemo(
+    () => getHolidaysForDateRange(rangeStart, rangeEnd),
+    [rangeStart, rangeEnd],
+  )
   const [operationError, setOperationError] = useState<string | null>(null)
   const [isEventDialogOpen, setIsEventDialogOpen] = useState(false)
   const [editingEvent, setEditingEvent] = useState<Event | undefined>(undefined)
@@ -64,9 +132,13 @@ export function CalendarView({ initialDate }: CalendarViewProps) {
   const [isTaskDialogOpen, setIsTaskDialogOpen] = useState(false)
   const [editingTask, setEditingTask] = useState<Task | undefined>(undefined)
   const [deletingTask, setDeletingTask] = useState<Task | undefined>(undefined)
+  const [isBucketListDialogOpen, setIsBucketListDialogOpen] = useState(false)
+  const [editingBucketListItem, setEditingBucketListItem] = useState<BucketListItem | undefined>(undefined)
+  const [deletingBucketListItem, setDeletingBucketListItem] = useState<BucketListItem | undefined>(undefined)
+  const [deletingSubscription, setDeletingSubscription] = useState<Subscription | undefined>(undefined)
 
   const isLoading =
-    isLoadingGoals || isLoadingEvents || isLoadingTasks || isLoadingSettings
+    isLoadingGoals || isLoadingEvents || isLoadingTasks || isLoadingSubscriptions || isLoadingSettings
 
   const handleEditEvent = (event: Event) => {
     setEditingEvent(event)
@@ -85,6 +157,10 @@ export function CalendarView({ initialDate }: CalendarViewProps) {
         allDay: input.allDay,
         category: input.category,
         description: input.description,
+        recurrenceRule: input.recurrenceRule,
+        recurrenceDaysOfWeek: input.recurrenceDaysOfWeek,
+        recurrenceDayOfMonth: input.recurrenceDayOfMonth,
+        recurrenceEndDate: input.recurrenceEndDate,
       }
       await updateEvent(editingEvent.id, updateInput)
       setIsEventDialogOpen(false)
@@ -127,6 +203,10 @@ export function CalendarView({ initialDate }: CalendarViewProps) {
       const updateInput: UpdateTaskInput = {
         title: input.title,
         executionDate: input.executionDate,
+        recurrenceRule: input.recurrenceRule,
+        recurrenceDaysOfWeek: input.recurrenceDaysOfWeek,
+        recurrenceDayOfMonth: input.recurrenceDayOfMonth,
+        recurrenceEndDate: input.recurrenceEndDate,
       }
       await updateTask(editingTask.id, updateInput)
       setIsTaskDialogOpen(false)
@@ -159,10 +239,93 @@ export function CalendarView({ initialDate }: CalendarViewProps) {
   const handleToggleTaskCompletion = async (task: Task) => {
     try {
       setOperationError(null)
+      if (
+        task.recurrenceRule &&
+        !task.completed &&
+        task.executionDate
+      ) {
+        const nextDate = getNextOccurrenceAfter(
+          task,
+          parseISO(task.executionDate),
+        )
+        if (nextDate !== null) {
+          await updateTask(task.id, {
+            executionDate: nextDate,
+            completed: false,
+          })
+          return
+        }
+      }
       await toggleTaskCompletion(task.id, !task.completed)
     } catch (err) {
       setOperationError(
         err instanceof Error ? err.message : 'タスクの完了状態の更新に失敗しました',
+      )
+    }
+  }
+
+  const handleEditBucketListItem = (item: BucketListItem) => {
+    setEditingBucketListItem(item)
+    setIsBucketListDialogOpen(true)
+  }
+
+  const handleUpdateBucketListItem = async (input: CreateBucketListItemInput) => {
+    if (!editingBucketListItem) return
+
+    try {
+      setOperationError(null)
+      const updateInput: UpdateBucketListItemInput = {
+        title: input.title,
+        categoryId: input.categoryId,
+        targetYear: input.targetYear,
+        targetMonth: input.targetMonth,
+      }
+      await updateBucketListItem(editingBucketListItem.id, updateInput)
+      setIsBucketListDialogOpen(false)
+      setEditingBucketListItem(undefined)
+    } catch (err) {
+      setOperationError(
+        err instanceof Error ? err.message : 'やりたいことの更新に失敗しました',
+      )
+    }
+  }
+
+  const handleDeleteBucketListItemClick = (item: BucketListItem) => {
+    setDeletingBucketListItem(item)
+  }
+
+  const handleDeleteBucketListItem = async () => {
+    if (!deletingBucketListItem) return
+
+    try {
+      setOperationError(null)
+      await deleteBucketListItem(deletingBucketListItem.id)
+      setDeletingBucketListItem(undefined)
+    } catch (err) {
+      setOperationError(
+        err instanceof Error ? err.message : 'やりたいことの削除に失敗しました',
+      )
+    }
+  }
+
+  const handleEditSubscription = (subscription: Subscription) => {
+    window.location.href = '/subscriptions'
+  }
+
+  const handleDeleteSubscriptionClick = (subscription: Subscription) => {
+    setDeletingSubscription(subscription)
+  }
+
+  const handleDeleteSubscription = async () => {
+    if (!deletingSubscription) return
+
+    try {
+      setOperationError(null)
+      await deleteSubscription(deletingSubscription.id)
+      setDeletingSubscription(undefined)
+    } catch (err) {
+      setOperationError(
+        err instanceof Error ? err.message : 'サブスクの削除に失敗しました',
       )
     }
   }
@@ -190,32 +353,61 @@ export function CalendarView({ initialDate }: CalendarViewProps) {
         {viewMode === 'month' ? (
           <MonthView
             currentDate={currentDate}
-            monthlyGoals={monthlyGoals}
-            events={events}
-            tasks={tasks}
+            events={expandedEvents}
+            tasks={expandedTasks}
+            subscriptions={subscriptions}
             weekStartDay={weekStartDay}
+            holidays={holidays}
             onEditEvent={handleEditEvent}
             onDeleteEvent={handleDeleteEventClick}
             onEditTask={handleEditTask}
             onDeleteTask={handleDeleteTaskClick}
             onToggleTaskCompletion={handleToggleTaskCompletion}
+            onEditSubscription={handleEditSubscription}
+            onDeleteSubscription={handleDeleteSubscriptionClick}
           />
         ) : (
           <WeekView
             currentDate={currentDate}
-            monthlyGoals={monthlyGoals}
             weeklyGoals={weeklyGoals}
-            events={events}
-            tasks={tasks}
+            events={expandedEvents}
+            tasks={expandedTasks}
+            subscriptions={subscriptions}
             weekStartDay={weekStartDay}
+            holidays={holidays}
             onEditEvent={handleEditEvent}
             onDeleteEvent={handleDeleteEventClick}
             onEditTask={handleEditTask}
             onDeleteTask={handleDeleteTaskClick}
             onToggleTaskCompletion={handleToggleTaskCompletion}
+            onEditSubscription={handleEditSubscription}
+            onDeleteSubscription={handleDeleteSubscriptionClick}
           />
         )}
       </CalendarViewBase>
+
+      {viewMode === 'month' && (
+        <Card className="mt-4 border-border shadow-none">
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-lg">
+              {currentDate.getFullYear()}年{currentDate.getMonth() + 1}月のやりたいこと
+            </CardTitle>
+            <Link
+              href="/bucket-list"
+              className="text-sm text-primary hover:underline"
+            >
+              やりたいことリストへ
+            </Link>
+          </CardHeader>
+          <CardContent>
+            <BucketListList
+              items={bucketListItemsForMonth}
+              onEdit={handleEditBucketListItem}
+              onDelete={handleDeleteBucketListItemClick}
+            />
+          </CardContent>
+        </Card>
+      )}
 
       <EventDialog
         open={isEventDialogOpen}
@@ -231,7 +423,11 @@ export function CalendarView({ initialDate }: CalendarViewProps) {
 
       <DeleteConfirmDialog
         open={!!deletingEvent}
-        message={`「${deletingEvent?.title}」を削除しますか？この操作は取り消せません。`}
+        message={
+          deletingEvent?.recurrenceRule
+            ? `「${deletingEvent.title}」の繰り返し予定をすべて削除しますか？この操作は取り消せません。`
+            : `「${deletingEvent?.title}」を削除しますか？この操作は取り消せません。`
+        }
         onConfirm={handleDeleteEvent}
         onCancel={() => setDeletingEvent(undefined)}
       />
@@ -250,9 +446,39 @@ export function CalendarView({ initialDate }: CalendarViewProps) {
 
       <DeleteConfirmDialog
         open={!!deletingTask}
-        message={`「${deletingTask?.title}」を削除しますか？この操作は取り消せません。`}
+        message={
+          deletingTask?.recurrenceRule
+            ? `「${deletingTask?.title}」は繰り返しタスクです。削除するとすべての発生が削除されます。この操作は取り消せません。`
+            : `「${deletingTask?.title}」を削除しますか？この操作は取り消せません。`
+        }
         onConfirm={handleDeleteTask}
         onCancel={() => setDeletingTask(undefined)}
+      />
+
+      <BucketListDialog
+        open={isBucketListDialogOpen}
+        onOpenChange={(open) => {
+          setIsBucketListDialogOpen(open)
+          if (!open) {
+            setEditingBucketListItem(undefined)
+          }
+        }}
+        onSubmit={handleUpdateBucketListItem}
+        item={editingBucketListItem}
+      />
+
+      <DeleteConfirmDialog
+        open={!!deletingBucketListItem}
+        message={`「${deletingBucketListItem?.title}」を削除しますか？この操作は取り消せません。`}
+        onConfirm={handleDeleteBucketListItem}
+        onCancel={() => setDeletingBucketListItem(undefined)}
+      />
+
+      <DeleteConfirmDialog
+        open={!!deletingSubscription}
+        message={`「${deletingSubscription?.name}」を削除しますか？この操作は取り消せません。`}
+        onConfirm={handleDeleteSubscription}
+        onCancel={() => setDeletingSubscription(undefined)}
       />
     </>
   )

@@ -5,14 +5,26 @@ import type {
   CreateYearlyGoalInput,
   UpdateYearlyGoalInput,
 } from '../types/yearly-goal'
+import type { ChecklistItem } from '../types/checklist-item'
 
 interface DbYearlyGoal {
   id: number
   title: string
   year: number
   achieved: number
+  checklist: string | null
   created_at: string
   updated_at: string
+}
+
+function parseChecklist(checklistJson: string | null): ChecklistItem[] {
+  if (!checklistJson) return []
+  try {
+    const parsed = JSON.parse(checklistJson)
+    return Array.isArray(parsed) ? parsed : []
+  } catch {
+    return []
+  }
 }
 
 function mapDbYearlyGoalToYearlyGoal(dbGoal: DbYearlyGoal): YearlyGoal {
@@ -21,6 +33,7 @@ function mapDbYearlyGoalToYearlyGoal(dbGoal: DbYearlyGoal): YearlyGoal {
     title: dbGoal.title,
     year: dbGoal.year,
     achieved: dbGoal.achieved === 1,
+    checklist: parseChecklist(dbGoal.checklist),
     createdAt: dbGoal.created_at,
     updatedAt: dbGoal.updated_at,
   }
@@ -67,10 +80,13 @@ export async function createYearlyGoal(
   await validateYearlyLimit(year)
 
   try {
+    const checklistJson = input.checklist
+      ? JSON.stringify(input.checklist)
+      : null
     await db.execute(
-      `INSERT INTO yearly_goals (title, year)
-       VALUES (?, ?)`,
-      [input.title, year],
+      `INSERT INTO yearly_goals (title, year, checklist)
+       VALUES (?, ?, ?)`,
+      [input.title, year, checklistJson],
     )
 
     const result = await db.select<DbYearlyGoal[]>(
@@ -168,6 +184,10 @@ export async function updateYearlyGoal(
   if (input.year !== undefined) {
     updates.push('year = ?')
     values.push(input.year)
+  }
+  if (input.checklist !== undefined) {
+    updates.push('checklist = ?')
+    values.push(input.checklist ? JSON.stringify(input.checklist) : null)
   }
 
   if (updates.length === 0) {

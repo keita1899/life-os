@@ -3,7 +3,7 @@
 import type { ReactElement } from 'react'
 import Link from 'next/link'
 import { useRouter, useSearchParams } from 'next/navigation'
-import { useMemo } from 'react'
+import { useMemo, Suspense } from 'react'
 import useSWR from 'swr'
 import { mutate } from 'swr'
 import { MainLayout } from '@/components/layout/MainLayout'
@@ -31,7 +31,7 @@ import {
   AccordionItem,
   AccordionTrigger,
 } from '@/components/ui/accordion'
-import { Trash2, Calendar, Focus } from 'lucide-react'
+import { Pencil, Trash2, Calendar, Focus } from 'lucide-react'
 
 const statusLabels: Record<ProjectStatus, string> = {
   draft: '下書き',
@@ -54,7 +54,7 @@ function formatDate(date: string | null): string | null {
   })
 }
 
-export default function DevProjectPage(): ReactElement | null {
+function DevProjectPageContent(): ReactElement | null {
   const { mode } = useMode()
   const router = useRouter()
   const searchParams = useSearchParams()
@@ -94,7 +94,34 @@ export default function DevProjectPage(): ReactElement | null {
     useState(false)
   const [taskOperationError, setTaskOperationError] = useState<string | null>(null)
 
-  const groupedTasks = useMemo(() => groupTasks(tasks), [tasks])
+  const convertedTasks: Task[] = useMemo(() => {
+    return tasks.map((t) => ({
+      id: t.id,
+      title: t.title,
+      executionDate: t.executionDate,
+      completed: t.completed,
+      order: t.order,
+      scheduledTime: null,
+      recurrenceRule: null,
+      recurrenceDaysOfWeek: null,
+      recurrenceDayOfMonth: null,
+      recurrenceEndDate: null,
+      recurrenceExcludedDates: [],
+      memo: t.memo,
+      createdAt: t.createdAt,
+      updatedAt: t.updatedAt,
+    }))
+  }, [tasks])
+
+  const groupedTasks = useMemo(() => groupTasks(convertedTasks), [convertedTasks])
+
+  const visibleGroups = useMemo(
+    () =>
+      groupedTasks.filter(
+        (group) => group.key === 'today' || group.tasks.length > 0,
+      ),
+    [groupedTasks],
+  )
 
   if (mode !== 'development') {
     return null
@@ -138,6 +165,7 @@ export default function DevProjectPage(): ReactElement | null {
         projectId,
         type: 'inbox',
         executionDate: input.executionDate,
+        memo: input.memo,
       })
       setIsTaskDialogOpen(false)
     } catch (err) {
@@ -155,6 +183,7 @@ export default function DevProjectPage(): ReactElement | null {
       await updateTask(editingTask.id, {
         title: input.title,
         executionDate: input.executionDate,
+        memo: input.memo,
       })
       setIsTaskDialogOpen(false)
       setEditingTask(undefined)
@@ -271,16 +300,22 @@ export default function DevProjectPage(): ReactElement | null {
           {data && (
             <div className="flex items-center gap-2">
               <Button
-                variant="outline"
+                variant="ghost"
+                size="icon"
                 onClick={() => setIsEditDialogOpen(true)}
+                className="text-muted-foreground hover:text-foreground"
+                aria-label="編集"
               >
-                編集
+                <Pencil className="h-4 w-4" />
               </Button>
               <Button
-                variant="destructive"
+                variant="ghost"
+                size="icon"
                 onClick={() => setIsDeleteDialogOpen(true)}
+                className="text-muted-foreground hover:text-red-600 hover:dark:text-red-400"
+                aria-label="削除"
               >
-                削除
+                <Trash2 className="h-4 w-4" />
               </Button>
             </div>
           )}
@@ -309,7 +344,7 @@ export default function DevProjectPage(): ReactElement | null {
         ) : (
           <div className="space-y-6">
             <section>
-              <div className="mt-3 rounded-lg border border-stone-200 bg-white p-4 dark:border-stone-800 dark:bg-stone-900">
+              <div className="mt-3 border-b border-stone-200 py-4 dark:border-stone-800">
                 <dl className="grid gap-4 sm:grid-cols-3">
                   <div>
                     <dt className="text-xs font-medium text-muted-foreground">
@@ -358,9 +393,9 @@ export default function DevProjectPage(): ReactElement | null {
                 <Accordion
                   type="multiple"
                   className="w-full"
-                  defaultValue={groupedTasks.map((group) => group.key)}
+                  defaultValue={visibleGroups.map((group) => group.key)}
                 >
-                  {groupedTasks.map((group) => (
+                  {visibleGroups.map((group) => (
                     <AccordionItem key={group.key} value={group.key}>
                       <AccordionHeader>
                         <AccordionTrigger className="hover:no-underline">
@@ -369,24 +404,33 @@ export default function DevProjectPage(): ReactElement | null {
                               <h3 className="text-lg font-semibold text-stone-900 dark:text-stone-100">
                                 {group.title}
                               </h3>
-                              <span className="text-sm text-muted-foreground">
-                                ({group.tasks.length})
-                              </span>
+                              {group.tasks.length > 0 && (
+                                <span className="text-sm text-muted-foreground">
+                                  {group.tasks.length}
+                                </span>
+                              )}
                             </div>
                             {group.key === 'overdue' && group.tasks.length > 0 && (
-                              <Button
-                                type="button"
-                                variant="outline"
-                                size="sm"
-                                className="mr-2"
+                              <span
+                                role="button"
+                                tabIndex={0}
+                                className="inline-flex h-9 cursor-pointer items-center justify-center rounded-md border border-input bg-background px-3 text-sm font-medium hover:bg-accent hover:text-accent-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 mr-2 [&_svg]:size-4"
                                 onClick={(e) => {
                                   e.stopPropagation()
+                                  e.preventDefault()
                                   handleUpdateOverdueTasksToToday()
+                                }}
+                                onKeyDown={(e) => {
+                                  if (e.key === 'Enter' || e.key === ' ') {
+                                    e.preventDefault()
+                                    e.stopPropagation()
+                                    handleUpdateOverdueTasksToToday()
+                                  }
                                 }}
                               >
                                 <Calendar className="mr-2 h-4 w-4" />
                                 今日に戻す
-                              </Button>
+                              </span>
                             )}
                           </div>
                         </AccordionTrigger>
@@ -475,6 +519,14 @@ export default function DevProjectPage(): ReactElement | null {
         )}
       </div>
     </MainLayout>
+  )
+}
+
+export default function DevProjectPage(): ReactElement | null {
+  return (
+    <Suspense fallback={<Loading />}>
+      <DevProjectPageContent />
+    </Suspense>
   )
 }
 

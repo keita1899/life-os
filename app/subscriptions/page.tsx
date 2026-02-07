@@ -1,7 +1,9 @@
 'use client'
 
-import { useState, useMemo } from 'react'
+import { useState, useMemo, useCallback } from 'react'
+import { Plus } from 'lucide-react'
 import { Button } from '@/components/ui/button'
+import { useCreateShortcut } from '@/hooks/useCreateShortcut'
 import {
   Accordion,
   AccordionContent,
@@ -156,26 +158,28 @@ export default function SubscriptionsPage() {
     }
   }
 
+  const handleCreateClick = useCallback(() => {
+    setEditingSubscription(undefined)
+    setIsDialogOpen(true)
+  }, [])
+
+  useCreateShortcut({
+    onCreate: handleCreateClick,
+    enabled: !isDialogOpen,
+  })
+
   return (
     <MainLayout>
       <div className="container mx-auto max-w-4xl py-8 px-4">
         <div className="mb-6">
           <div className="flex items-center justify-between">
             <h1 className="text-3xl font-bold">サブスク</h1>
-            <Button onClick={() => setIsDialogOpen(true)}>
-              サブスクを追加
+            <Button onClick={handleCreateClick}>
+              <Plus className="mr-2 h-4 w-4" />
+              サブスクを作成
             </Button>
           </div>
         </div>
-
-      {monthlyTotal > 0 && (
-        <div className="mb-6 rounded-lg border border-stone-200 bg-white p-4 dark:border-stone-800 dark:bg-stone-900">
-          <div className="text-sm text-muted-foreground">月額合計</div>
-          <div className="text-2xl font-bold">
-            {monthlyTotal.toLocaleString()}円
-          </div>
-        </div>
-      )}
 
       {upcomingSubscriptions.length > 0 && (
         <div className="mb-6 rounded-lg border border-yellow-200 bg-yellow-50 p-4 dark:border-yellow-900/50 dark:bg-yellow-900/20">
@@ -213,13 +217,23 @@ export default function SubscriptionsPage() {
             <AccordionItem key={group.key} value={group.key}>
               <AccordionHeader className="flex items-center justify-between">
                 <AccordionTrigger className="hover:no-underline flex-1">
-                  <div className="flex items-center gap-2">
+                  <div className="flex w-full items-center gap-2">
                     <h2 className="text-lg font-semibold text-stone-900 dark:text-stone-100">
                       {group.title}
                     </h2>
-                    <span className="text-sm text-muted-foreground">
-                      ({group.subscriptions.length})
-                    </span>
+                    {group.subscriptions.length > 0 && (
+                      <span className="text-sm text-muted-foreground">
+                        {group.subscriptions.length}
+                      </span>
+                    )}
+                    {group.key === 'active' && monthlyTotal > 0 && (
+                      <span className="ml-auto text-lg text-muted-foreground">
+                        月額合計:{' '}
+                        <span className="font-semibold text-foreground tabular-nums">
+                          {monthlyTotal.toLocaleString()}円
+                        </span>
+                      </span>
+                    )}
                   </div>
                 </AccordionTrigger>
               </AccordionHeader>

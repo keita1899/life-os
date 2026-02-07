@@ -12,6 +12,7 @@ interface HabitHeatmapMonthViewProps {
   todayDay: number | null
   completedHabitIdsToday: Set<number>
   onToggleToday?: (habit: Habit) => void
+  onToggleDate?: (habit: Habit, dateStr: string) => void
   onEdit?: (habit: Habit) => void
   onDelete?: (habit: Habit) => void
 }
@@ -23,13 +24,14 @@ export function HabitHeatmapMonthView({
   todayDay,
   completedHabitIdsToday,
   onToggleToday,
+  onToggleDate,
   onEdit,
   onDelete,
 }: HabitHeatmapMonthViewProps) {
   const lastDay = getDate(endOfMonth(new Date(year, month - 1)))
 
   return (
-    <div className="overflow-x-auto rounded-lg border border-stone-200 dark:border-stone-800">
+    <div className="overflow-x-auto">
       <table className="w-full min-w-[200px] border-collapse text-left">
         <thead>
           <tr>
@@ -66,6 +68,7 @@ export function HabitHeatmapMonthView({
               todayDay={todayDay}
               completedHabitIdsToday={completedHabitIdsToday}
               onToggleToday={onToggleToday}
+              onToggleDate={onToggleDate}
               onEdit={onEdit}
               onDelete={onDelete}
             />

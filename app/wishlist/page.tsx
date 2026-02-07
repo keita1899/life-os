@@ -1,13 +1,9 @@
 'use client'
 
-import { useState, useMemo } from 'react'
+import { useState, useMemo, useCallback } from 'react'
+import { Trash2, Plus } from 'lucide-react'
 import { Button } from '@/components/ui/button'
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-} from '@/components/ui/dialog'
+import { useCreateShortcut } from '@/hooks/useCreateShortcut'
 import {
   Accordion,
   AccordionContent,
@@ -17,7 +13,7 @@ import {
 } from '@/components/ui/accordion'
 import { WishlistList } from '@/components/wishlist/WishlistList'
 import { WishlistDialog } from '@/components/wishlist/WishlistDialog'
-import { WishlistCategoryManagement } from '@/components/wishlist/WishlistCategoryManagement'
+import { WishlistCategorySidebar } from '@/components/wishlist/WishlistCategorySidebar'
 import { DeleteConfirmDialog } from '@/components/ui/delete-confirm-dialog'
 import { Loading } from '@/components/ui/loading'
 import { ErrorMessage } from '@/components/ui/error-message'
@@ -48,6 +44,7 @@ export default function WishlistPage() {
     createWishlistItem,
     updateWishlistItem,
     deleteWishlistItem,
+    deleteWishlistItemsByIds,
   } = useWishlist()
   const { categories } = useWishlistCategories()
   const [selectedCategoryId, setSelectedCategoryId] = useState<string>('all')
@@ -59,7 +56,7 @@ export default function WishlistPage() {
   const [deletingItem, setDeletingItem] = useState<WishlistItem | undefined>(
     undefined,
   )
-  const [isCategoryManagementOpen, setIsCategoryManagementOpen] =
+  const [isDeletingPurchasedDialogOpen, setIsDeletingPurchasedDialogOpen] =
     useState(false)
   const [operationError, setOperationError] = useState<string | null>(null)
 
@@ -93,9 +90,27 @@ export default function WishlistPage() {
     return filtered
   }, [items, selectedCategoryId, selectedYear])
 
+  const unpurchasedItems = useMemo(
+    () => filteredItems.filter((item) => !item.purchased),
+    [filteredItems],
+  )
+  const purchasedItems = useMemo(
+    () => filteredItems.filter((item) => item.purchased),
+    [filteredItems],
+  )
+
   const totalPrice = useMemo(() => {
-    return calculateTotalPrice(filteredItems)
-  }, [filteredItems])
+    return calculateTotalPrice(unpurchasedItems)
+  }, [unpurchasedItems])
+
+  const selectedCategoryName = useMemo(() => {
+    if (selectedCategoryId === 'all') return 'すべて'
+    if (selectedCategoryId === 'none') return '未分類'
+    const category = categories.find(
+      (c) => c.id.toString() === selectedCategoryId,
+    )
+    return category?.name ?? ''
+  }, [selectedCategoryId, categories])
 
   if (mode !== 'life') {
     return null
@@ -122,6 +137,7 @@ export default function WishlistPage() {
         name: input.name,
         categoryId: input.categoryId,
         targetYear: input.targetYear,
+        targetMonth: input.targetMonth,
         price: input.price,
       }
       await updateWishlistItem(editingItem.id, updateInput)
@@ -146,6 +162,16 @@ export default function WishlistPage() {
     }
   }
 
+  const handleCreateClick = useCallback(() => {
+    setEditingItem(undefined)
+    setIsDialogOpen(true)
+  }, [])
+
+  useCreateShortcut({
+    onCreate: handleCreateClick,
+    enabled: !isDialogOpen,
+  })
+
   const handleDeleteItem = async () => {
     if (!deletingItem) return
 
@@ -164,132 +190,202 @@ export default function WishlistPage() {
     setDeletingItem(item)
   }
 
+  const handleTogglePurchased = async (item: WishlistItem) => {
+    try {
+      setOperationError(null)
+      await updateWishlistItem(item.id, { purchased: !item.purchased })
+    } catch (err) {
+      setOperationError(
+        err instanceof Error ? err.message : '更新に失敗しました',
+      )
+    }
+  }
+
+  const handleDeletePurchasedItemsClick = () => {
+    setIsDeletingPurchasedDialogOpen(true)
+  }
+
+  const handleDeletePurchasedItems = async () => {
+    const ids = purchasedItems.map((item) => item.id)
+    if (ids.length === 0) return
+
+    try {
+      setOperationError(null)
+      await deleteWishlistItemsByIds(ids)
+      setIsDeletingPurchasedDialogOpen(false)
+    } catch (err) {
+      setOperationError(
+        err instanceof Error
+          ? err.message
+          : '購入済みの一括削除に失敗しました',
+      )
+    }
+  }
+
   return (
     <MainLayout>
-      <div className="container mx-auto max-w-4xl py-8 px-4">
-        <div className="mb-6">
-          <div className="flex items-center justify-between">
-            <h1 className="text-3xl font-bold">欲しいものリスト</h1>
-            <div className="flex items-center gap-2">
-              <Button
-                variant="outline"
-                onClick={() => setIsCategoryManagementOpen(true)}
-              >
-                カテゴリー管理
-              </Button>
-              <Button onClick={() => setIsDialogOpen(true)}>
-                欲しいものを追加
+      <div className="flex min-h-[calc(100vh-3.5rem)]">
+        <div className="sticky top-14 h-[calc(100vh-3.5rem)] self-start">
+          <WishlistCategorySidebar
+            selectedCategoryId={selectedCategoryId}
+            onSelectCategory={setSelectedCategoryId}
+          />
+        </div>
+        <div className="min-h-0 flex-1 overflow-y-auto">
+          <div className="mx-auto max-w-3xl p-8">
+            <div className="mb-6 flex items-center justify-between">
+              <h1 className="text-3xl font-bold">欲しいものリスト</h1>
+              <Button onClick={handleCreateClick}>
+                <Plus className="mr-2 h-4 w-4" />
+                欲しいものを作成
               </Button>
             </div>
+
+            {totalPrice > 0 && (
+              <div className="mb-6 border-b border-stone-200 py-4 dark:border-stone-800">
+                <p className="text-lg text-muted-foreground">
+                  未購入の合計金額:{' '}
+                  <span className="font-semibold text-foreground tabular-nums">
+                    {totalPrice.toLocaleString()}円
+                  </span>
+                </p>
+              </div>
+            )}
+
+            <ErrorMessage
+              message={operationError || error || ''}
+              onDismiss={operationError ? () => setOperationError(null) : undefined}
+            />
+
+            {isLoading ? (
+              <Loading />
+            ) : (
+              <>
+                <div className="mb-4 flex items-center justify-between gap-4">
+                  <h2 className="text-lg font-semibold text-stone-900 dark:text-stone-100">
+                    {selectedCategoryName}
+                  </h2>
+                  <Select value={selectedYear} onValueChange={setSelectedYear}>
+                    <SelectTrigger className="w-[200px]">
+                      <SelectValue placeholder="年を選択" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="all">すべて</SelectItem>
+                      <SelectItem value="none">未定</SelectItem>
+                      {availableYears.map((year) => (
+                        <SelectItem key={year} value={year.toString()}>
+                          {year}年
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+                <Accordion
+                  type="multiple"
+                  className="w-full"
+                  defaultValue={
+                    purchasedItems.length > 0
+                      ? ['unpurchased', 'purchased']
+                      : ['unpurchased']
+                  }
+                >
+                  <AccordionItem value="unpurchased">
+                    <AccordionHeader>
+                      <AccordionTrigger className="hover:no-underline">
+                        <div className="flex items-center gap-2">
+                          <h2 className="text-lg font-semibold text-stone-900 dark:text-stone-100">
+                            未購入
+                          </h2>
+                          {unpurchasedItems.length > 0 && (
+                            <span className="text-sm text-muted-foreground">
+                              {unpurchasedItems.length}
+                            </span>
+                          )}
+                        </div>
+                      </AccordionTrigger>
+                    </AccordionHeader>
+                    <AccordionContent>
+                      <div className="space-y-4">
+                        <WishlistList
+                          items={unpurchasedItems}
+                          onEdit={handleEditItem}
+                          onDelete={handleDeleteClick}
+                          onToggleCompletion={handleTogglePurchased}
+                        />
+                      </div>
+                    </AccordionContent>
+                  </AccordionItem>
+                  {purchasedItems.length > 0 && (
+                    <AccordionItem value="purchased">
+                      <AccordionHeader>
+                        <AccordionTrigger className="hover:no-underline">
+                          <div className="flex items-center gap-2">
+                            <h2 className="text-lg font-semibold text-stone-900 dark:text-stone-100">
+                              購入済
+                            </h2>
+                            <span className="text-sm text-muted-foreground">
+                              {purchasedItems.length}
+                            </span>
+                          </div>
+                        </AccordionTrigger>
+                      </AccordionHeader>
+                      <AccordionContent>
+                        <div className="space-y-4">
+                          <WishlistList
+                            items={purchasedItems}
+                            onEdit={handleEditItem}
+                            onDelete={handleDeleteClick}
+                            onToggleCompletion={handleTogglePurchased}
+                          />
+                          <div className="flex justify-end">
+                            <Button
+                              type="button"
+                              variant="outline"
+                              size="sm"
+                              className="text-destructive hover:text-destructive hover:bg-destructive/10"
+                              onClick={handleDeletePurchasedItemsClick}
+                            >
+                              <Trash2 className="mr-2 h-4 w-4" />
+                              購入済みを一括削除
+                            </Button>
+                          </div>
+                        </div>
+                      </AccordionContent>
+                    </AccordionItem>
+                  )}
+                </Accordion>
+              </>
+            )}
+
+            <WishlistDialog
+              open={isDialogOpen}
+              onOpenChange={handleDialogClose}
+              onSubmit={editingItem ? handleUpdateItem : handleCreateItem}
+              item={editingItem}
+              defaultCategoryId={
+                editingItem == null &&
+                selectedCategoryId !== 'all' &&
+                selectedCategoryId !== 'none'
+                  ? selectedCategoryId
+                  : undefined
+              }
+            />
+
+            <DeleteConfirmDialog
+              open={!!deletingItem}
+              message={`「${deletingItem?.name}」を削除しますか？この操作は取り消せません。`}
+              onConfirm={handleDeleteItem}
+              onCancel={() => setDeletingItem(undefined)}
+            />
+
+            <DeleteConfirmDialog
+              open={isDeletingPurchasedDialogOpen}
+              message={`購入済みの欲しいもの（${purchasedItems.length}件）をすべて削除しますか？この操作は取り消せません。`}
+              onConfirm={handleDeletePurchasedItems}
+              onCancel={() => setIsDeletingPurchasedDialogOpen(false)}
+            />
           </div>
         </div>
-
-        {totalPrice > 0 && (
-          <div className="mb-6 rounded-lg border border-stone-200 bg-white p-4 dark:border-stone-800 dark:bg-stone-900">
-            <div className="text-sm text-muted-foreground">未購入の合計金額</div>
-            <div className="text-2xl font-bold">
-              {totalPrice.toLocaleString()}円
-            </div>
-          </div>
-        )}
-
-        <ErrorMessage
-          message={operationError || error || ''}
-          onDismiss={operationError ? () => setOperationError(null) : undefined}
-        />
-
-        {isLoading ? (
-          <Loading />
-        ) : (
-          <>
-            <div className="mb-4 flex justify-end gap-2">
-              <Select value={selectedCategoryId} onValueChange={setSelectedCategoryId}>
-                <SelectTrigger className="w-[200px]">
-                  <SelectValue placeholder="カテゴリーを選択" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">すべてのカテゴリー</SelectItem>
-                  <SelectItem value="none">未分類</SelectItem>
-                  {categories.map((category) => (
-                    <SelectItem key={category.id} value={category.id.toString()}>
-                      {category.name}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-              <Select value={selectedYear} onValueChange={setSelectedYear}>
-                <SelectTrigger className="w-[200px]">
-                  <SelectValue placeholder="年を選択" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">全期間</SelectItem>
-                  <SelectItem value="none">未設定</SelectItem>
-                  {availableYears.map((year) => (
-                    <SelectItem key={year} value={year.toString()}>
-                      {year}年
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-            <Accordion
-            type="multiple"
-            className="w-full"
-            defaultValue={['items']}
-          >
-              <AccordionItem value="items">
-                <AccordionHeader>
-                  <AccordionTrigger className="hover:no-underline">
-                    <div className="flex items-center gap-2">
-                      <h2 className="text-lg font-semibold text-stone-900 dark:text-stone-100">
-                        欲しいもの
-                      </h2>
-                      <span className="text-sm text-muted-foreground">
-                        ({filteredItems.length})
-                      </span>
-                    </div>
-                  </AccordionTrigger>
-                </AccordionHeader>
-                <AccordionContent>
-                  <div className="space-y-4">
-                    <WishlistList
-                      items={filteredItems}
-                      onEdit={handleEditItem}
-                      onDelete={handleDeleteClick}
-                    />
-                  </div>
-                </AccordionContent>
-              </AccordionItem>
-          </Accordion>
-          </>
-        )}
-
-        <WishlistDialog
-          open={isDialogOpen}
-          onOpenChange={handleDialogClose}
-          onSubmit={editingItem ? handleUpdateItem : handleCreateItem}
-          item={editingItem}
-        />
-
-        <Dialog
-          open={isCategoryManagementOpen}
-          onOpenChange={setIsCategoryManagementOpen}
-        >
-          <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
-            <DialogHeader>
-              <DialogTitle>カテゴリー管理</DialogTitle>
-            </DialogHeader>
-            <WishlistCategoryManagement />
-          </DialogContent>
-        </Dialog>
-
-        <DeleteConfirmDialog
-          open={!!deletingItem}
-          message={`「${deletingItem?.name}」を削除しますか？この操作は取り消せません。`}
-          onConfirm={handleDeleteItem}
-          onCancel={() => setDeletingItem(undefined)}
-        />
-
       </div>
     </MainLayout>
   )

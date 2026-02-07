@@ -1,8 +1,9 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useCallback } from 'react'
 import { Plus } from 'lucide-react'
 import { Button } from '@/components/ui/button'
+import { useCreateShortcut } from '@/hooks/useCreateShortcut'
 import {
   Select,
   SelectContent,
@@ -52,9 +53,14 @@ export default function DevProjectsPage() {
     setIsDialogOpen(open)
   }
 
-  const handleCreateClick = () => {
+  const handleCreateClick = useCallback(() => {
     setIsDialogOpen(true)
-  }
+  }, [])
+
+  useCreateShortcut({
+    onCreate: handleCreateClick,
+    enabled: !isDialogOpen,
+  })
 
   return (
     <MainLayout>
@@ -74,7 +80,7 @@ export default function DevProjectsPage() {
             </Select>
             <Button onClick={handleCreateClick}>
               <Plus className="mr-2 h-4 w-4" />
-              新規作成
+              プロジェクトを作成
             </Button>
           </div>
         </div>

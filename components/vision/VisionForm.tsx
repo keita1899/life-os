@@ -1,7 +1,10 @@
 'use client'
 
+import { useCallback } from 'react'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
+import { useFormSubmitShortcut } from '@/hooks/useFormSubmitShortcut'
+import { formatShortcutKey } from '@/lib/utils/shortcut'
 import * as z from 'zod'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -38,9 +41,14 @@ export function VisionForm({
     },
   })
 
-  const handleSubmit = async (formValues: VisionFormValues): Promise<void> => {
+  const handleSubmit = useCallback(async (formValues: VisionFormValues): Promise<void> => {
     await onSubmit(formValues.title)
-  }
+  }, [onSubmit])
+
+  useFormSubmitShortcut({
+    form,
+    onSubmit: handleSubmit,
+  })
 
   return (
     <Form {...form}>
@@ -76,7 +84,8 @@ export function VisionForm({
           size="icon"
           disabled={form.formState.isSubmitting}
           className="h-9 w-9"
-          aria-label="保存"
+          aria-label={`保存 (${formatShortcutKey()})`}
+          title={`保存 (${formatShortcutKey()})`}
         >
           <Check className="h-4 w-4" />
         </Button>

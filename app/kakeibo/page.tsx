@@ -1,7 +1,9 @@
 'use client'
 
-import { useState, useMemo, useEffect } from 'react'
+import { useState, useMemo, useEffect, useCallback } from 'react'
+import { Plus } from 'lucide-react'
 import { MainLayout } from '@/components/layout/MainLayout'
+import { useCreateShortcut } from '@/hooks/useCreateShortcut'
 import { useMode } from '@/lib/contexts/ModeContext'
 import { Button } from '@/components/ui/button'
 import { TransactionDialog } from '@/components/kakeibo/TransactionDialog'
@@ -79,7 +81,7 @@ export default function KakeiboPage() {
 
   const incomeCategories = useTransactionCategories('income')
   const expenseCategories = useTransactionCategories('expense')
-  const { userSettings, updateUserSettings, refreshUserSettings } = useUserSettings()
+  const { userSettings, updateUserSettings } = useUserSettings()
 
   const filteredTransactions = useMemo(() => {
     let filtered = transactions
@@ -165,6 +167,14 @@ export default function KakeiboPage() {
         return { start: '期間開始時残高', end: '期間終了時残高' }
     }
   }, [periodType])
+
+  const shouldShowInitialBalanceDialog = useMemo(() => {
+    if (!userSettings) return false
+    return (
+      userSettings.initialBalance === null &&
+      allTransactions.length === 0
+    )
+  }, [userSettings, allTransactions.length])
 
   if (mode !== 'life') {
     return null
@@ -254,17 +264,19 @@ export default function KakeiboPage() {
     }
   }
 
-  const shouldShowInitialBalanceDialog = useMemo(() => {
-    if (!userSettings) return false
-    return (
-      userSettings.initialBalance === null &&
-      allTransactions.length === 0
-    )
-  }, [userSettings, allTransactions.length])
-
   const handleInitialBalanceConfirm = async (balance: number) => {
     await updateUserSettings({ initialBalance: balance })
   }
+
+  const handleCreateClick = useCallback(() => {
+    setEditingTransaction(undefined)
+    setIsDialogOpen(true)
+  }, [])
+
+  useCreateShortcut({
+    onCreate: handleCreateClick,
+    enabled: !isDialogOpen,
+  })
 
   return (
     <MainLayout>
@@ -303,10 +315,11 @@ export default function KakeiboPage() {
 
         <div className="mb-4 flex items-center justify-between">
           <div className="text-sm text-muted-foreground">
-            取引一覧（{filteredTransactions.length}件）
+            取引一覧{filteredTransactions.length > 0 ? ` ${filteredTransactions.length}` : ''}
           </div>
-          <Button onClick={() => setIsDialogOpen(true)}>
-            取引を追加
+          <Button onClick={handleCreateClick}>
+            <Plus className="mr-2 h-4 w-4" />
+            取引を作成
           </Button>
         </div>
 
@@ -327,7 +340,13 @@ export default function KakeiboPage() {
           />
         </div>
 
-        <div className="rounded-lg border border-stone-200 bg-white p-4 dark:border-stone-800 dark:bg-stone-900">
+        <div
+          className={
+            isLoading || filteredTransactions.length === 0
+              ? 'rounded-lg border border-stone-200 p-4 dark:border-stone-800'
+              : undefined
+          }
+        >
           {isLoading ? (
             <Loading />
           ) : (

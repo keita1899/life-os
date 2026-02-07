@@ -11,6 +11,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select'
+import { cn } from '@/lib/utils'
 
 type ViewMode = 'month' | 'week'
 
@@ -26,6 +27,7 @@ interface CalendarViewBaseProps {
   onNext: () => void
   isLoading: boolean
   children: ReactNode
+  cardClassName?: string
 }
 
 export function CalendarViewBase({
@@ -36,10 +38,11 @@ export function CalendarViewBase({
   onNext,
   isLoading,
   children,
+  cardClassName,
 }: CalendarViewBaseProps) {
   return (
     <div className="w-full space-y-4">
-      <Card className="border-border shadow-none">
+      <Card className={cn('border-border shadow-none', cardClassName)}>
         <CardHeader>
           <div className="flex items-center justify-between">
             <CardTitle className="text-2xl">{displayTitle}</CardTitle>

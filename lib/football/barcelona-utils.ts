@@ -4,5 +4,8 @@ export function isBarcelonaMatch(event: {
   title: string
   category: EventCategory
 }): boolean {
-  return event.category === 'sports' && event.title.includes('FC Barcelona')
+  return (
+    event.category === 'barca' ||
+    (event.category === 'sports' && event.title.includes('FC Barcelona'))
+  )
 }

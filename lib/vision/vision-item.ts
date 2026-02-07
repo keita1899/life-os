@@ -1,5 +1,4 @@
 import { getDatabase, handleDbError } from '../db'
-import { DB_COLUMNS } from '../db/constants'
 import type {
   VisionItem,
   CreateVisionItemInput,

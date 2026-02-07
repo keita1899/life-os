@@ -1,6 +1,8 @@
 'use client'
 
-import { useState, useMemo, useEffect } from 'react'
+import { useState, useMemo, useEffect, useCallback } from 'react'
+import { useFormSubmitShortcut } from '@/hooks/useFormSubmitShortcut'
+import { formatSubmitLabelWithShortcut } from '@/lib/utils/shortcut'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import * as z from 'zod'
@@ -64,7 +66,18 @@ export function MonthlyGoalCalendarForm({
     return () => clearTimeout(timeoutId)
   }, [currentMonthlyGoal])
 
-  const handleSubmit = async (data: MonthlyGoalFormValues) => {
+  const handleDelete = useCallback(async () => {
+    if (!currentMonthlyGoal) return
+
+    try {
+      await deleteMonthlyGoal(currentMonthlyGoal.id)
+      setIsEditing(false)
+    } catch (err) {
+      console.error('Failed to delete monthly goal:', err)
+    }
+  }, [currentMonthlyGoal, deleteMonthlyGoal])
+
+  const handleSubmit = useCallback(async (data: MonthlyGoalFormValues) => {
     const trimmedValue = data.title.trim()
     if (!trimmedValue) {
       if (currentMonthlyGoal) {
@@ -98,18 +111,13 @@ export function MonthlyGoalCalendarForm({
     } catch (err) {
       console.error('Failed to save monthly goal:', err)
     }
-  }
+  }, [currentMonthlyGoal, handleDelete, updateMonthlyGoal, createMonthlyGoal, year, month])
 
-  const handleDelete = async () => {
-    if (!currentMonthlyGoal) return
-
-    try {
-      await deleteMonthlyGoal(currentMonthlyGoal.id)
-      setIsEditing(false)
-    } catch (err) {
-      console.error('Failed to delete monthly goal:', err)
-    }
-  }
+  useFormSubmitShortcut({
+    form,
+    onSubmit: handleSubmit,
+    enabled: isEditing,
+  })
 
   const handleDoubleClick = () => {
     if (!isEditing) {
@@ -171,7 +179,7 @@ export function MonthlyGoalCalendarForm({
                 disabled={form.formState.isSubmitting}
                 size="default"
               >
-                保存
+                {formatSubmitLabelWithShortcut('保存')}
               </Button>
               {currentMonthlyGoal && (
                 <Button

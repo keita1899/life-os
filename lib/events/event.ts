@@ -1,6 +1,11 @@
 import { getDatabase, handleDbError } from '../db'
 import { DB_COLUMNS } from '../db/constants'
-import type { Event, CreateEventInput, UpdateEventInput } from '../types/event'
+import type {
+  Event,
+  CreateEventInput,
+  UpdateEventInput,
+  RecurrenceRule,
+} from '../types/event'
 
 interface DbEvent {
   id: number
@@ -10,11 +15,43 @@ interface DbEvent {
   all_day: number
   category: string | null
   description: string | null
+  recurrence_rule: string | null
+  recurrence_day_of_week: number | null
+  recurrence_days_of_week: string | null
+  recurrence_day_of_month: number | null
+  recurrence_end_date: string | null
+  recurrence_excluded_dates: string | null
   created_at: string
   updated_at: string
 }
 
+function parseDaysOfWeek(
+  daysStr: string | null,
+  fallbackSingle: number | null,
+): number[] | null {
+  if (daysStr?.trim()) {
+    const parsed = daysStr
+      .split(',')
+      .map((s) => parseInt(s.trim(), 10))
+      .filter((n) => !Number.isNaN(n) && n >= 0 && n <= 6)
+    if (parsed.length > 0) return parsed
+  }
+  if (fallbackSingle !== null && fallbackSingle !== undefined) {
+    return [fallbackSingle]
+  }
+  return null
+}
+
 function mapDbEventToEvent(dbEvent: DbEvent): Event {
+  let excludedDates: string[] = []
+  if (dbEvent.recurrence_excluded_dates) {
+    try {
+      excludedDates = JSON.parse(dbEvent.recurrence_excluded_dates)
+    } catch {
+      excludedDates = []
+    }
+  }
+
   return {
     id: dbEvent.id,
     title: dbEvent.title,
@@ -23,6 +60,14 @@ function mapDbEventToEvent(dbEvent: DbEvent): Event {
     allDay: dbEvent.all_day === 1,
     category: (dbEvent.category as Event['category']) || null,
     description: dbEvent.description,
+    recurrenceRule: (dbEvent.recurrence_rule as RecurrenceRule) || null,
+    recurrenceDaysOfWeek: parseDaysOfWeek(
+      dbEvent.recurrence_days_of_week ?? null,
+      dbEvent.recurrence_day_of_week ?? null,
+    ),
+    recurrenceDayOfMonth: dbEvent.recurrence_day_of_month ?? null,
+    recurrenceEndDate: dbEvent.recurrence_end_date || null,
+    recurrenceExcludedDates: excludedDates,
     createdAt: dbEvent.created_at,
     updatedAt: dbEvent.updated_at,
   }
@@ -32,9 +77,14 @@ export async function createEvent(input: CreateEventInput): Promise<Event> {
   const db = await getDatabase()
 
   try {
+    const recurrenceDaysOfWeekStr =
+      (input.recurrenceDaysOfWeek?.length ?? 0) > 0
+        ? input.recurrenceDaysOfWeek!.join(',')
+        : null
+
     await db.execute(
-      `INSERT INTO events (title, start_datetime, end_datetime, all_day, category, description)
-       VALUES (?, ?, ?, ?, ?, ?)`,
+      `INSERT INTO events (title, start_datetime, end_datetime, all_day, category, description, recurrence_rule, recurrence_day_of_week, recurrence_days_of_week, recurrence_day_of_month, recurrence_end_date, recurrence_excluded_dates)
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
       [
         input.title,
         input.startDatetime,
@@ -42,6 +92,12 @@ export async function createEvent(input: CreateEventInput): Promise<Event> {
         input.allDay ? 1 : 0,
         input.category || null,
         input.description || null,
+        input.recurrenceRule || null,
+        null,
+        recurrenceDaysOfWeekStr,
+        input.recurrenceDayOfMonth ?? null,
+        input.recurrenceEndDate || null,
+        null,
       ],
     )
 
@@ -157,6 +213,39 @@ export async function updateEvent(
     updateValues.push(input.description || null)
   }
 
+  if (input.recurrenceRule !== undefined) {
+    updateFields.push('recurrence_rule = ?')
+    updateValues.push(input.recurrenceRule || null)
+  }
+
+  if (input.recurrenceDaysOfWeek !== undefined) {
+    updateFields.push('recurrence_days_of_week = ?')
+    updateValues.push(
+      input.recurrenceDaysOfWeek?.length
+        ? input.recurrenceDaysOfWeek.join(',')
+        : null,
+    )
+  }
+
+  if (input.recurrenceDayOfMonth !== undefined) {
+    updateFields.push('recurrence_day_of_month = ?')
+    updateValues.push(input.recurrenceDayOfMonth ?? null)
+  }
+
+  if (input.recurrenceEndDate !== undefined) {
+    updateFields.push('recurrence_end_date = ?')
+    updateValues.push(input.recurrenceEndDate || null)
+  }
+
+  if (input.recurrenceExcludedDates !== undefined) {
+    updateFields.push('recurrence_excluded_dates = ?')
+    updateValues.push(
+      input.recurrenceExcludedDates.length > 0
+        ? JSON.stringify(input.recurrenceExcludedDates)
+        : null,
+    )
+  }
+
   if (updateFields.length === 0) {
     const result = await db.select<DbEvent[]>(
       `SELECT ${DB_COLUMNS.EVENTS.join(', ')} FROM events WHERE id = ?`,
@@ -225,9 +314,7 @@ export async function deleteBarcelonaMatches(): Promise<void> {
   const db = await getDatabase()
 
   try {
-    await db.execute(
-      "DELETE FROM events WHERE category = 'sports' AND title LIKE '%FC Barcelona%'",
-    )
+    await db.execute("DELETE FROM events WHERE category = 'barca'")
   } catch (err) {
     handleDbError(err, 'delete Barcelona matches')
   }

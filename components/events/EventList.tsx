@@ -1,5 +1,6 @@
 'use client'
 
+import { EmptyState } from '@/components/ui/empty-state'
 import { EventItem } from './EventItem'
 import type { Event } from '@/lib/types/event'
 
@@ -11,18 +12,14 @@ interface EventListProps {
 
 export function EventList({ events, onEdit, onDelete }: EventListProps) {
   if (events.length === 0) {
-    return (
-      <div className="rounded-lg border border-stone-200 bg-stone-50/30 p-8 text-center dark:border-stone-800 dark:bg-stone-950/30">
-        <p className="text-muted-foreground">予定がありません</p>
-      </div>
-    )
+    return <EmptyState message="予定がありません" />
   }
 
   return (
     <div className="space-y-2">
       {events.map((event) => (
         <EventItem
-          key={event.id}
+          key={`${event.id}-${event.startDatetime}`}
           event={event}
           onEdit={onEdit}
           onDelete={onDelete}

@@ -1,5 +1,4 @@
 import { getDatabase, handleDbError } from '../db'
-import { DB_COLUMNS } from '../db/constants'
 import type {
   BucketListItem,
   CreateBucketListItemInput,
@@ -12,6 +11,7 @@ interface DbBucketListItem {
   title: string
   category_id: number | null
   target_year: number | null
+  target_month: number | null
   achieved_date: string | null
   completed: number
   order: number
@@ -45,6 +45,7 @@ function mapDbBucketListItemToBucketListItem(
     categoryId: dbItem.category_id,
     category,
     targetYear: dbItem.target_year,
+    targetMonth: dbItem.target_month ?? null,
     achievedDate: dbItem.achieved_date,
     completed: dbItem.completed === 1,
     order: dbItem.order,
@@ -75,6 +76,7 @@ export async function getAllBucketListItems(): Promise<BucketListItem[]> {
         bli.title,
         bli.category_id,
         bli.target_year,
+        bli.target_month,
         bli.achieved_date,
         bli.completed,
         bli."order",
@@ -105,12 +107,13 @@ export async function createBucketListItem(
 
   try {
     await db.execute(
-      `INSERT INTO bucket_list_items (title, category_id, target_year, "order")
-       VALUES (?, ?, ?, ?)`,
+      `INSERT INTO bucket_list_items (title, category_id, target_year, target_month, "order")
+       VALUES (?, ?, ?, ?, ?)`,
       [
         input.title,
         input.categoryId || null,
         input.targetYear || null,
+        input.targetMonth ?? null,
         newOrder,
       ],
     )
@@ -121,6 +124,7 @@ export async function createBucketListItem(
         bli.title,
         bli.category_id,
         bli.target_year,
+        bli.target_month,
         bli.achieved_date,
         bli.completed,
         bli."order",
@@ -174,6 +178,11 @@ export async function updateBucketListItem(
     updateValues.push(input.targetYear || null)
   }
 
+  if (input.targetMonth !== undefined) {
+    updateFields.push('target_month = ?')
+    updateValues.push(input.targetMonth ?? null)
+  }
+
   if (input.achievedDate !== undefined) {
     updateFields.push('achieved_date = ?')
     updateValues.push(input.achievedDate || null)
@@ -209,6 +218,7 @@ export async function updateBucketListItem(
           bli.title,
           bli.category_id,
           bli.target_year,
+          bli.target_month,
           bli.achieved_date,
           bli.completed,
           bli."order",
@@ -247,6 +257,7 @@ export async function updateBucketListItem(
         bli.title,
         bli.category_id,
         bli.target_year,
+        bli.target_month,
         bli.achieved_date,
         bli.completed,
         bli."order",
@@ -291,31 +302,18 @@ export async function deleteBucketListItem(id: number): Promise<void> {
   }
 }
 
-export async function deleteCompletedBucketListItems(): Promise<number> {
+export async function deleteBucketListItemsByIds(ids: number[]): Promise<void> {
+  if (ids.length === 0) return
+
   const db = await getDatabase()
 
   try {
-    const result = await db.execute(
-      'DELETE FROM bucket_list_items WHERE completed = 1',
+    const placeholders = ids.map(() => '?').join(', ')
+    await db.execute(
+      `DELETE FROM bucket_list_items WHERE id IN (${placeholders})`,
+      ids,
     )
-    return result.rowsAffected
   } catch (err) {
-    handleDbError(err, 'delete completed bucket list items')
-  }
-}
-
-export async function updateBucketListItemOrder(
-  id: number,
-  order: number,
-): Promise<void> {
-  const db = await getDatabase()
-
-  try {
-    await db.execute('UPDATE bucket_list_items SET "order" = ? WHERE id = ?', [
-      order,
-      id,
-    ])
-  } catch (err) {
-    handleDbError(err, 'update bucket list item order')
+    handleDbError(err, 'delete bucket list items by ids')
   }
 }

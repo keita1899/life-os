@@ -5,7 +5,7 @@ import {
   getAllBucketListItems,
   updateBucketListItem,
   deleteBucketListItem,
-  deleteCompletedBucketListItems,
+  deleteBucketListItemsByIds,
 } from '@/lib/bucket-list'
 import type {
   BucketListItem,
@@ -51,8 +51,8 @@ export function useBucketList() {
     await mutate(bucketListKey)
   }
 
-  const handleDeleteCompletedBucketListItems = async () => {
-    await deleteCompletedBucketListItems()
+  const handleDeleteBucketListItemsByIds = async (ids: number[]) => {
+    await deleteBucketListItemsByIds(ids)
     await mutate(bucketListKey)
   }
 
@@ -68,7 +68,6 @@ export function useBucketList() {
     updateBucketListItem: handleUpdateBucketListItem,
     deleteBucketListItem: handleDeleteBucketListItem,
     toggleBucketListItemCompletion: handleToggleBucketListItemCompletion,
-    deleteCompletedBucketListItems: handleDeleteCompletedBucketListItems,
-    refreshBucketList: () => mutate(bucketListKey),
+    deleteBucketListItemsByIds: handleDeleteBucketListItemsByIds,
   }
 }

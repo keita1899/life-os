@@ -8,7 +8,7 @@ import { parseISO, isValid, addDays, subDays } from 'date-fns'
 import { useMode } from '@/lib/contexts/ModeContext'
 import { useRouter } from 'next/navigation'
 import { Button } from '@/components/ui/button'
-import { ChevronLeft, ChevronRight, CheckSquare } from 'lucide-react'
+import { ChevronLeft, ChevronRight, CheckSquare, Focus } from 'lucide-react'
 import { useDevGoals } from '@/hooks/useDevGoals'
 import { useDevCalendarTasks } from '@/hooks/useDevCalendarTasks'
 import { useDevProjects } from '@/hooks/useDevProjects'
@@ -23,6 +23,20 @@ import { DevLogGoalsSection } from '@/components/dev/logs/DevLogGoalsSection'
 import { DevLogTasksSection } from '@/components/dev/logs/DevLogTasksSection'
 import { DevLogReportSection } from '@/components/dev/logs/DevLogReportSection'
 import { TaskDialog } from '@/components/tasks/TaskDialog'
+import { TaskForm } from '@/components/tasks/TaskForm'
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog'
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select'
 import { DeleteConfirmDialog } from '@/components/ui/delete-confirm-dialog'
 import { FloatingActionButtons } from '@/components/floating/FloatingActionButtons'
 import {
@@ -32,13 +46,28 @@ import {
   getDevTasksForDate,
 } from '@/lib/dev/logs/utils'
 import type { Task, CreateTaskInput } from '@/lib/types/task'
-import type { DevTask } from '@/lib/types/dev-task'
 import type { UpdateDevDailyLogInput } from '@/lib/types/dev-daily-log'
 import Link from 'next/link'
 
 interface DevLogPageViewProps {
   logDate: Date
   date: string
+}
+
+type DevTaskTarget =
+  | { kind: 'type'; value: 'inbox' | 'learning' }
+  | { kind: 'project'; projectId: number }
+
+function parseDevTaskTarget(value: string): DevTaskTarget | null {
+  if (value === 'inbox' || value === 'learning') {
+    return { kind: 'type', value }
+  }
+  if (value.startsWith('project:')) {
+    const id = Number(value.slice('project:'.length))
+    if (!Number.isFinite(id)) return null
+    return { kind: 'project', projectId: id }
+  }
+  return null
 }
 
 function DevLogPageView({ logDate, date }: DevLogPageViewProps) {
@@ -59,6 +88,8 @@ function DevLogPageView({ logDate, date }: DevLogPageViewProps) {
   const { projects } = useDevProjects()
   const [isTaskDialogOpen, setIsTaskDialogOpen] = useState(false)
   const [editingTask, setEditingTask] = useState<Task | undefined>(undefined)
+  const [taskCreateTargetValue, setTaskCreateTargetValue] =
+    useState<string>('inbox')
   const [deletingTask, setDeletingTask] = useState<Task | undefined>(undefined)
   const [operationError, setOperationError] = useState<string | null>(null)
   const { userSettings } = useUserSettings()
@@ -110,7 +141,13 @@ function DevLogPageView({ logDate, date }: DevLogPageViewProps) {
         executionDate: t.executionDate,
         completed: t.completed,
         order: t.order,
-        actualTime: t.actualTime,
+        scheduledTime: null,
+        recurrenceRule: null,
+        recurrenceDaysOfWeek: null,
+        recurrenceDayOfMonth: null,
+        recurrenceEndDate: null,
+        recurrenceExcludedDates: [],
+        memo: t.memo,
         createdAt: t.createdAt,
         updatedAt: t.updatedAt,
       }
@@ -143,12 +180,14 @@ function DevLogPageView({ logDate, date }: DevLogPageViewProps) {
     setEditingTask({
       ...task,
       title: titleWithoutPrefix,
+      memo: devTask.memo,
     })
     setIsTaskDialogOpen(true)
   }
 
   const handleOpenCreateTask = () => {
     setEditingTask(undefined)
+    setTaskCreateTargetValue('inbox')
     setIsTaskDialogOpen(true)
   }
 
@@ -160,14 +199,30 @@ function DevLogPageView({ logDate, date }: DevLogPageViewProps) {
   }
 
   const handleCreateTask = async (input: CreateTaskInput) => {
+    const target = parseDevTaskTarget(taskCreateTargetValue)
+    if (!target) {
+      setOperationError('タスクの作成先が無効です')
+      return
+    }
     try {
       setOperationError(null)
-      await createDevTask({
-        title: input.title,
-        projectId: null,
-        type: 'inbox',
-        executionDate: input.executionDate ?? date,
-      })
+      if (target.kind === 'type') {
+        await createDevTask({
+          title: input.title,
+          projectId: null,
+          type: target.value,
+          executionDate: input.executionDate ?? date,
+          memo: input.memo,
+        })
+      } else {
+        await createDevTask({
+          title: input.title,
+          projectId: target.projectId,
+          type: 'inbox',
+          executionDate: input.executionDate ?? date,
+          memo: input.memo,
+        })
+      }
       await mutate('dev-calendar-tasks')
       setIsTaskDialogOpen(false)
     } catch (err) {
@@ -188,6 +243,7 @@ function DevLogPageView({ logDate, date }: DevLogPageViewProps) {
       await updateDevTask(editingTask.id, {
         title: input.title,
         executionDate: input.executionDate,
+        memo: input.memo,
       })
       await mutate('dev-calendar-tasks')
       setIsTaskDialogOpen(false)
@@ -254,7 +310,7 @@ function DevLogPageView({ logDate, date }: DevLogPageViewProps) {
 
   return (
     <MainLayout>
-      <div className="container mx-auto max-w-4xl py-8 px-4">
+      <div className="container mx-auto max-w-7xl py-8 px-4">
         <div className="mb-6">
           <div className="flex items-center justify-between">
             <h1 className="text-3xl font-bold">{formattedDate}のログ</h1>
@@ -289,47 +345,93 @@ function DevLogPageView({ logDate, date }: DevLogPageViewProps) {
         {isLoading ? (
           <Loading />
         ) : (
-          <div className="space-y-6">
-            <DevLogGoalsSection
-              yearlyGoals={yearlyGoals}
-              monthlyGoals={monthlyGoals}
-              weeklyGoals={weeklyGoals}
-            />
-            <DevLogTasksSection
-              tasks={tasks}
-              onToggleCompletion={async (task) => {
-                try {
-                  setOperationError(null)
-                  const devTask = allDevTasks.find((t) => t.id === task.id)
-                  if (!devTask) return
-                  await updateDevTask(task.id, { completed: !task.completed })
-                  await mutate('dev-calendar-tasks')
-                } catch (err) {
-                  setOperationError(
-                    err instanceof Error
-                      ? err.message
-                      : 'タスクの完了状態の更新に失敗しました',
-                  )
-                }
-              }}
-              onEdit={handleEditTask}
-              onDelete={handleDeleteClick}
-              onUpdateExecutionDate={handleUpdateExecutionDate}
-            />
-            <DevLogReportSection
-              devDailyLog={devDailyLog}
-              isLoading={isLoadingDailyLog}
-              onUpdate={handleUpdateReport}
-            />
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            <div className="space-y-6">
+              <DevLogGoalsSection
+                yearlyGoals={yearlyGoals}
+                monthlyGoals={monthlyGoals}
+                weeklyGoals={weeklyGoals}
+                currentDate={logDate}
+              />
+              <DevLogReportSection
+                devDailyLog={devDailyLog}
+                isLoading={isLoadingDailyLog}
+                onUpdate={handleUpdateReport}
+              />
+            </div>
+            <div>
+              <DevLogTasksSection
+                tasks={tasks}
+                onToggleCompletion={async (task) => {
+                  try {
+                    setOperationError(null)
+                    const devTask = allDevTasks.find((t) => t.id === task.id)
+                    if (!devTask) return
+                    await updateDevTask(task.id, { completed: !task.completed })
+                    await mutate('dev-calendar-tasks')
+                  } catch (err) {
+                    setOperationError(
+                      err instanceof Error
+                        ? err.message
+                        : 'タスクの完了状態の更新に失敗しました',
+                    )
+                  }
+                }}
+                onEdit={handleEditTask}
+                onDelete={handleDeleteClick}
+                onUpdateExecutionDate={handleUpdateExecutionDate}
+              />
+            </div>
           </div>
         )}
 
-        <TaskDialog
-          open={isTaskDialogOpen}
-          onOpenChange={handleDialogClose}
-          onSubmit={editingTask ? handleUpdateTask : handleCreateTask}
-          task={editingTask}
-        />
+        {editingTask ? (
+          <TaskDialog
+            open={isTaskDialogOpen}
+            onOpenChange={handleDialogClose}
+            onSubmit={handleUpdateTask}
+            task={editingTask}
+          />
+        ) : (
+          <Dialog open={isTaskDialogOpen} onOpenChange={handleDialogClose}>
+            <DialogContent>
+              <DialogHeader>
+                <DialogTitle>新しいタスクを作成</DialogTitle>
+              </DialogHeader>
+              <div className="space-y-4">
+                <div className="space-y-2">
+                  <div className="text-sm font-medium">作成先</div>
+                  <Select
+                    value={taskCreateTargetValue}
+                    onValueChange={(value) => {
+                      if (!parseDevTaskTarget(value)) return
+                      setTaskCreateTargetValue(value)
+                    }}
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder="作成先を選択" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="inbox">Inbox</SelectItem>
+                      <SelectItem value="learning">学習</SelectItem>
+                      {projects.map((p) => (
+                        <SelectItem key={p.id} value={`project:${p.id}`}>
+                          {p.name}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+                <TaskForm
+                  onSubmit={handleCreateTask}
+                  onCancel={() => handleDialogClose(false)}
+                  defaultExecutionDate={date}
+                  submitLabel="作成"
+                />
+              </div>
+            </DialogContent>
+          </Dialog>
+        )}
 
         <DeleteConfirmDialog
           open={!!deletingTask}
@@ -340,6 +442,12 @@ function DevLogPageView({ logDate, date }: DevLogPageViewProps) {
 
         <FloatingActionButtons
           actions={[
+            {
+              id: 'focus',
+              label: 'フォーカスモード',
+              icon: <Focus className="h-5 w-5" />,
+              onClick: () => router.push('/dev/focus'),
+            },
             {
               id: 'create-task',
               label: 'タスクを作成',
@@ -362,7 +470,7 @@ function DevLogPageContent() {
   const logDate = parseISO(date)
   if (!isValid(logDate)) {
     return (
-      <div className="container mx-auto max-w-4xl py-8 px-4">
+      <div className="container mx-auto max-w-7xl py-8 px-4">
         <div className="text-center">
           <h1 className="text-2xl font-bold text-destructive">無効な日付です</h1>
           <Link

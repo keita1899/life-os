@@ -1,8 +1,12 @@
 'use client'
 
-import { useCallback, useEffect, useState } from 'react'
+import { useCallback, useState } from 'react'
+import { useRouter } from 'next/navigation'
+import { useHotkeys } from 'react-hotkeys-hook'
+import { useMode } from '@/lib/contexts/ModeContext'
 import { Header } from './Header'
 import { Sidebar } from './Sidebar'
+import { cn } from '@/lib/utils'
 
 interface MainLayoutProps {
   children: React.ReactNode
@@ -23,52 +27,59 @@ function getInitialSidebarState(): boolean {
 }
 
 export function MainLayout({ children }: MainLayoutProps) {
+  const router = useRouter()
+  const { mode } = useMode()
   const [isSidebarOpen, setIsSidebarOpen] = useState(getInitialSidebarState)
+
+  useHotkeys(
+    'mod+h',
+    () => router.push('/'),
+    { enableOnFormTags: false, preventDefault: true },
+    [router],
+  )
+  useHotkeys(
+    'd',
+    () => router.push(mode === 'development' ? '/dev/logs' : '/logs'),
+    { enableOnFormTags: false, preventDefault: true },
+    [mode, router],
+  )
 
   const handleOpenChange = useCallback((open: boolean): void => {
     setIsSidebarOpen(open)
     try {
       localStorage.setItem(SIDEBAR_STORAGE_KEY, String(open))
-    } catch (e) {
+    } catch {
       // localStorage access failed, ignore safely
     }
   }, [])
 
-  useEffect(() => {
-    const handleKeyDown = (e: KeyboardEvent) => {
-      const target = e.target as HTMLElement
-      const isInputFocused =
-        target.tagName === 'INPUT' ||
-        target.tagName === 'TEXTAREA' ||
-        target.tagName === 'SELECT' ||
-        target.isContentEditable
-
-      if (isInputFocused) {
-        return
-      }
-
-      if ((e.metaKey || e.ctrlKey) && e.key === 'b') {
-        e.preventDefault()
-        handleOpenChange(!isSidebarOpen)
-      }
-    }
-
-    window.addEventListener('keydown', handleKeyDown)
-    return () => {
-      window.removeEventListener('keydown', handleKeyDown)
-    }
-  }, [handleOpenChange, isSidebarOpen])
+  useHotkeys(
+    'mod+b',
+    () => handleOpenChange(!isSidebarOpen),
+    {
+      enableOnFormTags: false,
+      preventDefault: true,
+    },
+    [handleOpenChange, isSidebarOpen],
+  )
 
   const handleMenuClick = useCallback((): void => {
     handleOpenChange(!isSidebarOpen)
   }, [handleOpenChange, isSidebarOpen])
 
   return (
-    <div className="flex min-h-screen flex-col">
-      <Header onMenuClick={handleMenuClick} />
-      <div className="flex flex-1">
-        <Sidebar open={isSidebarOpen} onOpenChange={handleOpenChange} />
-        <main className="flex-1">{children}</main>
+    <div className="flex min-h-screen">
+      <Sidebar open={isSidebarOpen} onOpenChange={handleOpenChange} />
+      <div className="flex flex-1 flex-col min-w-0">
+        <Header onMenuClick={handleMenuClick} />
+        <main
+          className={cn(
+            'flex-1',
+            mode === 'development' && 'bg-slate-950',
+          )}
+        >
+          {children}
+        </main>
       </div>
     </div>
   )

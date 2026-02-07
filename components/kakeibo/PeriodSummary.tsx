@@ -26,7 +26,7 @@ export function PeriodSummary({
   const periodBalance = periodIncome - totalExpense
 
   return (
-    <div className="mb-6 rounded-lg border border-stone-200 bg-white p-4 dark:border-stone-800 dark:bg-stone-900">
+    <div className="mb-6 rounded-lg border border-stone-200 p-4 dark:border-stone-800">
       <div className="text-sm text-muted-foreground">{periodLabel}</div>
       <div className="mt-4 grid grid-cols-2 gap-4 md:grid-cols-4">
         <div>

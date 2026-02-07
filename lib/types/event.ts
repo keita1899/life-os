@@ -6,11 +6,15 @@ export type EventCategory =
   | 'play'
   | 'hobby'
   | 'health'
+  | 'travel'
+  | 'sports'
+  | 'barca'
   | 'procedure'
   | 'birthday'
   | 'anniversary'
-  | 'sports'
   | null
+
+export type RecurrenceRule = 'daily' | 'weekly' | 'monthly'
 
 export interface Event {
   id: number
@@ -20,6 +24,11 @@ export interface Event {
   allDay: boolean
   category: EventCategory
   description: string | null
+  recurrenceRule: RecurrenceRule | null
+  recurrenceDaysOfWeek: number[] | null
+  recurrenceDayOfMonth: number | null
+  recurrenceEndDate: string | null
+  recurrenceExcludedDates: string[]
   createdAt: string
   updatedAt: string
 }
@@ -31,6 +40,10 @@ export interface CreateEventInput {
   allDay?: boolean
   category?: EventCategory
   description?: string | null
+  recurrenceRule?: RecurrenceRule | null
+  recurrenceDaysOfWeek?: number[] | null
+  recurrenceDayOfMonth?: number | null
+  recurrenceEndDate?: string | null
 }
 
 export interface UpdateEventInput {
@@ -40,4 +53,9 @@ export interface UpdateEventInput {
   allDay?: boolean
   category?: EventCategory
   description?: string | null
+  recurrenceRule?: RecurrenceRule | null
+  recurrenceDaysOfWeek?: number[] | null
+  recurrenceDayOfMonth?: number | null
+  recurrenceEndDate?: string | null
+  recurrenceExcludedDates?: string[]
 }

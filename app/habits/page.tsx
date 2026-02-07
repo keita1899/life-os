@@ -1,17 +1,21 @@
 'use client'
 
-import { useState, useMemo } from 'react'
+import { useState, useMemo, useCallback } from 'react'
 import { format } from 'date-fns'
+import { Plus } from 'lucide-react'
 import { Button } from '@/components/ui/button'
+import { useCreateShortcut } from '@/hooks/useCreateShortcut'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { HabitDialog } from '@/components/habits/HabitDialog'
 import { HabitHeatmap } from '@/components/habits/HabitHeatmap'
 import { DeleteConfirmDialog } from '@/components/ui/delete-confirm-dialog'
+import { EmptyState } from '@/components/ui/empty-state'
 import { Loading } from '@/components/ui/loading'
 import { ErrorMessage } from '@/components/ui/error-message'
 import { MainLayout } from '@/components/layout/MainLayout'
 import { useHabits } from '@/hooks/useHabits'
 import { useHabitCompletionsByDate } from '@/hooks/useHabitCompletions'
+import { getCompletionsByDate } from '@/lib/habits'
 import { useHabitHeatmapView } from '@/hooks/useHabitHeatmapView'
 import { useMode } from '@/lib/contexts/ModeContext'
 import type { Habit, CreateHabitInput } from '@/lib/types/habit'
@@ -139,10 +143,15 @@ export default function HabitsPage() {
     }
   }
 
-  const handleOpenCreate = () => {
+  const handleOpenCreate = useCallback(() => {
     setEditingHabit(undefined)
     setIsDialogOpen(true)
-  }
+  }, [])
+
+  useCreateShortcut({
+    onCreate: handleOpenCreate,
+    enabled: !isDialogOpen,
+  })
 
   const handleToggleToday = async (habit: Habit) => {
     const completed = completedHabitIdsToday.has(habit.id)
@@ -160,12 +169,33 @@ export default function HabitsPage() {
     }
   }
 
+  const handleToggleDate = async (habit: Habit, dateStr: string) => {
+    try {
+      setOperationError(null)
+      const completions = await getCompletionsByDate(dateStr)
+      const isCompleted = completions.some((c) => c.habitId === habit.id)
+      
+      if (isCompleted) {
+        await deleteHabitCompletion(habit.id, dateStr)
+      } else {
+        await createHabitCompletion(habit.id, dateStr)
+      }
+    } catch (err) {
+      setOperationError(
+        err instanceof Error ? err.message : '習慣の完了状態の更新に失敗しました',
+      )
+    }
+  }
+
   return (
     <MainLayout>
       <div className="container mx-auto max-w-5xl py-8 px-4">
         <div className="mb-6 flex items-center justify-between">
           <h1 className="text-3xl font-bold">習慣</h1>
-          <Button onClick={handleOpenCreate}>習慣を追加</Button>
+          <Button onClick={handleOpenCreate}>
+            <Plus className="mr-2 h-4 w-4" />
+            習慣を作成
+          </Button>
         </div>
 
         <ErrorMessage
@@ -176,18 +206,20 @@ export default function HabitsPage() {
         {isLoading ? (
           <Loading />
         ) : sortedHabits.length === 0 ? (
-          <div className="rounded-lg border border-stone-200 bg-stone-50/30 p-8 text-center dark:border-stone-800 dark:bg-stone-950/30">
-            <p className="text-muted-foreground">習慣がありません</p>
-            <Button
-              variant="outline"
-              className="mt-4"
-              onClick={handleOpenCreate}
-            >
-              習慣を追加
-            </Button>
+          <div className="text-center">
+            <EmptyState message="習慣がありません">
+              <Button
+                variant="outline"
+                className="mt-4"
+                onClick={handleOpenCreate}
+              >
+                <Plus className="mr-2 h-4 w-4" />
+                習慣を作成
+              </Button>
+            </EmptyState>
           </div>
         ) : (
-          <Card>
+          <Card className="border-stone-200/60 dark:border-stone-700/40">
             <CardHeader>
               <div className="flex flex-wrap items-center justify-between gap-2">
                 <CardTitle className="text-lg">実行記録</CardTitle>
@@ -244,7 +276,7 @@ export default function HabitsPage() {
                 </div>
               </div>
             </CardHeader>
-            <CardContent>
+            <CardContent className="p-0">
               <HabitHeatmap
                 habits={sortedHabits}
                 viewMode={viewMode}
@@ -254,6 +286,7 @@ export default function HabitsPage() {
                 month={heatmapMonth}
                 completedHabitIdsToday={completedHabitIdsToday}
                 onToggleToday={handleToggleToday}
+                onToggleDate={handleToggleDate}
                 onEdit={handleEditHabit}
                 onDelete={handleDeleteClick}
               />
