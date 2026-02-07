@@ -22,6 +22,7 @@ import { TaskDialog } from '@/components/tasks/TaskDialog'
 import { TaskList } from '@/components/tasks/TaskList'
 import type { CreateTaskInput, Task } from '@/lib/types/task'
 import { useDevTasks } from '@/hooks/useDevTasks'
+import { useDialogState } from '@/hooks/useDialogState'
 import { groupTasks } from '@/lib/tasks/grouping'
 import { FloatingActionButtons } from '@/components/floating/FloatingActionButtons'
 import {
@@ -87,8 +88,13 @@ function DevProjectPageContent(): ReactElement | null {
     type: undefined,
   })
 
-  const [isTaskDialogOpen, setIsTaskDialogOpen] = useState(false)
-  const [editingTask, setEditingTask] = useState<Task | undefined>(undefined)
+  const {
+    isDialogOpen: isTaskDialogOpen,
+    editingItem: editingTask,
+    handleEdit: handleEditTask,
+    handleDialogClose: handleTaskDialogClose,
+    handleCreateClick: handleTaskCreateClick,
+  } = useDialogState<Task>()
   const [deletingTask, setDeletingTask] = useState<Task | undefined>(undefined)
   const [isDeletingCompletedDialogOpen, setIsDeletingCompletedDialogOpen] =
     useState(false)
@@ -167,7 +173,7 @@ function DevProjectPageContent(): ReactElement | null {
         executionDate: input.executionDate,
         memo: input.memo,
       })
-      setIsTaskDialogOpen(false)
+      handleTaskDialogClose(false)
     } catch (err) {
       setTaskOperationError(
         err instanceof Error ? err.message : 'タスクの作成に失敗しました',
@@ -185,24 +191,11 @@ function DevProjectPageContent(): ReactElement | null {
         executionDate: input.executionDate,
         memo: input.memo,
       })
-      setIsTaskDialogOpen(false)
-      setEditingTask(undefined)
+      handleTaskDialogClose(false)
     } catch (err) {
       setTaskOperationError(
         err instanceof Error ? err.message : 'タスクの更新に失敗しました',
       )
-    }
-  }
-
-  const handleEditTask = (task: Task) => {
-    setEditingTask(task)
-    setIsTaskDialogOpen(true)
-  }
-
-  const handleTaskDialogClose = (open: boolean) => {
-    setIsTaskDialogOpen(open)
-    if (!open) {
-      setEditingTask(undefined)
     }
   }
 
@@ -380,7 +373,7 @@ function DevProjectPageContent(): ReactElement | null {
               <div className="flex items-center justify-between">
                 <h2 className="text-xl font-semibold">タスク</h2>
                 <Button
-                  onClick={() => setIsTaskDialogOpen(true)}
+                  onClick={handleTaskCreateClick}
                   disabled={!Number.isFinite(projectId)}
                 >
                   タスクを作成

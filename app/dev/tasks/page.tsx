@@ -1,10 +1,11 @@
 'use client'
 
-import { useMemo, useState, useCallback } from 'react'
+import { useMemo, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { Trash2, Calendar, Focus, Plus } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { useCreateShortcut } from '@/hooks/useCreateShortcut'
+import { useDialogState } from '@/hooks/useDialogState'
 import {
   Accordion,
   AccordionContent,
@@ -46,8 +47,13 @@ export default function DevTasksPage() {
     type: activeType,
   })
 
-  const [isDialogOpen, setIsDialogOpen] = useState(false)
-  const [editingTask, setEditingTask] = useState<Task | undefined>(undefined)
+  const {
+    isDialogOpen,
+    editingItem: editingTask,
+    handleEdit: handleEditTask,
+    handleDialogClose,
+    handleCreateClick,
+  } = useDialogState<Task>()
   const [deletingTask, setDeletingTask] = useState<Task | undefined>(undefined)
   const [isDeletingCompletedDialogOpen, setIsDeletingCompletedDialogOpen] =
     useState(false)
@@ -89,8 +95,7 @@ export default function DevTasksPage() {
   const handleTypeChange = (value: string) => {
     if (value !== 'inbox' && value !== 'learning') return
     setActiveType(value)
-    setEditingTask(undefined)
-    setIsDialogOpen(false)
+    handleDialogClose(false)
   }
 
   const handleCreateTask = async (input: CreateTaskInput): Promise<void> => {
@@ -103,7 +108,7 @@ export default function DevTasksPage() {
         executionDate: input.executionDate,
         memo: input.memo,
       })
-      setIsDialogOpen(false)
+      handleDialogClose(false)
     } catch (err) {
       setOperationError(
         err instanceof Error ? err.message : 'タスクの作成に失敗しました',
@@ -121,31 +126,13 @@ export default function DevTasksPage() {
         executionDate: input.executionDate,
         memo: input.memo,
       })
-      setIsDialogOpen(false)
-      setEditingTask(undefined)
+      handleDialogClose(false)
     } catch (err) {
       setOperationError(
         err instanceof Error ? err.message : 'タスクの更新に失敗しました',
       )
     }
   }
-
-  const handleEditTask = (task: Task) => {
-    setEditingTask(task)
-    setIsDialogOpen(true)
-  }
-
-  const handleDialogClose = (open: boolean) => {
-    setIsDialogOpen(open)
-    if (!open) {
-      setEditingTask(undefined)
-    }
-  }
-
-  const handleCreateClick = useCallback(() => {
-    setEditingTask(undefined)
-    setIsDialogOpen(true)
-  }, [])
 
   useCreateShortcut({
     onCreate: handleCreateClick,

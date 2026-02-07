@@ -1,9 +1,10 @@
 'use client'
 
-import { useState, useMemo, useCallback } from 'react'
+import { useState, useMemo } from 'react'
 import { Plus } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { useCreateShortcut } from '@/hooks/useCreateShortcut'
+import { useDialogState } from '@/hooks/useDialogState'
 import {
   Accordion,
   AccordionContent,
@@ -41,10 +42,13 @@ export default function SubscriptionsPage() {
     deleteSubscription,
     toggleSubscriptionActive,
   } = useSubscriptions()
-  const [isDialogOpen, setIsDialogOpen] = useState(false)
-  const [editingSubscription, setEditingSubscription] = useState<
-    Subscription | undefined
-  >(undefined)
+  const {
+    isDialogOpen,
+    editingItem: editingSubscription,
+    handleEdit: handleEditSubscription,
+    handleDialogClose,
+    handleCreateClick,
+  } = useDialogState<Subscription>()
   const [deletingSubscription, setDeletingSubscription] = useState<
     Subscription | undefined
   >(undefined)
@@ -83,7 +87,7 @@ export default function SubscriptionsPage() {
     try {
       setOperationError(null)
       await createSubscription(input)
-      setIsDialogOpen(false)
+      handleDialogClose(false)
     } catch (err) {
       setOperationError(
         err instanceof Error ? err.message : 'サブスクの作成に失敗しました',
@@ -106,24 +110,11 @@ export default function SubscriptionsPage() {
         active: input.active,
       }
       await updateSubscription(editingSubscription.id, updateInput)
-      setIsDialogOpen(false)
-      setEditingSubscription(undefined)
+      handleDialogClose(false)
     } catch (err) {
       setOperationError(
         err instanceof Error ? err.message : 'サブスクの更新に失敗しました',
       )
-    }
-  }
-
-  const handleEditSubscription = (subscription: Subscription) => {
-    setEditingSubscription(subscription)
-    setIsDialogOpen(true)
-  }
-
-  const handleDialogClose = (open: boolean) => {
-    setIsDialogOpen(open)
-    if (!open) {
-      setEditingSubscription(undefined)
     }
   }
 
@@ -157,11 +148,6 @@ export default function SubscriptionsPage() {
       )
     }
   }
-
-  const handleCreateClick = useCallback(() => {
-    setEditingSubscription(undefined)
-    setIsDialogOpen(true)
-  }, [])
 
   useCreateShortcut({
     onCreate: handleCreateClick,

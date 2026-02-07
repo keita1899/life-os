@@ -1,9 +1,10 @@
 'use client'
 
-import { useState, useMemo, useCallback } from 'react'
+import { useState, useMemo } from 'react'
 import { Trash2, Plus } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { useCreateShortcut } from '@/hooks/useCreateShortcut'
+import { useDialogState } from '@/hooks/useDialogState'
 import {
   Accordion,
   AccordionContent,
@@ -59,10 +60,13 @@ export default function BucketListPage() {
   const { createTask } = useTasks()
   const [selectedCategoryId, setSelectedCategoryId] = useState<string>('all')
   const [selectedYear, setSelectedYear] = useState<string>('all')
-  const [isDialogOpen, setIsDialogOpen] = useState(false)
-  const [editingItem, setEditingItem] = useState<BucketListItem | undefined>(
-    undefined,
-  )
+  const {
+    isDialogOpen,
+    editingItem,
+    handleEdit: handleEditItem,
+    handleDialogClose,
+    handleCreateClick,
+  } = useDialogState<BucketListItem>()
   const [deletingItem, setDeletingItem] = useState<BucketListItem | undefined>(
     undefined,
   )
@@ -159,7 +163,7 @@ export default function BucketListPage() {
     try {
       setOperationError(null)
       await createBucketListItem(input)
-      setIsDialogOpen(false)
+      handleDialogClose(false)
     } catch (err) {
       setOperationError(
         err instanceof Error ? err.message : 'やりたいことの作成に失敗しました',
@@ -179,31 +183,13 @@ export default function BucketListPage() {
         targetMonth: input.targetMonth,
       }
       await updateBucketListItem(editingItem.id, updateInput)
-      setIsDialogOpen(false)
-      setEditingItem(undefined)
+      handleDialogClose(false)
     } catch (err) {
       setOperationError(
         err instanceof Error ? err.message : 'やりたいことの更新に失敗しました',
       )
     }
   }
-
-  const handleEditItem = (item: BucketListItem) => {
-    setEditingItem(item)
-    setIsDialogOpen(true)
-  }
-
-  const handleDialogClose = (open: boolean) => {
-    setIsDialogOpen(open)
-    if (!open) {
-      setEditingItem(undefined)
-    }
-  }
-
-  const handleCreateClick = useCallback(() => {
-    setEditingItem(undefined)
-    setIsDialogOpen(true)
-  }, [])
 
   useCreateShortcut({
     onCreate: handleCreateClick,

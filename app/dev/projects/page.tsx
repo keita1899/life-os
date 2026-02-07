@@ -1,9 +1,10 @@
 'use client'
 
-import { useState, useCallback } from 'react'
+import { useState } from 'react'
 import { Plus } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { useCreateShortcut } from '@/hooks/useCreateShortcut'
+import { useDialogState } from '@/hooks/useDialogState'
 import {
   Select,
   SelectContent,
@@ -27,7 +28,11 @@ export default function DevProjectsPage() {
     error,
     createProject,
   } = useDevProjects()
-  const [isDialogOpen, setIsDialogOpen] = useState(false)
+  const {
+    isDialogOpen,
+    handleDialogClose,
+    handleCreateClick,
+  } = useDialogState<never>()
   const [statusFilter, setStatusFilter] = useState<
     'all' | 'unreleased' | 'released'
   >('all')
@@ -46,16 +51,8 @@ export default function DevProjectsPage() {
     input: CreateDevProjectInput,
   ): Promise<void> => {
     await createProject(input)
-    setIsDialogOpen(false)
+    handleDialogClose(false)
   }
-
-  const handleDialogClose = (open: boolean) => {
-    setIsDialogOpen(open)
-  }
-
-  const handleCreateClick = useCallback(() => {
-    setIsDialogOpen(true)
-  }, [])
 
   useCreateShortcut({
     onCreate: handleCreateClick,

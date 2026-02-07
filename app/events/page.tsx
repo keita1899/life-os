@@ -1,10 +1,11 @@
 'use client'
 
-import { useState, useMemo, useCallback } from 'react'
+import { useState, useMemo } from 'react'
 import { startOfDay, subYears, addMonths } from 'date-fns'
 import { Plus } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { useCreateShortcut } from '@/hooks/useCreateShortcut'
+import { useDialogState } from '@/hooks/useDialogState'
 import {
   Accordion,
   AccordionContent,
@@ -33,8 +34,13 @@ export default function EventsPage() {
   const { mode } = useMode()
   const { events, isLoading, error, createEvent, updateEvent, deleteEvent } =
     useEvents()
-  const [isDialogOpen, setIsDialogOpen] = useState(false)
-  const [editingEvent, setEditingEvent] = useState<Event | undefined>(undefined)
+  const {
+    isDialogOpen,
+    editingItem: editingEvent,
+    handleEdit: handleEditEvent,
+    handleDialogClose,
+    handleCreateClick,
+  } = useDialogState<Event>()
   const [deletingEvent, setDeletingEvent] = useState<Event | undefined>(
     undefined,
   )
@@ -61,7 +67,7 @@ export default function EventsPage() {
     try {
       setOperationError(null)
       await createEvent(input)
-      setIsDialogOpen(false)
+      handleDialogClose(false)
     } catch (err) {
       setOperationError(
         err instanceof Error ? err.message : '予定の作成に失敗しました',
@@ -87,18 +93,12 @@ export default function EventsPage() {
         recurrenceEndDate: input.recurrenceEndDate,
       }
       await updateEvent(editingEvent.id, updateInput)
-      setIsDialogOpen(false)
-      setEditingEvent(undefined)
+      handleDialogClose(false)
     } catch (err) {
       setOperationError(
         err instanceof Error ? err.message : '予定の更新に失敗しました',
       )
     }
-  }
-
-  const handleEditEvent = (event: Event) => {
-    setEditingEvent(event)
-    setIsDialogOpen(true)
   }
 
   const handleDeleteEvent = async (mode?: 'single' | 'all') => {
@@ -129,17 +129,6 @@ export default function EventsPage() {
     setDeletingEvent(event)
   }
 
-  const handleDialogClose = (open: boolean) => {
-    setIsDialogOpen(open)
-    if (!open) {
-      setEditingEvent(undefined)
-    }
-  }
-
-  const handleCreateClick = useCallback(() => {
-    setEditingEvent(undefined)
-    setIsDialogOpen(true)
-  }, [])
 
   useCreateShortcut({
     onCreate: handleCreateClick,

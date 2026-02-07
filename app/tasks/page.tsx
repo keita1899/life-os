@@ -1,10 +1,11 @@
 'use client'
 
-import { useState, useMemo, useEffect, useCallback } from 'react'
+import { useState, useMemo, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { Trash2, Calendar, Focus, Plus } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { useCreateShortcut } from '@/hooks/useCreateShortcut'
+import { useDialogState } from '@/hooks/useDialogState'
 import {
   Accordion,
   AccordionContent,
@@ -46,8 +47,13 @@ export default function TasksPage() {
     deleteCompletedTasks,
     updateOverdueTasksToToday,
   } = useTasks()
-  const [isDialogOpen, setIsDialogOpen] = useState(false)
-  const [editingTask, setEditingTask] = useState<Task | undefined>(undefined)
+  const {
+    isDialogOpen,
+    editingItem: editingTask,
+    handleEdit: handleEditTask,
+    handleDialogClose,
+    handleCreateClick,
+  } = useDialogState<Task>()
   const [deletingTask, setDeletingTask] = useState<Task | undefined>(undefined)
   const [isDeletingCompletedDialogOpen, setIsDeletingCompletedDialogOpen] =
     useState(false)
@@ -91,7 +97,7 @@ export default function TasksPage() {
     try {
       setOperationError(null)
       await createTask(input)
-      setIsDialogOpen(false)
+      handleDialogClose(false)
     } catch (err) {
       setOperationError(
         err instanceof Error ? err.message : 'タスクの作成に失敗しました',
@@ -114,31 +120,13 @@ export default function TasksPage() {
         recurrenceEndDate: input.recurrenceEndDate,
       }
       await updateTask(editingTask.id, updateInput)
-      setIsDialogOpen(false)
-      setEditingTask(undefined)
+      handleDialogClose(false)
     } catch (err) {
       setOperationError(
         err instanceof Error ? err.message : 'タスクの更新に失敗しました',
       )
     }
   }
-
-  const handleEditTask = (task: Task) => {
-    setEditingTask(task)
-    setIsDialogOpen(true)
-  }
-
-  const handleDialogClose = (open: boolean) => {
-    setIsDialogOpen(open)
-    if (!open) {
-      setEditingTask(undefined)
-    }
-  }
-
-  const handleCreateClick = useCallback(() => {
-    setEditingTask(undefined)
-    setIsDialogOpen(true)
-  }, [])
 
   useCreateShortcut({
     onCreate: handleCreateClick,
