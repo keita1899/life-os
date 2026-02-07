@@ -25,12 +25,6 @@ import {
   SheetHeader,
   SheetTitle,
 } from '@/components/ui/sheet'
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipProvider,
-  TooltipTrigger,
-} from '@/components/ui/tooltip'
 import { useMode } from '@/lib/contexts/ModeContext'
 
 interface SidebarProps {
@@ -148,9 +142,8 @@ const settingsItem = {
     'bg-stone-200 text-stone-800 dark:bg-stone-700 dark:text-stone-200',
 }
 
-function SidebarContent({ isCollapsed }: { isCollapsed: boolean }) {
+function LifeSidebarContent({ isCollapsed }: { isCollapsed: boolean }) {
   const pathname = usePathname()
-  const { mode } = useMode()
 
   const renderLink = (
     item: typeof homeItem & {
@@ -165,7 +158,7 @@ function SidebarContent({ isCollapsed }: { isCollapsed: boolean }) {
       <Link
         href={item.href}
         className={cn(
-          'group flex items-center gap-3 rounded-lg p-2 h-10 transition-colors whitespace-nowrap',
+          'flex items-center gap-3 rounded-lg p-2 h-10 transition-colors whitespace-nowrap',
           isCollapsed && 'w-10',
           'hover:bg-accent hover:text-accent-foreground',
           'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring',
@@ -181,58 +174,14 @@ function SidebarContent({ isCollapsed }: { isCollapsed: boolean }) {
     )
 
     return (
-      <Tooltip key={item.href}>
-        <TooltipTrigger asChild>
-          <div>{link}</div>
-        </TooltipTrigger>
-        <TooltipContent side="right">
-          <p>{item.title}</p>
-        </TooltipContent>
-      </Tooltip>
-    )
-  }
-
-  if (mode === 'development') {
-    const devTaskItems = [
-      {
-        href: '/dev/goals',
-        icon: Target,
-        title: '目標',
-        hoverIcon:
-          'group-hover:bg-blue-100 group-hover:text-blue-600 dark:group-hover:bg-blue-900/30 dark:group-hover:text-blue-400',
-        activeIcon:
-          'bg-blue-100 text-blue-600 dark:bg-blue-900/30 dark:text-blue-400',
-      },
-      {
-        href: '/dev/projects',
-        icon: FolderKanban,
-        title: 'プロジェクト',
-        hoverIcon:
-          'group-hover:bg-purple-100 group-hover:text-purple-600 dark:group-hover:bg-purple-900/30 dark:group-hover:text-purple-400',
-        activeIcon:
-          'bg-purple-100 text-purple-600 dark:bg-purple-900/30 dark:text-purple-400',
-      },
-      {
-        href: '/dev/tasks',
-        icon: CheckSquare,
-        title: 'タスク',
-        hoverIcon:
-          'group-hover:bg-green-100 group-hover:text-green-600 dark:group-hover:bg-green-900/30 dark:group-hover:text-green-400',
-        activeIcon:
-          'bg-green-100 text-green-600 dark:bg-green-900/30 dark:text-green-400',
-      },
-    ]
-
-    return (
-      <nav className="flex flex-col">
-        {renderLink(homeItem)}
-        <div className="mt-2">
-          {devTaskItems.map((item) => renderLink(item))}
-        </div>
-        <div className="mt-2">
-          {renderLink(settingsItem)}
-        </div>
-      </nav>
+      <div key={item.href} className="relative group">
+        {link}
+        {isCollapsed && (
+          <div className="absolute left-full ml-2 top-1/2 -translate-y-1/2 hidden group-hover:block z-50 overflow-hidden rounded-md border border-stone-200/50 dark:border-stone-700/50 bg-popover px-3 py-1.5 text-sm text-popover-foreground shadow-md whitespace-nowrap pointer-events-none">
+            {item.title}
+          </div>
+        )}
+      </div>
     )
   }
 
@@ -255,6 +204,102 @@ function SidebarContent({ isCollapsed }: { isCollapsed: boolean }) {
   )
 }
 
+function DevSidebarContent({ isCollapsed }: { isCollapsed: boolean }) {
+  const pathname = usePathname()
+
+  const devTaskItems = [
+    {
+      href: '/dev/goals',
+      icon: Target,
+      title: '目標',
+      hoverIcon:
+        'group-hover:bg-blue-100 group-hover:text-blue-600 dark:group-hover:bg-blue-900/30 dark:group-hover:text-blue-400',
+      activeIcon:
+        'bg-blue-100 text-blue-600 dark:bg-blue-900/30 dark:text-blue-400',
+    },
+    {
+      href: '/dev/projects',
+      icon: FolderKanban,
+      title: 'プロジェクト',
+      hoverIcon:
+        'group-hover:bg-purple-100 group-hover:text-purple-600 dark:group-hover:bg-purple-900/30 dark:group-hover:text-purple-400',
+      activeIcon:
+        'bg-purple-100 text-purple-600 dark:bg-purple-900/30 dark:text-purple-400',
+    },
+    {
+      href: '/dev/tasks',
+      icon: CheckSquare,
+      title: 'タスク',
+      hoverIcon:
+        'group-hover:bg-green-100 group-hover:text-green-600 dark:group-hover:bg-green-900/30 dark:group-hover:text-green-400',
+      activeIcon:
+        'bg-green-100 text-green-600 dark:bg-green-900/30 dark:text-green-400',
+    },
+  ]
+
+  const renderLink = (
+    item: typeof homeItem & {
+      hoverIcon?: string
+      activeIcon?: string
+    },
+  ) => {
+    const Icon = item.icon
+    const isActive = pathname === item.href
+
+    const link = (
+      <Link
+        href={item.href}
+        className={cn(
+          'flex items-center gap-3 rounded-lg p-2 h-10 transition-colors whitespace-nowrap',
+          isCollapsed && 'w-10',
+          'hover:bg-accent hover:text-accent-foreground',
+          'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring',
+          isActive && 'bg-accent text-accent-foreground',
+          !isActive && 'text-stone-600 dark:text-stone-400',
+          item.hoverIcon,
+          isActive && item.activeIcon,
+        )}
+      >
+        <Icon className="h-5 w-5 flex-shrink-0" />
+        {!isCollapsed && <span className="font-semibold">{item.title}</span>}
+      </Link>
+    )
+
+    return (
+      <div key={item.href} className="relative group">
+        {link}
+        {isCollapsed && (
+          <div className="absolute left-full ml-2 top-1/2 -translate-y-1/2 hidden group-hover:block z-50 overflow-hidden rounded-md border border-stone-200/50 dark:border-stone-700/50 bg-popover px-3 py-1.5 text-sm text-popover-foreground shadow-md whitespace-nowrap pointer-events-none">
+            {item.title}
+          </div>
+        )}
+      </div>
+    )
+  }
+
+  return (
+    <nav className="flex flex-col">
+      {renderLink(homeItem)}
+      <div className="mt-2">
+        {devTaskItems.map((item) => renderLink(item))}
+      </div>
+      <div className="mt-2">
+        {renderLink(settingsItem)}
+      </div>
+    </nav>
+  )
+}
+
+function SidebarContent({ isCollapsed }: { isCollapsed: boolean }) {
+  const { mode } = useMode()
+
+  if (mode === 'development') {
+    return <DevSidebarContent key="dev" isCollapsed={isCollapsed} />
+  }
+
+  return <LifeSidebarContent key="life" isCollapsed={isCollapsed} />
+}
+
 export function Sidebar({ open, onOpenChange }: SidebarProps) {
   const pathname = usePathname()
   const prevPathnameRef = useRef(pathname)
@@ -267,9 +312,8 @@ export function Sidebar({ open, onOpenChange }: SidebarProps) {
   }, [pathname, open, onOpenChange])
 
   return (
-    <TooltipProvider>
-      <>
-        <aside
+    <>
+      <aside
           suppressHydrationWarning
           className={cn(
             'hidden md:flex md:flex-shrink-0 md:flex-col md:border-r md:border-stone-200 md:bg-muted/40 dark:md:border-stone-800',
@@ -280,22 +324,20 @@ export function Sidebar({ open, onOpenChange }: SidebarProps) {
         >
           <div className="w-72 h-full flex flex-col">
             <div className="h-14 flex items-center px-2 flex-shrink-0">
-              <Tooltip>
-                <TooltipTrigger asChild>
-                  <button
-                    onClick={() => onOpenChange(!open)}
-                    className="group flex items-center justify-center rounded-lg p-2 h-10 w-10 transition-colors hover:bg-accent hover:text-accent-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring text-stone-600 dark:text-stone-400"
-                  >
-                    <PanelLeft className="h-5 w-5 flex-shrink-0" />
-                    <span className="sr-only">
-                      {open ? 'サイドバーを閉じる' : 'サイドバーを開く'}
-                    </span>
-                  </button>
-                </TooltipTrigger>
-                <TooltipContent side="right">
-                  <p>{open ? 'サイドバーを閉じる' : 'サイドバーを開く'}</p>
-                </TooltipContent>
-              </Tooltip>
+              <div className="relative group">
+                <button
+                  onClick={() => onOpenChange(!open)}
+                  className="flex items-center justify-center rounded-lg p-2 h-10 w-10 transition-colors hover:bg-accent hover:text-accent-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring text-stone-600 dark:text-stone-400"
+                >
+                  <PanelLeft className="h-5 w-5 flex-shrink-0" />
+                  <span className="sr-only">
+                    {open ? 'サイドバーを閉じる' : 'サイドバーを開く'}
+                  </span>
+                </button>
+                <div className="absolute left-full ml-2 top-1/2 -translate-y-1/2 hidden group-hover:block z-50 overflow-hidden rounded-md border border-stone-200/50 dark:border-stone-700/50 bg-popover px-3 py-1.5 text-sm text-popover-foreground shadow-md whitespace-nowrap pointer-events-none">
+                  {open ? 'サイドバーを閉じる' : 'サイドバーを開く'}
+                </div>
+              </div>
             </div>
             <div className="flex-1 overflow-y-auto min-h-0 p-2">
               <SidebarContent isCollapsed={!open} />
@@ -314,8 +356,7 @@ export function Sidebar({ open, onOpenChange }: SidebarProps) {
               </div>
             </SheetContent>
           </Sheet>
-        </div>
-      </>
-    </TooltipProvider>
+      </div>
+    </>
   )
 }
