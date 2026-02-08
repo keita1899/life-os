@@ -89,6 +89,11 @@ export default function DevTasksPage() {
     [groupedTasks],
   )
 
+  useCreateShortcut({
+    onCreate: handleCreateClick,
+    enabled: !isDialogOpen,
+  })
+
   if (mode !== 'development') {
     return null
   }
@@ -132,11 +137,6 @@ export default function DevTasksPage() {
       handleDialogClose(false)
     }
   }
-
-  useCreateShortcut({
-    onCreate: handleCreateClick,
-    enabled: !isDialogOpen,
-  })
 
   const handleDeleteTask = async (): Promise<void> => {
     if (!deletingTask) return

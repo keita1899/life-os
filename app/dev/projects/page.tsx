@@ -43,6 +43,11 @@ export default function DevProjectsPage() {
     }
   }
 
+  useCreateShortcut({
+    onCreate: handleCreateClick,
+    enabled: !isDialogOpen,
+  })
+
   if (mode !== 'development') {
     return null
   }
@@ -53,11 +58,6 @@ export default function DevProjectsPage() {
     await createProject(input)
     handleDialogClose(false)
   }
-
-  useCreateShortcut({
-    onCreate: handleCreateClick,
-    enabled: !isDialogOpen,
-  })
 
   return (
     <MainLayout>
