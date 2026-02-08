@@ -173,75 +173,75 @@ export async function updateDevTask(
 ): Promise<DevTask> {
   const db = await getDatabase()
 
-  const existing = await db.select<DbDevTask[]>(
-    `SELECT ${getSelectColumns()} FROM dev_tasks WHERE id = ?`,
-    [id],
-  )
-  if (existing.length === 0) {
-    throw new Error('Task not found')
-  }
-  const current = existing[0]
-
-  const newProjectId = input.projectId !== undefined ? input.projectId : current.project_id
-  const newType = input.type !== undefined ? input.type : current.type
-  const targetChanged =
-    newProjectId !== current.project_id || newType !== current.type
-
-  const updateFields: string[] = []
-  const updateValues: unknown[] = []
-
-  if (input.title !== undefined) {
-    updateFields.push('title = ?')
-    updateValues.push(input.title)
-  }
-
-  if (input.projectId !== undefined) {
-    updateFields.push('project_id = ?')
-    updateValues.push(input.projectId)
-  }
-
-  if (input.type !== undefined) {
-    updateFields.push('type = ?')
-    updateValues.push(input.type)
-  }
-
-  if (targetChanged) {
-    const maxOrder = await getMaxOrder(newProjectId, newType)
-    updateFields.push('"order" = ?')
-    updateValues.push(maxOrder + 1)
-  } else if (input.order !== undefined) {
-    updateFields.push('"order" = ?')
-    updateValues.push(input.order)
-  }
-
-  if (input.executionDate !== undefined) {
-    updateFields.push('execution_date = ?')
-    updateValues.push(input.executionDate || null)
-  }
-
-  if (input.completed !== undefined) {
-    updateFields.push('completed = ?')
-    updateValues.push(input.completed ? 1 : 0)
-  }
-
-  if (input.actualTime !== undefined) {
-    updateFields.push('actual_time = ?')
-    updateValues.push(input.actualTime)
-  }
-
-  if (input.memo !== undefined) {
-    updateFields.push('memo = ?')
-    updateValues.push(input.memo || null)
-  }
-
-  if (updateFields.length === 0) {
-    return mapDbDevTaskToDevTask(current)
-  }
-
-  updateFields.push('updated_at = CURRENT_TIMESTAMP')
-  updateValues.push(id)
-
   try {
+    const existing = await db.select<DbDevTask[]>(
+      `SELECT ${getSelectColumns()} FROM dev_tasks WHERE id = ?`,
+      [id],
+    )
+    if (existing.length === 0) {
+      throw new Error('Task not found')
+    }
+    const current = existing[0]
+
+    const newProjectId = input.projectId !== undefined ? input.projectId : current.project_id
+    const newType = input.type !== undefined ? input.type : current.type
+    const targetChanged =
+      newProjectId !== current.project_id || newType !== current.type
+
+    const updateFields: string[] = []
+    const updateValues: unknown[] = []
+
+    if (input.title !== undefined) {
+      updateFields.push('title = ?')
+      updateValues.push(input.title)
+    }
+
+    if (input.projectId !== undefined) {
+      updateFields.push('project_id = ?')
+      updateValues.push(input.projectId)
+    }
+
+    if (input.type !== undefined) {
+      updateFields.push('type = ?')
+      updateValues.push(input.type)
+    }
+
+    if (targetChanged) {
+      const maxOrder = await getMaxOrder(newProjectId, newType)
+      updateFields.push('"order" = ?')
+      updateValues.push(maxOrder + 1)
+    } else if (input.order !== undefined) {
+      updateFields.push('"order" = ?')
+      updateValues.push(input.order)
+    }
+
+    if (input.executionDate !== undefined) {
+      updateFields.push('execution_date = ?')
+      updateValues.push(input.executionDate || null)
+    }
+
+    if (input.completed !== undefined) {
+      updateFields.push('completed = ?')
+      updateValues.push(input.completed ? 1 : 0)
+    }
+
+    if (input.actualTime !== undefined) {
+      updateFields.push('actual_time = ?')
+      updateValues.push(input.actualTime)
+    }
+
+    if (input.memo !== undefined) {
+      updateFields.push('memo = ?')
+      updateValues.push(input.memo || null)
+    }
+
+    if (updateFields.length === 0) {
+      return mapDbDevTaskToDevTask(current)
+    }
+
+    updateFields.push('updated_at = CURRENT_TIMESTAMP')
+    updateValues.push(id)
+
     await db.execute(
       `UPDATE dev_tasks SET ${updateFields.join(', ')} WHERE id = ?`,
       updateValues,

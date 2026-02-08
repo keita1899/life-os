@@ -159,7 +159,10 @@ export default function WishlistPage() {
     if (!item) return
 
     const result = await execute(
-      () => deleteWishlistItem(item.id),
+      async () => {
+        await deleteWishlistItem(item.id)
+        return true
+      },
       '欲しいものの削除に失敗しました',
     )
     if (result !== undefined) {
@@ -183,7 +186,10 @@ export default function WishlistPage() {
     if (ids.length === 0) return
 
     const result = await execute(
-      () => deleteWishlistItemsByIds(ids),
+      async () => {
+        await deleteWishlistItemsByIds(ids)
+        return true
+      },
       '購入済みの一括削除に失敗しました',
     )
     if (result !== undefined) {

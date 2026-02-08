@@ -197,7 +197,10 @@ export default function BucketListPage() {
     if (!item) return
 
     const result = await execute(
-      () => deleteBucketListItem(item.id),
+      async () => {
+        await deleteBucketListItem(item.id)
+        return true
+      },
       'やりたいことの削除に失敗しました',
     )
     if (result !== undefined) {
@@ -221,7 +224,10 @@ export default function BucketListPage() {
     if (ids.length === 0) return
 
     const result = await execute(
-      () => deleteBucketListItemsByIds(ids),
+      async () => {
+        await deleteBucketListItemsByIds(ids)
+        return true
+      },
       '達成済みやりたいことの削除に失敗しました',
     )
     if (result !== undefined) {

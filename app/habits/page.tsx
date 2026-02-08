@@ -283,7 +283,7 @@ export default function HabitsPage() {
 
         <DeleteConfirmDialog
           open={!!deleteConfirm.deletingItem}
-          message={`「${deleteConfirm.deletingItem?.name}」を削除しますか？この操作は取り消せません。`}
+          message={`「${deleteConfirm.deletingItem?.name ?? ''}」を削除しますか？この操作は取り消せません。`}
           onConfirm={handleDeleteHabit}
           onCancel={deleteConfirm.handleDeleteCancel}
         />
