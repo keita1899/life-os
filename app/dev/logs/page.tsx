@@ -17,6 +17,7 @@ import { mutate } from 'swr'
 import { useUserSettings } from '@/hooks/useUserSettings'
 import { useDevDailyLog } from '@/hooks/useDevDailyLog'
 import { useDialogState } from '@/hooks/useDialogState'
+import { useAsyncOperation } from '@/hooks/useAsyncOperation'
 import { Loading } from '@/components/ui/loading'
 import { ErrorMessage } from '@/components/ui/error-message'
 import { MainLayout } from '@/components/layout/MainLayout'
@@ -90,7 +91,7 @@ function DevLogPageView({ logDate, date }: DevLogPageViewProps) {
   const [taskCreateTargetValue, setTaskCreateTargetValue] =
     useState<string>('inbox')
   const [deletingTask, setDeletingTask] = useState<Task | undefined>(undefined)
-  const [operationError, setOperationError] = useState<string | null>(null)
+  const { operationError, setOperationError, execute } = useAsyncOperation()
   const { userSettings } = useUserSettings()
   const {
     devDailyLog,
@@ -205,31 +206,32 @@ function DevLogPageView({ logDate, date }: DevLogPageViewProps) {
       setOperationError('タスクの作成先が無効です')
       return
     }
-    try {
-      setOperationError(null)
-      if (target.kind === 'type') {
-        await createDevTask({
-          title: input.title,
-          projectId: null,
-          type: target.value,
-          executionDate: input.executionDate ?? date,
-          memo: input.memo,
-        })
-      } else {
-        await createDevTask({
-          title: input.title,
-          projectId: target.projectId,
-          type: 'inbox',
-          executionDate: input.executionDate ?? date,
-          memo: input.memo,
-        })
-      }
-      await mutate('dev-calendar-tasks')
+    const result = await execute(
+      async () => {
+        if (target.kind === 'type') {
+          await createDevTask({
+            title: input.title,
+            projectId: null,
+            type: target.value,
+            executionDate: input.executionDate ?? date,
+            memo: input.memo,
+          })
+        } else {
+          await createDevTask({
+            title: input.title,
+            projectId: target.projectId,
+            type: 'inbox',
+            executionDate: input.executionDate ?? date,
+            memo: input.memo,
+          })
+        }
+        await mutate('dev-calendar-tasks')
+        return true
+      },
+      'タスクの作成に失敗しました',
+    )
+    if (result !== undefined) {
       taskDialog.handleDialogClose(false)
-    } catch (err) {
-      setOperationError(
-        err instanceof Error ? err.message : 'タスクの作成に失敗しました',
-      )
     }
   }
 
@@ -242,31 +244,33 @@ function DevLogPageView({ logDate, date }: DevLogPageViewProps) {
       return
     }
 
-    try {
-      setOperationError(null)
-      if (target.kind === 'type') {
-        await updateDevTask(taskDialog.editingItem.id, {
-          title: input.title,
-          projectId: null,
-          type: target.value,
-          executionDate: input.executionDate ?? undefined,
-          memo: input.memo,
-        })
-      } else {
-        await updateDevTask(taskDialog.editingItem.id, {
-          title: input.title,
-          projectId: target.projectId,
-          type: 'inbox',
-          executionDate: input.executionDate ?? undefined,
-          memo: input.memo,
-        })
-      }
-      await mutate('dev-calendar-tasks')
+    const taskId = taskDialog.editingItem.id
+    const result = await execute(
+      async () => {
+        if (target.kind === 'type') {
+          await updateDevTask(taskId, {
+            title: input.title,
+            projectId: null,
+            type: target.value,
+            executionDate: input.executionDate ?? undefined,
+            memo: input.memo,
+          })
+        } else {
+          await updateDevTask(taskId, {
+            title: input.title,
+            projectId: target.projectId,
+            type: 'inbox',
+            executionDate: input.executionDate ?? undefined,
+            memo: input.memo,
+          })
+        }
+        await mutate('dev-calendar-tasks')
+        return true
+      },
+      'タスクの更新に失敗しました',
+    )
+    if (result !== undefined) {
       taskDialog.handleDialogClose(false)
-    } catch (err) {
-      setOperationError(
-        err instanceof Error ? err.message : 'タスクの更新に失敗しました',
-      )
     }
   }
 
@@ -275,48 +279,58 @@ function DevLogPageView({ logDate, date }: DevLogPageViewProps) {
   }
 
   const handleDeleteTask = async () => {
-    if (!deletingTask) return
+    const taskToDelete = deletingTask
+    if (!taskToDelete) return
 
-    try {
-      setOperationError(null)
-      await deleteDevTask(deletingTask.id)
-      await mutate('dev-calendar-tasks')
+    const result = await execute(
+      async () => {
+        await deleteDevTask(taskToDelete.id)
+        await mutate('dev-calendar-tasks')
+        return true
+      },
+      'タスクの削除に失敗しました',
+    )
+    if (result !== undefined) {
       setDeletingTask(undefined)
-    } catch (err) {
-      setOperationError(
-        err instanceof Error ? err.message : 'タスクの削除に失敗しました',
-      )
     }
   }
 
   const handleUpdateReport = async (input: UpdateDevDailyLogInput) => {
-    try {
-      setOperationError(null)
-      if (devDailyLog) {
-        await updateDevDailyLog(input)
-      } else {
-        await createDevDailyLog({ logDate: date, report: input.report })
-      }
-    } catch (err) {
-      setOperationError(
-        err instanceof Error ? err.message : '日報の保存に失敗しました',
-      )
-    }
+    await execute(
+      async () => {
+        if (devDailyLog) {
+          await updateDevDailyLog(input)
+        } else {
+          await createDevDailyLog({ logDate: date, report: input.report })
+        }
+      },
+      '日報の保存に失敗しました',
+    )
   }
 
   const handleUpdateExecutionDate = async (
     task: Task,
     executionDate: string | null,
   ) => {
-    try {
-      setOperationError(null)
-      await updateDevTask(task.id, { executionDate })
-      await mutate('dev-calendar-tasks')
-    } catch (err) {
-      setOperationError(
-        err instanceof Error ? err.message : 'タスクの実行日の更新に失敗しました',
-      )
-    }
+    await execute(
+      async () => {
+        await updateDevTask(task.id, { executionDate })
+        await mutate('dev-calendar-tasks')
+      },
+      'タスクの実行日の更新に失敗しました',
+    )
+  }
+
+  const handleToggleTaskCompletion = async (task: Task) => {
+    await execute(
+      async () => {
+        const devTask = allDevTasks.find((t) => t.id === task.id)
+        if (!devTask) throw new Error('タスクが見つかりません')
+        await updateDevTask(task.id, { completed: !task.completed })
+        await mutate('dev-calendar-tasks')
+      },
+      'タスクの完了状態の更新に失敗しました',
+    )
   }
 
   const isLoading =
@@ -378,21 +392,7 @@ function DevLogPageView({ logDate, date }: DevLogPageViewProps) {
               <DevLogTasksSection
                 tasks={tasks}
                 getTargetLabel={getTaskTargetLabel}
-                onToggleCompletion={async (task) => {
-                  try {
-                    setOperationError(null)
-                    const devTask = allDevTasks.find((t) => t.id === task.id)
-                    if (!devTask) return
-                    await updateDevTask(task.id, { completed: !task.completed })
-                    await mutate('dev-calendar-tasks')
-                  } catch (err) {
-                    setOperationError(
-                      err instanceof Error
-                        ? err.message
-                        : 'タスクの完了状態の更新に失敗しました',
-                    )
-                  }
-                }}
+                onToggleCompletion={handleToggleTaskCompletion}
                 onEdit={handleEditTask}
                 onDelete={handleDeleteClick}
                 onUpdateExecutionDate={handleUpdateExecutionDate}
