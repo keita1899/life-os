@@ -1,10 +1,13 @@
 'use client'
 
-import { useState, useMemo, useCallback } from 'react'
+import { useState, useMemo } from 'react'
 import { format } from 'date-fns'
 import { Plus } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { useCreateShortcut } from '@/hooks/useCreateShortcut'
+import { useDialogState } from '@/hooks/useDialogState'
+import { useDeleteConfirm } from '@/hooks/useDeleteConfirm'
+import { useAsyncOperation } from '@/hooks/useAsyncOperation'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { HabitDialog } from '@/components/habits/HabitDialog'
 import { HabitHeatmap } from '@/components/habits/HabitHeatmap'
@@ -31,10 +34,15 @@ export default function HabitsPage() {
     updateHabit,
     deleteHabit,
   } = useHabits()
-  const [isDialogOpen, setIsDialogOpen] = useState(false)
-  const [editingHabit, setEditingHabit] = useState<Habit | undefined>(undefined)
-  const [deletingHabit, setDeletingHabit] = useState<Habit | undefined>(undefined)
-  const [operationError, setOperationError] = useState<string | null>(null)
+  const {
+    isDialogOpen,
+    editingItem: editingHabit,
+    handleEdit: handleEditHabit,
+    handleDialogClose,
+    handleCreateClick,
+  } = useDialogState<Habit>()
+  const deleteConfirm = useDeleteConfirm<Habit>()
+  const { operationError, setOperationError, execute } = useAsyncOperation()
   const {
     currentDate: heatmapDate,
     viewMode,
@@ -47,6 +55,11 @@ export default function HabitsPage() {
     month: heatmapMonth,
   } = useHabitHeatmapView()
   const todayStr = format(new Date(), 'yyyy-MM-dd')
+
+  useCreateShortcut({
+    onCreate: handleCreateClick,
+    enabled: !isDialogOpen,
+  })
 
   const {
     completions: todayCompletions,
@@ -79,79 +92,46 @@ export default function HabitsPage() {
   }
 
   const handleCreateHabit = async (input: CreateHabitInput) => {
-    try {
-      setOperationError(null)
-      await createHabit(input)
-      setIsDialogOpen(false)
-    } catch (err) {
-      setOperationError(
-        err instanceof Error ? err.message : '習慣の作成に失敗しました',
-      )
-      throw err
+    const result = await execute(
+      () => createHabit(input),
+      '習慣の作成に失敗しました',
+    )
+    if (result !== undefined) {
+      handleDialogClose(false)
     }
   }
 
   const handleUpdateHabit = async (input: CreateHabitInput) => {
     if (!editingHabit) return
 
-    try {
-      setOperationError(null)
-      await updateHabit(editingHabit.id, {
-        name: input.name,
-        scheduledTime: input.scheduledTime,
-        frequencyType: input.frequencyType,
-        frequencyDays: input.frequencyDays,
-        frequencyDayOfMonth: input.frequencyDayOfMonth,
-      })
-      setIsDialogOpen(false)
-      setEditingHabit(undefined)
-    } catch (err) {
-      setOperationError(
-        err instanceof Error ? err.message : '習慣の更新に失敗しました',
-      )
-      throw err
+    const result = await execute(
+      () =>
+        updateHabit(editingHabit.id, {
+          name: input.name,
+          scheduledTime: input.scheduledTime,
+          frequencyType: input.frequencyType,
+          frequencyDays: input.frequencyDays,
+          frequencyDayOfMonth: input.frequencyDayOfMonth,
+        }),
+      '習慣の更新に失敗しました',
+    )
+    if (result !== undefined) {
+      handleDialogClose(false)
     }
-  }
-
-  const handleEditHabit = (habit: Habit) => {
-    setEditingHabit(habit)
-    setIsDialogOpen(true)
-  }
-
-  const handleDialogClose = (open: boolean) => {
-    setIsDialogOpen(open)
-    if (!open) {
-      setEditingHabit(undefined)
-    }
-  }
-
-  const handleDeleteClick = (habit: Habit) => {
-    setDeletingHabit(habit)
   }
 
   const handleDeleteHabit = async () => {
-    if (!deletingHabit) return
+    const habit = deleteConfirm.deletingItem
+    if (!habit) return
 
-    try {
-      setOperationError(null)
-      await deleteHabit(deletingHabit.id)
-      setDeletingHabit(undefined)
-    } catch (err) {
-      setOperationError(
-        err instanceof Error ? err.message : '習慣の削除に失敗しました',
-      )
+    const result = await execute(
+      () => deleteHabit(habit.id),
+      '習慣の削除に失敗しました',
+    )
+    if (result !== undefined) {
+      deleteConfirm.clearDeletingItem()
     }
   }
-
-  const handleOpenCreate = useCallback(() => {
-    setEditingHabit(undefined)
-    setIsDialogOpen(true)
-  }, [])
-
-  useCreateShortcut({
-    onCreate: handleOpenCreate,
-    enabled: !isDialogOpen,
-  })
 
   const handleToggleToday = async (habit: Habit) => {
     const completed = completedHabitIdsToday.has(habit.id)
@@ -192,7 +172,7 @@ export default function HabitsPage() {
       <div className="container mx-auto max-w-5xl py-8 px-4">
         <div className="mb-6 flex items-center justify-between">
           <h1 className="text-3xl font-bold">習慣</h1>
-          <Button onClick={handleOpenCreate}>
+          <Button onClick={handleCreateClick}>
             <Plus className="mr-2 h-4 w-4" />
             習慣を作成
           </Button>
@@ -211,7 +191,7 @@ export default function HabitsPage() {
               <Button
                 variant="outline"
                 className="mt-4"
-                onClick={handleOpenCreate}
+                onClick={handleCreateClick}
               >
                 <Plus className="mr-2 h-4 w-4" />
                 習慣を作成
@@ -288,7 +268,7 @@ export default function HabitsPage() {
                 onToggleToday={handleToggleToday}
                 onToggleDate={handleToggleDate}
                 onEdit={handleEditHabit}
-                onDelete={handleDeleteClick}
+                onDelete={deleteConfirm.handleDeleteClick}
               />
             </CardContent>
           </Card>
@@ -302,10 +282,10 @@ export default function HabitsPage() {
         />
 
         <DeleteConfirmDialog
-          open={!!deletingHabit}
-          message={`「${deletingHabit?.name}」を削除しますか？この操作は取り消せません。`}
+          open={!!deleteConfirm.deletingItem}
+          message={`「${deleteConfirm.deletingItem?.name ?? ''}」を削除しますか？この操作は取り消せません。`}
           onConfirm={handleDeleteHabit}
-          onCancel={() => setDeletingHabit(undefined)}
+          onCancel={deleteConfirm.handleDeleteCancel}
         />
       </div>
     </MainLayout>

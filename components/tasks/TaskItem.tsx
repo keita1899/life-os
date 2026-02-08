@@ -42,6 +42,7 @@ import type { Task } from '@/lib/types/task'
 
 interface TaskItemProps {
   task: Task
+  label?: string
   onEdit?: (task: Task) => void
   onDelete?: (task: Task) => void
   onToggleCompletion?: (task: Task) => void
@@ -88,6 +89,7 @@ function isValidTimeFormat(time: string | null): boolean {
 
 export function TaskItem({
   task,
+  label,
   onEdit,
   onDelete,
   onToggleCompletion,
@@ -167,15 +169,22 @@ export function TaskItem({
         )}
       </div>
       <div className="flex-1">
-        <div
-          className={cn(
-            'text-sm font-medium',
-            task.completed
-              ? 'text-stone-500 line-through dark:text-stone-400'
-              : 'text-stone-900 dark:text-stone-100',
+        <div className="flex flex-wrap items-center gap-2">
+          {label && (
+            <span className="inline-flex shrink-0 rounded bg-stone-200 px-1.5 py-0.5 text-xs font-medium text-stone-600 dark:bg-stone-700 dark:text-stone-400">
+              {label}
+            </span>
           )}
-        >
-          {task.title}
+          <span
+            className={cn(
+              'text-sm font-medium',
+              task.completed
+                ? 'text-stone-500 line-through dark:text-stone-400'
+                : 'text-stone-900 dark:text-stone-100',
+            )}
+          >
+            {task.title}
+          </span>
         </div>
         {(task.recurrenceRule || isValidScheduledTime) && (
           <div className="mt-1 flex flex-wrap items-center gap-2 text-xs text-muted-foreground">

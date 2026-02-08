@@ -1,9 +1,12 @@
 'use client'
 
-import { useState, useMemo, useCallback } from 'react'
+import { useState, useMemo } from 'react'
 import { Trash2, Plus } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { useCreateShortcut } from '@/hooks/useCreateShortcut'
+import { useDialogState } from '@/hooks/useDialogState'
+import { useDeleteConfirm } from '@/hooks/useDeleteConfirm'
+import { useAsyncOperation } from '@/hooks/useAsyncOperation'
 import {
   Accordion,
   AccordionContent,
@@ -59,13 +62,14 @@ export default function BucketListPage() {
   const { createTask } = useTasks()
   const [selectedCategoryId, setSelectedCategoryId] = useState<string>('all')
   const [selectedYear, setSelectedYear] = useState<string>('all')
-  const [isDialogOpen, setIsDialogOpen] = useState(false)
-  const [editingItem, setEditingItem] = useState<BucketListItem | undefined>(
-    undefined,
-  )
-  const [deletingItem, setDeletingItem] = useState<BucketListItem | undefined>(
-    undefined,
-  )
+  const {
+    isDialogOpen,
+    editingItem,
+    handleEdit: handleEditItem,
+    handleDialogClose,
+    handleCreateClick,
+  } = useDialogState<BucketListItem>()
+  const deleteConfirm = useDeleteConfirm<BucketListItem>()
   const [isDeletingCompletedDialogOpen, setIsDeletingCompletedDialogOpen] =
     useState(false)
   const [convertingToEventItem, setConvertingToEventItem] = useState<
@@ -74,7 +78,7 @@ export default function BucketListPage() {
   const [convertingToTaskItem, setConvertingToTaskItem] = useState<
     BucketListItem | undefined
   >(undefined)
-  const [operationError, setOperationError] = useState<string | null>(null)
+  const { operationError, setOperationError, execute } = useAsyncOperation()
 
   const availableYears = useMemo(() => {
     const years = new Set<number>()
@@ -156,54 +160,32 @@ export default function BucketListPage() {
   }
 
   const handleCreateItem = async (input: CreateBucketListItemInput) => {
-    try {
-      setOperationError(null)
-      await createBucketListItem(input)
-      setIsDialogOpen(false)
-    } catch (err) {
-      setOperationError(
-        err instanceof Error ? err.message : 'やりたいことの作成に失敗しました',
-      )
+    const result = await execute(
+      () => createBucketListItem(input),
+      'やりたいことの作成に失敗しました',
+    )
+    if (result !== undefined) {
+      handleDialogClose(false)
     }
   }
 
   const handleUpdateItem = async (input: CreateBucketListItemInput) => {
     if (!editingItem) return
 
-    try {
-      setOperationError(null)
-      const updateInput: UpdateBucketListItemInput = {
-        title: input.title,
-        categoryId: input.categoryId,
-        targetYear: input.targetYear,
-        targetMonth: input.targetMonth,
-      }
-      await updateBucketListItem(editingItem.id, updateInput)
-      setIsDialogOpen(false)
-      setEditingItem(undefined)
-    } catch (err) {
-      setOperationError(
-        err instanceof Error ? err.message : 'やりたいことの更新に失敗しました',
-      )
+    const updateInput: UpdateBucketListItemInput = {
+      title: input.title,
+      categoryId: input.categoryId,
+      targetYear: input.targetYear,
+      targetMonth: input.targetMonth,
+    }
+    const result = await execute(
+      () => updateBucketListItem(editingItem.id, updateInput),
+      'やりたいことの更新に失敗しました',
+    )
+    if (result !== undefined) {
+      handleDialogClose(false)
     }
   }
-
-  const handleEditItem = (item: BucketListItem) => {
-    setEditingItem(item)
-    setIsDialogOpen(true)
-  }
-
-  const handleDialogClose = (open: boolean) => {
-    setIsDialogOpen(open)
-    if (!open) {
-      setEditingItem(undefined)
-    }
-  }
-
-  const handleCreateClick = useCallback(() => {
-    setEditingItem(undefined)
-    setIsDialogOpen(true)
-  }, [])
 
   useCreateShortcut({
     onCreate: handleCreateClick,
@@ -211,34 +193,26 @@ export default function BucketListPage() {
   })
 
   const handleDeleteItem = async () => {
-    if (!deletingItem) return
+    const item = deleteConfirm.deletingItem
+    if (!item) return
 
-    try {
-      setOperationError(null)
-      await deleteBucketListItem(deletingItem.id)
-      setDeletingItem(undefined)
-    } catch (err) {
-      setOperationError(
-        err instanceof Error ? err.message : 'やりたいことの削除に失敗しました',
-      )
+    const result = await execute(
+      async () => {
+        await deleteBucketListItem(item.id)
+        return true
+      },
+      'やりたいことの削除に失敗しました',
+    )
+    if (result !== undefined) {
+      deleteConfirm.clearDeletingItem()
     }
-  }
-
-  const handleDeleteClick = (item: BucketListItem) => {
-    setDeletingItem(item)
   }
 
   const handleToggleCompletion = async (item: BucketListItem) => {
-    try {
-      setOperationError(null)
-      await toggleBucketListItemCompletion(item.id, !item.completed)
-    } catch (err) {
-      setOperationError(
-        err instanceof Error
-          ? err.message
-          : 'やりたいことの完了状態の更新に失敗しました',
-      )
-    }
+    await execute(
+      () => toggleBucketListItemCompletion(item.id, !item.completed),
+      'やりたいことの完了状態の更新に失敗しました',
+    )
   }
 
   const handleDeleteCompletedItemsClick = () => {
@@ -249,16 +223,15 @@ export default function BucketListPage() {
     const ids = completedItems.map((item) => item.id)
     if (ids.length === 0) return
 
-    try {
-      setOperationError(null)
-      await deleteBucketListItemsByIds(ids)
+    const result = await execute(
+      async () => {
+        await deleteBucketListItemsByIds(ids)
+        return true
+      },
+      '達成済みやりたいことの削除に失敗しました',
+    )
+    if (result !== undefined) {
       setIsDeletingCompletedDialogOpen(false)
-    } catch (err) {
-      setOperationError(
-        err instanceof Error
-          ? err.message
-          : '達成済みやりたいことの削除に失敗しました',
-      )
     }
   }
 
@@ -271,32 +244,36 @@ export default function BucketListPage() {
   }
 
   const handleCreateEventFromBucketItem = async (input: CreateEventInput) => {
-    if (!convertingToEventItem) return
+    const item = convertingToEventItem
+    if (!item) return
 
-    try {
-      setOperationError(null)
-      await createEvent(input)
-      await deleteBucketListItem(convertingToEventItem.id)
+    const result = await execute(
+      async () => {
+        await createEvent(input)
+        await deleteBucketListItem(item.id)
+        return true
+      },
+      '予定の作成に失敗しました',
+    )
+    if (result !== undefined) {
       setConvertingToEventItem(undefined)
-    } catch (err) {
-      setOperationError(
-        err instanceof Error ? err.message : '予定の作成に失敗しました',
-      )
     }
   }
 
   const handleCreateTaskFromBucketItem = async (input: CreateTaskInput) => {
-    if (!convertingToTaskItem) return
+    const item = convertingToTaskItem
+    if (!item) return
 
-    try {
-      setOperationError(null)
-      await createTask(input)
-      await deleteBucketListItem(convertingToTaskItem.id)
+    const result = await execute(
+      async () => {
+        await createTask(input)
+        await deleteBucketListItem(item.id)
+        return true
+      },
+      'タスクの作成に失敗しました',
+    )
+    if (result !== undefined) {
       setConvertingToTaskItem(undefined)
-    } catch (err) {
-      setOperationError(
-        err instanceof Error ? err.message : 'タスクの作成に失敗しました',
-      )
     }
   }
 
@@ -331,7 +308,7 @@ export default function BucketListPage() {
                 <BucketListList
                   items={filteredItems}
                   onEdit={handleEditItem}
-                  onDelete={handleDeleteClick}
+                  onDelete={deleteConfirm.handleDeleteClick}
                   onToggleCompletion={handleToggleCompletion}
                   onConvertToEvent={handleConvertToEvent}
                   onConvertToTask={handleConvertToTask}
@@ -405,7 +382,7 @@ export default function BucketListPage() {
                             <BucketListList
                               items={monthItems}
                               onEdit={handleEditItem}
-                              onDelete={handleDeleteClick}
+                              onDelete={deleteConfirm.handleDeleteClick}
                               onToggleCompletion={handleToggleCompletion}
                               onConvertToEvent={handleConvertToEvent}
                               onConvertToTask={handleConvertToTask}
@@ -437,7 +414,7 @@ export default function BucketListPage() {
                         <BucketListList
                           items={incompleteByMonth.unset}
                           onEdit={handleEditItem}
-                          onDelete={handleDeleteClick}
+                          onDelete={deleteConfirm.handleDeleteClick}
                           onToggleCompletion={handleToggleCompletion}
                           onConvertToEvent={handleConvertToEvent}
                           onConvertToTask={handleConvertToTask}
@@ -464,7 +441,7 @@ export default function BucketListPage() {
                           <BucketListList
                             items={completedItems}
                             onEdit={handleEditItem}
-                            onDelete={handleDeleteClick}
+                            onDelete={deleteConfirm.handleDeleteClick}
                             onToggleCompletion={handleToggleCompletion}
                             onConvertToEvent={handleConvertToEvent}
                             onConvertToTask={handleConvertToTask}
@@ -505,10 +482,10 @@ export default function BucketListPage() {
             />
 
             <DeleteConfirmDialog
-              open={!!deletingItem}
-              message={`「${deletingItem?.title}」を削除しますか？この操作は取り消せません。`}
+              open={!!deleteConfirm.deletingItem}
+              message={`「${deleteConfirm.deletingItem?.title}」を削除しますか？この操作は取り消せません。`}
               onConfirm={handleDeleteItem}
-              onCancel={() => setDeletingItem(undefined)}
+              onCancel={deleteConfirm.handleDeleteCancel}
             />
 
             <DeleteConfirmDialog

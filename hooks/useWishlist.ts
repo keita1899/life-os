@@ -26,26 +26,30 @@ export function useWishlist() {
   )
 
   const handleCreateWishlistItem = async (input: CreateWishlistItemInput) => {
-    await createWishlistItem(input)
+    const result = await createWishlistItem(input)
     await mutate(wishlistKey)
+    return result
   }
 
   const handleUpdateWishlistItem = async (
     id: number,
     input: UpdateWishlistItemInput,
   ) => {
-    await updateWishlistItem(id, input)
+    const result = await updateWishlistItem(id, input)
     await mutate(wishlistKey)
+    return result
   }
 
   const handleDeleteWishlistItem = async (id: number) => {
     await deleteWishlistItem(id)
     await mutate(wishlistKey)
+    return true
   }
 
   const handleDeleteWishlistItemsByIds = async (ids: number[]) => {
     await deleteWishlistItemsByIds(ids)
     await mutate(wishlistKey)
+    return true
   }
 
   return {

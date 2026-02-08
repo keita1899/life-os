@@ -1,9 +1,12 @@
 'use client'
 
-import { useState, useMemo, useEffect, useCallback } from 'react'
+import { useState, useMemo, useEffect } from 'react'
 import { Plus } from 'lucide-react'
 import { MainLayout } from '@/components/layout/MainLayout'
 import { useCreateShortcut } from '@/hooks/useCreateShortcut'
+import { useDialogState } from '@/hooks/useDialogState'
+import { useDeleteConfirm } from '@/hooks/useDeleteConfirm'
+import { useAsyncOperation } from '@/hooks/useAsyncOperation'
 import { useMode } from '@/lib/contexts/ModeContext'
 import { Button } from '@/components/ui/button'
 import { TransactionDialog } from '@/components/kakeibo/TransactionDialog'
@@ -33,14 +36,15 @@ export default function KakeiboPage() {
   const [selectedMonth, setSelectedMonth] = useState(
     (new Date().getMonth() + 1).toString(),
   )
-  const [isDialogOpen, setIsDialogOpen] = useState(false)
-  const [editingTransaction, setEditingTransaction] = useState<
-    Transaction | undefined
-  >(undefined)
-  const [deletingTransaction, setDeletingTransaction] = useState<
-    Transaction | undefined
-  >(undefined)
-  const [operationError, setOperationError] = useState<string | null>(null)
+  const {
+    isDialogOpen,
+    editingItem: editingTransaction,
+    handleEdit: handleEditTransaction,
+    handleDialogClose,
+    handleCreateClick,
+  } = useDialogState<Transaction>()
+  const deleteConfirm = useDeleteConfirm<Transaction>()
+  const { operationError, setOperationError, execute } = useAsyncOperation()
   const [filterType, setFilterType] = useState<
     'all' | 'income' | 'expense' | 'fixed' | 'variable'
   >('all')
@@ -82,6 +86,15 @@ export default function KakeiboPage() {
   const incomeCategories = useTransactionCategories('income')
   const expenseCategories = useTransactionCategories('expense')
   const { userSettings, updateUserSettings } = useUserSettings()
+
+  useCreateShortcut({
+    onCreate: handleCreateClick,
+    enabled: !isDialogOpen,
+  })
+
+  useEffect(() => {
+    setFilterCategoryId('all')
+  }, [filterType])
 
   const filteredTransactions = useMemo(() => {
     let filtered = transactions
@@ -147,10 +160,6 @@ export default function KakeiboPage() {
     }
   }, [allTransactions, transactions, periodRange.startDate, userSettings])
 
-  useEffect(() => {
-    setFilterCategoryId('all')
-  }, [filterType])
-
   const balanceLabel = useMemo(() => {
     switch (periodType) {
       case 'today':
@@ -185,26 +194,22 @@ export default function KakeiboPage() {
   const months = Array.from({ length: 12 }, (_, i) => i + 1)
 
   const handleCreateTransaction = async (input: CreateTransactionInput) => {
-    try {
-      setOperationError(null)
-      await createTransaction(input)
+    const result = await execute(async () => {
+      const created = await createTransaction(input)
       await refreshTransactions()
       await mutate(`transactions-${selectedYear}-${selectedMonth}`)
-      setIsDialogOpen(false)
-    } catch (err) {
-      console.error('Failed to create transaction:', err)
-      setOperationError(
-        err instanceof Error ? err.message : '取引の作成に失敗しました',
-      )
+      return created
+    }, '取引の作成に失敗しました')
+    if (result !== undefined) {
+      handleDialogClose(false)
     }
   }
 
   const handleUpdateTransaction = async (input: CreateTransactionInput) => {
     if (!editingTransaction) return
 
-    try {
-      setOperationError(null)
-      await updateTransaction(editingTransaction.id, {
+    const result = await execute(async () => {
+      const updated = await updateTransaction(editingTransaction.id, {
         date: input.date,
         type: input.type,
         name: input.name,
@@ -218,48 +223,35 @@ export default function KakeiboPage() {
         (key) =>
           typeof key === 'string' && key.startsWith('transactions-range-'),
       )
-      setIsDialogOpen(false)
-      setEditingTransaction(undefined)
-    } catch (err) {
-      setOperationError(
-        err instanceof Error ? err.message : '取引の更新に失敗しました',
-      )
+      return updated
+    }, '取引の更新に失敗しました')
+    if (result !== undefined) {
+      handleDialogClose(false)
     }
   }
 
-  const handleEditTransaction = (transaction: Transaction) => {
-    setEditingTransaction(transaction)
-    setIsDialogOpen(true)
-  }
-
-  const handleDeleteClick = (transaction: Transaction) => {
-    setDeletingTransaction(transaction)
-  }
-
   const handleDeleteTransaction = async () => {
-    if (!deletingTransaction) return
+    const transaction = deleteConfirm.deletingItem
+    if (!transaction) return
 
-    try {
-      setOperationError(null)
-      await deleteTransaction(deletingTransaction.id)
+    const result = await execute(async () => {
+      await deleteTransaction(transaction.id)
       await refreshTransactions()
       await mutate(`transactions-${selectedYear}-${selectedMonth}`)
       await mutate(
         (key) =>
           typeof key === 'string' && key.startsWith('transactions-range-'),
       )
-      setDeletingTransaction(undefined)
-    } catch (err) {
-      setOperationError(
-        err instanceof Error ? err.message : '取引の削除に失敗しました',
-      )
+      return true
+    }, '取引の削除に失敗しました')
+    if (result !== undefined) {
+      deleteConfirm.clearDeletingItem()
     }
   }
 
-  const handleDialogClose = (open: boolean) => {
-    setIsDialogOpen(open)
+  const handleDialogCloseWithErrorClear = (open: boolean) => {
+    handleDialogClose(open)
     if (!open) {
-      setEditingTransaction(undefined)
       setOperationError(null)
     }
   }
@@ -267,16 +259,6 @@ export default function KakeiboPage() {
   const handleInitialBalanceConfirm = async (balance: number) => {
     await updateUserSettings({ initialBalance: balance })
   }
-
-  const handleCreateClick = useCallback(() => {
-    setEditingTransaction(undefined)
-    setIsDialogOpen(true)
-  }, [])
-
-  useCreateShortcut({
-    onCreate: handleCreateClick,
-    enabled: !isDialogOpen,
-  })
 
   return (
     <MainLayout>
@@ -353,14 +335,14 @@ export default function KakeiboPage() {
             <TransactionList
               transactions={filteredTransactions}
               onEdit={handleEditTransaction}
-              onDelete={handleDeleteClick}
+              onDelete={deleteConfirm.handleDeleteClick}
             />
           )}
         </div>
 
         <TransactionDialog
           open={isDialogOpen}
-          onOpenChange={handleDialogClose}
+          onOpenChange={handleDialogCloseWithErrorClear}
           onSubmit={
             editingTransaction ? handleUpdateTransaction : handleCreateTransaction
           }
@@ -368,10 +350,10 @@ export default function KakeiboPage() {
         />
 
         <DeleteConfirmDialog
-          open={!!deletingTransaction}
-          message={`「${deletingTransaction?.name}」を削除しますか？この操作は取り消せません。`}
+          open={!!deleteConfirm.deletingItem}
+          message={`「${deleteConfirm.deletingItem?.name}」を削除しますか？この操作は取り消せません。`}
           onConfirm={handleDeleteTransaction}
-          onCancel={() => setDeletingTransaction(undefined)}
+          onCancel={deleteConfirm.handleDeleteCancel}
         />
 
         <InitialBalanceDialog

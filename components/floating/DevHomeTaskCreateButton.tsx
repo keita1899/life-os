@@ -4,6 +4,7 @@ import { useMemo, useState } from 'react'
 import { CheckSquare } from 'lucide-react'
 import { ErrorMessage } from '@/components/ui/error-message'
 import { useDevProjects } from '@/hooks/useDevProjects'
+import { useAsyncOperation } from '@/hooks/useAsyncOperation'
 import { createDevTask } from '@/lib/dev/tasks'
 import { mutate } from 'swr'
 import {
@@ -41,41 +42,40 @@ function parseDevTaskTarget(value: string): DevTaskTarget | null {
 
 export function DevHomeTaskCreateButton() {
   const { projects } = useDevProjects()
-  const [operationError, setOperationError] = useState<string | null>(null)
+  const { operationError, setOperationError, execute } = useAsyncOperation()
   const [isTaskDialogOpen, setIsTaskDialogOpen] = useState(false)
   const [targetValue, setTargetValue] = useState<string>('inbox')
 
   const target = useMemo(() => parseDevTaskTarget(targetValue), [targetValue])
 
   const handleCreateTask = async (input: CreateTaskInput) => {
-    try {
-      if (!target) {
-        setOperationError('タスクの作成先が無効です')
-        return
-      }
-
-      setOperationError(null)
-      if (target.kind === 'type') {
-        await createDevTask({
-          title: input.title,
-          projectId: null,
-          type: target.value,
-          executionDate: input.executionDate,
-        })
-      } else {
-        await createDevTask({
-          title: input.title,
-          projectId: target.projectId,
-          type: 'inbox',
-          executionDate: input.executionDate,
-        })
-      }
-      await mutate('dev-calendar-tasks')
+    const result = await execute(
+      async () => {
+        if (!target) {
+          throw new Error('タスクの作成先が無効です')
+        }
+        if (target.kind === 'type') {
+          await createDevTask({
+            title: input.title,
+            projectId: null,
+            type: target.value,
+            executionDate: input.executionDate,
+          })
+        } else {
+          await createDevTask({
+            title: input.title,
+            projectId: target.projectId,
+            type: 'inbox',
+            executionDate: input.executionDate,
+          })
+        }
+        await mutate('dev-calendar-tasks')
+        return true
+      },
+      'タスクの作成に失敗しました',
+    )
+    if (result !== undefined) {
       setIsTaskDialogOpen(false)
-    } catch (err) {
-      setOperationError(
-        err instanceof Error ? err.message : 'タスクの作成に失敗しました',
-      )
     }
   }
 

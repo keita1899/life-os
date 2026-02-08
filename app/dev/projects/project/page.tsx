@@ -22,6 +22,9 @@ import { TaskDialog } from '@/components/tasks/TaskDialog'
 import { TaskList } from '@/components/tasks/TaskList'
 import type { CreateTaskInput, Task } from '@/lib/types/task'
 import { useDevTasks } from '@/hooks/useDevTasks'
+import { useDialogState } from '@/hooks/useDialogState'
+import { useDeleteConfirm } from '@/hooks/useDeleteConfirm'
+import { useAsyncOperation } from '@/hooks/useAsyncOperation'
 import { groupTasks } from '@/lib/tasks/grouping'
 import { FloatingActionButtons } from '@/components/floating/FloatingActionButtons'
 import {
@@ -68,7 +71,7 @@ function DevProjectPageContent(): ReactElement | null {
     () => fetcher(() => getDevProjectById(projectId)),
   )
 
-  const [isEditDialogOpen, setIsEditDialogOpen] = useState(false)
+  const projectDialog = useDialogState<DevProject>()
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false)
   const [deleteError, setDeleteError] = useState<string | null>(null)
 
@@ -87,12 +90,15 @@ function DevProjectPageContent(): ReactElement | null {
     type: undefined,
   })
 
-  const [isTaskDialogOpen, setIsTaskDialogOpen] = useState(false)
-  const [editingTask, setEditingTask] = useState<Task | undefined>(undefined)
-  const [deletingTask, setDeletingTask] = useState<Task | undefined>(undefined)
+  const taskDialog = useDialogState<Task>()
+  const deleteConfirm = useDeleteConfirm<Task>()
   const [isDeletingCompletedDialogOpen, setIsDeletingCompletedDialogOpen] =
     useState(false)
-  const [taskOperationError, setTaskOperationError] = useState<string | null>(null)
+  const {
+    operationError: taskOperationError,
+    setOperationError: setTaskOperationError,
+    execute: executeTaskOperation,
+  } = useAsyncOperation()
 
   const convertedTasks: Task[] = useMemo(() => {
     return tasks.map((t) => ({
@@ -139,7 +145,7 @@ function DevProjectPageContent(): ReactElement | null {
       mutate(`dev-project-${projectId}`),
       mutate('dev-projects'),
     ])
-    setIsEditDialogOpen(false)
+    projectDialog.handleDialogClose(false)
   }
 
   const handleDelete = async () => {
@@ -158,97 +164,68 @@ function DevProjectPageContent(): ReactElement | null {
   const handleCreateTask = async (input: CreateTaskInput): Promise<void> => {
     if (!Number.isFinite(projectId)) return
 
-    try {
-      setTaskOperationError(null)
-      await createTask({
-        title: input.title,
-        projectId,
-        type: 'inbox',
-        executionDate: input.executionDate,
-        memo: input.memo,
-      })
-      setIsTaskDialogOpen(false)
-    } catch (err) {
-      setTaskOperationError(
-        err instanceof Error ? err.message : 'タスクの作成に失敗しました',
-      )
+    const result = await executeTaskOperation(
+      () =>
+        createTask({
+          title: input.title,
+          projectId,
+          type: 'inbox',
+          executionDate: input.executionDate,
+          memo: input.memo,
+        }),
+      'タスクの作成に失敗しました',
+    )
+    if (result !== undefined) {
+      taskDialog.handleDialogClose(false)
     }
   }
 
   const handleUpdateTask = async (input: CreateTaskInput): Promise<void> => {
-    if (!editingTask) return
+    const task = taskDialog.editingItem
+    if (!task) return
 
-    try {
-      setTaskOperationError(null)
-      await updateTask(editingTask.id, {
-        title: input.title,
-        executionDate: input.executionDate,
-        memo: input.memo,
-      })
-      setIsTaskDialogOpen(false)
-      setEditingTask(undefined)
-    } catch (err) {
-      setTaskOperationError(
-        err instanceof Error ? err.message : 'タスクの更新に失敗しました',
-      )
-    }
-  }
-
-  const handleEditTask = (task: Task) => {
-    setEditingTask(task)
-    setIsTaskDialogOpen(true)
-  }
-
-  const handleTaskDialogClose = (open: boolean) => {
-    setIsTaskDialogOpen(open)
-    if (!open) {
-      setEditingTask(undefined)
+    const result = await executeTaskOperation(
+      () =>
+        updateTask(task.id, {
+          title: input.title,
+          executionDate: input.executionDate,
+          memo: input.memo,
+        }),
+      'タスクの更新に失敗しました',
+    )
+    if (result !== undefined) {
+      taskDialog.handleDialogClose(false)
     }
   }
 
   const handleDeleteTask = async (): Promise<void> => {
-    if (!deletingTask) return
+    const task = deleteConfirm.deletingItem
+    if (!task) return
 
-    try {
-      setTaskOperationError(null)
-      await deleteTask(deletingTask.id)
-      setDeletingTask(undefined)
-    } catch (err) {
-      setTaskOperationError(
-        err instanceof Error ? err.message : 'タスクの削除に失敗しました',
-      )
+    const result = await executeTaskOperation(
+      () => deleteTask(task.id),
+      'タスクの削除に失敗しました',
+    )
+    if (result !== undefined) {
+      deleteConfirm.clearDeletingItem()
     }
-  }
-
-  const handleDeleteClick = (task: Task) => {
-    setDeletingTask(task)
   }
 
   const handleToggleCompletion = async (task: Task): Promise<void> => {
-    try {
-      setTaskOperationError(null)
-      await toggleTaskCompletion(task.id, !task.completed)
-    } catch (err) {
-      setTaskOperationError(
-        err instanceof Error
-          ? err.message
-          : 'タスクの完了状態の更新に失敗しました',
-      )
-    }
+    await executeTaskOperation(
+      () => toggleTaskCompletion(task.id, !task.completed),
+      'タスクの完了状態の更新に失敗しました',
+    )
   }
 
   const handleUpdateExecutionDate = async (
     task: Task,
     executionDate: string | null,
   ): Promise<void> => {
-    try {
-      setTaskOperationError(null)
-      await updateTask(task.id, { executionDate })
-    } catch (err) {
-      setTaskOperationError(
-        err instanceof Error ? err.message : 'タスクの実行日の更新に失敗しました',
-      )
-    }
+    await executeTaskOperation(
+      () => updateTask(task.id, { executionDate }),
+      'タスクの実行日の更新に失敗しました',
+    )
   }
 
   const handleDeleteCompletedTasksClick = () => {
@@ -256,30 +233,20 @@ function DevProjectPageContent(): ReactElement | null {
   }
 
   const handleDeleteCompletedTasks = async (): Promise<void> => {
-    try {
-      setTaskOperationError(null)
-      await deleteCompletedTasks()
+    const result = await executeTaskOperation(
+      () => deleteCompletedTasks(),
+      '完了済みタスクの削除に失敗しました',
+    )
+    if (result !== undefined) {
       setIsDeletingCompletedDialogOpen(false)
-    } catch (err) {
-      setTaskOperationError(
-        err instanceof Error
-          ? err.message
-          : '完了済みタスクの削除に失敗しました',
-      )
     }
   }
 
   const handleUpdateOverdueTasksToToday = async (): Promise<void> => {
-    try {
-      setTaskOperationError(null)
-      await updateOverdueTasksToToday()
-    } catch (err) {
-      setTaskOperationError(
-        err instanceof Error
-          ? err.message
-          : '期限切れタスクの更新に失敗しました',
-      )
-    }
+    await executeTaskOperation(
+      () => updateOverdueTasksToToday(),
+      '期限切れタスクの更新に失敗しました',
+    )
   }
 
   return (
@@ -302,7 +269,7 @@ function DevProjectPageContent(): ReactElement | null {
               <Button
                 variant="ghost"
                 size="icon"
-                onClick={() => setIsEditDialogOpen(true)}
+                onClick={() => data && projectDialog.handleEdit(data)}
                 className="text-muted-foreground hover:text-foreground"
                 aria-label="編集"
               >
@@ -380,7 +347,7 @@ function DevProjectPageContent(): ReactElement | null {
               <div className="flex items-center justify-between">
                 <h2 className="text-xl font-semibold">タスク</h2>
                 <Button
-                  onClick={() => setIsTaskDialogOpen(true)}
+                  onClick={taskDialog.handleCreateClick}
                   disabled={!Number.isFinite(projectId)}
                 >
                   タスクを作成
@@ -439,8 +406,8 @@ function DevProjectPageContent(): ReactElement | null {
                         <div className="space-y-4">
                           <TaskList
                             tasks={group.tasks}
-                            onEdit={handleEditTask}
-                            onDelete={handleDeleteClick}
+                            onEdit={taskDialog.handleEdit}
+                            onDelete={deleteConfirm.handleDeleteClick}
                             onToggleCompletion={handleToggleCompletion}
                             onUpdateExecutionDate={handleUpdateExecutionDate}
                           />
@@ -469,10 +436,10 @@ function DevProjectPageContent(): ReactElement | null {
         )}
 
         <ProjectDialog
-          open={isEditDialogOpen}
-          onOpenChange={setIsEditDialogOpen}
+          open={projectDialog.isDialogOpen}
+          onOpenChange={projectDialog.handleDialogClose}
           onSubmit={handleUpdate}
-          project={data || undefined}
+          project={projectDialog.editingItem ?? data ?? undefined}
         />
 
         <DeleteConfirmDialog
@@ -483,17 +450,17 @@ function DevProjectPageContent(): ReactElement | null {
         />
 
         <TaskDialog
-          open={isTaskDialogOpen}
-          onOpenChange={handleTaskDialogClose}
-          onSubmit={editingTask ? handleUpdateTask : handleCreateTask}
-          task={editingTask}
+          open={taskDialog.isDialogOpen}
+          onOpenChange={taskDialog.handleDialogClose}
+          onSubmit={taskDialog.editingItem ? handleUpdateTask : handleCreateTask}
+          task={taskDialog.editingItem}
         />
 
         <DeleteConfirmDialog
-          open={!!deletingTask}
-          message={`「${deletingTask?.title}」を削除しますか？この操作は取り消せません。`}
+          open={!!deleteConfirm.deletingItem}
+          message={`「${deleteConfirm.deletingItem?.title}」を削除しますか？この操作は取り消せません。`}
           onConfirm={handleDeleteTask}
-          onCancel={() => setDeletingTask(undefined)}
+          onCancel={deleteConfirm.handleDeleteCancel}
         />
 
         <DeleteConfirmDialog

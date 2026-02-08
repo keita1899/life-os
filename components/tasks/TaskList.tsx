@@ -6,6 +6,7 @@ import type { Task } from '@/lib/types/task'
 
 interface TaskListProps {
   tasks: Task[]
+  getTaskLabel?: (task: Task) => string | undefined
   onEdit?: (task: Task) => void
   onDelete?: (task: Task) => void
   onToggleCompletion?: (task: Task) => void
@@ -14,6 +15,7 @@ interface TaskListProps {
 
 export function TaskList({
   tasks,
+  getTaskLabel,
   onEdit,
   onDelete,
   onToggleCompletion,
@@ -29,6 +31,7 @@ export function TaskList({
         <TaskItem
           key={task.id}
           task={task}
+          label={getTaskLabel?.(task)}
           onEdit={onEdit}
           onDelete={onDelete}
           onToggleCompletion={onToggleCompletion}

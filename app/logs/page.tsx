@@ -20,6 +20,9 @@ import { useEvents } from '@/hooks/useEvents'
 import { useDailyLog } from '@/hooks/useDailyLog'
 import { useHabits } from '@/hooks/useHabits'
 import { useHabitCompletionsByDate } from '@/hooks/useHabitCompletions'
+import { useAsyncOperation } from '@/hooks/useAsyncOperation'
+import { useDialogState } from '@/hooks/useDialogState'
+import { useDeleteConfirm } from '@/hooks/useDeleteConfirm'
 import { Loading } from '@/components/ui/loading'
 import { ErrorMessage } from '@/components/ui/error-message'
 import { MainLayout } from '@/components/layout/MainLayout'
@@ -70,13 +73,11 @@ function LogPageView({ logDate, date }: LogPageViewProps) {
     updateTask,
     deleteTask,
   } = useTasks()
-  const [isTaskDialogOpen, setIsTaskDialogOpen] = useState(false)
-  const [isEventDialogOpen, setIsEventDialogOpen] = useState(false)
-  const [editingEvent, setEditingEvent] = useState<Event | undefined>(undefined)
-  const [deletingEvent, setDeletingEvent] = useState<Event | undefined>(undefined)
-  const [editingTask, setEditingTask] = useState<Task | undefined>(undefined)
-  const [deletingTask, setDeletingTask] = useState<Task | undefined>(undefined)
-  const [operationError, setOperationError] = useState<string | null>(null)
+  const taskDialog = useDialogState<Task>()
+  const eventDialog = useDialogState<Event>()
+  const deleteEventConfirm = useDeleteConfirm<Event>()
+  const deleteTaskConfirm = useDeleteConfirm<Task>()
+  const { operationError, setOperationError, execute } = useAsyncOperation()
   const {
     events: allEvents,
     isLoading: isLoadingEvents,
@@ -148,222 +149,188 @@ function LogPageView({ logDate, date }: LogPageViewProps) {
     router.push(`/logs?date=${format(nextDate, 'yyyy-MM-dd')}`)
   }
 
-  const handleEditTask = (task: Task) => {
-    setEditingTask(task)
-    setIsTaskDialogOpen(true)
-  }
-
-  const handleOpenCreateTask = () => {
-    setEditingTask(undefined)
-    setIsTaskDialogOpen(true)
-  }
-
-  const handleDialogClose = (open: boolean) => {
-    setIsTaskDialogOpen(open)
-    if (!open) {
-      setEditingTask(undefined)
-    }
-  }
-
   const handleCreateTask = async (input: CreateTaskInput) => {
-    try {
-      setOperationError(null)
-      await createTask(input)
-      setIsTaskDialogOpen(false)
-    } catch (err) {
-      setOperationError(
-        err instanceof Error ? err.message : 'タスクの作成に失敗しました',
-      )
+    const result = await execute(
+      () => createTask(input),
+      'タスクの作成に失敗しました',
+    )
+    if (result !== undefined) {
+      taskDialog.handleDialogClose(false)
     }
   }
 
   const handleUpdateTask = async (input: CreateTaskInput) => {
-    if (!editingTask) return
+    if (!taskDialog.editingItem) return
 
-    try {
-      setOperationError(null)
-      const updateInput: UpdateTaskInput = {
-        title: input.title,
-        executionDate: input.executionDate,
-        scheduledTime: input.scheduledTime,
-        recurrenceRule: input.recurrenceRule,
-        recurrenceDaysOfWeek: input.recurrenceDaysOfWeek,
-        recurrenceDayOfMonth: input.recurrenceDayOfMonth,
-        recurrenceEndDate: input.recurrenceEndDate,
-      }
-      await updateTask(editingTask.id, updateInput)
-      setIsTaskDialogOpen(false)
-      setEditingTask(undefined)
-    } catch (err) {
-      setOperationError(
-        err instanceof Error ? err.message : 'タスクの更新に失敗しました',
-      )
+    const taskId = taskDialog.editingItem.id
+    const updateInput: UpdateTaskInput = {
+      title: input.title,
+      executionDate: input.executionDate,
+      scheduledTime: input.scheduledTime,
+      recurrenceRule: input.recurrenceRule,
+      recurrenceDaysOfWeek: input.recurrenceDaysOfWeek,
+      recurrenceDayOfMonth: input.recurrenceDayOfMonth,
+      recurrenceEndDate: input.recurrenceEndDate,
     }
-  }
-
-  const handleOpenCreateEvent = () => {
-    setEditingEvent(undefined)
-    setIsEventDialogOpen(true)
+    const result = await execute(
+      () => updateTask(taskId, updateInput),
+      'タスクの更新に失敗しました',
+    )
+    if (result !== undefined) {
+      taskDialog.handleDialogClose(false)
+    }
   }
 
   const handleCreateEvent = async (input: CreateEventInput) => {
-    try {
-      setOperationError(null)
-      await createEvent(input)
-      setIsEventDialogOpen(false)
-    } catch (err) {
-      setOperationError(
-        err instanceof Error ? err.message : '予定の作成に失敗しました',
-      )
+    const result = await execute(
+      () => createEvent(input),
+      '予定の作成に失敗しました',
+    )
+    if (result !== undefined) {
+      eventDialog.handleDialogClose(false)
     }
-  }
-
-  const handleEditEvent = (event: Event) => {
-    setEditingEvent(event)
-    setIsEventDialogOpen(true)
   }
 
   const handleUpdateEvent = async (input: CreateEventInput) => {
-    if (!editingEvent) return
+    if (!eventDialog.editingItem) return
 
-    try {
-      setOperationError(null)
-      const updateInput: UpdateEventInput = {
-        title: input.title,
-        startDatetime: input.startDatetime,
-        endDatetime: input.endDatetime,
-        allDay: input.allDay,
-        category: input.category,
-        description: input.description,
-        recurrenceRule: input.recurrenceRule,
-        recurrenceDaysOfWeek: input.recurrenceDaysOfWeek,
-        recurrenceDayOfMonth: input.recurrenceDayOfMonth,
-        recurrenceEndDate: input.recurrenceEndDate,
-      }
-      await updateEvent(editingEvent.id, updateInput)
-      setIsEventDialogOpen(false)
-      setEditingEvent(undefined)
-    } catch (err) {
-      setOperationError(
-        err instanceof Error ? err.message : '予定の更新に失敗しました',
-      )
+    const eventId = eventDialog.editingItem.id
+    const updateInput: UpdateEventInput = {
+      title: input.title,
+      startDatetime: input.startDatetime,
+      endDatetime: input.endDatetime,
+      allDay: input.allDay,
+      category: input.category,
+      description: input.description,
+      recurrenceRule: input.recurrenceRule,
+      recurrenceDaysOfWeek: input.recurrenceDaysOfWeek,
+      recurrenceDayOfMonth: input.recurrenceDayOfMonth,
+      recurrenceEndDate: input.recurrenceEndDate,
     }
-  }
-
-  const handleDeleteEventClick = (event: Event) => {
-    setDeletingEvent(event)
+    const result = await execute(
+      () => updateEvent(eventId, updateInput),
+      '予定の更新に失敗しました',
+    )
+    if (result !== undefined) {
+      eventDialog.handleDialogClose(false)
+    }
   }
 
   const handleDeleteEvent = async (mode?: 'single' | 'all') => {
-    if (!deletingEvent) return
+    const eventToDelete = deleteEventConfirm.deletingItem
+    if (!eventToDelete) return
 
-    try {
-      setOperationError(null)
-      if (deletingEvent.recurrenceRule && mode === 'single' && deletingEvent.startDatetime) {
-        const eventDate = deletingEvent.startDatetime.split('T')[0]
-        const currentExcludedDates = deletingEvent.recurrenceExcludedDates || []
-        if (!currentExcludedDates.includes(eventDate)) {
-          await updateEvent(deletingEvent.id, {
-            recurrenceExcludedDates: [...currentExcludedDates, eventDate],
-          })
+    const result = await execute(
+      async () => {
+        if (
+          eventToDelete.recurrenceRule &&
+          mode === 'single' &&
+          eventToDelete.startDatetime
+        ) {
+          const eventDate = eventToDelete.startDatetime.split('T')[0]
+          const currentExcludedDates =
+            eventToDelete.recurrenceExcludedDates || []
+          if (!currentExcludedDates.includes(eventDate)) {
+            await updateEvent(eventToDelete.id, {
+              recurrenceExcludedDates: [...currentExcludedDates, eventDate],
+            })
+          }
+        } else {
+          await deleteEvent(eventToDelete.id)
         }
-      } else {
-        await deleteEvent(deletingEvent.id)
-      }
-      setDeletingEvent(undefined)
-    } catch (err) {
-      setOperationError(
-        err instanceof Error ? err.message : '予定の削除に失敗しました',
-      )
+        return true
+      },
+      '予定の削除に失敗しました',
+    )
+    if (result !== undefined) {
+      deleteEventConfirm.clearDeletingItem()
     }
-  }
-
-  const handleDeleteClick = (task: Task) => {
-    setDeletingTask(task)
   }
 
   const handleToggleTaskCompletion = async (task: Task) => {
-    try {
-      setOperationError(null)
-      if (
-        task.recurrenceRule &&
-        !task.completed &&
-        task.executionDate
-      ) {
-        const nextDate = getNextOccurrenceAfter(
-          task,
-          parseISO(task.executionDate),
-        )
-        if (nextDate !== null) {
-          await updateTask(task.id, {
-            executionDate: nextDate,
-            completed: false,
-          })
-          return
+    await execute(
+      async () => {
+        if (
+          task.recurrenceRule &&
+          !task.completed &&
+          task.executionDate
+        ) {
+          const nextDate = getNextOccurrenceAfter(
+            task,
+            parseISO(task.executionDate),
+          )
+          if (nextDate !== null) {
+            await updateTask(task.id, {
+              executionDate: nextDate,
+              completed: false,
+            })
+            return
+          }
         }
-      }
-      await toggleTaskCompletion(task.id, !task.completed)
-    } catch (err) {
-      setOperationError(
-        err instanceof Error
-          ? err.message
-          : 'タスクの完了状態の更新に失敗しました',
-      )
-    }
+        await toggleTaskCompletion(task.id, !task.completed)
+      },
+      'タスクの完了状態の更新に失敗しました',
+    )
   }
 
   const handleDeleteTask = async (mode?: 'single' | 'all') => {
-    if (!deletingTask) return
+    const taskToDelete = deleteTaskConfirm.deletingItem
+    if (!taskToDelete) return
 
-    try {
-      setOperationError(null)
-      if (deletingTask.recurrenceRule && mode === 'single' && deletingTask.executionDate) {
-        const currentExcludedDates = deletingTask.recurrenceExcludedDates || []
-        if (!currentExcludedDates.includes(deletingTask.executionDate)) {
-          await updateTask(deletingTask.id, {
-            recurrenceExcludedDates: [...currentExcludedDates, deletingTask.executionDate],
-          })
+    const result = await execute(
+      async () => {
+        if (
+          taskToDelete.recurrenceRule &&
+          mode === 'single' &&
+          taskToDelete.executionDate
+        ) {
+          const currentExcludedDates =
+            taskToDelete.recurrenceExcludedDates || []
+          if (!currentExcludedDates.includes(taskToDelete.executionDate)) {
+            await updateTask(taskToDelete.id, {
+              recurrenceExcludedDates: [
+                ...currentExcludedDates,
+                taskToDelete.executionDate,
+              ],
+            })
+          }
+        } else {
+          await deleteTask(taskToDelete.id)
         }
-      } else {
-        await deleteTask(deletingTask.id)
-      }
-      setDeletingTask(undefined)
-    } catch (err) {
-      setOperationError(
-        err instanceof Error ? err.message : 'タスクの削除に失敗しました',
-      )
+        return true
+      },
+      'タスクの削除に失敗しました',
+    )
+    if (result !== undefined) {
+      deleteTaskConfirm.clearDeletingItem()
     }
   }
 
   const handleUpdateDiary = async (input: UpdateDailyLogInput) => {
-    try {
-      setOperationError(null)
-      if (dailyLog) {
-        await updateDailyLog(input)
-      } else {
-        await createDailyLog({ logDate: date, diary: input.diary })
-      }
-    } catch (err) {
-      setOperationError(
-        err instanceof Error ? err.message : '日記の保存に失敗しました',
-      )
-    }
+    await execute(
+      async () => {
+        if (dailyLog) {
+          await updateDailyLog(input)
+        } else {
+          await createDailyLog({ logDate: date, diary: input.diary })
+        }
+      },
+      '日記の保存に失敗しました',
+    )
   }
 
   const handleToggleHabit = async (habit: { id: number }) => {
     const completed = completedHabitIds.has(habit.id)
-    try {
-      setOperationError(null)
-      if (completed) {
-        await deleteHabitCompletion(habit.id, date)
-      } else {
-        await createHabitCompletion(habit.id, date)
-      }
-    } catch (err) {
-      setOperationError(
-        err instanceof Error ? err.message : '習慣の完了状態の更新に失敗しました',
-      )
-    }
+    await execute(
+      async () => {
+        if (completed) {
+          await deleteHabitCompletion(habit.id, date)
+        } else {
+          await createHabitCompletion(habit.id, date)
+        }
+      },
+      '習慣の完了状態の更新に失敗しました',
+    )
   }
 
   const isLoading =
@@ -433,12 +400,12 @@ function LogPageView({ logDate, date }: LogPageViewProps) {
               habits={habitsForDate}
               tasks={tasks}
               completedHabitIds={completedHabitIds}
-              onEditEvent={handleEditEvent}
-              onDeleteEvent={handleDeleteEventClick}
+              onEditEvent={eventDialog.handleEdit}
+              onDeleteEvent={deleteEventConfirm.handleDeleteClick}
               onToggleHabit={handleToggleHabit}
               onToggleTask={handleToggleTaskCompletion}
-              onEditTask={handleEditTask}
-              onDeleteTask={handleDeleteClick}
+              onEditTask={taskDialog.handleEdit}
+              onDeleteTask={deleteTaskConfirm.handleDeleteClick}
             />
           </div>
         </div>
@@ -456,67 +423,62 @@ function LogPageView({ logDate, date }: LogPageViewProps) {
             id: 'create-event',
             label: '予定を作成',
             icon: <CalendarPlus className="h-5 w-5" />,
-            onClick: handleOpenCreateEvent,
+            onClick: eventDialog.handleCreateClick,
           },
           {
             id: 'create-task',
             label: 'タスクを作成',
             icon: <CheckSquare className="h-5 w-5" />,
-            onClick: handleOpenCreateTask,
+            onClick: taskDialog.handleCreateClick,
           },
         ]}
       />
 
       <EventDialog
-        open={isEventDialogOpen}
-        onOpenChange={(open) => {
-          setIsEventDialogOpen(open)
-          if (!open) {
-            setEditingEvent(undefined)
-          }
-        }}
-        onSubmit={editingEvent ? handleUpdateEvent : handleCreateEvent}
-        event={editingEvent}
+        open={eventDialog.isDialogOpen}
+        onOpenChange={eventDialog.handleDialogClose}
+        onSubmit={eventDialog.editingItem ? handleUpdateEvent : handleCreateEvent}
+        event={eventDialog.editingItem}
         defaultStartDate={date}
       />
 
       <TaskDialog
-        open={isTaskDialogOpen}
-        onOpenChange={handleDialogClose}
-        onSubmit={editingTask ? handleUpdateTask : handleCreateTask}
-        task={editingTask}
+        open={taskDialog.isDialogOpen}
+        onOpenChange={taskDialog.handleDialogClose}
+        onSubmit={taskDialog.editingItem ? handleUpdateTask : handleCreateTask}
+        task={taskDialog.editingItem}
         defaultExecutionDate={date}
       />
 
-      {deletingTask?.recurrenceRule ? (
+      {deleteTaskConfirm.deletingItem?.recurrenceRule ? (
         <RecurringTaskDeleteDialog
-          open={!!deletingTask}
-          taskTitle={deletingTask.title}
+          open={!!deleteTaskConfirm.deletingItem}
+          taskTitle={deleteTaskConfirm.deletingItem.title}
           onConfirm={handleDeleteTask}
-          onCancel={() => setDeletingTask(undefined)}
+          onCancel={deleteTaskConfirm.handleDeleteCancel}
         />
       ) : (
         <DeleteConfirmDialog
-          open={!!deletingTask}
-          message={`「${deletingTask?.title}」を削除しますか？この操作は取り消せません。`}
+          open={!!deleteTaskConfirm.deletingItem}
+          message={`「${deleteTaskConfirm.deletingItem?.title}」を削除しますか？この操作は取り消せません。`}
           onConfirm={() => handleDeleteTask()}
-          onCancel={() => setDeletingTask(undefined)}
+          onCancel={deleteTaskConfirm.handleDeleteCancel}
         />
       )}
 
-      {deletingEvent?.recurrenceRule ? (
+      {deleteEventConfirm.deletingItem?.recurrenceRule ? (
         <RecurringEventDeleteDialog
-          open={!!deletingEvent}
-          eventTitle={deletingEvent.title}
+          open={!!deleteEventConfirm.deletingItem}
+          eventTitle={deleteEventConfirm.deletingItem.title}
           onConfirm={handleDeleteEvent}
-          onCancel={() => setDeletingEvent(undefined)}
+          onCancel={deleteEventConfirm.handleDeleteCancel}
         />
       ) : (
         <DeleteConfirmDialog
-          open={!!deletingEvent}
-          message={`「${deletingEvent?.title}」を削除しますか？この操作は取り消せません。`}
+          open={!!deleteEventConfirm.deletingItem}
+          message={`「${deleteEventConfirm.deletingItem?.title}」を削除しますか？この操作は取り消せません。`}
           onConfirm={() => handleDeleteEvent()}
-          onCancel={() => setDeletingEvent(undefined)}
+          onCancel={deleteEventConfirm.handleDeleteCancel}
         />
       )}
       </div>

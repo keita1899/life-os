@@ -7,6 +7,7 @@ import { TaskDialog } from '@/components/tasks/TaskDialog'
 import { EventDialog } from '@/components/events/EventDialog'
 import { useTasks } from '@/hooks/useTasks'
 import { useEvents } from '@/hooks/useEvents'
+import { useAsyncOperation } from '@/hooks/useAsyncOperation'
 import { FloatingActionButtons } from '@/components/floating/FloatingActionButtons'
 import type { CreateTaskInput } from '@/lib/types/task'
 import type { CreateEventInput } from '@/lib/types/event'
@@ -14,31 +15,27 @@ import type { CreateEventInput } from '@/lib/types/event'
 export function LifeHomeCreateButtons() {
   const { createTask } = useTasks()
   const { createEvent } = useEvents()
-  const [operationError, setOperationError] = useState<string | null>(null)
+  const { operationError, setOperationError, execute } = useAsyncOperation()
   const [isTaskDialogOpen, setIsTaskDialogOpen] = useState(false)
   const [isEventDialogOpen, setIsEventDialogOpen] = useState(false)
 
   const handleCreateTask = async (input: CreateTaskInput) => {
-    try {
-      setOperationError(null)
-      await createTask(input)
+    const result = await execute(
+      () => createTask(input),
+      'タスクの作成に失敗しました',
+    )
+    if (result !== undefined) {
       setIsTaskDialogOpen(false)
-    } catch (err) {
-      setOperationError(
-        err instanceof Error ? err.message : 'タスクの作成に失敗しました',
-      )
     }
   }
 
   const handleCreateEvent = async (input: CreateEventInput) => {
-    try {
-      setOperationError(null)
-      await createEvent(input)
+    const result = await execute(
+      () => createEvent(input),
+      '予定の作成に失敗しました',
+    )
+    if (result !== undefined) {
       setIsEventDialogOpen(false)
-    } catch (err) {
-      setOperationError(
-        err instanceof Error ? err.message : '予定の作成に失敗しました',
-      )
     }
   }
 

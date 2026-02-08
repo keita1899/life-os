@@ -27,22 +27,24 @@ export function useTransactions() {
   )
 
   const handleCreateTransaction = async (input: CreateTransactionInput) => {
-    await createTransaction(input)
+    const result = await createTransaction(input)
     await mutate(transactionsKey)
     await mutate(
       (key) => typeof key === 'string' && key.startsWith(`${transactionsKey}-`),
     )
+    return result
   }
 
   const handleUpdateTransaction = async (
     id: number,
     input: UpdateTransactionInput,
   ) => {
-    await updateTransaction(id, input)
+    const result = await updateTransaction(id, input)
     await mutate(transactionsKey)
     await mutate(
       (key) => typeof key === 'string' && key.startsWith(`${transactionsKey}-`),
     )
+    return result
   }
 
   const handleDeleteTransaction = async (id: number) => {
@@ -51,6 +53,7 @@ export function useTransactions() {
     await mutate(
       (key) => typeof key === 'string' && key.startsWith(`${transactionsKey}-`),
     )
+    return true
   }
 
   return {

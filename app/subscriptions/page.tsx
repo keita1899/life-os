@@ -1,9 +1,12 @@
 'use client'
 
-import { useState, useMemo, useCallback } from 'react'
+import { useState, useMemo } from 'react'
 import { Plus } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { useCreateShortcut } from '@/hooks/useCreateShortcut'
+import { useDialogState } from '@/hooks/useDialogState'
+import { useDeleteConfirm } from '@/hooks/useDeleteConfirm'
+import { useAsyncOperation } from '@/hooks/useAsyncOperation'
 import {
   Accordion,
   AccordionContent,
@@ -41,14 +44,20 @@ export default function SubscriptionsPage() {
     deleteSubscription,
     toggleSubscriptionActive,
   } = useSubscriptions()
-  const [isDialogOpen, setIsDialogOpen] = useState(false)
-  const [editingSubscription, setEditingSubscription] = useState<
-    Subscription | undefined
-  >(undefined)
-  const [deletingSubscription, setDeletingSubscription] = useState<
-    Subscription | undefined
-  >(undefined)
-  const [operationError, setOperationError] = useState<string | null>(null)
+  const {
+    isDialogOpen,
+    editingItem: editingSubscription,
+    handleEdit: handleEditSubscription,
+    handleDialogClose,
+    handleCreateClick,
+  } = useDialogState<Subscription>()
+  const deleteConfirm = useDeleteConfirm<Subscription>()
+  const { operationError, setOperationError, execute } = useAsyncOperation()
+
+  useCreateShortcut({
+    onCreate: handleCreateClick,
+    enabled: !isDialogOpen,
+  })
 
   const groupedSubscriptions = useMemo(() => {
     const active = subscriptions.filter((sub) => sub.active)
@@ -80,93 +89,55 @@ export default function SubscriptionsPage() {
   }
 
   const handleCreateSubscription = async (input: CreateSubscriptionInput) => {
-    try {
-      setOperationError(null)
-      await createSubscription(input)
-      setIsDialogOpen(false)
-    } catch (err) {
-      setOperationError(
-        err instanceof Error ? err.message : 'サブスクの作成に失敗しました',
-      )
+    const result = await execute(
+      () => createSubscription(input),
+      'サブスクの作成に失敗しました',
+    )
+    if (result !== undefined) {
+      handleDialogClose(false)
     }
   }
 
   const handleUpdateSubscription = async (input: CreateSubscriptionInput) => {
     if (!editingSubscription) return
 
-    try {
-      setOperationError(null)
-      const updateInput: UpdateSubscriptionInput = {
-        name: input.name,
-        monthlyPrice: input.monthlyPrice,
-        billingCycle: input.billingCycle,
-        nextBillingDate: input.nextBillingDate,
-        startDate: input.startDate,
-        cancellationUrl: input.cancellationUrl,
-        active: input.active,
-      }
-      await updateSubscription(editingSubscription.id, updateInput)
-      setIsDialogOpen(false)
-      setEditingSubscription(undefined)
-    } catch (err) {
-      setOperationError(
-        err instanceof Error ? err.message : 'サブスクの更新に失敗しました',
-      )
+    const updateInput: UpdateSubscriptionInput = {
+      name: input.name,
+      monthlyPrice: input.monthlyPrice,
+      billingCycle: input.billingCycle,
+      nextBillingDate: input.nextBillingDate,
+      startDate: input.startDate,
+      cancellationUrl: input.cancellationUrl,
+      active: input.active,
     }
-  }
-
-  const handleEditSubscription = (subscription: Subscription) => {
-    setEditingSubscription(subscription)
-    setIsDialogOpen(true)
-  }
-
-  const handleDialogClose = (open: boolean) => {
-    setIsDialogOpen(open)
-    if (!open) {
-      setEditingSubscription(undefined)
+    const result = await execute(
+      () => updateSubscription(editingSubscription.id, updateInput),
+      'サブスクの更新に失敗しました',
+    )
+    if (result !== undefined) {
+      handleDialogClose(false)
     }
-  }
-
-  const handleDeleteClick = (subscription: Subscription) => {
-    setDeletingSubscription(subscription)
   }
 
   const handleDeleteSubscription = async () => {
-    if (!deletingSubscription) return
+    const subscription = deleteConfirm.deletingItem
+    if (!subscription) return
 
-    try {
-      setOperationError(null)
-      await deleteSubscription(deletingSubscription.id)
-      setDeletingSubscription(undefined)
-    } catch (err) {
-      setOperationError(
-        err instanceof Error ? err.message : 'サブスクの削除に失敗しました',
-      )
+    const result = await execute(
+      () => deleteSubscription(subscription.id),
+      'サブスクの削除に失敗しました',
+    )
+    if (result !== undefined) {
+      deleteConfirm.clearDeletingItem()
     }
   }
 
   const handleToggleActive = async (subscription: Subscription) => {
-    try {
-      setOperationError(null)
-      await toggleSubscriptionActive(subscription.id, !subscription.active)
-    } catch (err) {
-      setOperationError(
-        err instanceof Error
-          ? err.message
-          : 'サブスクの契約状態の更新に失敗しました',
-      )
-    }
+    await execute(
+      () => toggleSubscriptionActive(subscription.id, !subscription.active),
+      'サブスクの契約状態の更新に失敗しました',
+    )
   }
-
-  const handleCreateClick = useCallback(() => {
-    setEditingSubscription(undefined)
-    setIsDialogOpen(true)
-  }, [])
-
-  useCreateShortcut({
-    onCreate: handleCreateClick,
-    enabled: !isDialogOpen,
-  })
 
   return (
     <MainLayout>
@@ -241,7 +212,7 @@ export default function SubscriptionsPage() {
                 <SubscriptionList
                   subscriptions={group.subscriptions}
                   onEdit={handleEditSubscription}
-                  onDelete={handleDeleteClick}
+                  onDelete={deleteConfirm.handleDeleteClick}
                   onToggleActive={handleToggleActive}
                 />
               </AccordionContent>
@@ -260,10 +231,10 @@ export default function SubscriptionsPage() {
       />
 
       <DeleteConfirmDialog
-        open={!!deletingSubscription}
-        message={`「${deletingSubscription?.name}」を削除しますか？この操作は取り消せません。`}
+        open={!!deleteConfirm.deletingItem}
+        message={`「${deleteConfirm.deletingItem?.name}」を削除しますか？この操作は取り消せません。`}
         onConfirm={handleDeleteSubscription}
-        onCancel={() => setDeletingSubscription(undefined)}
+        onCancel={deleteConfirm.handleDeleteCancel}
       />
       </div>
     </MainLayout>

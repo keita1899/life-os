@@ -1,10 +1,13 @@
 'use client'
 
-import { useState, useMemo, useCallback } from 'react'
+import { useState, useMemo } from 'react'
 import { startOfDay, subYears, addMonths } from 'date-fns'
 import { Plus } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { useCreateShortcut } from '@/hooks/useCreateShortcut'
+import { useDialogState } from '@/hooks/useDialogState'
+import { useDeleteConfirm } from '@/hooks/useDeleteConfirm'
+import { useAsyncOperation } from '@/hooks/useAsyncOperation'
 import {
   Accordion,
   AccordionContent,
@@ -33,12 +36,15 @@ export default function EventsPage() {
   const { mode } = useMode()
   const { events, isLoading, error, createEvent, updateEvent, deleteEvent } =
     useEvents()
-  const [isDialogOpen, setIsDialogOpen] = useState(false)
-  const [editingEvent, setEditingEvent] = useState<Event | undefined>(undefined)
-  const [deletingEvent, setDeletingEvent] = useState<Event | undefined>(
-    undefined,
-  )
-  const [operationError, setOperationError] = useState<string | null>(null)
+  const {
+    isDialogOpen,
+    editingItem: editingEvent,
+    handleEdit: handleEditEvent,
+    handleDialogClose,
+    handleCreateClick,
+  } = useDialogState<Event>()
+  const deleteConfirm = useDeleteConfirm<Event>()
+  const { operationError, setOperationError, execute } = useAsyncOperation()
 
   const expandedEvents = useMemo(() => {
     const today = new Date()
@@ -58,88 +64,61 @@ export default function EventsPage() {
   )
 
   const handleCreateEvent = async (input: CreateEventInput) => {
-    try {
-      setOperationError(null)
-      await createEvent(input)
-      setIsDialogOpen(false)
-    } catch (err) {
-      setOperationError(
-        err instanceof Error ? err.message : '予定の作成に失敗しました',
-      )
+    const result = await execute(
+      () => createEvent(input),
+      '予定の作成に失敗しました',
+    )
+    if (result !== undefined) {
+      handleDialogClose(false)
     }
   }
 
   const handleUpdateEvent = async (input: CreateEventInput) => {
     if (!editingEvent) return
 
-    try {
-      setOperationError(null)
-      const updateInput: UpdateEventInput = {
-        title: input.title,
-        startDatetime: input.startDatetime,
-        endDatetime: input.endDatetime,
-        allDay: input.allDay,
-        category: input.category,
-        description: input.description,
-        recurrenceRule: input.recurrenceRule,
-        recurrenceDaysOfWeek: input.recurrenceDaysOfWeek,
-        recurrenceDayOfMonth: input.recurrenceDayOfMonth,
-        recurrenceEndDate: input.recurrenceEndDate,
-      }
-      await updateEvent(editingEvent.id, updateInput)
-      setIsDialogOpen(false)
-      setEditingEvent(undefined)
-    } catch (err) {
-      setOperationError(
-        err instanceof Error ? err.message : '予定の更新に失敗しました',
-      )
+    const updateInput: UpdateEventInput = {
+      title: input.title,
+      startDatetime: input.startDatetime,
+      endDatetime: input.endDatetime,
+      allDay: input.allDay,
+      category: input.category,
+      description: input.description,
+      recurrenceRule: input.recurrenceRule,
+      recurrenceDaysOfWeek: input.recurrenceDaysOfWeek,
+      recurrenceDayOfMonth: input.recurrenceDayOfMonth,
+      recurrenceEndDate: input.recurrenceEndDate,
+    }
+    const result = await execute(
+      () => updateEvent(editingEvent.id, updateInput),
+      '予定の更新に失敗しました',
+    )
+    if (result !== undefined) {
+      handleDialogClose(false)
     }
   }
 
-  const handleEditEvent = (event: Event) => {
-    setEditingEvent(event)
-    setIsDialogOpen(true)
-  }
-
   const handleDeleteEvent = async (mode?: 'single' | 'all') => {
-    if (!deletingEvent) return
+    const event = deleteConfirm.deletingItem
+    if (!event) return
 
-    try {
-      setOperationError(null)
-      if (deletingEvent.recurrenceRule && mode === 'single' && deletingEvent.startDatetime) {
-        const eventDate = deletingEvent.startDatetime.split('T')[0]
-        const currentExcludedDates = deletingEvent.recurrenceExcludedDates || []
+    const result = await execute(async () => {
+      if (event.recurrenceRule && mode === 'single' && event.startDatetime) {
+        const eventDate = event.startDatetime.split('T')[0]
+        const currentExcludedDates = event.recurrenceExcludedDates || []
         if (!currentExcludedDates.includes(eventDate)) {
-          await updateEvent(deletingEvent.id, {
+          await updateEvent(event.id, {
             recurrenceExcludedDates: [...currentExcludedDates, eventDate],
           })
         }
       } else {
-        await deleteEvent(deletingEvent.id)
+        await deleteEvent(event.id)
       }
-      setDeletingEvent(undefined)
-    } catch (err) {
-      setOperationError(
-        err instanceof Error ? err.message : '予定の削除に失敗しました',
-      )
+      return true
+    }, '予定の削除に失敗しました')
+    if (result !== undefined) {
+      deleteConfirm.clearDeletingItem()
     }
   }
-
-  const handleDeleteClick = (event: Event) => {
-    setDeletingEvent(event)
-  }
-
-  const handleDialogClose = (open: boolean) => {
-    setIsDialogOpen(open)
-    if (!open) {
-      setEditingEvent(undefined)
-    }
-  }
-
-  const handleCreateClick = useCallback(() => {
-    setEditingEvent(undefined)
-    setIsDialogOpen(true)
-  }, [])
 
   useCreateShortcut({
     onCreate: handleCreateClick,
@@ -198,7 +177,7 @@ export default function EventsPage() {
                 <EventList
                   events={group.events}
                   onEdit={handleEditEvent}
-                  onDelete={handleDeleteClick}
+                  onDelete={deleteConfirm.handleDeleteClick}
                 />
               </AccordionContent>
             </AccordionItem>
@@ -213,19 +192,19 @@ export default function EventsPage() {
         event={editingEvent}
       />
 
-      {deletingEvent?.recurrenceRule ? (
+      {deleteConfirm.deletingItem?.recurrenceRule ? (
         <RecurringEventDeleteDialog
-          open={!!deletingEvent}
-          eventTitle={deletingEvent.title}
+          open={!!deleteConfirm.deletingItem}
+          eventTitle={deleteConfirm.deletingItem.title}
           onConfirm={handleDeleteEvent}
-          onCancel={() => setDeletingEvent(undefined)}
+          onCancel={deleteConfirm.handleDeleteCancel}
         />
       ) : (
         <DeleteConfirmDialog
-          open={!!deletingEvent}
-          message={`「${deletingEvent?.title}」を削除しますか？この操作は取り消せません。`}
+          open={!!deleteConfirm.deletingItem}
+          message={`「${deleteConfirm.deletingItem?.title}」を削除しますか？この操作は取り消せません。`}
           onConfirm={() => handleDeleteEvent()}
-          onCancel={() => setDeletingEvent(undefined)}
+          onCancel={deleteConfirm.handleDeleteCancel}
         />
       )}
       </div>
