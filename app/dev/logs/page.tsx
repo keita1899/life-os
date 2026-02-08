@@ -1,6 +1,6 @@
 'use client'
 
-import { Suspense, useMemo, useState } from 'react'
+import { Suspense, useCallback, useMemo, useState } from 'react'
 import { useSearchParams } from 'next/navigation'
 import { format, getYear } from 'date-fns'
 import { ja } from 'date-fns/locale/ja'
@@ -16,13 +16,13 @@ import { createDevTask, updateDevTask, deleteDevTask } from '@/lib/dev/tasks'
 import { mutate } from 'swr'
 import { useUserSettings } from '@/hooks/useUserSettings'
 import { useDevDailyLog } from '@/hooks/useDevDailyLog'
+import { useDialogState } from '@/hooks/useDialogState'
 import { Loading } from '@/components/ui/loading'
 import { ErrorMessage } from '@/components/ui/error-message'
 import { MainLayout } from '@/components/layout/MainLayout'
 import { DevLogGoalsSection } from '@/components/dev/logs/DevLogGoalsSection'
 import { DevLogTasksSection } from '@/components/dev/logs/DevLogTasksSection'
 import { DevLogReportSection } from '@/components/dev/logs/DevLogReportSection'
-import { TaskDialog } from '@/components/tasks/TaskDialog'
 import { TaskForm } from '@/components/tasks/TaskForm'
 import {
   Dialog,
@@ -86,8 +86,7 @@ function DevLogPageView({ logDate, date }: DevLogPageViewProps) {
     error: tasksError,
   } = useDevCalendarTasks()
   const { projects } = useDevProjects()
-  const [isTaskDialogOpen, setIsTaskDialogOpen] = useState(false)
-  const [editingTask, setEditingTask] = useState<Task | undefined>(undefined)
+  const taskDialog = useDialogState<Task>()
   const [taskCreateTargetValue, setTaskCreateTargetValue] =
     useState<string>('inbox')
   const [deletingTask, setDeletingTask] = useState<Task | undefined>(undefined)
@@ -128,31 +127,49 @@ function DevLogPageView({ logDate, date }: DevLogPageViewProps) {
   )
 
   const tasks: Task[] = useMemo(() => {
-    return devTasksForDate.map((t) => {
-      const prefix = t.projectId
-        ? projectNameById.get(t.projectId) ?? `プロジェクト#${t.projectId}`
-        : t.type === 'learning'
+    return devTasksForDate.map((t) => ({
+      id: t.id,
+      title: t.title,
+      executionDate: t.executionDate,
+      completed: t.completed,
+      order: t.order,
+      scheduledTime: null,
+      recurrenceRule: null,
+      recurrenceDaysOfWeek: null,
+      recurrenceDayOfMonth: null,
+      recurrenceEndDate: null,
+      recurrenceExcludedDates: [],
+      memo: t.memo,
+      createdAt: t.createdAt,
+      updatedAt: t.updatedAt,
+    }))
+  }, [devTasksForDate])
+
+  const getTaskTargetLabel = useCallback(
+    (task: Task) => {
+      const devTask = allDevTasks.find((t) => t.id === task.id)
+      if (!devTask) return ''
+      return devTask.projectId
+        ? projectNameById.get(devTask.projectId) ?? `プロジェクト#${devTask.projectId}`
+        : devTask.type === 'learning'
           ? '学習'
           : 'Inbox'
+    },
+    [allDevTasks, projectNameById],
+  )
 
-      return {
-        id: t.id,
-        title: `${prefix}: ${t.title}`,
-        executionDate: t.executionDate,
-        completed: t.completed,
-        order: t.order,
-        scheduledTime: null,
-        recurrenceRule: null,
-        recurrenceDaysOfWeek: null,
-        recurrenceDayOfMonth: null,
-        recurrenceEndDate: null,
-        recurrenceExcludedDates: [],
-        memo: t.memo,
-        createdAt: t.createdAt,
-        updatedAt: t.updatedAt,
-      }
-    })
-  }, [devTasksForDate, projectNameById])
+  const getTargetValueForTask = useCallback(
+    (task: Task) => {
+      const devTask = allDevTasks.find((t) => t.id === task.id)
+      if (!devTask) return 'inbox'
+      return devTask.projectId
+        ? `project:${devTask.projectId}`
+        : devTask.type === 'learning'
+          ? 'learning'
+          : 'inbox'
+    },
+    [allDevTasks],
+  )
 
   const formattedDate = format(logDate, 'yyyy年M月d日(E)', { locale: ja })
   const prevDate = subDays(logDate, 1)
@@ -170,32 +187,16 @@ function DevLogPageView({ logDate, date }: DevLogPageViewProps) {
     const devTask = allDevTasks.find((t) => t.id === task.id)
     if (!devTask) return
 
-    const prefix = devTask.projectId
-      ? projectNameById.get(devTask.projectId) ?? `プロジェクト#${devTask.projectId}`
-      : devTask.type === 'learning'
-        ? '学習'
-        : 'Inbox'
-
-    const titleWithoutPrefix = task.title.replace(`${prefix}: `, '')
-    setEditingTask({
+    setTaskCreateTargetValue(getTargetValueForTask(task))
+    taskDialog.handleEdit({
       ...task,
-      title: titleWithoutPrefix,
       memo: devTask.memo,
     })
-    setIsTaskDialogOpen(true)
   }
 
   const handleOpenCreateTask = () => {
-    setEditingTask(undefined)
+    taskDialog.handleCreateClick()
     setTaskCreateTargetValue('inbox')
-    setIsTaskDialogOpen(true)
-  }
-
-  const handleDialogClose = (open: boolean) => {
-    setIsTaskDialogOpen(open)
-    if (!open) {
-      setEditingTask(undefined)
-    }
   }
 
   const handleCreateTask = async (input: CreateTaskInput) => {
@@ -224,7 +225,7 @@ function DevLogPageView({ logDate, date }: DevLogPageViewProps) {
         })
       }
       await mutate('dev-calendar-tasks')
-      setIsTaskDialogOpen(false)
+      taskDialog.handleDialogClose(false)
     } catch (err) {
       setOperationError(
         err instanceof Error ? err.message : 'タスクの作成に失敗しました',
@@ -233,21 +234,35 @@ function DevLogPageView({ logDate, date }: DevLogPageViewProps) {
   }
 
   const handleUpdateTask = async (input: CreateTaskInput) => {
-    if (!editingTask) return
+    if (!taskDialog.editingItem) return
+
+    const target = parseDevTaskTarget(taskCreateTargetValue)
+    if (!target) {
+      setOperationError('保存先が無効です')
+      return
+    }
 
     try {
       setOperationError(null)
-      const devTask = allDevTasks.find((t) => t.id === editingTask.id)
-      if (!devTask) return
-
-      await updateDevTask(editingTask.id, {
-        title: input.title,
-        executionDate: input.executionDate,
-        memo: input.memo,
-      })
+      if (target.kind === 'type') {
+        await updateDevTask(taskDialog.editingItem.id, {
+          title: input.title,
+          projectId: null,
+          type: target.value,
+          executionDate: input.executionDate ?? undefined,
+          memo: input.memo,
+        })
+      } else {
+        await updateDevTask(taskDialog.editingItem.id, {
+          title: input.title,
+          projectId: target.projectId,
+          type: 'inbox',
+          executionDate: input.executionDate ?? undefined,
+          memo: input.memo,
+        })
+      }
       await mutate('dev-calendar-tasks')
-      setIsTaskDialogOpen(false)
-      setEditingTask(undefined)
+      taskDialog.handleDialogClose(false)
     } catch (err) {
       setOperationError(
         err instanceof Error ? err.message : 'タスクの更新に失敗しました',
@@ -362,6 +377,7 @@ function DevLogPageView({ logDate, date }: DevLogPageViewProps) {
             <div>
               <DevLogTasksSection
                 tasks={tasks}
+                getTargetLabel={getTaskTargetLabel}
                 onToggleCompletion={async (task) => {
                   try {
                     setOperationError(null)
@@ -385,53 +401,49 @@ function DevLogPageView({ logDate, date }: DevLogPageViewProps) {
           </div>
         )}
 
-        {editingTask ? (
-          <TaskDialog
-            open={isTaskDialogOpen}
-            onOpenChange={handleDialogClose}
-            onSubmit={handleUpdateTask}
-            task={editingTask}
-          />
-        ) : (
-          <Dialog open={isTaskDialogOpen} onOpenChange={handleDialogClose}>
-            <DialogContent>
-              <DialogHeader>
-                <DialogTitle>新しいタスクを作成</DialogTitle>
-              </DialogHeader>
-              <div className="space-y-4">
-                <div className="space-y-2">
-                  <div className="text-sm font-medium">作成先</div>
-                  <Select
-                    value={taskCreateTargetValue}
-                    onValueChange={(value) => {
-                      if (!parseDevTaskTarget(value)) return
-                      setTaskCreateTargetValue(value)
-                    }}
-                  >
-                    <SelectTrigger>
-                      <SelectValue placeholder="作成先を選択" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="inbox">Inbox</SelectItem>
-                      <SelectItem value="learning">学習</SelectItem>
-                      {projects.map((p) => (
-                        <SelectItem key={p.id} value={`project:${p.id}`}>
-                          {p.name}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-                <TaskForm
-                  onSubmit={handleCreateTask}
-                  onCancel={() => handleDialogClose(false)}
-                  defaultExecutionDate={date}
-                  submitLabel="作成"
-                />
+        <Dialog open={taskDialog.isDialogOpen} onOpenChange={taskDialog.handleDialogClose}>
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle>
+                {taskDialog.editingItem ? 'タスクを編集' : '新しいタスクを作成'}
+              </DialogTitle>
+            </DialogHeader>
+            <div className="space-y-4">
+              <div className="space-y-2">
+                <div className="text-sm font-medium">保存先</div>
+                <Select
+                  value={taskCreateTargetValue}
+                  onValueChange={(value) => {
+                    if (!parseDevTaskTarget(value)) return
+                    setTaskCreateTargetValue(value)
+                  }}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="保存先を選択" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="inbox">Inbox</SelectItem>
+                    <SelectItem value="learning">学習</SelectItem>
+                    {projects.map((p) => (
+                      <SelectItem key={p.id} value={`project:${p.id}`}>
+                        {p.name}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
               </div>
-            </DialogContent>
-          </Dialog>
-        )}
+              <TaskForm
+                onSubmit={
+                  taskDialog.editingItem ? handleUpdateTask : handleCreateTask
+                }
+                onCancel={() => taskDialog.handleDialogClose(false)}
+                initialData={taskDialog.editingItem}
+                defaultExecutionDate={date}
+                submitLabel={taskDialog.editingItem ? '更新' : '作成'}
+              />
+            </div>
+          </DialogContent>
+        </Dialog>
 
         <DeleteConfirmDialog
           open={!!deletingTask}

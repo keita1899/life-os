@@ -6,6 +6,7 @@ import type { Task } from '@/lib/types/task'
 
 interface DevLogTasksSectionProps {
   tasks: Task[]
+  getTargetLabel?: (task: Task) => string
   onToggleCompletion?: (task: Task) => void
   onEdit?: (task: Task) => void
   onDelete?: (task: Task) => void
@@ -14,6 +15,7 @@ interface DevLogTasksSectionProps {
 
 export function DevLogTasksSection({
   tasks,
+  getTargetLabel,
   onToggleCompletion,
   onEdit,
   onDelete,
@@ -27,6 +29,7 @@ export function DevLogTasksSection({
       <CardContent>
         <TaskList
           tasks={tasks}
+          getTaskLabel={getTargetLabel}
           onToggleCompletion={onToggleCompletion}
           onEdit={onEdit}
           onDelete={onDelete}
