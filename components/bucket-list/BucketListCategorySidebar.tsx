@@ -4,6 +4,7 @@ import { useState } from 'react'
 import { Loading } from '@/components/ui/loading'
 import { ErrorMessage } from '@/components/ui/error-message'
 import { useBucketListCategories } from '@/hooks/useBucketListCategories'
+import { useAsyncOperation } from '@/hooks/useAsyncOperation'
 import type { BucketListCategory } from '@/lib/types/bucket-list-category'
 import { BucketListCategoryList } from './BucketListCategoryList'
 import { BucketListCategoryCreateForm } from './BucketListCategoryCreateForm'
@@ -28,18 +29,15 @@ export function BucketListCategorySidebar({
   const [editingCategoryId, setEditingCategoryId] = useState<number | null>(
     null,
   )
-  const [operationError, setOperationError] = useState<string | null>(null)
+  const { operationError, setOperationError, execute } = useAsyncOperation()
 
   const handleCreateCategory = async (name: string) => {
-    try {
-      setOperationError(null)
-      const newCategory = await createBucketListCategory({ name })
-      onSelectCategory(newCategory.id.toString())
-    } catch (err) {
-      setOperationError(
-        err instanceof Error ? err.message : 'カテゴリーの作成に失敗しました',
-      )
-      throw err
+    const result = await execute(
+      () => createBucketListCategory({ name }),
+      'カテゴリーの作成に失敗しました',
+    )
+    if (result !== undefined) {
+      onSelectCategory(result.id.toString())
     }
   }
 
@@ -52,30 +50,29 @@ export function BucketListCategorySidebar({
   }
 
   const handleUpdateCategory = async (id: number, name: string) => {
-    try {
-      setOperationError(null)
-      await updateBucketListCategory(id, { name })
+    const result = await execute(
+      async () => {
+        await updateBucketListCategory(id, { name })
+        return true
+      },
+      'カテゴリーの更新に失敗しました',
+    )
+    if (result !== undefined) {
       setEditingCategoryId(null)
-    } catch (err) {
-      setOperationError(
-        err instanceof Error ? err.message : 'カテゴリーの更新に失敗しました',
-      )
-      throw err
     }
   }
 
   const handleDeleteCategory = async (category: BucketListCategory) => {
-    try {
-      setOperationError(null)
-      await deleteBucketListCategory(category.id)
-      if (selectedCategoryId === category.id.toString()) {
-        onSelectCategory('all')
-      }
-    } catch (err) {
-      setOperationError(
-        err instanceof Error ? err.message : 'カテゴリーの削除に失敗しました',
-      )
-      throw err
+    const categoryIdStr = category.id.toString()
+    const result = await execute(
+      async () => {
+        await deleteBucketListCategory(category.id)
+        return true
+      },
+      'カテゴリーの削除に失敗しました',
+    )
+    if (result !== undefined && selectedCategoryId === categoryIdStr) {
+      onSelectCategory('all')
     }
   }
 

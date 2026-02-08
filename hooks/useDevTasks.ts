@@ -23,12 +23,12 @@ interface UseDevTasksResult {
   tasks: DevTask[]
   isLoading: boolean
   error: string | null
-  createTask: (input: CreateDevTaskInput) => Promise<void>
-  updateTask: (id: number, input: UpdateDevTaskInput) => Promise<void>
-  deleteTask: (id: number) => Promise<void>
+  createTask: (input: CreateDevTaskInput) => Promise<DevTask>
+  updateTask: (id: number, input: UpdateDevTaskInput) => Promise<DevTask>
+  deleteTask: (id: number) => Promise<boolean>
   toggleTaskCompletion: (id: number, completed: boolean) => Promise<void>
-  deleteCompletedTasks: () => Promise<void>
-  updateOverdueTasksToToday: () => Promise<void>
+  deleteCompletedTasks: () => Promise<number | undefined>
+  updateOverdueTasksToToday: () => Promise<number | undefined>
 }
 
 export function useDevTasks(input: {
@@ -58,22 +58,25 @@ export function useDevTasks(input: {
     return await mutate(key)
   }
 
-  const handleCreateTask = async (createInput: CreateDevTaskInput): Promise<void> => {
-    await createDevTask(createInput)
+  const handleCreateTask = async (createInput: CreateDevTaskInput) => {
+    const result = await createDevTask(createInput)
     await Promise.all([refreshTasks(), mutate(devCalendarTasksKey)])
+    return result
   }
 
   const handleUpdateTask = async (
     id: number,
     updateInput: UpdateDevTaskInput,
-  ): Promise<void> => {
-    await updateDevTask(id, updateInput)
+  ) => {
+    const result = await updateDevTask(id, updateInput)
     await Promise.all([refreshTasks(), mutate(devCalendarTasksKey)])
+    return result
   }
 
-  const handleDeleteTask = async (id: number): Promise<void> => {
+  const handleDeleteTask = async (id: number) => {
     await deleteDevTask(id)
     await Promise.all([refreshTasks(), mutate(devCalendarTasksKey)])
+    return true
   }
 
   const handleToggleTaskCompletion = async (
@@ -84,22 +87,24 @@ export function useDevTasks(input: {
     await Promise.all([refreshTasks(), mutate(devCalendarTasksKey)])
   }
 
-  const handleDeleteCompletedTasks = async (): Promise<void> => {
+  const handleDeleteCompletedTasks = async () => {
     if (projectId === undefined) return
-    await deleteCompletedDevTasks({
+    const count = await deleteCompletedDevTasks({
       projectId,
       type,
     })
     await Promise.all([refreshTasks(), mutate(devCalendarTasksKey)])
+    return count
   }
 
-  const handleUpdateOverdueTasksToToday = async (): Promise<void> => {
+  const handleUpdateOverdueTasksToToday = async () => {
     if (projectId === undefined) return
-    await updateOverdueDevTasksToToday({
+    const count = await updateOverdueDevTasksToToday({
       projectId,
       type,
     })
     await Promise.all([refreshTasks(), mutate(devCalendarTasksKey)])
+    return count
   }
 
   return {

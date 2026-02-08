@@ -5,6 +5,7 @@ import { Plus } from 'lucide-react'
 import { MainLayout } from '@/components/layout/MainLayout'
 import { useCreateShortcut } from '@/hooks/useCreateShortcut'
 import { useDialogState } from '@/hooks/useDialogState'
+import { useAsyncOperation } from '@/hooks/useAsyncOperation'
 import { useMode } from '@/lib/contexts/ModeContext'
 import { Button } from '@/components/ui/button'
 import { TransactionDialog } from '@/components/kakeibo/TransactionDialog'
@@ -44,7 +45,7 @@ export default function KakeiboPage() {
   const [deletingTransaction, setDeletingTransaction] = useState<
     Transaction | undefined
   >(undefined)
-  const [operationError, setOperationError] = useState<string | null>(null)
+  const { operationError, setOperationError, execute } = useAsyncOperation()
   const [filterType, setFilterType] = useState<
     'all' | 'income' | 'expense' | 'fixed' | 'variable'
   >('all')
@@ -189,26 +190,22 @@ export default function KakeiboPage() {
   const months = Array.from({ length: 12 }, (_, i) => i + 1)
 
   const handleCreateTransaction = async (input: CreateTransactionInput) => {
-    try {
-      setOperationError(null)
-      await createTransaction(input)
+    const result = await execute(async () => {
+      const created = await createTransaction(input)
       await refreshTransactions()
       await mutate(`transactions-${selectedYear}-${selectedMonth}`)
+      return created
+    }, '取引の作成に失敗しました')
+    if (result !== undefined) {
       handleDialogClose(false)
-    } catch (err) {
-      console.error('Failed to create transaction:', err)
-      setOperationError(
-        err instanceof Error ? err.message : '取引の作成に失敗しました',
-      )
     }
   }
 
   const handleUpdateTransaction = async (input: CreateTransactionInput) => {
     if (!editingTransaction) return
 
-    try {
-      setOperationError(null)
-      await updateTransaction(editingTransaction.id, {
+    const result = await execute(async () => {
+      const updated = await updateTransaction(editingTransaction.id, {
         date: input.date,
         type: input.type,
         name: input.name,
@@ -222,11 +219,10 @@ export default function KakeiboPage() {
         (key) =>
           typeof key === 'string' && key.startsWith('transactions-range-'),
       )
+      return updated
+    }, '取引の更新に失敗しました')
+    if (result !== undefined) {
       handleDialogClose(false)
-    } catch (err) {
-      setOperationError(
-        err instanceof Error ? err.message : '取引の更新に失敗しました',
-      )
     }
   }
 
@@ -237,8 +233,7 @@ export default function KakeiboPage() {
   const handleDeleteTransaction = async () => {
     if (!deletingTransaction) return
 
-    try {
-      setOperationError(null)
+    const result = await execute(async () => {
       await deleteTransaction(deletingTransaction.id)
       await refreshTransactions()
       await mutate(`transactions-${selectedYear}-${selectedMonth}`)
@@ -246,11 +241,10 @@ export default function KakeiboPage() {
         (key) =>
           typeof key === 'string' && key.startsWith('transactions-range-'),
       )
+      return true
+    }, '取引の削除に失敗しました')
+    if (result !== undefined) {
       setDeletingTransaction(undefined)
-    } catch (err) {
-      setOperationError(
-        err instanceof Error ? err.message : '取引の削除に失敗しました',
-      )
     }
   }
 

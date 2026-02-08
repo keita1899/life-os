@@ -21,18 +21,21 @@ export function useTasks() {
   } = useSWR<Task[]>(tasksKey, () => fetcher(() => getAllTasks()))
 
   const handleCreateTask = async (input: CreateTaskInput) => {
-    await createTask(input)
+    const result = await createTask(input)
     await mutate(tasksKey)
+    return result
   }
 
   const handleUpdateTask = async (id: number, input: UpdateTaskInput) => {
-    await updateTask(id, input)
+    const result = await updateTask(id, input)
     await mutate(tasksKey)
+    return result
   }
 
   const handleDeleteTask = async (id: number) => {
     await deleteTask(id)
     await mutate(tasksKey)
+    return true
   }
 
   const handleToggleTaskCompletion = async (id: number, completed: boolean) => {
@@ -41,8 +44,9 @@ export function useTasks() {
   }
 
   const handleDeleteCompletedTasks = async () => {
-    await deleteCompletedTasks()
+    const count = await deleteCompletedTasks()
     await mutate(tasksKey)
+    return count
   }
 
   const handleUpdateOverdueTasksToToday = async (): Promise<number> => {

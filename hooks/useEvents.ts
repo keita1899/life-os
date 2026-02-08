@@ -23,18 +23,21 @@ export function useEvents() {
   } = useSWR<Event[]>(eventsKey, () => fetcher(() => getAllEvents()))
 
   const handleCreateEvent = async (input: CreateEventInput) => {
-    await createEvent(input)
+    const result = await createEvent(input)
     await mutate(eventsKey)
+    return result
   }
 
   const handleUpdateEvent = async (id: number, input: UpdateEventInput) => {
-    await updateEvent(id, input)
+    const result = await updateEvent(id, input)
     await mutate(eventsKey)
+    return result
   }
 
   const handleDeleteEvent = async (id: number) => {
     await deleteEvent(id)
     await mutate(eventsKey)
+    return true
   }
 
   return {

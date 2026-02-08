@@ -6,6 +6,7 @@ import { Trash2, Calendar, Focus, Plus } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { useCreateShortcut } from '@/hooks/useCreateShortcut'
 import { useDialogState } from '@/hooks/useDialogState'
+import { useAsyncOperation } from '@/hooks/useAsyncOperation'
 import {
   Accordion,
   AccordionContent,
@@ -57,7 +58,7 @@ export default function TasksPage() {
   const [deletingTask, setDeletingTask] = useState<Task | undefined>(undefined)
   const [isDeletingCompletedDialogOpen, setIsDeletingCompletedDialogOpen] =
     useState(false)
-  const [operationError, setOperationError] = useState<string | null>(null)
+  const { operationError, setOperationError, execute } = useAsyncOperation()
   const [todayStr, setTodayStr] = useState(getTodayDateString())
 
   useEffect(() => {
@@ -94,37 +95,33 @@ export default function TasksPage() {
   }
 
   const handleCreateTask = async (input: CreateTaskInput) => {
-    try {
-      setOperationError(null)
-      await createTask(input)
+    const result = await execute(
+      () => createTask(input),
+      'タスクの作成に失敗しました',
+    )
+    if (result !== undefined) {
       handleDialogClose(false)
-    } catch (err) {
-      setOperationError(
-        err instanceof Error ? err.message : 'タスクの作成に失敗しました',
-      )
     }
   }
 
   const handleUpdateTask = async (input: CreateTaskInput) => {
     if (!editingTask) return
 
-    try {
-      setOperationError(null)
-      const updateInput: UpdateTaskInput = {
-        title: input.title,
-        executionDate: input.executionDate,
-        scheduledTime: input.scheduledTime,
-        recurrenceRule: input.recurrenceRule,
-        recurrenceDaysOfWeek: input.recurrenceDaysOfWeek,
-        recurrenceDayOfMonth: input.recurrenceDayOfMonth,
-        recurrenceEndDate: input.recurrenceEndDate,
-      }
-      await updateTask(editingTask.id, updateInput)
+    const updateInput: UpdateTaskInput = {
+      title: input.title,
+      executionDate: input.executionDate,
+      scheduledTime: input.scheduledTime,
+      recurrenceRule: input.recurrenceRule,
+      recurrenceDaysOfWeek: input.recurrenceDaysOfWeek,
+      recurrenceDayOfMonth: input.recurrenceDayOfMonth,
+      recurrenceEndDate: input.recurrenceEndDate,
+    }
+    const result = await execute(
+      () => updateTask(editingTask.id, updateInput),
+      'タスクの更新に失敗しました',
+    )
+    if (result !== undefined) {
       handleDialogClose(false)
-    } catch (err) {
-      setOperationError(
-        err instanceof Error ? err.message : 'タスクの更新に失敗しました',
-      )
     }
   }
 
@@ -136,8 +133,7 @@ export default function TasksPage() {
   const handleDeleteTask = async (mode?: 'single' | 'all') => {
     if (!deletingTask) return
 
-    try {
-      setOperationError(null)
+    const result = await execute(async () => {
       if (deletingTask.recurrenceRule && mode === 'single' && deletingTask.executionDate) {
         const currentExcludedDates = deletingTask.recurrenceExcludedDates || []
         if (!currentExcludedDates.includes(deletingTask.executionDate)) {
@@ -148,11 +144,10 @@ export default function TasksPage() {
       } else {
         await deleteTask(deletingTask.id)
       }
+      return true
+    }, 'タスクの削除に失敗しました')
+    if (result !== undefined) {
       setDeletingTask(undefined)
-    } catch (err) {
-      setOperationError(
-        err instanceof Error ? err.message : 'タスクの削除に失敗しました',
-      )
     }
   }
 
@@ -161,8 +156,7 @@ export default function TasksPage() {
   }
 
   const handleToggleCompletion = async (task: Task) => {
-    try {
-      setOperationError(null)
+    await execute(async () => {
       if (
         task.recurrenceRule &&
         !task.completed &&
@@ -181,27 +175,17 @@ export default function TasksPage() {
         }
       }
       await toggleTaskCompletion(task.id, !task.completed)
-    } catch (err) {
-      setOperationError(
-        err instanceof Error
-          ? err.message
-          : 'タスクの完了状態の更新に失敗しました',
-      )
-    }
+    }, 'タスクの完了状態の更新に失敗しました')
   }
 
   const handleUpdateExecutionDate = async (
     task: Task,
     executionDate: string | null,
   ) => {
-    try {
-      setOperationError(null)
-      await updateTask(task.id, { executionDate })
-    } catch (err) {
-      setOperationError(
-        err instanceof Error ? err.message : 'タスクの実行日の更新に失敗しました',
-      )
-    }
+    await execute(
+      () => updateTask(task.id, { executionDate }),
+      'タスクの実行日の更新に失敗しました',
+    )
   }
 
   const handleDeleteCompletedTasksClick = () => {
@@ -209,26 +193,20 @@ export default function TasksPage() {
   }
 
   const handleDeleteCompletedTasks = async () => {
-    try {
-      setOperationError(null)
-      await deleteCompletedTasks()
+    const result = await execute(
+      () => deleteCompletedTasks(),
+      '完了済みタスクの削除に失敗しました',
+    )
+    if (result !== undefined) {
       setIsDeletingCompletedDialogOpen(false)
-    } catch (err) {
-      setOperationError(
-        err instanceof Error
-          ? err.message
-          : '完了済みタスクの削除に失敗しました',
-      )
     }
   }
 
   const handleUpdateOverdueTasksToToday = async () => {
-    try {
-      setOperationError(null)
+    await execute(async () => {
       const overdueGroup = groupedTasks.find((g) => g.key === 'overdue')
       if (!overdueGroup || overdueGroup.tasks.length === 0) {
-        setOperationError('更新する期限切れタスクがありませんでした')
-        return
+        throw new Error('更新する期限切れタスクがありませんでした')
       }
 
       const today = getTodayDateString()
@@ -256,15 +234,10 @@ export default function TasksPage() {
       }
 
       if (updatedCount === 0) {
-        setOperationError('更新する期限切れタスクがありませんでした')
+        throw new Error('更新する期限切れタスクがありませんでした')
       }
-    } catch (err) {
-      setOperationError(
-        err instanceof Error
-          ? err.message
-          : '期限切れタスクの更新に失敗しました',
-      )
-    }
+      return updatedCount
+    }, '期限切れタスクの更新に失敗しました')
   }
 
   return (

@@ -25,21 +25,24 @@ export function useSubscriptions() {
   )
 
   const handleCreateSubscription = async (input: CreateSubscriptionInput) => {
-    await createSubscription(input)
+    const result = await createSubscription(input)
     await mutate(subscriptionsKey)
+    return result
   }
 
   const handleUpdateSubscription = async (
     id: number,
     input: UpdateSubscriptionInput,
   ) => {
-    await updateSubscription(id, input)
+    const result = await updateSubscription(id, input)
     await mutate(subscriptionsKey)
+    return result
   }
 
   const handleDeleteSubscription = async (id: number) => {
     await deleteSubscription(id)
     await mutate(subscriptionsKey)
+    return true
   }
 
   const handleToggleSubscriptionActive = async (

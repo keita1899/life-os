@@ -19,18 +19,21 @@ export function useHabits() {
   } = useSWR<Habit[]>(habitsKey, () => fetcher(() => getAllHabits()))
 
   const handleCreateHabit = async (input: CreateHabitInput) => {
-    await createHabit(input)
+    const result = await createHabit(input)
     await mutate(habitsKey)
+    return result
   }
 
   const handleUpdateHabit = async (id: number, input: UpdateHabitInput) => {
-    await updateHabit(id, input)
+    const result = await updateHabit(id, input)
     await mutate(habitsKey)
+    return result
   }
 
   const handleDeleteHabit = async (id: number) => {
     await deleteHabit(id)
     await mutate(habitsKey)
+    return true
   }
 
   return {

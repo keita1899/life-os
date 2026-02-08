@@ -7,6 +7,7 @@ import { ErrorMessage } from '@/components/ui/error-message'
 import { MainLayout } from '@/components/layout/MainLayout'
 import { UserSettingsForm } from '@/components/settings/UserSettingsForm'
 import { useUserSettings } from '@/hooks/useUserSettings'
+import { useAsyncOperation } from '@/hooks/useAsyncOperation'
 import type { UpdateUserSettingsInput } from '@/lib/types/user-settings'
 
 export default function SettingsPage() {
@@ -16,25 +17,22 @@ export default function SettingsPage() {
     error,
     updateUserSettings,
   } = useUserSettings()
-  const [operationError, setOperationError] = useState<string | null>(null)
+  const { operationError, setOperationError, execute } = useAsyncOperation()
   const [isSaving, setIsSaving] = useState(false)
   const [saveSuccess, setSaveSuccess] = useState(false)
 
   const handleSubmit = async (input: UpdateUserSettingsInput) => {
-    try {
-      setOperationError(null)
-      setSaveSuccess(false)
-      setIsSaving(true)
-      await updateUserSettings(input)
+    setSaveSuccess(false)
+    setIsSaving(true)
+    const result = await execute(
+      () => updateUserSettings(input),
+      '設定の保存に失敗しました',
+    )
+    if (result !== undefined) {
       setSaveSuccess(true)
       setTimeout(() => setSaveSuccess(false), 3000)
-    } catch (err) {
-      setOperationError(
-        err instanceof Error ? err.message : '設定の保存に失敗しました',
-      )
-    } finally {
-      setIsSaving(false)
     }
+    setIsSaving(false)
   }
 
   return (

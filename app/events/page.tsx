@@ -6,6 +6,7 @@ import { Plus } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { useCreateShortcut } from '@/hooks/useCreateShortcut'
 import { useDialogState } from '@/hooks/useDialogState'
+import { useAsyncOperation } from '@/hooks/useAsyncOperation'
 import {
   Accordion,
   AccordionContent,
@@ -44,7 +45,7 @@ export default function EventsPage() {
   const [deletingEvent, setDeletingEvent] = useState<Event | undefined>(
     undefined,
   )
-  const [operationError, setOperationError] = useState<string | null>(null)
+  const { operationError, setOperationError, execute } = useAsyncOperation()
 
   const expandedEvents = useMemo(() => {
     const today = new Date()
@@ -64,48 +65,43 @@ export default function EventsPage() {
   )
 
   const handleCreateEvent = async (input: CreateEventInput) => {
-    try {
-      setOperationError(null)
-      await createEvent(input)
+    const result = await execute(
+      () => createEvent(input),
+      '予定の作成に失敗しました',
+    )
+    if (result !== undefined) {
       handleDialogClose(false)
-    } catch (err) {
-      setOperationError(
-        err instanceof Error ? err.message : '予定の作成に失敗しました',
-      )
     }
   }
 
   const handleUpdateEvent = async (input: CreateEventInput) => {
     if (!editingEvent) return
 
-    try {
-      setOperationError(null)
-      const updateInput: UpdateEventInput = {
-        title: input.title,
-        startDatetime: input.startDatetime,
-        endDatetime: input.endDatetime,
-        allDay: input.allDay,
-        category: input.category,
-        description: input.description,
-        recurrenceRule: input.recurrenceRule,
-        recurrenceDaysOfWeek: input.recurrenceDaysOfWeek,
-        recurrenceDayOfMonth: input.recurrenceDayOfMonth,
-        recurrenceEndDate: input.recurrenceEndDate,
-      }
-      await updateEvent(editingEvent.id, updateInput)
+    const updateInput: UpdateEventInput = {
+      title: input.title,
+      startDatetime: input.startDatetime,
+      endDatetime: input.endDatetime,
+      allDay: input.allDay,
+      category: input.category,
+      description: input.description,
+      recurrenceRule: input.recurrenceRule,
+      recurrenceDaysOfWeek: input.recurrenceDaysOfWeek,
+      recurrenceDayOfMonth: input.recurrenceDayOfMonth,
+      recurrenceEndDate: input.recurrenceEndDate,
+    }
+    const result = await execute(
+      () => updateEvent(editingEvent.id, updateInput),
+      '予定の更新に失敗しました',
+    )
+    if (result !== undefined) {
       handleDialogClose(false)
-    } catch (err) {
-      setOperationError(
-        err instanceof Error ? err.message : '予定の更新に失敗しました',
-      )
     }
   }
 
   const handleDeleteEvent = async (mode?: 'single' | 'all') => {
     if (!deletingEvent) return
 
-    try {
-      setOperationError(null)
+    const result = await execute(async () => {
       if (deletingEvent.recurrenceRule && mode === 'single' && deletingEvent.startDatetime) {
         const eventDate = deletingEvent.startDatetime.split('T')[0]
         const currentExcludedDates = deletingEvent.recurrenceExcludedDates || []
@@ -117,11 +113,10 @@ export default function EventsPage() {
       } else {
         await deleteEvent(deletingEvent.id)
       }
+      return true
+    }, '予定の削除に失敗しました')
+    if (result !== undefined) {
       setDeletingEvent(undefined)
-    } catch (err) {
-      setOperationError(
-        err instanceof Error ? err.message : '予定の削除に失敗しました',
-      )
     }
   }
 

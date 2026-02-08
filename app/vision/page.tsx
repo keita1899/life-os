@@ -16,6 +16,7 @@ import { ErrorMessage } from '@/components/ui/error-message'
 import { useMode } from '@/lib/contexts/ModeContext'
 import { useVisionCategories } from '@/hooks/useVisionCategories'
 import { useVision } from '@/hooks/useVision'
+import { useAsyncOperation } from '@/hooks/useAsyncOperation'
 import type { VisionItem } from '@/lib/types/vision-item'
 
 export default function VisionPage() {
@@ -32,7 +33,7 @@ export default function VisionPage() {
   const [selectedCategoryId, setSelectedCategoryId] = useState<
     number | 'all' | null
   >('all')
-  const [operationError, setOperationError] = useState<string | null>(null)
+  const { operationError, setOperationError, execute } = useAsyncOperation()
 
   const selectedCategoryName = useMemo(() => {
     if (selectedCategoryId === 'all' || selectedCategoryId === null) {
@@ -87,42 +88,31 @@ export default function VisionPage() {
   }, [groupedItemsByCategory])
 
   const handleCreateItem = async (title: string) => {
-    try {
-      setOperationError(null)
-      await createVisionItem({
-        title,
-        categoryId:
-          selectedCategoryId === 'all' || selectedCategoryId === null
-            ? null
-            : selectedCategoryId,
-      })
-    } catch (err) {
-      setOperationError(
-        err instanceof Error ? err.message : 'ビジョンの作成に失敗しました',
-      )
-    }
+    await execute(
+      () =>
+        createVisionItem({
+          title,
+          categoryId:
+            selectedCategoryId === 'all' || selectedCategoryId === null
+              ? null
+              : selectedCategoryId,
+        }),
+      'ビジョンの作成に失敗しました',
+    )
   }
 
   const handleUpdateItem = async (id: number, title: string) => {
-    try {
-      setOperationError(null)
-      await updateVisionItem(id, { title })
-    } catch (err) {
-      setOperationError(
-        err instanceof Error ? err.message : 'ビジョンの更新に失敗しました',
-      )
-    }
+    await execute(
+      () => updateVisionItem(id, { title }),
+      'ビジョンの更新に失敗しました',
+    )
   }
 
   const handleDeleteItem = async (id: number) => {
-    try {
-      setOperationError(null)
-      await deleteVisionItem(id)
-    } catch (err) {
-      setOperationError(
-        err instanceof Error ? err.message : 'ビジョンの削除に失敗しました',
-      )
-    }
+    await execute(
+      () => deleteVisionItem(id),
+      'ビジョンの削除に失敗しました',
+    )
   }
 
   if (mode !== 'life') {
@@ -140,7 +130,10 @@ export default function VisionPage() {
           <div className="mx-auto max-w-3xl p-8">
             <h1 className="mb-6 text-3xl font-bold">{selectedCategoryName}</h1>
 
-            <ErrorMessage message={error || operationError || ''} />
+            <ErrorMessage
+              message={error || operationError || ''}
+              onDismiss={operationError ? () => setOperationError(null) : undefined}
+            />
 
             {isLoading ? (
               <Loading />

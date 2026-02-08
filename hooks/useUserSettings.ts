@@ -14,8 +14,9 @@ export function useUserSettings() {
   } = useSWR<UserSettings>(userSettingsKey, () => fetcher(() => getUserSettings()))
 
   const handleUpdateUserSettings = async (input: UpdateUserSettingsInput) => {
-    await updateUserSettings(input)
+    const result = await updateUserSettings(input)
     await mutate(userSettingsKey)
+    return result
   }
 
   const handleGetBirthdate = async (): Promise<string | null> => {

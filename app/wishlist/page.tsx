@@ -5,6 +5,7 @@ import { Trash2, Plus } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { useCreateShortcut } from '@/hooks/useCreateShortcut'
 import { useDialogState } from '@/hooks/useDialogState'
+import { useAsyncOperation } from '@/hooks/useAsyncOperation'
 import {
   Accordion,
   AccordionContent,
@@ -62,7 +63,7 @@ export default function WishlistPage() {
   )
   const [isDeletingPurchasedDialogOpen, setIsDeletingPurchasedDialogOpen] =
     useState(false)
-  const [operationError, setOperationError] = useState<string | null>(null)
+  const { operationError, setOperationError, execute } = useAsyncOperation()
 
   const availableYears = useMemo(() => {
     const years = new Set<number>()
@@ -121,35 +122,31 @@ export default function WishlistPage() {
   }
 
   const handleCreateItem = async (input: CreateWishlistItemInput) => {
-    try {
-      setOperationError(null)
-      await createWishlistItem(input)
+    const result = await execute(
+      () => createWishlistItem(input),
+      '欲しいものの作成に失敗しました',
+    )
+    if (result !== undefined) {
       handleDialogClose(false)
-    } catch (err) {
-      setOperationError(
-        err instanceof Error ? err.message : '欲しいものの作成に失敗しました',
-      )
     }
   }
 
   const handleUpdateItem = async (input: CreateWishlistItemInput) => {
     if (!editingItem) return
 
-    try {
-      setOperationError(null)
-      const updateInput: UpdateWishlistItemInput = {
-        name: input.name,
-        categoryId: input.categoryId,
-        targetYear: input.targetYear,
-        targetMonth: input.targetMonth,
-        price: input.price,
-      }
-      await updateWishlistItem(editingItem.id, updateInput)
+    const updateInput: UpdateWishlistItemInput = {
+      name: input.name,
+      categoryId: input.categoryId,
+      targetYear: input.targetYear,
+      targetMonth: input.targetMonth,
+      price: input.price,
+    }
+    const result = await execute(
+      () => updateWishlistItem(editingItem.id, updateInput),
+      '欲しいものの更新に失敗しました',
+    )
+    if (result !== undefined) {
       handleDialogClose(false)
-    } catch (err) {
-      setOperationError(
-        err instanceof Error ? err.message : '欲しいものの更新に失敗しました',
-      )
     }
   }
 
@@ -177,14 +174,10 @@ export default function WishlistPage() {
   }
 
   const handleTogglePurchased = async (item: WishlistItem) => {
-    try {
-      setOperationError(null)
-      await updateWishlistItem(item.id, { purchased: !item.purchased })
-    } catch (err) {
-      setOperationError(
-        err instanceof Error ? err.message : '更新に失敗しました',
-      )
-    }
+    await execute(
+      () => updateWishlistItem(item.id, { purchased: !item.purchased }),
+      '更新に失敗しました',
+    )
   }
 
   const handleDeletePurchasedItemsClick = () => {
@@ -195,16 +188,12 @@ export default function WishlistPage() {
     const ids = purchasedItems.map((item) => item.id)
     if (ids.length === 0) return
 
-    try {
-      setOperationError(null)
-      await deleteWishlistItemsByIds(ids)
+    const result = await execute(
+      () => deleteWishlistItemsByIds(ids),
+      '購入済みの一括削除に失敗しました',
+    )
+    if (result !== undefined) {
       setIsDeletingPurchasedDialogOpen(false)
-    } catch (err) {
-      setOperationError(
-        err instanceof Error
-          ? err.message
-          : '購入済みの一括削除に失敗しました',
-      )
     }
   }
 

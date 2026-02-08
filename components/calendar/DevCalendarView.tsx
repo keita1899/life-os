@@ -9,6 +9,7 @@ import { useDevGoals } from '@/hooks/useDevGoals'
 import { useDevCalendarTasks } from '@/hooks/useDevCalendarTasks'
 import { useDevProjects } from '@/hooks/useDevProjects'
 import { useCalendarView } from '@/hooks/useCalendarView'
+import { useAsyncOperation } from '@/hooks/useAsyncOperation'
 import { useMemo, useState } from 'react'
 import { startOfMonth, endOfMonth, startOfWeek, endOfWeek } from 'date-fns'
 import { getHolidaysForDateRange } from '@/lib/calendar/holidays'
@@ -119,7 +120,7 @@ export function DevCalendarView({ initialDate }: DevCalendarViewProps) {
   const isLoading =
     isLoadingGoals || isLoadingTasks || isLoadingProjects || isLoadingSettings
 
-  const [operationError, setOperationError] = useState<string | null>(null)
+  const { operationError, setOperationError, execute } = useAsyncOperation()
   const [isTaskDialogOpen, setIsTaskDialogOpen] = useState(false)
   const [editingTask, setEditingTask] = useState<Task | undefined>(undefined)
   const [deletingTask, setDeletingTask] = useState<Task | undefined>(undefined)
@@ -150,20 +151,22 @@ export function DevCalendarView({ initialDate }: DevCalendarViewProps) {
   const handleUpdateTask = async (input: CreateTaskInput) => {
     if (!editingTask) return
 
-    try {
-      setOperationError(null)
-      await updateDevTask(editingTask.id, {
-        title: input.title,
-        executionDate: input.executionDate,
-        memo: input.memo,
-      })
-      await mutate('dev-calendar-tasks')
+    const taskId = editingTask.id
+    const result = await execute(
+      async () => {
+        await updateDevTask(taskId, {
+          title: input.title,
+          executionDate: input.executionDate,
+          memo: input.memo,
+        })
+        await mutate('dev-calendar-tasks')
+        return true
+      },
+      'タスクの更新に失敗しました',
+    )
+    if (result !== undefined) {
       setIsTaskDialogOpen(false)
       setEditingTask(undefined)
-    } catch (err) {
-      setOperationError(
-        err instanceof Error ? err.message : 'タスクの更新に失敗しました',
-      )
     }
   }
 
@@ -172,30 +175,30 @@ export function DevCalendarView({ initialDate }: DevCalendarViewProps) {
   }
 
   const handleDeleteTask = async () => {
-    if (!deletingTask) return
+    const taskToDelete = deletingTask
+    if (!taskToDelete) return
 
-    try {
-      setOperationError(null)
-      await deleteDevTask(deletingTask.id)
-      await mutate('dev-calendar-tasks')
+    const result = await execute(
+      async () => {
+        await deleteDevTask(taskToDelete.id)
+        await mutate('dev-calendar-tasks')
+        return true
+      },
+      'タスクの削除に失敗しました',
+    )
+    if (result !== undefined) {
       setDeletingTask(undefined)
-    } catch (err) {
-      setOperationError(
-        err instanceof Error ? err.message : 'タスクの削除に失敗しました',
-      )
     }
   }
 
   const handleToggleTaskCompletion = async (task: Task) => {
-    try {
-      setOperationError(null)
-      await updateDevTask(task.id, { completed: !task.completed })
-      await mutate('dev-calendar-tasks')
-    } catch (err) {
-      setOperationError(
-        err instanceof Error ? err.message : 'タスクの完了状態の更新に失敗しました',
-      )
-    }
+    await execute(
+      async () => {
+        await updateDevTask(task.id, { completed: !task.completed })
+        await mutate('dev-calendar-tasks')
+      },
+      'タスクの完了状態の更新に失敗しました',
+    )
   }
 
   return (

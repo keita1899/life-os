@@ -5,6 +5,7 @@ import { Plus } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { useCreateShortcut } from '@/hooks/useCreateShortcut'
 import { useDialogState } from '@/hooks/useDialogState'
+import { useAsyncOperation } from '@/hooks/useAsyncOperation'
 import {
   Accordion,
   AccordionContent,
@@ -52,7 +53,7 @@ export default function SubscriptionsPage() {
   const [deletingSubscription, setDeletingSubscription] = useState<
     Subscription | undefined
   >(undefined)
-  const [operationError, setOperationError] = useState<string | null>(null)
+  const { operationError, setOperationError, execute } = useAsyncOperation()
 
   const groupedSubscriptions = useMemo(() => {
     const active = subscriptions.filter((sub) => sub.active)
@@ -84,37 +85,33 @@ export default function SubscriptionsPage() {
   }
 
   const handleCreateSubscription = async (input: CreateSubscriptionInput) => {
-    try {
-      setOperationError(null)
-      await createSubscription(input)
+    const result = await execute(
+      () => createSubscription(input),
+      'サブスクの作成に失敗しました',
+    )
+    if (result !== undefined) {
       handleDialogClose(false)
-    } catch (err) {
-      setOperationError(
-        err instanceof Error ? err.message : 'サブスクの作成に失敗しました',
-      )
     }
   }
 
   const handleUpdateSubscription = async (input: CreateSubscriptionInput) => {
     if (!editingSubscription) return
 
-    try {
-      setOperationError(null)
-      const updateInput: UpdateSubscriptionInput = {
-        name: input.name,
-        monthlyPrice: input.monthlyPrice,
-        billingCycle: input.billingCycle,
-        nextBillingDate: input.nextBillingDate,
-        startDate: input.startDate,
-        cancellationUrl: input.cancellationUrl,
-        active: input.active,
-      }
-      await updateSubscription(editingSubscription.id, updateInput)
+    const updateInput: UpdateSubscriptionInput = {
+      name: input.name,
+      monthlyPrice: input.monthlyPrice,
+      billingCycle: input.billingCycle,
+      nextBillingDate: input.nextBillingDate,
+      startDate: input.startDate,
+      cancellationUrl: input.cancellationUrl,
+      active: input.active,
+    }
+    const result = await execute(
+      () => updateSubscription(editingSubscription.id, updateInput),
+      'サブスクの更新に失敗しました',
+    )
+    if (result !== undefined) {
       handleDialogClose(false)
-    } catch (err) {
-      setOperationError(
-        err instanceof Error ? err.message : 'サブスクの更新に失敗しました',
-      )
     }
   }
 
@@ -125,28 +122,20 @@ export default function SubscriptionsPage() {
   const handleDeleteSubscription = async () => {
     if (!deletingSubscription) return
 
-    try {
-      setOperationError(null)
-      await deleteSubscription(deletingSubscription.id)
+    const result = await execute(
+      () => deleteSubscription(deletingSubscription.id),
+      'サブスクの削除に失敗しました',
+    )
+    if (result !== undefined) {
       setDeletingSubscription(undefined)
-    } catch (err) {
-      setOperationError(
-        err instanceof Error ? err.message : 'サブスクの削除に失敗しました',
-      )
     }
   }
 
   const handleToggleActive = async (subscription: Subscription) => {
-    try {
-      setOperationError(null)
-      await toggleSubscriptionActive(subscription.id, !subscription.active)
-    } catch (err) {
-      setOperationError(
-        err instanceof Error
-          ? err.message
-          : 'サブスクの契約状態の更新に失敗しました',
-      )
-    }
+    await execute(
+      () => toggleSubscriptionActive(subscription.id, !subscription.active),
+      'サブスクの契約状態の更新に失敗しました',
+    )
   }
 
   useCreateShortcut({

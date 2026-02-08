@@ -26,21 +26,24 @@ export function useBucketList() {
   )
 
   const handleCreateBucketListItem = async (input: CreateBucketListItemInput) => {
-    await createBucketListItem(input)
+    const result = await createBucketListItem(input)
     await mutate(bucketListKey)
+    return result
   }
 
   const handleUpdateBucketListItem = async (
     id: number,
     input: UpdateBucketListItemInput,
   ) => {
-    await updateBucketListItem(id, input)
+    const result = await updateBucketListItem(id, input)
     await mutate(bucketListKey)
+    return result
   }
 
   const handleDeleteBucketListItem = async (id: number) => {
     await deleteBucketListItem(id)
     await mutate(bucketListKey)
+    return true
   }
 
   const handleToggleBucketListItemCompletion = async (
@@ -54,6 +57,7 @@ export function useBucketList() {
   const handleDeleteBucketListItemsByIds = async (ids: number[]) => {
     await deleteBucketListItemsByIds(ids)
     await mutate(bucketListKey)
+    return true
   }
 
   return {

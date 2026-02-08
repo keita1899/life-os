@@ -2,6 +2,7 @@
 
 import { useState } from 'react'
 import { useGoals } from '@/hooks/useGoals'
+import { useAsyncOperation } from '@/hooks/useAsyncOperation'
 import { YearlyGoalDialog } from '@/components/goals/YearlyGoalDialog'
 import { MonthlyGoalDialog } from '@/components/goals/MonthlyGoalDialog'
 import { DeleteConfirmDialog } from '@/components/ui/delete-confirm-dialog'
@@ -35,7 +36,7 @@ const GoalsPage = () => {
   } = useGoals(selectedYear)
   const [isYearlyDialogOpen, setIsYearlyDialogOpen] = useState(false)
   const [isMonthlyDialogOpen, setIsMonthlyDialogOpen] = useState(false)
-  const [operationError, setOperationError] = useState<string | null>(null)
+  const { operationError, setOperationError, execute } = useAsyncOperation()
   const [deleteConfirmDialog, setDeleteConfirmDialog] = useState<{
     open: boolean
     message: string
@@ -49,65 +50,63 @@ const GoalsPage = () => {
   >(undefined)
 
   const handleCreateYearlyGoal = async (input: CreateYearlyGoalInput) => {
-    try {
-      setOperationError(null)
-      await createYearlyGoal(input)
+    const result = await execute(
+      () => createYearlyGoal(input),
+      '年間目標の作成に失敗しました',
+    )
+    if (result !== undefined) {
       setIsYearlyDialogOpen(false)
-    } catch (err) {
-      setOperationError(
-        err instanceof Error ? err.message : '年間目標の作成に失敗しました',
-      )
     }
   }
 
   const handleCreateMonthlyGoal = async (input: CreateMonthlyGoalInput) => {
-    try {
-      setOperationError(null)
-      await createMonthlyGoal(input)
+    const result = await execute(
+      () => createMonthlyGoal(input),
+      '月間目標の作成に失敗しました',
+    )
+    if (result !== undefined) {
       setIsMonthlyDialogOpen(false)
-    } catch (err) {
-      setOperationError(
-        err instanceof Error ? err.message : '月間目標の作成に失敗しました',
-      )
     }
   }
 
   const handleUpdateYearlyGoal = async (input: CreateYearlyGoalInput) => {
     if (!editingYearlyGoal) return
-    try {
-      setOperationError(null)
-      await updateYearlyGoal(editingYearlyGoal.id, {
-        title: input.title,
-        year: input.year,
-        checklist: input.checklist,
-      })
-      await refreshGoals()
+    const result = await execute(
+      async () => {
+        await updateYearlyGoal(editingYearlyGoal.id, {
+          title: input.title,
+          year: input.year,
+          checklist: input.checklist,
+        })
+        await refreshGoals()
+        return true
+      },
+      '年間目標の更新に失敗しました',
+    )
+    if (result !== undefined) {
       setIsYearlyDialogOpen(false)
       setEditingYearlyGoal(undefined)
-    } catch (err) {
-      setOperationError(
-        err instanceof Error ? err.message : '年間目標の更新に失敗しました',
-      )
     }
   }
 
   const handleUpdateMonthlyGoal = async (input: CreateMonthlyGoalInput) => {
     if (!editingMonthlyGoal) return
-    try {
-      setOperationError(null)
-      await updateMonthlyGoal(editingMonthlyGoal.id, {
-        title: input.title,
-        year: input.year,
-        month: input.month,
-        checklist: input.checklist,
-      })
-      await refreshGoals()
+    const result = await execute(
+      async () => {
+        await updateMonthlyGoal(editingMonthlyGoal.id, {
+          title: input.title,
+          year: input.year,
+          month: input.month,
+          checklist: input.checklist,
+        })
+        await refreshGoals()
+        return true
+      },
+      '月間目標の更新に失敗しました',
+    )
+    if (result !== undefined) {
       setIsMonthlyDialogOpen(false)
       setEditingMonthlyGoal(undefined)
-    } catch (err) {
-      setOperationError(
-        err instanceof Error ? err.message : '月間目標の更新に失敗しました',
-      )
     }
   }
 
@@ -141,21 +140,18 @@ const GoalsPage = () => {
           onConfirm: async () => {},
         })
 
-        try {
-          setOperationError(null)
-          if ('month' in goal) {
-            await deleteMonthlyGoal(goal.id)
-          } else {
-            await deleteYearlyGoal(goal.id)
-          }
-          await refreshGoals()
-        } catch (err) {
-          setOperationError(
-            err instanceof Error
-              ? err.message
-              : `${goalType}の削除に失敗しました`,
-          )
-        }
+        await execute(
+          async () => {
+            if ('month' in goal) {
+              await deleteMonthlyGoal(goal.id)
+            } else {
+              await deleteYearlyGoal(goal.id)
+            }
+            await refreshGoals()
+            return true
+          },
+          `${goalType}の削除に失敗しました`,
+        )
       },
     })
   }
@@ -173,22 +169,19 @@ const GoalsPage = () => {
     itemId: string,
     completed: boolean,
   ) => {
-    try {
-      setOperationError(null)
-      const updatedChecklist = goal.checklist.map((item) =>
-        item.id === itemId ? { ...item, completed } : item,
-      )
-      await updateYearlyGoal(goal.id, {
-        checklist: updatedChecklist,
-      })
-      await refreshGoals()
-    } catch (err) {
-      setOperationError(
-        err instanceof Error
-          ? err.message
-          : 'チェックリスト項目の更新に失敗しました',
-      )
-    }
+    await execute(
+      async () => {
+        const updatedChecklist = goal.checklist.map((item) =>
+          item.id === itemId ? { ...item, completed } : item,
+        )
+        await updateYearlyGoal(goal.id, {
+          checklist: updatedChecklist,
+        })
+        await refreshGoals()
+        return true
+      },
+      'チェックリスト項目の更新に失敗しました',
+    )
   }
 
   const handleToggleMonthlyGoalChecklistItem = async (
@@ -196,24 +189,20 @@ const GoalsPage = () => {
     itemId: string,
     completed: boolean,
   ) => {
-    try {
-      setOperationError(null)
-      const updatedChecklist = goal.checklist.map((item) =>
-        item.id === itemId ? { ...item, completed } : item,
-      )
-      await updateMonthlyGoal(goal.id, {
-        checklist: updatedChecklist,
-      })
-      await refreshGoals()
-    } catch (err) {
-      setOperationError(
-        err instanceof Error
-          ? err.message
-          : 'チェックリスト項目の更新に失敗しました',
-      )
-    }
+    await execute(
+      async () => {
+        const updatedChecklist = goal.checklist.map((item) =>
+          item.id === itemId ? { ...item, completed } : item,
+        )
+        await updateMonthlyGoal(goal.id, {
+          checklist: updatedChecklist,
+        })
+        await refreshGoals()
+        return true
+      },
+      'チェックリスト項目の更新に失敗しました',
+    )
   }
-
 
   const handleYearlyDialogClose = (open: boolean) => {
     setIsYearlyDialogOpen(open)

@@ -23,6 +23,7 @@ import { TaskList } from '@/components/tasks/TaskList'
 import type { CreateTaskInput, Task } from '@/lib/types/task'
 import { useDevTasks } from '@/hooks/useDevTasks'
 import { useDialogState } from '@/hooks/useDialogState'
+import { useAsyncOperation } from '@/hooks/useAsyncOperation'
 import { groupTasks } from '@/lib/tasks/grouping'
 import { FloatingActionButtons } from '@/components/floating/FloatingActionButtons'
 import {
@@ -98,7 +99,11 @@ function DevProjectPageContent(): ReactElement | null {
   const [deletingTask, setDeletingTask] = useState<Task | undefined>(undefined)
   const [isDeletingCompletedDialogOpen, setIsDeletingCompletedDialogOpen] =
     useState(false)
-  const [taskOperationError, setTaskOperationError] = useState<string | null>(null)
+  const {
+    operationError: taskOperationError,
+    setOperationError: setTaskOperationError,
+    execute: executeTaskOperation,
+  } = useAsyncOperation()
 
   const convertedTasks: Task[] = useMemo(() => {
     return tasks.map((t) => ({
@@ -164,52 +169,48 @@ function DevProjectPageContent(): ReactElement | null {
   const handleCreateTask = async (input: CreateTaskInput): Promise<void> => {
     if (!Number.isFinite(projectId)) return
 
-    try {
-      setTaskOperationError(null)
-      await createTask({
-        title: input.title,
-        projectId,
-        type: 'inbox',
-        executionDate: input.executionDate,
-        memo: input.memo,
-      })
+    const result = await executeTaskOperation(
+      () =>
+        createTask({
+          title: input.title,
+          projectId,
+          type: 'inbox',
+          executionDate: input.executionDate,
+          memo: input.memo,
+        }),
+      'タスクの作成に失敗しました',
+    )
+    if (result !== undefined) {
       handleTaskDialogClose(false)
-    } catch (err) {
-      setTaskOperationError(
-        err instanceof Error ? err.message : 'タスクの作成に失敗しました',
-      )
     }
   }
 
   const handleUpdateTask = async (input: CreateTaskInput): Promise<void> => {
     if (!editingTask) return
 
-    try {
-      setTaskOperationError(null)
-      await updateTask(editingTask.id, {
-        title: input.title,
-        executionDate: input.executionDate,
-        memo: input.memo,
-      })
+    const result = await executeTaskOperation(
+      () =>
+        updateTask(editingTask.id, {
+          title: input.title,
+          executionDate: input.executionDate,
+          memo: input.memo,
+        }),
+      'タスクの更新に失敗しました',
+    )
+    if (result !== undefined) {
       handleTaskDialogClose(false)
-    } catch (err) {
-      setTaskOperationError(
-        err instanceof Error ? err.message : 'タスクの更新に失敗しました',
-      )
     }
   }
 
   const handleDeleteTask = async (): Promise<void> => {
     if (!deletingTask) return
 
-    try {
-      setTaskOperationError(null)
-      await deleteTask(deletingTask.id)
+    const result = await executeTaskOperation(
+      () => deleteTask(deletingTask.id),
+      'タスクの削除に失敗しました',
+    )
+    if (result !== undefined) {
       setDeletingTask(undefined)
-    } catch (err) {
-      setTaskOperationError(
-        err instanceof Error ? err.message : 'タスクの削除に失敗しました',
-      )
     }
   }
 
@@ -218,30 +219,20 @@ function DevProjectPageContent(): ReactElement | null {
   }
 
   const handleToggleCompletion = async (task: Task): Promise<void> => {
-    try {
-      setTaskOperationError(null)
-      await toggleTaskCompletion(task.id, !task.completed)
-    } catch (err) {
-      setTaskOperationError(
-        err instanceof Error
-          ? err.message
-          : 'タスクの完了状態の更新に失敗しました',
-      )
-    }
+    await executeTaskOperation(
+      () => toggleTaskCompletion(task.id, !task.completed),
+      'タスクの完了状態の更新に失敗しました',
+    )
   }
 
   const handleUpdateExecutionDate = async (
     task: Task,
     executionDate: string | null,
   ): Promise<void> => {
-    try {
-      setTaskOperationError(null)
-      await updateTask(task.id, { executionDate })
-    } catch (err) {
-      setTaskOperationError(
-        err instanceof Error ? err.message : 'タスクの実行日の更新に失敗しました',
-      )
-    }
+    await executeTaskOperation(
+      () => updateTask(task.id, { executionDate }),
+      'タスクの実行日の更新に失敗しました',
+    )
   }
 
   const handleDeleteCompletedTasksClick = () => {
@@ -249,30 +240,20 @@ function DevProjectPageContent(): ReactElement | null {
   }
 
   const handleDeleteCompletedTasks = async (): Promise<void> => {
-    try {
-      setTaskOperationError(null)
-      await deleteCompletedTasks()
+    const result = await executeTaskOperation(
+      () => deleteCompletedTasks(),
+      '完了済みタスクの削除に失敗しました',
+    )
+    if (result !== undefined) {
       setIsDeletingCompletedDialogOpen(false)
-    } catch (err) {
-      setTaskOperationError(
-        err instanceof Error
-          ? err.message
-          : '完了済みタスクの削除に失敗しました',
-      )
     }
   }
 
   const handleUpdateOverdueTasksToToday = async (): Promise<void> => {
-    try {
-      setTaskOperationError(null)
-      await updateOverdueTasksToToday()
-    } catch (err) {
-      setTaskOperationError(
-        err instanceof Error
-          ? err.message
-          : '期限切れタスクの更新に失敗しました',
-      )
-    }
+    await executeTaskOperation(
+      () => updateOverdueTasksToToday(),
+      '期限切れタスクの更新に失敗しました',
+    )
   }
 
   return (

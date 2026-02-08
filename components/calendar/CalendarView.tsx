@@ -21,6 +21,7 @@ import { useTasks } from '@/hooks/useTasks'
 import { useSubscriptions } from '@/hooks/useSubscriptions'
 import { useBucketList } from '@/hooks/useBucketList'
 import { useCalendarView } from '@/hooks/useCalendarView'
+import { useAsyncOperation } from '@/hooks/useAsyncOperation'
 import { useUserSettings } from '@/hooks/useUserSettings'
 import { useBarcelonaMatches } from '@/hooks/useBarcelonaMatches'
 import { EventDialog } from '@/components/events/EventDialog'
@@ -125,7 +126,7 @@ export function CalendarView({ initialDate }: CalendarViewProps) {
     () => getHolidaysForDateRange(rangeStart, rangeEnd),
     [rangeStart, rangeEnd],
   )
-  const [operationError, setOperationError] = useState<string | null>(null)
+  const { operationError, setOperationError, execute } = useAsyncOperation()
   const [isEventDialogOpen, setIsEventDialogOpen] = useState(false)
   const [editingEvent, setEditingEvent] = useState<Event | undefined>(undefined)
   const [deletingEvent, setDeletingEvent] = useState<Event | undefined>(undefined)
@@ -148,27 +149,26 @@ export function CalendarView({ initialDate }: CalendarViewProps) {
   const handleUpdateEvent = async (input: CreateEventInput) => {
     if (!editingEvent) return
 
-    try {
-      setOperationError(null)
-      const updateInput: UpdateEventInput = {
-        title: input.title,
-        startDatetime: input.startDatetime,
-        endDatetime: input.endDatetime,
-        allDay: input.allDay,
-        category: input.category,
-        description: input.description,
-        recurrenceRule: input.recurrenceRule,
-        recurrenceDaysOfWeek: input.recurrenceDaysOfWeek,
-        recurrenceDayOfMonth: input.recurrenceDayOfMonth,
-        recurrenceEndDate: input.recurrenceEndDate,
-      }
-      await updateEvent(editingEvent.id, updateInput)
+    const eventId = editingEvent.id
+    const updateInput: UpdateEventInput = {
+      title: input.title,
+      startDatetime: input.startDatetime,
+      endDatetime: input.endDatetime,
+      allDay: input.allDay,
+      category: input.category,
+      description: input.description,
+      recurrenceRule: input.recurrenceRule,
+      recurrenceDaysOfWeek: input.recurrenceDaysOfWeek,
+      recurrenceDayOfMonth: input.recurrenceDayOfMonth,
+      recurrenceEndDate: input.recurrenceEndDate,
+    }
+    const result = await execute(
+      () => updateEvent(eventId, updateInput),
+      '予定の更新に失敗しました',
+    )
+    if (result !== undefined) {
       setIsEventDialogOpen(false)
       setEditingEvent(undefined)
-    } catch (err) {
-      setOperationError(
-        err instanceof Error ? err.message : '予定の更新に失敗しました',
-      )
     }
   }
 
@@ -177,16 +177,18 @@ export function CalendarView({ initialDate }: CalendarViewProps) {
   }
 
   const handleDeleteEvent = async () => {
-    if (!deletingEvent) return
+    const eventToDelete = deletingEvent
+    if (!eventToDelete) return
 
-    try {
-      setOperationError(null)
-      await deleteEvent(deletingEvent.id)
+    const result = await execute(
+      async () => {
+        await deleteEvent(eventToDelete.id)
+        return true
+      },
+      '予定の削除に失敗しました',
+    )
+    if (result !== undefined) {
       setDeletingEvent(undefined)
-    } catch (err) {
-      setOperationError(
-        err instanceof Error ? err.message : '予定の削除に失敗しました',
-      )
     }
   }
 
@@ -198,23 +200,22 @@ export function CalendarView({ initialDate }: CalendarViewProps) {
   const handleUpdateTask = async (input: CreateTaskInput) => {
     if (!editingTask) return
 
-    try {
-      setOperationError(null)
-      const updateInput: UpdateTaskInput = {
-        title: input.title,
-        executionDate: input.executionDate,
-        recurrenceRule: input.recurrenceRule,
-        recurrenceDaysOfWeek: input.recurrenceDaysOfWeek,
-        recurrenceDayOfMonth: input.recurrenceDayOfMonth,
-        recurrenceEndDate: input.recurrenceEndDate,
-      }
-      await updateTask(editingTask.id, updateInput)
+    const taskId = editingTask.id
+    const updateInput: UpdateTaskInput = {
+      title: input.title,
+      executionDate: input.executionDate,
+      recurrenceRule: input.recurrenceRule,
+      recurrenceDaysOfWeek: input.recurrenceDaysOfWeek,
+      recurrenceDayOfMonth: input.recurrenceDayOfMonth,
+      recurrenceEndDate: input.recurrenceEndDate,
+    }
+    const result = await execute(
+      () => updateTask(taskId, updateInput),
+      'タスクの更新に失敗しました',
+    )
+    if (result !== undefined) {
       setIsTaskDialogOpen(false)
       setEditingTask(undefined)
-    } catch (err) {
-      setOperationError(
-        err instanceof Error ? err.message : 'タスクの更新に失敗しました',
-      )
     }
   }
 
@@ -223,45 +224,45 @@ export function CalendarView({ initialDate }: CalendarViewProps) {
   }
 
   const handleDeleteTask = async () => {
-    if (!deletingTask) return
+    const taskToDelete = deletingTask
+    if (!taskToDelete) return
 
-    try {
-      setOperationError(null)
-      await deleteTask(deletingTask.id)
+    const result = await execute(
+      async () => {
+        await deleteTask(taskToDelete.id)
+        return true
+      },
+      'タスクの削除に失敗しました',
+    )
+    if (result !== undefined) {
       setDeletingTask(undefined)
-    } catch (err) {
-      setOperationError(
-        err instanceof Error ? err.message : 'タスクの削除に失敗しました',
-      )
     }
   }
 
   const handleToggleTaskCompletion = async (task: Task) => {
-    try {
-      setOperationError(null)
-      if (
-        task.recurrenceRule &&
-        !task.completed &&
-        task.executionDate
-      ) {
-        const nextDate = getNextOccurrenceAfter(
-          task,
-          parseISO(task.executionDate),
-        )
-        if (nextDate !== null) {
-          await updateTask(task.id, {
-            executionDate: nextDate,
-            completed: false,
-          })
-          return
+    await execute(
+      async () => {
+        if (
+          task.recurrenceRule &&
+          !task.completed &&
+          task.executionDate
+        ) {
+          const nextDate = getNextOccurrenceAfter(
+            task,
+            parseISO(task.executionDate),
+          )
+          if (nextDate !== null) {
+            await updateTask(task.id, {
+              executionDate: nextDate,
+              completed: false,
+            })
+            return
+          }
         }
-      }
-      await toggleTaskCompletion(task.id, !task.completed)
-    } catch (err) {
-      setOperationError(
-        err instanceof Error ? err.message : 'タスクの完了状態の更新に失敗しました',
-      )
-    }
+        await toggleTaskCompletion(task.id, !task.completed)
+      },
+      'タスクの完了状態の更新に失敗しました',
+    )
   }
 
   const handleEditBucketListItem = (item: BucketListItem) => {
@@ -272,21 +273,20 @@ export function CalendarView({ initialDate }: CalendarViewProps) {
   const handleUpdateBucketListItem = async (input: CreateBucketListItemInput) => {
     if (!editingBucketListItem) return
 
-    try {
-      setOperationError(null)
-      const updateInput: UpdateBucketListItemInput = {
-        title: input.title,
-        categoryId: input.categoryId,
-        targetYear: input.targetYear,
-        targetMonth: input.targetMonth,
-      }
-      await updateBucketListItem(editingBucketListItem.id, updateInput)
+    const itemId = editingBucketListItem.id
+    const updateInput: UpdateBucketListItemInput = {
+      title: input.title,
+      categoryId: input.categoryId,
+      targetYear: input.targetYear,
+      targetMonth: input.targetMonth,
+    }
+    const result = await execute(
+      () => updateBucketListItem(itemId, updateInput),
+      'やりたいことの更新に失敗しました',
+    )
+    if (result !== undefined) {
       setIsBucketListDialogOpen(false)
       setEditingBucketListItem(undefined)
-    } catch (err) {
-      setOperationError(
-        err instanceof Error ? err.message : 'やりたいことの更新に失敗しました',
-      )
     }
   }
 
@@ -295,16 +295,18 @@ export function CalendarView({ initialDate }: CalendarViewProps) {
   }
 
   const handleDeleteBucketListItem = async () => {
-    if (!deletingBucketListItem) return
+    const itemToDelete = deletingBucketListItem
+    if (!itemToDelete) return
 
-    try {
-      setOperationError(null)
-      await deleteBucketListItem(deletingBucketListItem.id)
+    const result = await execute(
+      async () => {
+        await deleteBucketListItem(itemToDelete.id)
+        return true
+      },
+      'やりたいことの削除に失敗しました',
+    )
+    if (result !== undefined) {
       setDeletingBucketListItem(undefined)
-    } catch (err) {
-      setOperationError(
-        err instanceof Error ? err.message : 'やりたいことの削除に失敗しました',
-      )
     }
   }
 
@@ -317,16 +319,18 @@ export function CalendarView({ initialDate }: CalendarViewProps) {
   }
 
   const handleDeleteSubscription = async () => {
-    if (!deletingSubscription) return
+    const subscriptionToDelete = deletingSubscription
+    if (!subscriptionToDelete) return
 
-    try {
-      setOperationError(null)
-      await deleteSubscription(deletingSubscription.id)
+    const result = await execute(
+      async () => {
+        await deleteSubscription(subscriptionToDelete.id)
+        return true
+      },
+      'サブスクの削除に失敗しました',
+    )
+    if (result !== undefined) {
       setDeletingSubscription(undefined)
-    } catch (err) {
-      setOperationError(
-        err instanceof Error ? err.message : 'サブスクの削除に失敗しました',
-      )
     }
   }
 

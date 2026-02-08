@@ -6,6 +6,7 @@ import { Plus } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { useCreateShortcut } from '@/hooks/useCreateShortcut'
 import { useDialogState } from '@/hooks/useDialogState'
+import { useAsyncOperation } from '@/hooks/useAsyncOperation'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { HabitDialog } from '@/components/habits/HabitDialog'
 import { HabitHeatmap } from '@/components/habits/HabitHeatmap'
@@ -40,7 +41,7 @@ export default function HabitsPage() {
     handleCreateClick,
   } = useDialogState<Habit>()
   const [deletingHabit, setDeletingHabit] = useState<Habit | undefined>(undefined)
-  const [operationError, setOperationError] = useState<string | null>(null)
+  const { operationError, setOperationError, execute } = useAsyncOperation()
   const {
     currentDate: heatmapDate,
     viewMode,
@@ -85,36 +86,31 @@ export default function HabitsPage() {
   }
 
   const handleCreateHabit = async (input: CreateHabitInput) => {
-    try {
-      setOperationError(null)
-      await createHabit(input)
+    const result = await execute(
+      () => createHabit(input),
+      '習慣の作成に失敗しました',
+    )
+    if (result !== undefined) {
       handleDialogClose(false)
-    } catch (err) {
-      setOperationError(
-        err instanceof Error ? err.message : '習慣の作成に失敗しました',
-      )
-      throw err
     }
   }
 
   const handleUpdateHabit = async (input: CreateHabitInput) => {
     if (!editingHabit) return
 
-    try {
-      setOperationError(null)
-      await updateHabit(editingHabit.id, {
-        name: input.name,
-        scheduledTime: input.scheduledTime,
-        frequencyType: input.frequencyType,
-        frequencyDays: input.frequencyDays,
-        frequencyDayOfMonth: input.frequencyDayOfMonth,
-      })
+    const result = await execute(
+      () =>
+        updateHabit(editingHabit.id, {
+          name: input.name,
+          scheduledTime: input.scheduledTime,
+          frequencyType: input.frequencyType,
+          frequencyDays: input.frequencyDays,
+          frequencyDayOfMonth: input.frequencyDayOfMonth,
+        }),
+      '習慣の更新に失敗しました',
+    )
+    if (result !== undefined) {
       handleDialogClose(false)
-    } catch (err) {
-      setOperationError(
-        err instanceof Error ? err.message : '習慣の更新に失敗しました',
-      )
-      throw err
     }
   }
 
@@ -125,21 +121,14 @@ export default function HabitsPage() {
   const handleDeleteHabit = async () => {
     if (!deletingHabit) return
 
-    try {
-      setOperationError(null)
-      await deleteHabit(deletingHabit.id)
+    const result = await execute(
+      () => deleteHabit(deletingHabit.id),
+      '習慣の削除に失敗しました',
+    )
+    if (result !== undefined) {
       setDeletingHabit(undefined)
-    } catch (err) {
-      setOperationError(
-        err instanceof Error ? err.message : '習慣の削除に失敗しました',
-      )
     }
   }
-
-  // const handleOpenCreate = useCallback(() => {
-  //   setEditingHabit(undefined)
-  //   setIsDialogOpen(true)
-  // }, [])
 
   useCreateShortcut({
     onCreate: handleCreateClick,
