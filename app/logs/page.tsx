@@ -21,6 +21,7 @@ import { useDailyLog } from '@/hooks/useDailyLog'
 import { useHabits } from '@/hooks/useHabits'
 import { useHabitCompletionsByDate } from '@/hooks/useHabitCompletions'
 import { useAsyncOperation } from '@/hooks/useAsyncOperation'
+import { useDialogState } from '@/hooks/useDialogState'
 import { Loading } from '@/components/ui/loading'
 import { ErrorMessage } from '@/components/ui/error-message'
 import { MainLayout } from '@/components/layout/MainLayout'
@@ -71,11 +72,9 @@ function LogPageView({ logDate, date }: LogPageViewProps) {
     updateTask,
     deleteTask,
   } = useTasks()
-  const [isTaskDialogOpen, setIsTaskDialogOpen] = useState(false)
-  const [isEventDialogOpen, setIsEventDialogOpen] = useState(false)
-  const [editingEvent, setEditingEvent] = useState<Event | undefined>(undefined)
+  const taskDialog = useDialogState<Task>()
+  const eventDialog = useDialogState<Event>()
   const [deletingEvent, setDeletingEvent] = useState<Event | undefined>(undefined)
-  const [editingTask, setEditingTask] = useState<Task | undefined>(undefined)
   const [deletingTask, setDeletingTask] = useState<Task | undefined>(undefined)
   const { operationError, setOperationError, execute } = useAsyncOperation()
   const {
@@ -149,37 +148,20 @@ function LogPageView({ logDate, date }: LogPageViewProps) {
     router.push(`/logs?date=${format(nextDate, 'yyyy-MM-dd')}`)
   }
 
-  const handleEditTask = (task: Task) => {
-    setEditingTask(task)
-    setIsTaskDialogOpen(true)
-  }
-
-  const handleOpenCreateTask = () => {
-    setEditingTask(undefined)
-    setIsTaskDialogOpen(true)
-  }
-
-  const handleDialogClose = (open: boolean) => {
-    setIsTaskDialogOpen(open)
-    if (!open) {
-      setEditingTask(undefined)
-    }
-  }
-
   const handleCreateTask = async (input: CreateTaskInput) => {
     const result = await execute(
       () => createTask(input),
       'タスクの作成に失敗しました',
     )
     if (result !== undefined) {
-      setIsTaskDialogOpen(false)
+      taskDialog.handleDialogClose(false)
     }
   }
 
   const handleUpdateTask = async (input: CreateTaskInput) => {
-    if (!editingTask) return
+    if (!taskDialog.editingItem) return
 
-    const taskId = editingTask.id
+    const taskId = taskDialog.editingItem.id
     const updateInput: UpdateTaskInput = {
       title: input.title,
       executionDate: input.executionDate,
@@ -194,14 +176,8 @@ function LogPageView({ logDate, date }: LogPageViewProps) {
       'タスクの更新に失敗しました',
     )
     if (result !== undefined) {
-      setIsTaskDialogOpen(false)
-      setEditingTask(undefined)
+      taskDialog.handleDialogClose(false)
     }
-  }
-
-  const handleOpenCreateEvent = () => {
-    setEditingEvent(undefined)
-    setIsEventDialogOpen(true)
   }
 
   const handleCreateEvent = async (input: CreateEventInput) => {
@@ -210,19 +186,14 @@ function LogPageView({ logDate, date }: LogPageViewProps) {
       '予定の作成に失敗しました',
     )
     if (result !== undefined) {
-      setIsEventDialogOpen(false)
+      eventDialog.handleDialogClose(false)
     }
   }
 
-  const handleEditEvent = (event: Event) => {
-    setEditingEvent(event)
-    setIsEventDialogOpen(true)
-  }
-
   const handleUpdateEvent = async (input: CreateEventInput) => {
-    if (!editingEvent) return
+    if (!eventDialog.editingItem) return
 
-    const eventId = editingEvent.id
+    const eventId = eventDialog.editingItem.id
     const updateInput: UpdateEventInput = {
       title: input.title,
       startDatetime: input.startDatetime,
@@ -240,8 +211,7 @@ function LogPageView({ logDate, date }: LogPageViewProps) {
       '予定の更新に失敗しました',
     )
     if (result !== undefined) {
-      setIsEventDialogOpen(false)
-      setEditingEvent(undefined)
+      eventDialog.handleDialogClose(false)
     }
   }
 
@@ -437,11 +407,11 @@ function LogPageView({ logDate, date }: LogPageViewProps) {
               habits={habitsForDate}
               tasks={tasks}
               completedHabitIds={completedHabitIds}
-              onEditEvent={handleEditEvent}
+              onEditEvent={eventDialog.handleEdit}
               onDeleteEvent={handleDeleteEventClick}
               onToggleHabit={handleToggleHabit}
               onToggleTask={handleToggleTaskCompletion}
-              onEditTask={handleEditTask}
+              onEditTask={taskDialog.handleEdit}
               onDeleteTask={handleDeleteClick}
             />
           </div>
@@ -460,35 +430,30 @@ function LogPageView({ logDate, date }: LogPageViewProps) {
             id: 'create-event',
             label: '予定を作成',
             icon: <CalendarPlus className="h-5 w-5" />,
-            onClick: handleOpenCreateEvent,
+            onClick: eventDialog.handleCreateClick,
           },
           {
             id: 'create-task',
             label: 'タスクを作成',
             icon: <CheckSquare className="h-5 w-5" />,
-            onClick: handleOpenCreateTask,
+            onClick: taskDialog.handleCreateClick,
           },
         ]}
       />
 
       <EventDialog
-        open={isEventDialogOpen}
-        onOpenChange={(open) => {
-          setIsEventDialogOpen(open)
-          if (!open) {
-            setEditingEvent(undefined)
-          }
-        }}
-        onSubmit={editingEvent ? handleUpdateEvent : handleCreateEvent}
-        event={editingEvent}
+        open={eventDialog.isDialogOpen}
+        onOpenChange={eventDialog.handleDialogClose}
+        onSubmit={eventDialog.editingItem ? handleUpdateEvent : handleCreateEvent}
+        event={eventDialog.editingItem}
         defaultStartDate={date}
       />
 
       <TaskDialog
-        open={isTaskDialogOpen}
-        onOpenChange={handleDialogClose}
-        onSubmit={editingTask ? handleUpdateTask : handleCreateTask}
-        task={editingTask}
+        open={taskDialog.isDialogOpen}
+        onOpenChange={taskDialog.handleDialogClose}
+        onSubmit={taskDialog.editingItem ? handleUpdateTask : handleCreateTask}
+        task={taskDialog.editingItem}
         defaultExecutionDate={date}
       />
 
