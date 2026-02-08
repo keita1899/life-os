@@ -2,6 +2,8 @@
 
 import { useState } from 'react'
 import { useGoals } from '@/hooks/useGoals'
+import { useDialogState } from '@/hooks/useDialogState'
+import { useDeleteConfirm } from '@/hooks/useDeleteConfirm'
 import { useAsyncOperation } from '@/hooks/useAsyncOperation'
 import { YearlyGoalDialog } from '@/components/goals/YearlyGoalDialog'
 import { MonthlyGoalDialog } from '@/components/goals/MonthlyGoalDialog'
@@ -34,20 +36,10 @@ const GoalsPage = () => {
     deleteMonthlyGoal,
     refreshGoals,
   } = useGoals(selectedYear)
-  const [isYearlyDialogOpen, setIsYearlyDialogOpen] = useState(false)
-  const [isMonthlyDialogOpen, setIsMonthlyDialogOpen] = useState(false)
+  const yearlyDialog = useDialogState<YearlyGoal>()
+  const monthlyDialog = useDialogState<MonthlyGoal>()
   const { operationError, setOperationError, execute } = useAsyncOperation()
-  const [deleteConfirmDialog, setDeleteConfirmDialog] = useState<{
-    open: boolean
-    message: string
-    onConfirm: () => Promise<void>
-  }>({ open: false, message: '', onConfirm: async () => {} })
-  const [editingYearlyGoal, setEditingYearlyGoal] = useState<
-    YearlyGoal | undefined
-  >(undefined)
-  const [editingMonthlyGoal, setEditingMonthlyGoal] = useState<
-    MonthlyGoal | undefined
-  >(undefined)
+  const deleteConfirm = useDeleteConfirm<YearlyGoal | MonthlyGoal>()
 
   const handleCreateYearlyGoal = async (input: CreateYearlyGoalInput) => {
     const result = await execute(
@@ -55,7 +47,7 @@ const GoalsPage = () => {
       '年間目標の作成に失敗しました',
     )
     if (result !== undefined) {
-      setIsYearlyDialogOpen(false)
+      yearlyDialog.handleDialogClose(false)
     }
   }
 
@@ -65,15 +57,16 @@ const GoalsPage = () => {
       '月間目標の作成に失敗しました',
     )
     if (result !== undefined) {
-      setIsMonthlyDialogOpen(false)
+      monthlyDialog.handleDialogClose(false)
     }
   }
 
   const handleUpdateYearlyGoal = async (input: CreateYearlyGoalInput) => {
-    if (!editingYearlyGoal) return
+    const goal = yearlyDialog.editingItem
+    if (!goal) return
     const result = await execute(
       async () => {
-        await updateYearlyGoal(editingYearlyGoal.id, {
+        await updateYearlyGoal(goal.id, {
           title: input.title,
           year: input.year,
           checklist: input.checklist,
@@ -84,16 +77,16 @@ const GoalsPage = () => {
       '年間目標の更新に失敗しました',
     )
     if (result !== undefined) {
-      setIsYearlyDialogOpen(false)
-      setEditingYearlyGoal(undefined)
+      yearlyDialog.handleDialogClose(false)
     }
   }
 
   const handleUpdateMonthlyGoal = async (input: CreateMonthlyGoalInput) => {
-    if (!editingMonthlyGoal) return
+    const goal = monthlyDialog.editingItem
+    if (!goal) return
     const result = await execute(
       async () => {
-        await updateMonthlyGoal(editingMonthlyGoal.id, {
+        await updateMonthlyGoal(goal.id, {
           title: input.title,
           year: input.year,
           month: input.month,
@@ -105,18 +98,15 @@ const GoalsPage = () => {
       '月間目標の更新に失敗しました',
     )
     if (result !== undefined) {
-      setIsMonthlyDialogOpen(false)
-      setEditingMonthlyGoal(undefined)
+      monthlyDialog.handleDialogClose(false)
     }
   }
 
   const handleEditClick = (goal: YearlyGoal | MonthlyGoal) => {
     if ('month' in goal) {
-      setEditingMonthlyGoal(goal)
-      setIsMonthlyDialogOpen(true)
+      monthlyDialog.handleEdit(goal)
     } else {
-      setEditingYearlyGoal(goal)
-      setIsYearlyDialogOpen(true)
+      yearlyDialog.handleEdit(goal)
     }
   }
 
@@ -126,42 +116,29 @@ const GoalsPage = () => {
   ) => {
     e.preventDefault()
     e.stopPropagation()
-
-    const goalType = 'month' in goal ? '月間目標' : '年間目標'
-    const message = `「${goal.title}」を削除してもよろしいですか？`
-
-    setDeleteConfirmDialog({
-      open: true,
-      message,
-      onConfirm: async () => {
-        setDeleteConfirmDialog({
-          open: false,
-          message: '',
-          onConfirm: async () => {},
-        })
-
-        await execute(
-          async () => {
-            if ('month' in goal) {
-              await deleteMonthlyGoal(goal.id)
-            } else {
-              await deleteYearlyGoal(goal.id)
-            }
-            await refreshGoals()
-            return true
-          },
-          `${goalType}の削除に失敗しました`,
-        )
-      },
-    })
+    deleteConfirm.handleDeleteClick(goal)
   }
 
-  const handleDeleteCancel = () => {
-    setDeleteConfirmDialog({
-      open: false,
-      message: '',
-      onConfirm: async () => {},
-    })
+  const handleDeleteGoal = async () => {
+    const goal = deleteConfirm.deletingItem
+    if (!goal) return
+
+    const goalType = 'month' in goal ? '月間目標' : '年間目標'
+    const result = await execute(
+      async () => {
+        if ('month' in goal) {
+          await deleteMonthlyGoal(goal.id)
+        } else {
+          await deleteYearlyGoal(goal.id)
+        }
+        await refreshGoals()
+        return true
+      },
+      `${goalType}の削除に失敗しました`,
+    )
+    if (result !== undefined) {
+      deleteConfirm.clearDeletingItem()
+    }
   }
 
   const handleToggleYearlyGoalChecklistItem = async (
@@ -204,20 +181,6 @@ const GoalsPage = () => {
     )
   }
 
-  const handleYearlyDialogClose = (open: boolean) => {
-    setIsYearlyDialogOpen(open)
-    if (!open) {
-      setEditingYearlyGoal(undefined)
-    }
-  }
-
-  const handleMonthlyDialogClose = (open: boolean) => {
-    setIsMonthlyDialogOpen(open)
-    if (!open) {
-      setEditingMonthlyGoal(undefined)
-    }
-  }
-
   const { mode } = useMode()
 
   if (mode !== 'life') {
@@ -246,10 +209,7 @@ const GoalsPage = () => {
         <div className="space-y-6">
           <YearlyGoalsSection
             goals={yearlyGoals}
-            onCreateClick={() => {
-              setEditingYearlyGoal(undefined)
-              setIsYearlyDialogOpen(true)
-            }}
+            onCreateClick={yearlyDialog.handleCreateClick}
             onEditClick={handleEditClick}
             onDeleteClick={handleDeleteClick}
             onToggleChecklistItem={handleToggleYearlyGoalChecklistItem}
@@ -260,10 +220,7 @@ const GoalsPage = () => {
           <MonthlyGoalsSection
             goals={allMonthlyGoals}
             selectedYear={selectedYear}
-            onCreateClick={() => {
-              setEditingMonthlyGoal(undefined)
-              setIsMonthlyDialogOpen(true)
-            }}
+            onCreateClick={monthlyDialog.handleCreateClick}
             onEditClick={handleEditClick}
             onDeleteClick={handleDeleteClick}
             onToggleChecklistItem={handleToggleMonthlyGoalChecklistItem}
@@ -272,30 +229,30 @@ const GoalsPage = () => {
       )}
 
       <YearlyGoalDialog
-        open={isYearlyDialogOpen}
-        onOpenChange={handleYearlyDialogClose}
+        open={yearlyDialog.isDialogOpen}
+        onOpenChange={yearlyDialog.handleDialogClose}
         onSubmit={
-          editingYearlyGoal ? handleUpdateYearlyGoal : handleCreateYearlyGoal
+          yearlyDialog.editingItem ? handleUpdateYearlyGoal : handleCreateYearlyGoal
         }
-        goal={editingYearlyGoal}
+        goal={yearlyDialog.editingItem}
         selectedYear={selectedYear}
       />
 
       <MonthlyGoalDialog
-        open={isMonthlyDialogOpen}
-        onOpenChange={handleMonthlyDialogClose}
+        open={monthlyDialog.isDialogOpen}
+        onOpenChange={monthlyDialog.handleDialogClose}
         onSubmit={
-          editingMonthlyGoal ? handleUpdateMonthlyGoal : handleCreateMonthlyGoal
+          monthlyDialog.editingItem ? handleUpdateMonthlyGoal : handleCreateMonthlyGoal
         }
-        goal={editingMonthlyGoal}
+        goal={monthlyDialog.editingItem}
         selectedYear={selectedYear}
       />
 
       <DeleteConfirmDialog
-        open={deleteConfirmDialog.open}
-        message={deleteConfirmDialog.message}
-        onConfirm={deleteConfirmDialog.onConfirm}
-        onCancel={handleDeleteCancel}
+        open={!!deleteConfirm.deletingItem}
+        message={`「${deleteConfirm.deletingItem?.title}」を削除してもよろしいですか？`}
+        onConfirm={handleDeleteGoal}
+        onCancel={deleteConfirm.handleDeleteCancel}
       />
       </div>
     </MainLayout>

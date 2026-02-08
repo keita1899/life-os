@@ -23,6 +23,7 @@ import { TaskList } from '@/components/tasks/TaskList'
 import type { CreateTaskInput, Task } from '@/lib/types/task'
 import { useDevTasks } from '@/hooks/useDevTasks'
 import { useDialogState } from '@/hooks/useDialogState'
+import { useDeleteConfirm } from '@/hooks/useDeleteConfirm'
 import { useAsyncOperation } from '@/hooks/useAsyncOperation'
 import { groupTasks } from '@/lib/tasks/grouping'
 import { FloatingActionButtons } from '@/components/floating/FloatingActionButtons'
@@ -70,7 +71,7 @@ function DevProjectPageContent(): ReactElement | null {
     () => fetcher(() => getDevProjectById(projectId)),
   )
 
-  const [isEditDialogOpen, setIsEditDialogOpen] = useState(false)
+  const projectDialog = useDialogState<DevProject>()
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false)
   const [deleteError, setDeleteError] = useState<string | null>(null)
 
@@ -89,14 +90,8 @@ function DevProjectPageContent(): ReactElement | null {
     type: undefined,
   })
 
-  const {
-    isDialogOpen: isTaskDialogOpen,
-    editingItem: editingTask,
-    handleEdit: handleEditTask,
-    handleDialogClose: handleTaskDialogClose,
-    handleCreateClick: handleTaskCreateClick,
-  } = useDialogState<Task>()
-  const [deletingTask, setDeletingTask] = useState<Task | undefined>(undefined)
+  const taskDialog = useDialogState<Task>()
+  const deleteConfirm = useDeleteConfirm<Task>()
   const [isDeletingCompletedDialogOpen, setIsDeletingCompletedDialogOpen] =
     useState(false)
   const {
@@ -150,7 +145,7 @@ function DevProjectPageContent(): ReactElement | null {
       mutate(`dev-project-${projectId}`),
       mutate('dev-projects'),
     ])
-    setIsEditDialogOpen(false)
+    projectDialog.handleDialogClose(false)
   }
 
   const handleDelete = async () => {
@@ -181,16 +176,17 @@ function DevProjectPageContent(): ReactElement | null {
       'タスクの作成に失敗しました',
     )
     if (result !== undefined) {
-      handleTaskDialogClose(false)
+      taskDialog.handleDialogClose(false)
     }
   }
 
   const handleUpdateTask = async (input: CreateTaskInput): Promise<void> => {
-    if (!editingTask) return
+    const task = taskDialog.editingItem
+    if (!task) return
 
     const result = await executeTaskOperation(
       () =>
-        updateTask(editingTask.id, {
+        updateTask(task.id, {
           title: input.title,
           executionDate: input.executionDate,
           memo: input.memo,
@@ -198,24 +194,21 @@ function DevProjectPageContent(): ReactElement | null {
       'タスクの更新に失敗しました',
     )
     if (result !== undefined) {
-      handleTaskDialogClose(false)
+      taskDialog.handleDialogClose(false)
     }
   }
 
   const handleDeleteTask = async (): Promise<void> => {
-    if (!deletingTask) return
+    const task = deleteConfirm.deletingItem
+    if (!task) return
 
     const result = await executeTaskOperation(
-      () => deleteTask(deletingTask.id),
+      () => deleteTask(task.id),
       'タスクの削除に失敗しました',
     )
     if (result !== undefined) {
-      setDeletingTask(undefined)
+      deleteConfirm.clearDeletingItem()
     }
-  }
-
-  const handleDeleteClick = (task: Task) => {
-    setDeletingTask(task)
   }
 
   const handleToggleCompletion = async (task: Task): Promise<void> => {
@@ -276,7 +269,7 @@ function DevProjectPageContent(): ReactElement | null {
               <Button
                 variant="ghost"
                 size="icon"
-                onClick={() => setIsEditDialogOpen(true)}
+                onClick={() => data && projectDialog.handleEdit(data)}
                 className="text-muted-foreground hover:text-foreground"
                 aria-label="編集"
               >
@@ -354,7 +347,7 @@ function DevProjectPageContent(): ReactElement | null {
               <div className="flex items-center justify-between">
                 <h2 className="text-xl font-semibold">タスク</h2>
                 <Button
-                  onClick={handleTaskCreateClick}
+                  onClick={taskDialog.handleCreateClick}
                   disabled={!Number.isFinite(projectId)}
                 >
                   タスクを作成
@@ -413,8 +406,8 @@ function DevProjectPageContent(): ReactElement | null {
                         <div className="space-y-4">
                           <TaskList
                             tasks={group.tasks}
-                            onEdit={handleEditTask}
-                            onDelete={handleDeleteClick}
+                            onEdit={taskDialog.handleEdit}
+                            onDelete={deleteConfirm.handleDeleteClick}
                             onToggleCompletion={handleToggleCompletion}
                             onUpdateExecutionDate={handleUpdateExecutionDate}
                           />
@@ -443,10 +436,10 @@ function DevProjectPageContent(): ReactElement | null {
         )}
 
         <ProjectDialog
-          open={isEditDialogOpen}
-          onOpenChange={setIsEditDialogOpen}
+          open={projectDialog.isDialogOpen}
+          onOpenChange={projectDialog.handleDialogClose}
           onSubmit={handleUpdate}
-          project={data || undefined}
+          project={projectDialog.editingItem ?? data ?? undefined}
         />
 
         <DeleteConfirmDialog
@@ -457,17 +450,17 @@ function DevProjectPageContent(): ReactElement | null {
         />
 
         <TaskDialog
-          open={isTaskDialogOpen}
-          onOpenChange={handleTaskDialogClose}
-          onSubmit={editingTask ? handleUpdateTask : handleCreateTask}
-          task={editingTask}
+          open={taskDialog.isDialogOpen}
+          onOpenChange={taskDialog.handleDialogClose}
+          onSubmit={taskDialog.editingItem ? handleUpdateTask : handleCreateTask}
+          task={taskDialog.editingItem}
         />
 
         <DeleteConfirmDialog
-          open={!!deletingTask}
-          message={`「${deletingTask?.title}」を削除しますか？この操作は取り消せません。`}
+          open={!!deleteConfirm.deletingItem}
+          message={`「${deleteConfirm.deletingItem?.title}」を削除しますか？この操作は取り消せません。`}
           onConfirm={handleDeleteTask}
-          onCancel={() => setDeletingTask(undefined)}
+          onCancel={deleteConfirm.handleDeleteCancel}
         />
 
         <DeleteConfirmDialog

@@ -5,6 +5,7 @@ import { Trash2, Plus } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { useCreateShortcut } from '@/hooks/useCreateShortcut'
 import { useDialogState } from '@/hooks/useDialogState'
+import { useDeleteConfirm } from '@/hooks/useDeleteConfirm'
 import { useAsyncOperation } from '@/hooks/useAsyncOperation'
 import {
   Accordion,
@@ -58,12 +59,15 @@ export default function WishlistPage() {
     handleDialogClose,
     handleCreateClick,
   } = useDialogState<WishlistItem>()
-  const [deletingItem, setDeletingItem] = useState<WishlistItem | undefined>(
-    undefined,
-  )
+  const deleteConfirm = useDeleteConfirm<WishlistItem>()
   const [isDeletingPurchasedDialogOpen, setIsDeletingPurchasedDialogOpen] =
     useState(false)
   const { operationError, setOperationError, execute } = useAsyncOperation()
+
+  useCreateShortcut({
+    onCreate: handleCreateClick,
+    enabled: !isDialogOpen,
+  })
 
   const availableYears = useMemo(() => {
     const years = new Set<number>()
@@ -150,27 +154,17 @@ export default function WishlistPage() {
     }
   }
 
-  useCreateShortcut({
-    onCreate: handleCreateClick,
-    enabled: !isDialogOpen,
-  })
-
   const handleDeleteItem = async () => {
-    if (!deletingItem) return
+    const item = deleteConfirm.deletingItem
+    if (!item) return
 
-    try {
-      setOperationError(null)
-      await deleteWishlistItem(deletingItem.id)
-      setDeletingItem(undefined)
-    } catch (err) {
-      setOperationError(
-        err instanceof Error ? err.message : '欲しいものの削除に失敗しました',
-      )
+    const result = await execute(
+      () => deleteWishlistItem(item.id),
+      '欲しいものの削除に失敗しました',
+    )
+    if (result !== undefined) {
+      deleteConfirm.clearDeletingItem()
     }
-  }
-
-  const handleDeleteClick = (item: WishlistItem) => {
-    setDeletingItem(item)
   }
 
   const handleTogglePurchased = async (item: WishlistItem) => {
@@ -284,7 +278,7 @@ export default function WishlistPage() {
                         <WishlistList
                           items={unpurchasedItems}
                           onEdit={handleEditItem}
-                          onDelete={handleDeleteClick}
+                          onDelete={deleteConfirm.handleDeleteClick}
                           onToggleCompletion={handleTogglePurchased}
                         />
                       </div>
@@ -309,7 +303,7 @@ export default function WishlistPage() {
                           <WishlistList
                             items={purchasedItems}
                             onEdit={handleEditItem}
-                            onDelete={handleDeleteClick}
+                            onDelete={deleteConfirm.handleDeleteClick}
                             onToggleCompletion={handleTogglePurchased}
                           />
                           <div className="flex justify-end">
@@ -347,10 +341,10 @@ export default function WishlistPage() {
             />
 
             <DeleteConfirmDialog
-              open={!!deletingItem}
-              message={`「${deletingItem?.name}」を削除しますか？この操作は取り消せません。`}
+              open={!!deleteConfirm.deletingItem}
+              message={`「${deleteConfirm.deletingItem?.name}」を削除しますか？この操作は取り消せません。`}
               onConfirm={handleDeleteItem}
-              onCancel={() => setDeletingItem(undefined)}
+              onCancel={deleteConfirm.handleDeleteCancel}
             />
 
             <DeleteConfirmDialog
