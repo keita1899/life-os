@@ -22,6 +22,7 @@ import { useHabits } from '@/hooks/useHabits'
 import { useHabitCompletionsByDate } from '@/hooks/useHabitCompletions'
 import { useAsyncOperation } from '@/hooks/useAsyncOperation'
 import { useDialogState } from '@/hooks/useDialogState'
+import { useDeleteConfirm } from '@/hooks/useDeleteConfirm'
 import { Loading } from '@/components/ui/loading'
 import { ErrorMessage } from '@/components/ui/error-message'
 import { MainLayout } from '@/components/layout/MainLayout'
@@ -74,8 +75,8 @@ function LogPageView({ logDate, date }: LogPageViewProps) {
   } = useTasks()
   const taskDialog = useDialogState<Task>()
   const eventDialog = useDialogState<Event>()
-  const [deletingEvent, setDeletingEvent] = useState<Event | undefined>(undefined)
-  const [deletingTask, setDeletingTask] = useState<Task | undefined>(undefined)
+  const deleteEventConfirm = useDeleteConfirm<Event>()
+  const deleteTaskConfirm = useDeleteConfirm<Task>()
   const { operationError, setOperationError, execute } = useAsyncOperation()
   const {
     events: allEvents,
@@ -215,12 +216,8 @@ function LogPageView({ logDate, date }: LogPageViewProps) {
     }
   }
 
-  const handleDeleteEventClick = (event: Event) => {
-    setDeletingEvent(event)
-  }
-
   const handleDeleteEvent = async (mode?: 'single' | 'all') => {
-    const eventToDelete = deletingEvent
+    const eventToDelete = deleteEventConfirm.deletingItem
     if (!eventToDelete) return
 
     const result = await execute(
@@ -246,12 +243,8 @@ function LogPageView({ logDate, date }: LogPageViewProps) {
       '予定の削除に失敗しました',
     )
     if (result !== undefined) {
-      setDeletingEvent(undefined)
+      deleteEventConfirm.clearDeletingItem()
     }
-  }
-
-  const handleDeleteClick = (task: Task) => {
-    setDeletingTask(task)
   }
 
   const handleToggleTaskCompletion = async (task: Task) => {
@@ -281,7 +274,7 @@ function LogPageView({ logDate, date }: LogPageViewProps) {
   }
 
   const handleDeleteTask = async (mode?: 'single' | 'all') => {
-    const taskToDelete = deletingTask
+    const taskToDelete = deleteTaskConfirm.deletingItem
     if (!taskToDelete) return
 
     const result = await execute(
@@ -309,7 +302,7 @@ function LogPageView({ logDate, date }: LogPageViewProps) {
       'タスクの削除に失敗しました',
     )
     if (result !== undefined) {
-      setDeletingTask(undefined)
+      deleteTaskConfirm.clearDeletingItem()
     }
   }
 
@@ -408,11 +401,11 @@ function LogPageView({ logDate, date }: LogPageViewProps) {
               tasks={tasks}
               completedHabitIds={completedHabitIds}
               onEditEvent={eventDialog.handleEdit}
-              onDeleteEvent={handleDeleteEventClick}
+              onDeleteEvent={deleteEventConfirm.handleDeleteClick}
               onToggleHabit={handleToggleHabit}
               onToggleTask={handleToggleTaskCompletion}
               onEditTask={taskDialog.handleEdit}
-              onDeleteTask={handleDeleteClick}
+              onDeleteTask={deleteTaskConfirm.handleDeleteClick}
             />
           </div>
         </div>
@@ -457,35 +450,35 @@ function LogPageView({ logDate, date }: LogPageViewProps) {
         defaultExecutionDate={date}
       />
 
-      {deletingTask?.recurrenceRule ? (
+      {deleteTaskConfirm.deletingItem?.recurrenceRule ? (
         <RecurringTaskDeleteDialog
-          open={!!deletingTask}
-          taskTitle={deletingTask.title}
+          open={!!deleteTaskConfirm.deletingItem}
+          taskTitle={deleteTaskConfirm.deletingItem.title}
           onConfirm={handleDeleteTask}
-          onCancel={() => setDeletingTask(undefined)}
+          onCancel={deleteTaskConfirm.handleDeleteCancel}
         />
       ) : (
         <DeleteConfirmDialog
-          open={!!deletingTask}
-          message={`「${deletingTask?.title}」を削除しますか？この操作は取り消せません。`}
+          open={!!deleteTaskConfirm.deletingItem}
+          message={`「${deleteTaskConfirm.deletingItem?.title}」を削除しますか？この操作は取り消せません。`}
           onConfirm={() => handleDeleteTask()}
-          onCancel={() => setDeletingTask(undefined)}
+          onCancel={deleteTaskConfirm.handleDeleteCancel}
         />
       )}
 
-      {deletingEvent?.recurrenceRule ? (
+      {deleteEventConfirm.deletingItem?.recurrenceRule ? (
         <RecurringEventDeleteDialog
-          open={!!deletingEvent}
-          eventTitle={deletingEvent.title}
+          open={!!deleteEventConfirm.deletingItem}
+          eventTitle={deleteEventConfirm.deletingItem.title}
           onConfirm={handleDeleteEvent}
-          onCancel={() => setDeletingEvent(undefined)}
+          onCancel={deleteEventConfirm.handleDeleteCancel}
         />
       ) : (
         <DeleteConfirmDialog
-          open={!!deletingEvent}
-          message={`「${deletingEvent?.title}」を削除しますか？この操作は取り消せません。`}
+          open={!!deleteEventConfirm.deletingItem}
+          message={`「${deleteEventConfirm.deletingItem?.title}」を削除しますか？この操作は取り消せません。`}
           onConfirm={() => handleDeleteEvent()}
-          onCancel={() => setDeletingEvent(undefined)}
+          onCancel={deleteEventConfirm.handleDeleteCancel}
         />
       )}
       </div>

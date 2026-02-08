@@ -6,6 +6,7 @@ import { Trash2, Calendar, Focus, Plus } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { useCreateShortcut } from '@/hooks/useCreateShortcut'
 import { useDialogState } from '@/hooks/useDialogState'
+import { useDeleteConfirm } from '@/hooks/useDeleteConfirm'
 import { useAsyncOperation } from '@/hooks/useAsyncOperation'
 import {
   Accordion,
@@ -55,11 +56,16 @@ export default function TasksPage() {
     handleDialogClose,
     handleCreateClick,
   } = useDialogState<Task>()
-  const [deletingTask, setDeletingTask] = useState<Task | undefined>(undefined)
+  const deleteConfirm = useDeleteConfirm<Task>()
   const [isDeletingCompletedDialogOpen, setIsDeletingCompletedDialogOpen] =
     useState(false)
   const { operationError, setOperationError, execute } = useAsyncOperation()
   const [todayStr, setTodayStr] = useState(getTodayDateString())
+
+  useCreateShortcut({
+    onCreate: handleCreateClick,
+    enabled: !isDialogOpen,
+  })
 
   useEffect(() => {
     const interval = setInterval(() => {
@@ -125,34 +131,26 @@ export default function TasksPage() {
     }
   }
 
-  useCreateShortcut({
-    onCreate: handleCreateClick,
-    enabled: !isDialogOpen,
-  })
-
   const handleDeleteTask = async (mode?: 'single' | 'all') => {
-    if (!deletingTask) return
+    const taskToDelete = deleteConfirm.deletingItem
+    if (!taskToDelete) return
 
     const result = await execute(async () => {
-      if (deletingTask.recurrenceRule && mode === 'single' && deletingTask.executionDate) {
-        const currentExcludedDates = deletingTask.recurrenceExcludedDates || []
-        if (!currentExcludedDates.includes(deletingTask.executionDate)) {
-          await updateTask(deletingTask.id, {
-            recurrenceExcludedDates: [...currentExcludedDates, deletingTask.executionDate],
+      if (taskToDelete.recurrenceRule && mode === 'single' && taskToDelete.executionDate) {
+        const currentExcludedDates = taskToDelete.recurrenceExcludedDates || []
+        if (!currentExcludedDates.includes(taskToDelete.executionDate)) {
+          await updateTask(taskToDelete.id, {
+            recurrenceExcludedDates: [...currentExcludedDates, taskToDelete.executionDate],
           })
         }
       } else {
-        await deleteTask(deletingTask.id)
+        await deleteTask(taskToDelete.id)
       }
       return true
     }, 'タスクの削除に失敗しました')
     if (result !== undefined) {
-      setDeletingTask(undefined)
+      deleteConfirm.clearDeletingItem()
     }
-  }
-
-  const handleDeleteClick = (task: Task) => {
-    setDeletingTask(task)
   }
 
   const handleToggleCompletion = async (task: Task) => {
@@ -306,7 +304,7 @@ export default function TasksPage() {
                   <TaskList
                     tasks={group.tasks}
                     onEdit={handleEditTask}
-                    onDelete={handleDeleteClick}
+                    onDelete={deleteConfirm.handleDeleteClick}
                     onToggleCompletion={handleToggleCompletion}
                     onUpdateExecutionDate={handleUpdateExecutionDate}
                   />
@@ -338,19 +336,19 @@ export default function TasksPage() {
         task={editingTask}
       />
 
-      {deletingTask?.recurrenceRule ? (
+      {deleteConfirm.deletingItem?.recurrenceRule ? (
         <RecurringTaskDeleteDialog
-          open={!!deletingTask}
-          taskTitle={deletingTask.title}
+          open={!!deleteConfirm.deletingItem}
+          taskTitle={deleteConfirm.deletingItem.title}
           onConfirm={handleDeleteTask}
-          onCancel={() => setDeletingTask(undefined)}
+          onCancel={deleteConfirm.handleDeleteCancel}
         />
       ) : (
         <DeleteConfirmDialog
-          open={!!deletingTask}
-          message={`「${deletingTask?.title}」を削除しますか？この操作は取り消せません。`}
+          open={!!deleteConfirm.deletingItem}
+          message={`「${deleteConfirm.deletingItem?.title}」を削除しますか？この操作は取り消せません。`}
           onConfirm={() => handleDeleteTask()}
-          onCancel={() => setDeletingTask(undefined)}
+          onCancel={deleteConfirm.handleDeleteCancel}
         />
       )}
 

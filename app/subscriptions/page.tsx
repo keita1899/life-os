@@ -5,6 +5,7 @@ import { Plus } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { useCreateShortcut } from '@/hooks/useCreateShortcut'
 import { useDialogState } from '@/hooks/useDialogState'
+import { useDeleteConfirm } from '@/hooks/useDeleteConfirm'
 import { useAsyncOperation } from '@/hooks/useAsyncOperation'
 import {
   Accordion,
@@ -50,10 +51,13 @@ export default function SubscriptionsPage() {
     handleDialogClose,
     handleCreateClick,
   } = useDialogState<Subscription>()
-  const [deletingSubscription, setDeletingSubscription] = useState<
-    Subscription | undefined
-  >(undefined)
+  const deleteConfirm = useDeleteConfirm<Subscription>()
   const { operationError, setOperationError, execute } = useAsyncOperation()
+
+  useCreateShortcut({
+    onCreate: handleCreateClick,
+    enabled: !isDialogOpen,
+  })
 
   const groupedSubscriptions = useMemo(() => {
     const active = subscriptions.filter((sub) => sub.active)
@@ -115,19 +119,16 @@ export default function SubscriptionsPage() {
     }
   }
 
-  const handleDeleteClick = (subscription: Subscription) => {
-    setDeletingSubscription(subscription)
-  }
-
   const handleDeleteSubscription = async () => {
-    if (!deletingSubscription) return
+    const subscription = deleteConfirm.deletingItem
+    if (!subscription) return
 
     const result = await execute(
-      () => deleteSubscription(deletingSubscription.id),
+      () => deleteSubscription(subscription.id),
       'サブスクの削除に失敗しました',
     )
     if (result !== undefined) {
-      setDeletingSubscription(undefined)
+      deleteConfirm.clearDeletingItem()
     }
   }
 
@@ -137,11 +138,6 @@ export default function SubscriptionsPage() {
       'サブスクの契約状態の更新に失敗しました',
     )
   }
-
-  useCreateShortcut({
-    onCreate: handleCreateClick,
-    enabled: !isDialogOpen,
-  })
 
   return (
     <MainLayout>
@@ -216,7 +212,7 @@ export default function SubscriptionsPage() {
                 <SubscriptionList
                   subscriptions={group.subscriptions}
                   onEdit={handleEditSubscription}
-                  onDelete={handleDeleteClick}
+                  onDelete={deleteConfirm.handleDeleteClick}
                   onToggleActive={handleToggleActive}
                 />
               </AccordionContent>
@@ -235,10 +231,10 @@ export default function SubscriptionsPage() {
       />
 
       <DeleteConfirmDialog
-        open={!!deletingSubscription}
-        message={`「${deletingSubscription?.name}」を削除しますか？この操作は取り消せません。`}
+        open={!!deleteConfirm.deletingItem}
+        message={`「${deleteConfirm.deletingItem?.name}」を削除しますか？この操作は取り消せません。`}
         onConfirm={handleDeleteSubscription}
-        onCancel={() => setDeletingSubscription(undefined)}
+        onCancel={deleteConfirm.handleDeleteCancel}
       />
       </div>
     </MainLayout>

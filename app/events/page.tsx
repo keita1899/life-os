@@ -6,6 +6,7 @@ import { Plus } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { useCreateShortcut } from '@/hooks/useCreateShortcut'
 import { useDialogState } from '@/hooks/useDialogState'
+import { useDeleteConfirm } from '@/hooks/useDeleteConfirm'
 import { useAsyncOperation } from '@/hooks/useAsyncOperation'
 import {
   Accordion,
@@ -42,9 +43,7 @@ export default function EventsPage() {
     handleDialogClose,
     handleCreateClick,
   } = useDialogState<Event>()
-  const [deletingEvent, setDeletingEvent] = useState<Event | undefined>(
-    undefined,
-  )
+  const deleteConfirm = useDeleteConfirm<Event>()
   const { operationError, setOperationError, execute } = useAsyncOperation()
 
   const expandedEvents = useMemo(() => {
@@ -99,31 +98,27 @@ export default function EventsPage() {
   }
 
   const handleDeleteEvent = async (mode?: 'single' | 'all') => {
-    if (!deletingEvent) return
+    const event = deleteConfirm.deletingItem
+    if (!event) return
 
     const result = await execute(async () => {
-      if (deletingEvent.recurrenceRule && mode === 'single' && deletingEvent.startDatetime) {
-        const eventDate = deletingEvent.startDatetime.split('T')[0]
-        const currentExcludedDates = deletingEvent.recurrenceExcludedDates || []
+      if (event.recurrenceRule && mode === 'single' && event.startDatetime) {
+        const eventDate = event.startDatetime.split('T')[0]
+        const currentExcludedDates = event.recurrenceExcludedDates || []
         if (!currentExcludedDates.includes(eventDate)) {
-          await updateEvent(deletingEvent.id, {
+          await updateEvent(event.id, {
             recurrenceExcludedDates: [...currentExcludedDates, eventDate],
           })
         }
       } else {
-        await deleteEvent(deletingEvent.id)
+        await deleteEvent(event.id)
       }
       return true
     }, '予定の削除に失敗しました')
     if (result !== undefined) {
-      setDeletingEvent(undefined)
+      deleteConfirm.clearDeletingItem()
     }
   }
-
-  const handleDeleteClick = (event: Event) => {
-    setDeletingEvent(event)
-  }
-
 
   useCreateShortcut({
     onCreate: handleCreateClick,
@@ -182,7 +177,7 @@ export default function EventsPage() {
                 <EventList
                   events={group.events}
                   onEdit={handleEditEvent}
-                  onDelete={handleDeleteClick}
+                  onDelete={deleteConfirm.handleDeleteClick}
                 />
               </AccordionContent>
             </AccordionItem>
@@ -197,19 +192,19 @@ export default function EventsPage() {
         event={editingEvent}
       />
 
-      {deletingEvent?.recurrenceRule ? (
+      {deleteConfirm.deletingItem?.recurrenceRule ? (
         <RecurringEventDeleteDialog
-          open={!!deletingEvent}
-          eventTitle={deletingEvent.title}
+          open={!!deleteConfirm.deletingItem}
+          eventTitle={deleteConfirm.deletingItem.title}
           onConfirm={handleDeleteEvent}
-          onCancel={() => setDeletingEvent(undefined)}
+          onCancel={deleteConfirm.handleDeleteCancel}
         />
       ) : (
         <DeleteConfirmDialog
-          open={!!deletingEvent}
-          message={`「${deletingEvent?.title}」を削除しますか？この操作は取り消せません。`}
+          open={!!deleteConfirm.deletingItem}
+          message={`「${deleteConfirm.deletingItem?.title}」を削除しますか？この操作は取り消せません。`}
           onConfirm={() => handleDeleteEvent()}
-          onCancel={() => setDeletingEvent(undefined)}
+          onCancel={deleteConfirm.handleDeleteCancel}
         />
       )}
       </div>

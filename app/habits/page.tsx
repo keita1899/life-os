@@ -6,6 +6,7 @@ import { Plus } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { useCreateShortcut } from '@/hooks/useCreateShortcut'
 import { useDialogState } from '@/hooks/useDialogState'
+import { useDeleteConfirm } from '@/hooks/useDeleteConfirm'
 import { useAsyncOperation } from '@/hooks/useAsyncOperation'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { HabitDialog } from '@/components/habits/HabitDialog'
@@ -40,7 +41,7 @@ export default function HabitsPage() {
     handleDialogClose,
     handleCreateClick,
   } = useDialogState<Habit>()
-  const [deletingHabit, setDeletingHabit] = useState<Habit | undefined>(undefined)
+  const deleteConfirm = useDeleteConfirm<Habit>()
   const { operationError, setOperationError, execute } = useAsyncOperation()
   const {
     currentDate: heatmapDate,
@@ -54,6 +55,11 @@ export default function HabitsPage() {
     month: heatmapMonth,
   } = useHabitHeatmapView()
   const todayStr = format(new Date(), 'yyyy-MM-dd')
+
+  useCreateShortcut({
+    onCreate: handleCreateClick,
+    enabled: !isDialogOpen,
+  })
 
   const {
     completions: todayCompletions,
@@ -114,26 +120,18 @@ export default function HabitsPage() {
     }
   }
 
-  const handleDeleteClick = (habit: Habit) => {
-    setDeletingHabit(habit)
-  }
-
   const handleDeleteHabit = async () => {
-    if (!deletingHabit) return
+    const habit = deleteConfirm.deletingItem
+    if (!habit) return
 
     const result = await execute(
-      () => deleteHabit(deletingHabit.id),
+      () => deleteHabit(habit.id),
       '習慣の削除に失敗しました',
     )
     if (result !== undefined) {
-      setDeletingHabit(undefined)
+      deleteConfirm.clearDeletingItem()
     }
   }
-
-  useCreateShortcut({
-    onCreate: handleCreateClick,
-    enabled: !isDialogOpen,
-  })
 
   const handleToggleToday = async (habit: Habit) => {
     const completed = completedHabitIdsToday.has(habit.id)
@@ -270,7 +268,7 @@ export default function HabitsPage() {
                 onToggleToday={handleToggleToday}
                 onToggleDate={handleToggleDate}
                 onEdit={handleEditHabit}
-                onDelete={handleDeleteClick}
+                onDelete={deleteConfirm.handleDeleteClick}
               />
             </CardContent>
           </Card>
@@ -284,10 +282,10 @@ export default function HabitsPage() {
         />
 
         <DeleteConfirmDialog
-          open={!!deletingHabit}
-          message={`「${deletingHabit?.name}」を削除しますか？この操作は取り消せません。`}
+          open={!!deleteConfirm.deletingItem}
+          message={`「${deleteConfirm.deletingItem?.name}」を削除しますか？この操作は取り消せません。`}
           onConfirm={handleDeleteHabit}
-          onCancel={() => setDeletingHabit(undefined)}
+          onCancel={deleteConfirm.handleDeleteCancel}
         />
       </div>
     </MainLayout>

@@ -7,6 +7,7 @@ import { YearSelect } from '@/components/goals/YearSelect'
 import { Loading } from '@/components/ui/loading'
 import { ErrorMessage } from '@/components/ui/error-message'
 import { useDevGoals } from '@/hooks/useDevGoals'
+import { useDeleteConfirm } from '@/hooks/useDeleteConfirm'
 import { useAsyncOperation } from '@/hooks/useAsyncOperation'
 import { YearlyGoalDialog } from '@/components/dev/goals/YearlyGoalDialog'
 import { MonthlyGoalDialog } from '@/components/dev/goals/MonthlyGoalDialog'
@@ -43,11 +44,7 @@ export default function DevGoalsPage() {
   const [isYearlyDialogOpen, setIsYearlyDialogOpen] = useState(false)
   const [isMonthlyDialogOpen, setIsMonthlyDialogOpen] = useState(false)
   const { operationError, setOperationError, execute } = useAsyncOperation()
-  const [deleteConfirmDialog, setDeleteConfirmDialog] = useState<{
-    open: boolean
-    message: string
-    onConfirm: () => Promise<void>
-  }>({ open: false, message: '', onConfirm: async () => {} })
+  const deleteConfirm = useDeleteConfirm<DevYearlyGoal | DevMonthlyGoal>()
   const [editingYearlyGoal, setEditingYearlyGoal] = useState<
     DevYearlyGoal | undefined
   >(undefined)
@@ -100,42 +97,29 @@ export default function DevGoalsPage() {
   ) => {
     e.preventDefault()
     e.stopPropagation()
-
-    const goalType = 'month' in goal ? '月間目標' : '年間目標'
-    const message = `「${goal.title}」を削除してもよろしいですか？`
-
-    setDeleteConfirmDialog({
-      open: true,
-      message,
-      onConfirm: async () => {
-        setDeleteConfirmDialog({
-          open: false,
-          message: '',
-          onConfirm: async () => {},
-        })
-
-        await execute(
-          async () => {
-            if ('month' in goal) {
-              await deleteMonthlyGoal(goal.id)
-            } else {
-              await deleteYearlyGoal(goal.id)
-            }
-            await refreshGoals()
-            return true
-          },
-          `${goalType}の削除に失敗しました`,
-        )
-      },
-    })
+    deleteConfirm.handleDeleteClick(goal)
   }
 
-  const handleDeleteCancel = () => {
-    setDeleteConfirmDialog({
-      open: false,
-      message: '',
-      onConfirm: async () => {},
-    })
+  const handleDeleteGoal = async () => {
+    const goal = deleteConfirm.deletingItem
+    if (!goal) return
+
+    const goalType = 'month' in goal ? '月間目標' : '年間目標'
+    const result = await execute(
+      async () => {
+        if ('month' in goal) {
+          await deleteMonthlyGoal(goal.id)
+        } else {
+          await deleteYearlyGoal(goal.id)
+        }
+        await refreshGoals()
+        return true
+      },
+      `${goalType}の削除に失敗しました`,
+    )
+    if (result !== undefined) {
+      deleteConfirm.clearDeletingItem()
+    }
   }
 
   const handleToggleYearlyGoalChecklistItem = async (
@@ -299,10 +283,10 @@ export default function DevGoalsPage() {
         />
 
         <DeleteConfirmDialog
-          open={deleteConfirmDialog.open}
-          message={deleteConfirmDialog.message}
-          onConfirm={deleteConfirmDialog.onConfirm}
-          onCancel={handleDeleteCancel}
+          open={!!deleteConfirm.deletingItem}
+          message={`「${deleteConfirm.deletingItem?.title}」を削除してもよろしいですか？`}
+          onConfirm={handleDeleteGoal}
+          onCancel={deleteConfirm.handleDeleteCancel}
         />
       </div>
     </MainLayout>

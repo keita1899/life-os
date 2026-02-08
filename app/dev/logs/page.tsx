@@ -18,6 +18,7 @@ import { useUserSettings } from '@/hooks/useUserSettings'
 import { useDevDailyLog } from '@/hooks/useDevDailyLog'
 import { useDialogState } from '@/hooks/useDialogState'
 import { useAsyncOperation } from '@/hooks/useAsyncOperation'
+import { useDeleteConfirm } from '@/hooks/useDeleteConfirm'
 import { Loading } from '@/components/ui/loading'
 import { ErrorMessage } from '@/components/ui/error-message'
 import { MainLayout } from '@/components/layout/MainLayout'
@@ -90,7 +91,7 @@ function DevLogPageView({ logDate, date }: DevLogPageViewProps) {
   const taskDialog = useDialogState<Task>()
   const [taskCreateTargetValue, setTaskCreateTargetValue] =
     useState<string>('inbox')
-  const [deletingTask, setDeletingTask] = useState<Task | undefined>(undefined)
+  const deleteConfirm = useDeleteConfirm<Task>()
   const { operationError, setOperationError, execute } = useAsyncOperation()
   const { userSettings } = useUserSettings()
   const {
@@ -274,12 +275,8 @@ function DevLogPageView({ logDate, date }: DevLogPageViewProps) {
     }
   }
 
-  const handleDeleteClick = (task: Task) => {
-    setDeletingTask(task)
-  }
-
   const handleDeleteTask = async () => {
-    const taskToDelete = deletingTask
+    const taskToDelete = deleteConfirm.deletingItem
     if (!taskToDelete) return
 
     const result = await execute(
@@ -291,7 +288,7 @@ function DevLogPageView({ logDate, date }: DevLogPageViewProps) {
       'タスクの削除に失敗しました',
     )
     if (result !== undefined) {
-      setDeletingTask(undefined)
+      deleteConfirm.clearDeletingItem()
     }
   }
 
@@ -394,7 +391,7 @@ function DevLogPageView({ logDate, date }: DevLogPageViewProps) {
                 getTargetLabel={getTaskTargetLabel}
                 onToggleCompletion={handleToggleTaskCompletion}
                 onEdit={handleEditTask}
-                onDelete={handleDeleteClick}
+                onDelete={deleteConfirm.handleDeleteClick}
                 onUpdateExecutionDate={handleUpdateExecutionDate}
               />
             </div>
@@ -446,10 +443,10 @@ function DevLogPageView({ logDate, date }: DevLogPageViewProps) {
         </Dialog>
 
         <DeleteConfirmDialog
-          open={!!deletingTask}
-          message={`「${deletingTask?.title}」を削除しますか？この操作は取り消せません。`}
+          open={!!deleteConfirm.deletingItem}
+          message={`「${deleteConfirm.deletingItem?.title}」を削除しますか？この操作は取り消せません。`}
           onConfirm={handleDeleteTask}
-          onCancel={() => setDeletingTask(undefined)}
+          onCancel={deleteConfirm.handleDeleteCancel}
         />
 
         <FloatingActionButtons

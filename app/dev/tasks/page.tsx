@@ -6,6 +6,7 @@ import { Trash2, Calendar, Focus, Plus } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { useCreateShortcut } from '@/hooks/useCreateShortcut'
 import { useDialogState } from '@/hooks/useDialogState'
+import { useDeleteConfirm } from '@/hooks/useDeleteConfirm'
 import { useAsyncOperation } from '@/hooks/useAsyncOperation'
 import {
   Accordion,
@@ -55,7 +56,7 @@ export default function DevTasksPage() {
     handleDialogClose,
     handleCreateClick,
   } = useDialogState<Task>()
-  const [deletingTask, setDeletingTask] = useState<Task | undefined>(undefined)
+  const deleteConfirm = useDeleteConfirm<Task>()
   const [isDeletingCompletedDialogOpen, setIsDeletingCompletedDialogOpen] =
     useState(false)
   const { operationError, setOperationError, execute } = useAsyncOperation()
@@ -139,19 +140,16 @@ export default function DevTasksPage() {
   }
 
   const handleDeleteTask = async (): Promise<void> => {
-    if (!deletingTask) return
+    const task = deleteConfirm.deletingItem
+    if (!task) return
 
     const result = await execute(
-      () => deleteTask(deletingTask.id),
+      () => deleteTask(task.id),
       'タスクの削除に失敗しました',
     )
     if (result !== undefined) {
-      setDeletingTask(undefined)
+      deleteConfirm.clearDeletingItem()
     }
-  }
-
-  const handleDeleteClick = (task: Task) => {
-    setDeletingTask(task)
   }
 
   const handleToggleCompletion = async (task: Task): Promise<void> => {
@@ -265,7 +263,7 @@ export default function DevTasksPage() {
                     <TaskList
                       tasks={group.tasks}
                       onEdit={handleEditTask}
-                      onDelete={handleDeleteClick}
+                      onDelete={deleteConfirm.handleDeleteClick}
                       onToggleCompletion={handleToggleCompletion}
                       onUpdateExecutionDate={handleUpdateExecutionDate}
                     />
@@ -298,10 +296,10 @@ export default function DevTasksPage() {
         />
 
         <DeleteConfirmDialog
-          open={!!deletingTask}
-          message={`「${deletingTask?.title}」を削除しますか？この操作は取り消せません。`}
+          open={!!deleteConfirm.deletingItem}
+          message={`「${deleteConfirm.deletingItem?.title}」を削除しますか？この操作は取り消せません。`}
           onConfirm={handleDeleteTask}
-          onCancel={() => setDeletingTask(undefined)}
+          onCancel={deleteConfirm.handleDeleteCancel}
         />
 
         <DeleteConfirmDialog

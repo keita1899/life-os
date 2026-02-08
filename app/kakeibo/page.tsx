@@ -5,6 +5,7 @@ import { Plus } from 'lucide-react'
 import { MainLayout } from '@/components/layout/MainLayout'
 import { useCreateShortcut } from '@/hooks/useCreateShortcut'
 import { useDialogState } from '@/hooks/useDialogState'
+import { useDeleteConfirm } from '@/hooks/useDeleteConfirm'
 import { useAsyncOperation } from '@/hooks/useAsyncOperation'
 import { useMode } from '@/lib/contexts/ModeContext'
 import { Button } from '@/components/ui/button'
@@ -42,9 +43,7 @@ export default function KakeiboPage() {
     handleDialogClose,
     handleCreateClick,
   } = useDialogState<Transaction>()
-  const [deletingTransaction, setDeletingTransaction] = useState<
-    Transaction | undefined
-  >(undefined)
+  const deleteConfirm = useDeleteConfirm<Transaction>()
   const { operationError, setOperationError, execute } = useAsyncOperation()
   const [filterType, setFilterType] = useState<
     'all' | 'income' | 'expense' | 'fixed' | 'variable'
@@ -87,6 +86,15 @@ export default function KakeiboPage() {
   const incomeCategories = useTransactionCategories('income')
   const expenseCategories = useTransactionCategories('expense')
   const { userSettings, updateUserSettings } = useUserSettings()
+
+  useCreateShortcut({
+    onCreate: handleCreateClick,
+    enabled: !isDialogOpen,
+  })
+
+  useEffect(() => {
+    setFilterCategoryId('all')
+  }, [filterType])
 
   const filteredTransactions = useMemo(() => {
     let filtered = transactions
@@ -151,10 +159,6 @@ export default function KakeiboPage() {
       totalExpense,
     }
   }, [allTransactions, transactions, periodRange.startDate, userSettings])
-
-  useEffect(() => {
-    setFilterCategoryId('all')
-  }, [filterType])
 
   const balanceLabel = useMemo(() => {
     switch (periodType) {
@@ -226,15 +230,12 @@ export default function KakeiboPage() {
     }
   }
 
-  const handleDeleteClick = (transaction: Transaction) => {
-    setDeletingTransaction(transaction)
-  }
-
   const handleDeleteTransaction = async () => {
-    if (!deletingTransaction) return
+    const transaction = deleteConfirm.deletingItem
+    if (!transaction) return
 
     const result = await execute(async () => {
-      await deleteTransaction(deletingTransaction.id)
+      await deleteTransaction(transaction.id)
       await refreshTransactions()
       await mutate(`transactions-${selectedYear}-${selectedMonth}`)
       await mutate(
@@ -244,7 +245,7 @@ export default function KakeiboPage() {
       return true
     }, '取引の削除に失敗しました')
     if (result !== undefined) {
-      setDeletingTransaction(undefined)
+      deleteConfirm.clearDeletingItem()
     }
   }
 
@@ -258,11 +259,6 @@ export default function KakeiboPage() {
   const handleInitialBalanceConfirm = async (balance: number) => {
     await updateUserSettings({ initialBalance: balance })
   }
-
-  useCreateShortcut({
-    onCreate: handleCreateClick,
-    enabled: !isDialogOpen,
-  })
 
   return (
     <MainLayout>
@@ -339,7 +335,7 @@ export default function KakeiboPage() {
             <TransactionList
               transactions={filteredTransactions}
               onEdit={handleEditTransaction}
-              onDelete={handleDeleteClick}
+              onDelete={deleteConfirm.handleDeleteClick}
             />
           )}
         </div>
@@ -354,10 +350,10 @@ export default function KakeiboPage() {
         />
 
         <DeleteConfirmDialog
-          open={!!deletingTransaction}
-          message={`「${deletingTransaction?.name}」を削除しますか？この操作は取り消せません。`}
+          open={!!deleteConfirm.deletingItem}
+          message={`「${deleteConfirm.deletingItem?.name}」を削除しますか？この操作は取り消せません。`}
           onConfirm={handleDeleteTransaction}
-          onCancel={() => setDeletingTransaction(undefined)}
+          onCancel={deleteConfirm.handleDeleteCancel}
         />
 
         <InitialBalanceDialog
