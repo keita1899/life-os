@@ -1,6 +1,7 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState } from 'react'
+import { useElapsedTime } from 'use-elapsed-time'
 
 interface UseStopwatchOptions {
   onTimeUpdate?: (seconds: number) => void
@@ -8,21 +9,13 @@ interface UseStopwatchOptions {
 
 export function useStopwatch({ onTimeUpdate }: UseStopwatchOptions = {}) {
   const [isRunning, setIsRunning] = useState(false)
-  const [elapsedSeconds, setElapsedSeconds] = useState(0)
+  const { elapsedTime, reset: resetElapsed } = useElapsedTime({
+    isPlaying: isRunning,
+    updateInterval: 1,
+    onUpdate: (elapsed) => onTimeUpdate?.(Math.floor(elapsed)),
+  })
 
-  useEffect(() => {
-    if (!isRunning) return
-
-    const interval = setInterval(() => {
-      setElapsedSeconds((prev) => {
-        const next = prev + 1
-        onTimeUpdate?.(next)
-        return next
-      })
-    }, 1000)
-
-    return () => clearInterval(interval)
-  }, [isRunning, onTimeUpdate])
+  const elapsedSeconds = Math.floor(elapsedTime)
 
   const formatTime = (seconds: number): string => {
     const hours = Math.floor(seconds / 3600)
@@ -45,7 +38,7 @@ export function useStopwatch({ onTimeUpdate }: UseStopwatchOptions = {}) {
 
   const reset = () => {
     setIsRunning(false)
-    setElapsedSeconds(0)
+    resetElapsed(0)
     onTimeUpdate?.(0)
   }
 
