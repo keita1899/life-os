@@ -66,7 +66,7 @@ export function Sidebar({ open, onOpenChange }: SidebarProps) {
         <Sheet open={open} onOpenChange={onOpenChange} modal={false}>
           <SheetContent side="left" className="w-72 p-0">
             <SheetHeader className="h-14">
-              <SheetTitle></SheetTitle>
+              <SheetTitle className="sr-only">サイドバー</SheetTitle>
             </SheetHeader>
             <div className="p-2">
               <SidebarContent isCollapsed={false} />
