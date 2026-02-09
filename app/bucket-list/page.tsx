@@ -82,7 +82,7 @@ export default function BucketListPage() {
     items.forEach((item) => {
       if (item.targetYear !== null) years.add(item.targetYear)
     })
-    return Array.from(years).sort((a, b) => b - a)
+    return Array.from(years).sort((a, b) => a - b)
   }, [items])
 
   const filteredItems = useMemo(() => {
@@ -321,8 +321,6 @@ export default function BucketListPage() {
                   </div>
                 )}
               </div>
-            ) : filteredItems.length === 0 ? (
-              <EmptyState message="やりたいことがありません" />
             ) : (
               <>
                 <div className="mb-4 flex justify-end">
@@ -341,6 +339,9 @@ export default function BucketListPage() {
                     </SelectContent>
                   </Select>
                 </div>
+                {filteredItems.length === 0 ? (
+                  <EmptyState message="やりたいことがありません" />
+                ) : (
                 <Accordion
                   type="multiple"
                   className="w-full"
@@ -456,6 +457,7 @@ export default function BucketListPage() {
                     </AccordionItem>
                   )}
                 </Accordion>
+                )}
               </>
             )}
 
