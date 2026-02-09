@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation'
 import { useHotkeys } from 'react-hotkeys-hook'
 import { useAppMode } from '@/hooks/useAppMode'
 import { Header } from '@/components/layout/Header'
-import { Sidebar } from '@/components/layout/Sidebar'
+import { Sidebar } from '@/components/layout/sidebar/Sidebar'
 import { cn } from '@/lib/utils'
 
 const SIDEBAR_STORAGE_KEY = 'sidebar-open'
