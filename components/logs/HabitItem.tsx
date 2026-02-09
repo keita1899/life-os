@@ -9,7 +9,7 @@ import type { Habit } from '@/lib/types/habit'
 interface HabitItemProps {
   habit: Habit
   completed: boolean
-  onToggle: (habit: Habit) => void
+  onToggle?: (habit: Habit) => void
 }
 
 function isValidTimeFormat(time: string | null): boolean {
@@ -60,7 +60,7 @@ export function HabitItem({
       <div className="mt-0.5">
         <button
           type="button"
-          onClick={() => onToggle(habit)}
+          onClick={() => onToggle?.(habit)}
           className="focus:outline-none"
         >
           {completed ? (

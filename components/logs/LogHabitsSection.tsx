@@ -7,7 +7,7 @@ import type { Habit } from '@/lib/types/habit'
 interface LogHabitsSectionProps {
   habits: Habit[]
   completedHabitIds: Set<number>
-  onToggle: (habit: Habit) => void
+  onToggle?: (habit: Habit) => void
 }
 
 export function LogHabitsSection({
