@@ -1,7 +1,6 @@
 import type { Metadata } from 'next'
 import { Geist, Geist_Mono } from 'next/font/google'
 import './globals.css'
-import { ModeProvider } from '@/lib/contexts/ModeContext'
 import { LayoutClient } from './layout-client'
 
 const geistSans = Geist({
@@ -29,9 +28,7 @@ export default function RootLayout({
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >
-        <ModeProvider>
-          <LayoutClient>{children}</LayoutClient>
-        </ModeProvider>
+        <LayoutClient>{children}</LayoutClient>
       </body>
     </html>
   )

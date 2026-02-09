@@ -2,7 +2,7 @@
 
 import { useEffect, Suspense } from 'react'
 import { useHotkeys } from 'react-hotkeys-hook'
-import { useMode } from '@/lib/contexts/ModeContext'
+import { useAppMode } from '@/hooks/useAppMode'
 import { Button } from '@/components/ui/button'
 import { usePathname, useRouter, useSearchParams } from 'next/navigation'
 import { cn } from '@/lib/utils'
@@ -12,10 +12,9 @@ const LAST_PATH_DEV_KEY = 'life-os-last-path-development'
 
 function isValidPathForMode(mode: 'life' | 'development', pathname: string): boolean {
   if (!pathname) return false
-  // Extract pathname without query string for validation
   const pathOnly = pathname.split('?')[0]
   if (mode === 'life') return !pathOnly.startsWith('/dev')
-  return pathOnly === '/' || pathOnly.startsWith('/dev')
+  return pathOnly.startsWith('/dev')
 }
 
 function getLastPathKey(mode: 'life' | 'development'): string {
@@ -39,7 +38,7 @@ function safeSetLocalStorage(key: string, value: string): void {
 }
 
 function ModeSwitchContent() {
-  const { mode, setMode } = useMode()
+  const { mode } = useAppMode()
   const router = useRouter()
   const pathname = usePathname()
   const searchParams = useSearchParams()
@@ -47,7 +46,6 @@ function ModeSwitchContent() {
   useEffect(() => {
     if (!pathname) return
     if (!isValidPathForMode(mode, pathname)) return
-    // Include query parameters in the saved path
     const queryString = searchParams.toString()
     const fullPath = queryString ? `${pathname}?${queryString}` : pathname
     safeSetLocalStorage(getLastPathKey(mode), fullPath)
@@ -56,37 +54,34 @@ function ModeSwitchContent() {
   const handleModeChange = (newMode: 'life' | 'development') => {
     if (newMode === mode) return
 
-    setMode(newMode)
-
-    const lastPath = safeGetLocalStorage(getLastPathKey(newMode), '/')
-    router.push(isValidPathForMode(newMode, lastPath) ? lastPath : '/')
+    const defaultPath = newMode === 'life' ? '/' : '/dev'
+    const lastPath = safeGetLocalStorage(getLastPathKey(newMode), defaultPath)
+    router.push(isValidPathForMode(newMode, lastPath) ? lastPath : defaultPath)
   }
 
   useHotkeys(
     'mod+l',
     () => {
       if (mode !== 'life') {
-        setMode('life')
         const lastPath = safeGetLocalStorage(LAST_PATH_LIFE_KEY, '/')
         router.push(isValidPathForMode('life', lastPath) ? lastPath : '/')
       }
     },
     { enableOnFormTags: false, preventDefault: true },
-    [mode, router, setMode],
+    [mode, router],
   )
   useHotkeys(
     'mod+d',
     () => {
       if (mode !== 'development') {
-        setMode('development')
-        const lastPath = safeGetLocalStorage(LAST_PATH_DEV_KEY, '/')
+        const lastPath = safeGetLocalStorage(LAST_PATH_DEV_KEY, '/dev')
         router.push(
-          isValidPathForMode('development', lastPath) ? lastPath : '/',
+          isValidPathForMode('development', lastPath) ? lastPath : '/dev',
         )
       }
     },
     { enableOnFormTags: false, preventDefault: true },
-    [mode, router, setMode],
+    [mode, router],
   )
 
   return (

@@ -25,7 +25,7 @@ import {
   SheetHeader,
   SheetTitle,
 } from '@/components/ui/sheet'
-import { useMode } from '@/lib/contexts/ModeContext'
+import { useAppMode } from '@/hooks/useAppMode'
 
 interface SidebarProps {
   open: boolean
@@ -277,9 +277,11 @@ function DevSidebarContent({ isCollapsed }: { isCollapsed: boolean }) {
     )
   }
 
+  const devHomeItem = { ...homeItem, href: '/dev' }
+
   return (
     <nav className="flex flex-col">
-      {renderLink(homeItem)}
+      {renderLink(devHomeItem)}
       <div className="mt-2">
         {devTaskItems.map((item) => renderLink(item))}
       </div>
@@ -291,9 +293,9 @@ function DevSidebarContent({ isCollapsed }: { isCollapsed: boolean }) {
 }
 
 function SidebarContent({ isCollapsed }: { isCollapsed: boolean }) {
-  const { mode } = useMode()
+  const { isDevMode } = useAppMode()
 
-  if (mode === 'development') {
+  if (isDevMode) {
     return <DevSidebarContent key="dev" isCollapsed={isCollapsed} />
   }
 

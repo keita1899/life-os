@@ -3,7 +3,7 @@
 import { useCallback, useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { useHotkeys } from 'react-hotkeys-hook'
-import { useMode } from '@/lib/contexts/ModeContext'
+import { useAppMode } from '@/hooks/useAppMode'
 import { Header } from '@/components/layout/Header'
 import { Sidebar } from '@/components/layout/Sidebar'
 import { cn } from '@/lib/utils'
@@ -28,7 +28,7 @@ interface LayoutClientProps {
 
 export function LayoutClient({ children }: LayoutClientProps) {
   const router = useRouter()
-  const { mode } = useMode()
+  const { mode } = useAppMode()
   const [isSidebarOpen, setIsSidebarOpen] = useState(false)
 
   useEffect(() => {
