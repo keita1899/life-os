@@ -1,7 +1,6 @@
 'use client'
 
 import { useState, useMemo } from 'react'
-import { MainLayout } from '@/components/layout/MainLayout'
 import { VisionCategorySidebar } from '@/components/vision/VisionCategorySidebar'
 import { VisionList } from '@/components/vision/VisionList'
 import {
@@ -120,7 +119,7 @@ export default function VisionPage() {
   }
 
   return (
-    <MainLayout>
+    <>
       <div className="flex h-[calc(100vh-3.5rem)]">
         <VisionCategorySidebar
           selectedCategoryId={selectedCategoryId}
@@ -194,6 +193,6 @@ export default function VisionPage() {
           </div>
         </div>
       </div>
-    </MainLayout>
+    </>
   )
 }

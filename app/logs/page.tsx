@@ -25,7 +25,6 @@ import { useDialogState } from '@/hooks/useDialogState'
 import { useDeleteConfirm } from '@/hooks/useDeleteConfirm'
 import { Loading } from '@/components/ui/loading'
 import { ErrorMessage } from '@/components/ui/error-message'
-import { MainLayout } from '@/components/layout/MainLayout'
 import { LogGoalsSection } from '@/components/logs/LogGoalsSection'
 import { LogDiarySection } from '@/components/logs/LogDiarySection'
 import { TimelineSection } from '@/components/logs/TimelineSection'
@@ -343,7 +342,7 @@ function LogPageView({ logDate, date }: LogPageViewProps) {
   const error = goalsError || tasksError || eventsError
 
   return (
-    <MainLayout>
+    <>
       <div className="container mx-auto max-w-7xl py-8 px-4">
         <div className="mb-6">
           <div className="flex items-center justify-between">
@@ -482,7 +481,7 @@ function LogPageView({ logDate, date }: LogPageViewProps) {
         />
       )}
       </div>
-    </MainLayout>
+    </>
   )
 }
 

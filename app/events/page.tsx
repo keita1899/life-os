@@ -21,7 +21,6 @@ import { DeleteConfirmDialog } from '@/components/ui/delete-confirm-dialog'
 import { RecurringEventDeleteDialog } from '@/components/events/RecurringEventDeleteDialog'
 import { Loading } from '@/components/ui/loading'
 import { ErrorMessage } from '@/components/ui/error-message'
-import { MainLayout } from '@/components/layout/MainLayout'
 import { useEvents } from '@/hooks/useEvents'
 import { useMode } from '@/lib/contexts/ModeContext'
 import { expandRecurringEvents } from '@/lib/events'
@@ -130,7 +129,7 @@ export default function EventsPage() {
   }
 
   return (
-    <MainLayout>
+    <>
       <div className="container mx-auto max-w-4xl py-8 px-4">
         <div className="mb-6">
           <div className="flex items-center justify-between">
@@ -208,6 +207,6 @@ export default function EventsPage() {
         />
       )}
       </div>
-    </MainLayout>
+    </>
   )
 }

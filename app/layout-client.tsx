@@ -1,20 +1,16 @@
 'use client'
 
-import { useCallback, useState } from 'react'
+import { useCallback, useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { useHotkeys } from 'react-hotkeys-hook'
 import { useMode } from '@/lib/contexts/ModeContext'
-import { Header } from './Header'
-import { Sidebar } from './Sidebar'
+import { Header } from '@/components/layout/Header'
+import { Sidebar } from '@/components/layout/Sidebar'
 import { cn } from '@/lib/utils'
-
-interface MainLayoutProps {
-  children: React.ReactNode
-}
 
 const SIDEBAR_STORAGE_KEY = 'sidebar-open'
 
-function getInitialSidebarState(): boolean {
+function getSidebarStateFromStorage(): boolean {
   try {
     const saved = localStorage.getItem(SIDEBAR_STORAGE_KEY)
     if (saved !== null) {
@@ -26,10 +22,18 @@ function getInitialSidebarState(): boolean {
   return false
 }
 
-export function MainLayout({ children }: MainLayoutProps) {
+interface LayoutClientProps {
+  children: React.ReactNode
+}
+
+export function LayoutClient({ children }: LayoutClientProps) {
   const router = useRouter()
   const { mode } = useMode()
-  const [isSidebarOpen, setIsSidebarOpen] = useState(getInitialSidebarState)
+  const [isSidebarOpen, setIsSidebarOpen] = useState(false)
+
+  useEffect(() => {
+    setIsSidebarOpen(getSidebarStateFromStorage())
+  }, [])
 
   useHotkeys(
     'mod+h',

@@ -21,7 +21,6 @@ import { useAsyncOperation } from '@/hooks/useAsyncOperation'
 import { useDeleteConfirm } from '@/hooks/useDeleteConfirm'
 import { Loading } from '@/components/ui/loading'
 import { ErrorMessage } from '@/components/ui/error-message'
-import { MainLayout } from '@/components/layout/MainLayout'
 import { DevLogGoalsSection } from '@/components/dev/logs/DevLogGoalsSection'
 import { DevLogTasksSection } from '@/components/dev/logs/DevLogTasksSection'
 import { DevLogReportSection } from '@/components/dev/logs/DevLogReportSection'
@@ -335,7 +334,7 @@ function DevLogPageView({ logDate, date }: DevLogPageViewProps) {
   const error = goalsError || tasksError || dailyLogError
 
   return (
-    <MainLayout>
+    <>
       <div className="container mx-auto max-w-7xl py-8 px-4">
         <div className="mb-6">
           <div className="flex items-center justify-between">
@@ -466,7 +465,7 @@ function DevLogPageView({ logDate, date }: DevLogPageViewProps) {
           ]}
         />
       </div>
-    </MainLayout>
+    </>
   )
 }
 

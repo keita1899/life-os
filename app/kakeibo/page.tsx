@@ -2,7 +2,6 @@
 
 import { useState, useMemo, useEffect } from 'react'
 import { Plus } from 'lucide-react'
-import { MainLayout } from '@/components/layout/MainLayout'
 import { useCreateShortcut } from '@/hooks/useCreateShortcut'
 import { useDialogState } from '@/hooks/useDialogState'
 import { useDeleteConfirm } from '@/hooks/useDeleteConfirm'
@@ -261,7 +260,7 @@ export default function KakeiboPage() {
   }
 
   return (
-    <MainLayout>
+    <>
       <div className="container mx-auto max-w-4xl py-8 px-4">
         <div className="mb-6">
           <h1 className="text-3xl font-bold">家計簿</h1>
@@ -362,6 +361,6 @@ export default function KakeiboPage() {
           onConfirm={handleInitialBalanceConfirm}
         />
       </div>
-    </MainLayout>
+    </>
   )
 }

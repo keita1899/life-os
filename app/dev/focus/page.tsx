@@ -23,7 +23,6 @@ import {
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { useDevTasks } from '@/hooks/useDevTasks'
 import { useMode } from '@/lib/contexts/ModeContext'
-import { MainLayout } from '@/components/layout/MainLayout'
 import { getTodayDevTasks } from '@/lib/tasks/utils'
 import { EmptyListDroppable, InvisibleDroppable, FocusListContainer } from '@/components/focus/FocusDroppable'
 import { SortableDevTaskItem, DraggableAvailableDevTaskItem } from '@/components/focus/DevFocusTaskItems'
@@ -149,7 +148,7 @@ function DevFocusPageContent() {
   }
 
   return (
-    <MainLayout>
+    <>
       <div className="container mx-auto max-w-7xl py-8 px-4">
         <div className="mb-6 flex items-center justify-between">
           <div className="flex items-center gap-4">
@@ -333,7 +332,7 @@ function DevFocusPageContent() {
         totalTimeMinutes={totalTimeMinutes}
         onClose={closeCompletionModal}
       />
-    </MainLayout>
+    </>
   )
 }
 

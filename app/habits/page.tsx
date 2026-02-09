@@ -15,7 +15,6 @@ import { DeleteConfirmDialog } from '@/components/ui/delete-confirm-dialog'
 import { EmptyState } from '@/components/ui/empty-state'
 import { Loading } from '@/components/ui/loading'
 import { ErrorMessage } from '@/components/ui/error-message'
-import { MainLayout } from '@/components/layout/MainLayout'
 import { useHabits } from '@/hooks/useHabits'
 import { useHabitCompletionsByDate } from '@/hooks/useHabitCompletions'
 import { getCompletionsByDate } from '@/lib/habits'
@@ -168,7 +167,7 @@ export default function HabitsPage() {
   }
 
   return (
-    <MainLayout>
+    <>
       <div className="container mx-auto max-w-5xl py-8 px-4">
         <div className="mb-6 flex items-center justify-between">
           <h1 className="text-3xl font-bold">習慣</h1>
@@ -288,6 +287,6 @@ export default function HabitsPage() {
           onCancel={deleteConfirm.handleDeleteCancel}
         />
       </div>
-    </MainLayout>
+    </>
   )
 }

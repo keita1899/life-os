@@ -6,7 +6,6 @@ import { useRouter, useSearchParams } from 'next/navigation'
 import { useMemo, Suspense } from 'react'
 import useSWR from 'swr'
 import { mutate } from 'swr'
-import { MainLayout } from '@/components/layout/MainLayout'
 import { Loading } from '@/components/ui/loading'
 import { ErrorMessage } from '@/components/ui/error-message'
 import { Badge } from '@/components/ui/badge'
@@ -250,7 +249,7 @@ function DevProjectPageContent(): ReactElement | null {
   }
 
   return (
-    <MainLayout>
+    <>
       <div className="container mx-auto max-w-4xl py-8 px-4">
         <div className="mb-6 flex items-center justify-between">
           <div>
@@ -485,7 +484,7 @@ function DevProjectPageContent(): ReactElement | null {
           />
         )}
       </div>
-    </MainLayout>
+    </>
   )
 }
 
