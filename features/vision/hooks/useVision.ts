@@ -5,7 +5,6 @@ import {
   getAllVisionItems,
   updateVisionItem,
   deleteVisionItem,
-  reorderVisionItems,
 } from '../lib'
 import type {
   VisionItem,
@@ -43,11 +42,6 @@ export function useVision() {
     await mutate(visionKey)
   }
 
-  const handleReorderVisionItems = async (itemIds: number[]) => {
-    await reorderVisionItems(itemIds)
-    await mutate(visionKey)
-  }
-
   return {
     items: data,
     isLoading,
@@ -59,7 +53,5 @@ export function useVision() {
     createVisionItem: handleCreateVisionItem,
     updateVisionItem: handleUpdateVisionItem,
     deleteVisionItem: handleDeleteVisionItem,
-    reorderVisionItems: handleReorderVisionItems,
-    refreshVision: () => mutate(visionKey),
   }
 }

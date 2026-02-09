@@ -58,6 +58,5 @@ export function useVisionCategories() {
     createVisionCategory: handleCreateVisionCategory,
     updateVisionCategory: handleUpdateVisionCategory,
     deleteVisionCategory: handleDeleteVisionCategory,
-    refreshCategories: () => mutate(visionCategoriesKey),
   }
 }

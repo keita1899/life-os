@@ -255,23 +255,3 @@ export async function deleteVisionItem(id: number): Promise<void> {
     handleDbError(err, 'delete vision item')
   }
 }
-
-export async function reorderVisionItems(itemIds: number[]): Promise<void> {
-  const db = await getDatabase()
-
-  try {
-    await db.execute('BEGIN TRANSACTION')
-
-    for (let i = 0; i < itemIds.length; i++) {
-      await db.execute(
-        'UPDATE vision_items SET "order" = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?',
-        [i, itemIds[i]],
-      )
-    }
-
-    await db.execute('COMMIT')
-  } catch (err) {
-    await db.execute('ROLLBACK')
-    handleDbError(err, 'reorder vision items')
-  }
-}
