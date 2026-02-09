@@ -37,7 +37,7 @@ import {
   getTomorrowDateString,
   formatDateForInput,
 } from '@/lib/date/formats'
-import { useMode } from '@/lib/contexts/ModeContext'
+import { useAppMode } from '@/hooks/useAppMode'
 import type { Task } from '@/lib/types/task'
 
 interface TaskItemProps {
@@ -95,7 +95,7 @@ export function TaskItem({
   onToggleCompletion,
   onUpdateExecutionDate,
 }: TaskItemProps) {
-  const { mode } = useMode()
+  const { isDevMode } = useAppMode()
   const dateLabel = useMemo(
     () => getDateLabel(task.executionDate),
     [task.executionDate],
@@ -199,7 +199,7 @@ export function TaskItem({
             )}
           </div>
         )}
-        {mode === 'development' && task.memo && (
+        {isDevMode && task.memo && (
           <div className="mt-2">
             <Accordion type="single" collapsible className="w-full">
               <AccordionItem value="memo" className="border-none">

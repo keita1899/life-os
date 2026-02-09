@@ -3,9 +3,9 @@
 import { useCallback, useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { useHotkeys } from 'react-hotkeys-hook'
-import { useMode } from '@/lib/contexts/ModeContext'
+import { useAppMode } from '@/hooks/useAppMode'
 import { Header } from '@/components/layout/Header'
-import { Sidebar } from '@/components/layout/Sidebar'
+import { Sidebar } from '@/components/layout/sidebar/Sidebar'
 import { cn } from '@/lib/utils'
 
 const SIDEBAR_STORAGE_KEY = 'sidebar-open'
@@ -28,7 +28,7 @@ interface LayoutClientProps {
 
 export function LayoutClient({ children }: LayoutClientProps) {
   const router = useRouter()
-  const { mode } = useMode()
+  const { mode } = useAppMode()
   const [isSidebarOpen, setIsSidebarOpen] = useState(false)
 
   useEffect(() => {

@@ -13,7 +13,6 @@ import { YearlyGoalsSection } from '@/components/goals/YearlyGoalsSection'
 import { MonthlyGoalsSection } from '@/components/goals/MonthlyGoalsSection'
 import { Loading } from '@/components/ui/loading'
 import { ErrorMessage } from '@/components/ui/error-message'
-import { useMode } from '@/lib/contexts/ModeContext'
 import type { YearlyGoal, CreateYearlyGoalInput } from '@/lib/types/yearly-goal'
 import type {
   MonthlyGoal,
@@ -178,12 +177,6 @@ const GoalsPage = () => {
       },
       'チェックリスト項目の更新に失敗しました',
     )
-  }
-
-  const { mode } = useMode()
-
-  if (mode !== 'life') {
-    return null
   }
 
   return (

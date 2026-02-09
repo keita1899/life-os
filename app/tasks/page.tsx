@@ -23,7 +23,6 @@ import { Loading } from '@/components/ui/loading'
 import { ErrorMessage } from '@/components/ui/error-message'
 import { FloatingActionButtons } from '@/components/floating/FloatingActionButtons'
 import { useTasks } from '@/hooks/useTasks'
-import { useMode } from '@/lib/contexts/ModeContext'
 import { groupTasks } from '@/lib/tasks/grouping'
 import {
   toTasksWithNextOccurrenceOnly,
@@ -35,7 +34,6 @@ import { parseISO } from 'date-fns'
 import type { CreateTaskInput, Task, UpdateTaskInput } from '@/lib/types/task'
 
 export default function TasksPage() {
-  const { mode } = useMode()
   const router = useRouter()
   const {
     tasks,
@@ -94,10 +92,6 @@ export default function TasksPage() {
       ),
     [groupedTasks],
   )
-
-  if (mode !== 'life') {
-    return null
-  }
 
   const handleCreateTask = async (input: CreateTaskInput) => {
     const result = await execute(

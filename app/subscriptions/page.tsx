@@ -20,7 +20,6 @@ import { DeleteConfirmDialog } from '@/components/ui/delete-confirm-dialog'
 import { Loading } from '@/components/ui/loading'
 import { ErrorMessage } from '@/components/ui/error-message'
 import { useSubscriptions } from '@/hooks/useSubscriptions'
-import { useMode } from '@/lib/contexts/ModeContext'
 import {
   calculateMonthlyTotal,
   getUpcomingBillingSubscriptions,
@@ -33,7 +32,6 @@ import type {
 } from '@/lib/types/subscription'
 
 export default function SubscriptionsPage() {
-  const { mode } = useMode()
   const {
     subscriptions,
     isLoading,
@@ -82,10 +80,6 @@ export default function SubscriptionsPage() {
   const upcomingSubscriptions = useMemo(() => {
     return getUpcomingBillingSubscriptions(subscriptions)
   }, [subscriptions])
-
-  if (mode !== 'life') {
-    return null
-  }
 
   const handleCreateSubscription = async (input: CreateSubscriptionInput) => {
     const result = await execute(

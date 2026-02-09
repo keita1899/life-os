@@ -21,7 +21,6 @@ import {
   verticalListSortingStrategy,
 } from '@dnd-kit/sortable'
 import { useTasks } from '@/hooks/useTasks'
-import { useMode } from '@/lib/contexts/ModeContext'
 import { getTodayTasks } from '@/lib/tasks/utils'
 import { EmptyListDroppable, InvisibleDroppable, FocusListContainer } from '@/components/focus/FocusDroppable'
 import { SortableTaskItem, DraggableAvailableTaskItem } from '@/components/focus/LifeFocusTaskItems'
@@ -34,7 +33,6 @@ import { useSessionHistory } from '@/hooks/useSessionHistory'
 import type { Task } from '@/lib/types/task'
 
 export default function FocusPage() {
-  const { mode } = useMode()
   const router = useRouter()
   const { tasks, isLoading, error, updateTask } = useTasks()
 
@@ -102,10 +100,6 @@ export default function FocusPage() {
     if (activeId === null) return null
     return todayTasks.find((task) => task.id === activeId) || null
   }, [activeId, todayTasks])
-
-  if (mode !== 'life') {
-    return null
-  }
 
   const handleBack = () => {
     router.back()

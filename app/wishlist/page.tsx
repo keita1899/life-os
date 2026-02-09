@@ -22,7 +22,6 @@ import { Loading } from '@/components/ui/loading'
 import { ErrorMessage } from '@/components/ui/error-message'
 import { useWishlist } from '@/hooks/useWishlist'
 import { useWishlistCategories } from '@/hooks/useWishlistCategories'
-import { useMode } from '@/lib/contexts/ModeContext'
 import { calculateTotalPrice } from '@/lib/wishlist'
 import {
   Select,
@@ -38,7 +37,6 @@ import type {
 } from '@/lib/types/wishlist-item'
 
 export default function WishlistPage() {
-  const { mode } = useMode()
   const {
     items,
     isLoading,
@@ -119,10 +117,6 @@ export default function WishlistPage() {
     )
     return category?.name ?? ''
   }, [selectedCategoryId, categories])
-
-  if (mode !== 'life') {
-    return null
-  }
 
   const handleCreateItem = async (input: CreateWishlistItemInput) => {
     const result = await execute(

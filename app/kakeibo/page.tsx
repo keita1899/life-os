@@ -6,7 +6,6 @@ import { useCreateShortcut } from '@/hooks/useCreateShortcut'
 import { useDialogState } from '@/hooks/useDialogState'
 import { useDeleteConfirm } from '@/hooks/useDeleteConfirm'
 import { useAsyncOperation } from '@/hooks/useAsyncOperation'
-import { useMode } from '@/lib/contexts/ModeContext'
 import { Button } from '@/components/ui/button'
 import { TransactionDialog } from '@/components/kakeibo/TransactionDialog'
 import { TransactionList } from '@/components/kakeibo/TransactionList'
@@ -27,7 +26,6 @@ import type { Transaction } from '@/lib/types/transaction'
 import type { CreateTransactionInput } from '@/lib/types/transaction'
 
 export default function KakeiboPage() {
-  const { mode } = useMode()
   const [periodType, setPeriodType] = useState<PeriodType>('thisMonth')
   const [selectedYear, setSelectedYear] = useState(
     new Date().getFullYear().toString(),
@@ -183,10 +181,6 @@ export default function KakeiboPage() {
       allTransactions.length === 0
     )
   }, [userSettings, allTransactions.length])
-
-  if (mode !== 'life') {
-    return null
-  }
 
   const currentYear = new Date().getFullYear()
   const years = Array.from({ length: 5 }, (_, i) => currentYear - 2 + i)

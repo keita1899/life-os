@@ -22,7 +22,6 @@ import {
 } from '@dnd-kit/sortable'
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { useDevTasks } from '@/hooks/useDevTasks'
-import { useMode } from '@/lib/contexts/ModeContext'
 import { getTodayDevTasks } from '@/lib/tasks/utils'
 import { EmptyListDroppable, InvisibleDroppable, FocusListContainer } from '@/components/focus/FocusDroppable'
 import { SortableDevTaskItem, DraggableAvailableDevTaskItem } from '@/components/focus/DevFocusTaskItems'
@@ -35,7 +34,6 @@ import { useSessionHistory } from '@/hooks/useSessionHistory'
 import type { DevTask } from '@/lib/types/dev-task'
 
 function DevFocusPageContent() {
-  const { mode } = useMode()
   const router = useRouter()
   const searchParams = useSearchParams()
   const projectIdParam = searchParams.get('projectId')
@@ -124,10 +122,6 @@ function DevFocusPageContent() {
     if (activeId === null) return null
     return todayTasks.find((task) => task.id === activeId) || null
   }, [activeId, todayTasks])
-
-  if (mode !== 'development') {
-    return null
-  }
 
   const handleBack = () => {
     router.back()
