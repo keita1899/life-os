@@ -10,7 +10,6 @@ import {
   toTasksWithNextOccurrenceOnly,
   getNextOccurrenceAfter,
 } from '@/lib/tasks'
-import { useMode } from '@/lib/contexts/ModeContext'
 import { useRouter } from 'next/navigation'
 import { Button } from '@/components/ui/button'
 import { CalendarPlus, CheckSquare, ChevronLeft, ChevronRight, Focus } from 'lucide-react'
@@ -486,7 +485,6 @@ function LogPageView({ logDate, date }: LogPageViewProps) {
 }
 
 function LogPageContent() {
-  const { mode } = useMode()
   const searchParams = useSearchParams()
   const dateParam = searchParams.get('date')
   const date = dateParam || format(new Date(), 'yyyy-MM-dd')
@@ -506,10 +504,6 @@ function LogPageContent() {
         </div>
       </div>
     )
-  }
-
-  if (mode !== 'life') {
-    return null
   }
 
   return <LogPageView logDate={logDate} date={date} />

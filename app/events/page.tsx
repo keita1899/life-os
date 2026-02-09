@@ -22,7 +22,6 @@ import { RecurringEventDeleteDialog } from '@/components/events/RecurringEventDe
 import { Loading } from '@/components/ui/loading'
 import { ErrorMessage } from '@/components/ui/error-message'
 import { useEvents } from '@/hooks/useEvents'
-import { useMode } from '@/lib/contexts/ModeContext'
 import { expandRecurringEvents } from '@/lib/events'
 import { groupEvents } from '@/lib/events/grouping'
 import type {
@@ -32,7 +31,6 @@ import type {
 } from '@/lib/types/event'
 
 export default function EventsPage() {
-  const { mode } = useMode()
   const { events, isLoading, error, createEvent, updateEvent, deleteEvent } =
     useEvents()
   const {
@@ -123,10 +121,6 @@ export default function EventsPage() {
     onCreate: handleCreateClick,
     enabled: !isDialogOpen,
   })
-
-  if (mode !== 'life') {
-    return null
-  }
 
   return (
     <>

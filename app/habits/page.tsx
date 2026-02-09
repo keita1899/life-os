@@ -19,12 +19,10 @@ import { useHabits } from '@/hooks/useHabits'
 import { useHabitCompletionsByDate } from '@/hooks/useHabitCompletions'
 import { getCompletionsByDate } from '@/lib/habits'
 import { useHabitHeatmapView } from '@/hooks/useHabitHeatmapView'
-import { useMode } from '@/lib/contexts/ModeContext'
 import type { Habit, CreateHabitInput } from '@/lib/types/habit'
 import { ChevronLeft, ChevronRight } from 'lucide-react'
 
 export default function HabitsPage() {
-  const { mode } = useMode()
   const {
     habits,
     isLoading,
@@ -85,10 +83,6 @@ export default function HabitsPage() {
       return ta.localeCompare(tb)
     })
   }, [habits])
-
-  if (mode !== 'life') {
-    return null
-  }
 
   const handleCreateHabit = async (input: CreateHabitInput) => {
     const result = await execute(

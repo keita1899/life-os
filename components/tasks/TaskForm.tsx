@@ -24,7 +24,7 @@ import {
 import { Input } from '@/components/ui/input'
 import { Textarea } from '@/components/ui/textarea'
 import { Button } from '@/components/ui/button'
-import { useMode } from '@/lib/contexts/ModeContext'
+import { useAppMode } from '@/hooks/useAppMode'
 import { useAutoResizeTextarea } from '@/hooks/useAutoResizeTextarea'
 import type { Task, CreateTaskInput } from '@/lib/types/task'
 import type { RecurrenceRule } from '@/lib/types/event'
@@ -79,8 +79,8 @@ export const TaskForm = ({
   defaultExecutionDate,
   submitLabel = '作成',
 }: TaskFormProps) => {
-  const { mode } = useMode()
-  const showRecurrence = mode === 'life'
+  const { isDevMode } = useAppMode()
+  const showRecurrence = !isDevMode
   const isEditMode = !!initialData
 
   const form = useForm<TaskFormValues>({
@@ -196,12 +196,12 @@ export const TaskForm = ({
       recurrenceDaysOfWeek,
       recurrenceDayOfMonth,
       recurrenceEndDate,
-      memo: mode === 'development' ? (data.memo || null) : undefined,
+      memo: isDevMode ? (data.memo || null) : undefined,
     })
     if (!isEditMode) {
       form.reset()
     }
-  }, [showRecurrence, onSubmit, mode, isEditMode, form])
+  }, [showRecurrence, onSubmit, isDevMode, isEditMode, form])
 
   useFormSubmitShortcut({
     form,
@@ -434,7 +434,7 @@ export const TaskForm = ({
           </>
         )}
 
-        {mode === 'development' && (
+        {isDevMode && (
           <FormField
             control={form.control}
             name="memo"

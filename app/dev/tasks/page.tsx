@@ -22,13 +22,11 @@ import { DeleteConfirmDialog } from '@/components/ui/delete-confirm-dialog'
 import { Loading } from '@/components/ui/loading'
 import { ErrorMessage } from '@/components/ui/error-message'
 import { FloatingActionButtons } from '@/components/floating/FloatingActionButtons'
-import { useMode } from '@/lib/contexts/ModeContext'
 import { groupTasks } from '@/lib/tasks/grouping'
 import { useDevTasks } from '@/hooks/useDevTasks'
 import type { Task, CreateTaskInput } from '@/lib/types/task'
 
 export default function DevTasksPage() {
-  const { mode } = useMode()
   const router = useRouter()
 
   const [activeType, setActiveType] = useState<'inbox' | 'learning'>('inbox')
@@ -93,10 +91,6 @@ export default function DevTasksPage() {
     onCreate: handleCreateClick,
     enabled: !isDialogOpen,
   })
-
-  if (mode !== 'development') {
-    return null
-  }
 
   const handleTypeChange = (value: string) => {
     if (value !== 'inbox' && value !== 'learning') return

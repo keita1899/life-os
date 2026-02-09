@@ -12,14 +12,12 @@ import {
 } from '@/components/ui/accordion'
 import { Loading } from '@/components/ui/loading'
 import { ErrorMessage } from '@/components/ui/error-message'
-import { useMode } from '@/lib/contexts/ModeContext'
 import { useVisionCategories } from '@/hooks/useVisionCategories'
 import { useVision } from '@/hooks/useVision'
 import { useAsyncOperation } from '@/hooks/useAsyncOperation'
 import type { VisionItem } from '@/lib/types/vision-item'
 
 export default function VisionPage() {
-  const { mode } = useMode()
   const { categories } = useVisionCategories()
   const {
     items,
@@ -112,10 +110,6 @@ export default function VisionPage() {
       () => deleteVisionItem(id),
       'ビジョンの削除に失敗しました',
     )
-  }
-
-  if (mode !== 'life') {
-    return null
   }
 
   return (

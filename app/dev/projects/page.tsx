@@ -12,7 +12,6 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select'
-import { useMode } from '@/lib/contexts/ModeContext'
 import { useDevProjects } from '@/hooks/useDevProjects'
 import { ProjectDialog } from '@/components/dev/projects/ProjectDialog'
 import { ProjectList } from '@/components/dev/projects/ProjectList'
@@ -20,7 +19,6 @@ import { Loading } from '@/components/ui/loading'
 import type { CreateDevProjectInput } from '@/lib/types/dev-project'
 
 export default function DevProjectsPage() {
-  const { mode } = useMode()
   const {
     projects,
     isLoading,
@@ -46,10 +44,6 @@ export default function DevProjectsPage() {
     onCreate: handleCreateClick,
     enabled: !isDialogOpen,
   })
-
-  if (mode !== 'development') {
-    return null
-  }
 
   const handleCreateProject = async (
     input: CreateDevProjectInput,

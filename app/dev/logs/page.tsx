@@ -5,7 +5,6 @@ import { useSearchParams } from 'next/navigation'
 import { format, getYear } from 'date-fns'
 import { ja } from 'date-fns/locale/ja'
 import { parseISO, isValid, addDays, subDays } from 'date-fns'
-import { useMode } from '@/lib/contexts/ModeContext'
 import { useRouter } from 'next/navigation'
 import { Button } from '@/components/ui/button'
 import { ChevronLeft, ChevronRight, CheckSquare, Focus } from 'lucide-react'
@@ -470,7 +469,6 @@ function DevLogPageView({ logDate, date }: DevLogPageViewProps) {
 }
 
 function DevLogPageContent() {
-  const { mode } = useMode()
   const searchParams = useSearchParams()
   const dateParam = searchParams.get('date')
   const date = dateParam || format(new Date(), 'yyyy-MM-dd')
@@ -490,10 +488,6 @@ function DevLogPageContent() {
         </div>
       </div>
     )
-  }
-
-  if (mode !== 'development') {
-    return null
   }
 
   return <DevLogPageView logDate={logDate} date={date} />

@@ -9,7 +9,6 @@ import { mutate } from 'swr'
 import { Loading } from '@/components/ui/loading'
 import { ErrorMessage } from '@/components/ui/error-message'
 import { Badge } from '@/components/ui/badge'
-import { useMode } from '@/lib/contexts/ModeContext'
 import { fetcher } from '@/lib/swr'
 import { deleteDevProject, getDevProjectById, updateDevProject } from '@/lib/dev/projects'
 import type { DevProject, ProjectStatus } from '@/lib/types/dev-project'
@@ -57,13 +56,12 @@ function formatDate(date: string | null): string | null {
 }
 
 function DevProjectPageContent(): ReactElement | null {
-  const { mode } = useMode()
   const router = useRouter()
   const searchParams = useSearchParams()
   const idParam = searchParams.get('id')
   const projectId = idParam ? Number(idParam) : NaN
 
-  const shouldFetch = mode === 'development' && Number.isFinite(projectId)
+  const shouldFetch = Number.isFinite(projectId)
 
   const { data, error, isLoading } = useSWR<DevProject | null>(
     shouldFetch ? `dev-project-${projectId}` : null,
@@ -127,10 +125,6 @@ function DevProjectPageContent(): ReactElement | null {
       ),
     [groupedTasks],
   )
-
-  if (mode !== 'development') {
-    return null
-  }
 
   const handleUpdate = async (input: {
     name: string

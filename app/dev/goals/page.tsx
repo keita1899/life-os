@@ -1,7 +1,6 @@
 'use client'
 
 import { useState } from 'react'
-import { useMode } from '@/lib/contexts/ModeContext'
 import { YearSelect } from '@/components/goals/YearSelect'
 import { Loading } from '@/components/ui/loading'
 import { ErrorMessage } from '@/components/ui/error-message'
@@ -25,7 +24,6 @@ import type {
 } from '@/lib/types/dev-monthly-goal'
 
 export default function DevGoalsPage() {
-  const { mode } = useMode()
   const [selectedYear, setSelectedYear] = useState(new Date().getFullYear())
   const {
     yearlyGoals,
@@ -206,10 +204,6 @@ export default function DevGoalsPage() {
     if (!open) {
       setEditingMonthlyGoal(undefined)
     }
-  }
-
-  if (mode !== 'development') {
-    return null
   }
 
   return (

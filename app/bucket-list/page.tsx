@@ -25,7 +25,6 @@ import { useBucketList } from '@/hooks/useBucketList'
 import { useBucketListCategories } from '@/hooks/useBucketListCategories'
 import { useEvents } from '@/hooks/useEvents'
 import { useTasks } from '@/hooks/useTasks'
-import { useMode } from '@/lib/contexts/ModeContext'
 import { getDateFromBucketItem } from '@/lib/bucket-list/conversion'
 import { EventDialog } from '@/components/events/EventDialog'
 import { TaskDialog } from '@/components/tasks/TaskDialog'
@@ -45,7 +44,6 @@ import type { CreateEventInput } from '@/lib/types/event'
 import type { CreateTaskInput } from '@/lib/types/task'
 
 export default function BucketListPage() {
-  const { mode } = useMode()
   const {
     items,
     isLoading,
@@ -153,10 +151,6 @@ export default function BucketListPage() {
     if (completedItems.length > 0) values.push('completed')
     return values
   }, [incompleteByMonth, completedItems.length])
-
-  if (mode !== 'life') {
-    return null
-  }
 
   const handleCreateItem = async (input: CreateBucketListItemInput) => {
     const result = await execute(
