@@ -13,7 +13,7 @@ import {
   FormMessage,
 } from '@/components/ui/form'
 import { Check, X } from 'lucide-react'
-import type { BucketListCategory } from '@/lib/types/bucket-list-category'
+import type { BucketListCategory } from '../types/bucket-list-category'
 
 const categoryFormSchema = z.object({
   name: z.string().trim().min(1, 'カテゴリー名は必須です'),

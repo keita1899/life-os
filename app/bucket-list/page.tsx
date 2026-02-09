@@ -14,18 +14,23 @@ import {
   AccordionItem,
   AccordionTrigger,
 } from '@/components/ui/accordion'
-import { BucketListList } from '@/components/bucket-list/BucketListList'
-import { BucketListDialog } from '@/components/bucket-list/BucketListDialog'
-import { BucketListCategorySidebar } from '@/components/bucket-list/BucketListCategorySidebar'
+import {
+  BucketListList,
+  BucketListDialog,
+  BucketListCategorySidebar,
+  useBucketList,
+  useBucketListCategories,
+  getDateFromBucketItem,
+  type CreateBucketListItemInput,
+  type BucketListItem,
+  type UpdateBucketListItemInput,
+} from '@/features/bucket-list'
 import { DeleteConfirmDialog } from '@/components/ui/delete-confirm-dialog'
 import { Loading } from '@/components/ui/loading'
 import { ErrorMessage } from '@/components/ui/error-message'
 import { EmptyState } from '@/components/ui/empty-state'
-import { useBucketList } from '@/hooks/useBucketList'
-import { useBucketListCategories } from '@/hooks/useBucketListCategories'
 import { useEvents } from '@/hooks/useEvents'
 import { useTasks } from '@/hooks/useTasks'
-import { getDateFromBucketItem } from '@/lib/bucket-list/conversion'
 import { EventDialog } from '@/components/events/EventDialog'
 import { TaskDialog } from '@/components/tasks/TaskDialog'
 import {
@@ -35,11 +40,6 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select'
-import type {
-  CreateBucketListItemInput,
-  BucketListItem,
-  UpdateBucketListItemInput,
-} from '@/lib/types/bucket-list-item'
 import type { CreateEventInput } from '@/lib/types/event'
 import type { CreateTaskInput } from '@/lib/types/task'
 

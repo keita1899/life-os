@@ -21,11 +21,11 @@ import {
   PopoverTrigger,
 } from '@/components/ui/popover'
 import { ChevronDown, Plus } from 'lucide-react'
-import { useBucketListCategories } from '@/hooks/useBucketListCategories'
+import { useBucketListCategories } from '../hooks/useBucketListCategories'
 import type {
   BucketListItem,
   CreateBucketListItemInput,
-} from '@/lib/types/bucket-list-item'
+} from '../types/bucket-list-item'
 
 const bucketListItemFormSchema = z.object({
   title: z.string().min(1, 'タイトルは必須です'),

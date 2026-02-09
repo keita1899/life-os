@@ -3,9 +3,9 @@
 import { useState } from 'react'
 import { Loading } from '@/components/ui/loading'
 import { ErrorMessage } from '@/components/ui/error-message'
-import { useBucketListCategories } from '@/hooks/useBucketListCategories'
+import { useBucketListCategories } from '../hooks/useBucketListCategories'
 import { useAsyncOperation } from '@/hooks/useAsyncOperation'
-import type { BucketListCategory } from '@/lib/types/bucket-list-category'
+import type { BucketListCategory } from '../types/bucket-list-category'
 import { BucketListCategoryList } from './BucketListCategoryList'
 import { BucketListCategoryCreateForm } from './BucketListCategoryCreateForm'
 

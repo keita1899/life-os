@@ -2,7 +2,7 @@
 
 import { FormDialog } from '@/components/ui/form-dialog'
 import { BucketListItemForm } from './BucketListItemForm'
-import type { BucketListItem, CreateBucketListItemInput } from '@/lib/types/bucket-list-item'
+import type { BucketListItem, CreateBucketListItemInput } from '../types/bucket-list-item'
 
 interface BucketListDialogProps {
   open: boolean

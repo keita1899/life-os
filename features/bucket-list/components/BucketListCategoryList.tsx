@@ -5,7 +5,7 @@ import { Button } from '@/components/ui/button'
 import { Trash2, Pencil } from 'lucide-react'
 import { DeleteConfirmDialog } from '@/components/ui/delete-confirm-dialog'
 import { cn } from '@/lib/utils'
-import type { BucketListCategory } from '@/lib/types/bucket-list-category'
+import type { BucketListCategory } from '../types/bucket-list-category'
 import { BucketListCategoryEditForm } from './BucketListCategoryEditForm'
 
 interface BucketListCategoryListProps {

@@ -2,7 +2,7 @@
 
 import { EmptyState } from '@/components/ui/empty-state'
 import { BucketListItem } from './BucketListItem'
-import type { BucketListItem as BucketListItemType } from '@/lib/types/bucket-list-item'
+import type { BucketListItem as BucketListItemType } from '../types/bucket-list-item'
 
 interface BucketListListProps {
   items: BucketListItemType[]

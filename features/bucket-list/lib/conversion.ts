@@ -1,5 +1,5 @@
 import { getTodayDateString } from '@/lib/date/formats'
-import type { BucketListItem } from '@/lib/types/bucket-list-item'
+import type { BucketListItem } from '../types/bucket-list-item'
 
 export function getDateFromBucketItem(item: BucketListItem): string {
   if (item.targetYear != null && item.targetMonth != null) {

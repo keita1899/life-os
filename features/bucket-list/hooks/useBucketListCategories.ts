@@ -5,12 +5,12 @@ import {
   createBucketListCategory,
   updateBucketListCategory,
   deleteBucketListCategory,
-} from '@/lib/bucket-list'
+} from '../lib'
 import type {
   BucketListCategory,
   CreateBucketListCategoryInput,
   UpdateBucketListCategoryInput,
-} from '@/lib/types/bucket-list-category'
+} from '../types/bucket-list-category'
 import { fetcher } from '@/lib/swr'
 
 const bucketListCategoriesKey = 'bucket-list-categories'

@@ -13,13 +13,15 @@ import { MonthView } from './MonthView'
 import { WeekView } from './WeekView'
 import { CalendarViewBase } from './CalendarViewBase'
 import { MonthlyGoalCalendarForm } from '@/components/goals/MonthlyGoalCalendarForm'
-import { BucketListList } from '@/components/bucket-list/BucketListList'
-import { BucketListDialog } from '@/components/bucket-list/BucketListDialog'
+import {
+  BucketListList,
+  BucketListDialog,
+  useBucketList,
+} from '@/features/bucket-list'
 import { useGoals } from '@/hooks/useGoals'
 import { useEvents } from '@/hooks/useEvents'
 import { useTasks } from '@/hooks/useTasks'
 import { useSubscriptions } from '@/hooks/useSubscriptions'
-import { useBucketList } from '@/hooks/useBucketList'
 import { useCalendarView } from '@/hooks/useCalendarView'
 import { useAsyncOperation } from '@/hooks/useAsyncOperation'
 import { useUserSettings } from '@/hooks/useUserSettings'
@@ -38,7 +40,7 @@ import { getHolidaysForDateRange } from '@/lib/calendar/holidays'
 import type { CreateEventInput, Event, UpdateEventInput } from '@/lib/types/event'
 import type { CreateTaskInput, Task, UpdateTaskInput } from '@/lib/types/task'
 import type { Subscription } from '@/lib/types/subscription'
-import type { BucketListItem, CreateBucketListItemInput, UpdateBucketListItemInput } from '@/lib/types/bucket-list-item'
+import type { BucketListItem, CreateBucketListItemInput, UpdateBucketListItemInput } from '@/features/bucket-list'
 
 interface CalendarViewProps {
   initialDate?: Date

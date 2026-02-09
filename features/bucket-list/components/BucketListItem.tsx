@@ -18,9 +18,9 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
 import { cn } from '@/lib/utils'
-import { calculateAgeAtYear } from '@/lib/bucket-list/age-calculation'
+import { calculateAgeAtYear } from '../lib/age-calculation'
 import { useUserSettings } from '@/hooks/useUserSettings'
-import type { BucketListItem as BucketListItemType } from '@/lib/types/bucket-list-item'
+import type { BucketListItem as BucketListItemType } from '../types/bucket-list-item'
 
 interface BucketListItemProps {
   item: BucketListItemType

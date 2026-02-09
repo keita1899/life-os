@@ -6,12 +6,12 @@ import {
   updateBucketListItem,
   deleteBucketListItem,
   deleteBucketListItemsByIds,
-} from '@/lib/bucket-list'
+} from '../lib'
 import type {
   BucketListItem,
   CreateBucketListItemInput,
   UpdateBucketListItemInput,
-} from '@/lib/types/bucket-list-item'
+} from '../types/bucket-list-item'
 import { fetcher } from '@/lib/swr'
 
 const bucketListKey = 'bucket-list'
