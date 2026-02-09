@@ -22,10 +22,9 @@ import {
   SelectValue,
 } from '@/components/ui/select'
 import { Input } from '@/components/ui/input'
-import { Textarea } from '@/components/ui/textarea'
+import { AutoResizeTextarea } from '@/components/ui/textarea-autosize'
 import { Button } from '@/components/ui/button'
 import { useAppMode } from '@/hooks/useAppMode'
-import { useAutoResizeTextarea } from '@/hooks/useAutoResizeTextarea'
 import type { Task, CreateTaskInput } from '@/lib/types/task'
 import type { RecurrenceRule } from '@/lib/types/event'
 import {
@@ -110,9 +109,6 @@ export const TaskForm = ({
 
   const executionDate = form.watch('executionDate')
   const recurrenceRule = form.watch('recurrenceRule')
-  const memoValue = form.watch('memo')
-  const { textareaRef: memoTextareaRef, handleChange: handleMemoChange } =
-    useAutoResizeTextarea(memoValue)
   const [datePresetOverride, setDatePresetOverride] = useState<
     'none' | 'today' | 'tomorrow' | 'custom' | null
   >(null)
@@ -444,15 +440,12 @@ export const TaskForm = ({
                 <FormItem>
                   <FormLabel>メモ</FormLabel>
                   <FormControl>
-                    <Textarea
-                      ref={memoTextareaRef}
+                    <AutoResizeTextarea
+                      ref={field.ref}
                       placeholder="メモを入力（任意）"
                       {...fieldProps}
                       value={field.value ?? ''}
-                      onChange={(e) => {
-                        field.onChange(e)
-                        handleMemoChange(e)
-                      }}
+                      onChange={field.onChange}
                     />
                   </FormControl>
                   <FormMessage />

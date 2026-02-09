@@ -11,7 +11,7 @@ import {
   FormItem,
 } from '@/components/ui/form'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
-import { Textarea } from '@/components/ui/textarea'
+import { AutoResizeTextarea } from '@/components/ui/textarea-autosize'
 import { Loader2 } from 'lucide-react'
 import type { DailyLog, UpdateDailyLogInput } from '@/lib/types/daily-log'
 
@@ -34,7 +34,6 @@ export function LogDiarySection({
   isLoading: isLoadingLog,
   onUpdate,
 }: LogDiarySectionProps) {
-  const textareaRef = useRef<HTMLTextAreaElement>(null)
   const lastSavedRef = useRef<string>(dailyLog?.diary ?? '')
   const onUpdateRef = useRef(onUpdate)
   const [isSaving, setIsSaving] = useState(false)
@@ -80,16 +79,6 @@ export function LogDiarySection({
     return () => clearTimeout(id)
   }, [savedMessage])
 
-  useEffect(() => {
-    const textarea = textareaRef.current
-    if (!textarea) return
-
-    textarea.style.height = 'auto'
-    const scrollHeight = textarea.scrollHeight
-    const minHeight = 200
-    textarea.style.height = `${Math.max(scrollHeight, minHeight)}px`
-  }, [diaryValue, dailyLog])
-
   return (
     <Card className="border-stone-200/60 dark:border-stone-700/40">
       <CardHeader>
@@ -120,14 +109,12 @@ export function LogDiarySection({
                 render={({ field }) => (
                   <FormItem>
                     <FormControl>
-                      <Textarea
+                      <AutoResizeTextarea
                         {...field}
-                        ref={(e) => {
-                          field.ref(e)
-                          textareaRef.current = e
-                        }}
+                        ref={field.ref}
                         placeholder="今日の日記を書いてください..."
-                        className="min-h-[200px] resize-none overflow-hidden focus-visible:ring-0 focus-visible:ring-offset-0"
+                        className="min-h-[200px] overflow-hidden focus-visible:ring-0 focus-visible:ring-offset-0"
+                        minRows={8}
                       />
                     </FormControl>
                   </FormItem>

@@ -23,8 +23,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select'
-import { Textarea } from '@/components/ui/textarea'
-import { useAutoResizeTextarea } from '@/hooks/useAutoResizeTextarea'
+import { AutoResizeTextarea } from '@/components/ui/textarea-autosize'
 import { getTodayDateString } from '@/lib/date/formats'
 import { EVENT_CATEGORIES } from '@/lib/events/constants'
 import { getEventFormValues } from '@/lib/events/form'
@@ -110,12 +109,6 @@ export const EventForm = ({
   const allDay = form.watch('allDay')
   const recurrenceRule = form.watch('recurrenceRule')
   const startDate = form.watch('startDate')
-  const descriptionValue = form.watch('description')
-
-  const {
-    textareaRef: descriptionTextareaRef,
-    handleChange: handleDescriptionChange,
-  } = useAutoResizeTextarea(descriptionValue)
 
   useEffect(() => {
     if (!startDate) return
@@ -460,14 +453,11 @@ export const EventForm = ({
               <FormItem>
                 <FormLabel>説明</FormLabel>
                 <FormControl>
-                  <Textarea
-                    ref={descriptionTextareaRef}
+                  <AutoResizeTextarea
+                    ref={field.ref}
                     placeholder="説明を入力（任意）"
                     {...fieldProps}
-                    onChange={(e) => {
-                      field.onChange(e)
-                      handleDescriptionChange(e)
-                    }}
+                    onChange={field.onChange}
                   />
                 </FormControl>
                 <FormMessage />
