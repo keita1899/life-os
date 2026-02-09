@@ -1,9 +1,9 @@
 'use client'
 
-import { useState } from 'react'
 import { Button } from '@/components/ui/button'
 import { Trash2, Pencil } from 'lucide-react'
 import { DeleteConfirmDialog } from '@/components/ui/delete-confirm-dialog'
+import { useDeleteConfirm } from '@/hooks/useDeleteConfirm'
 import { cn } from '@/lib/utils'
 import type { VisionCategory } from '../types/vision-category'
 import { VisionCategoryEditForm } from './VisionCategoryEditForm'
@@ -29,18 +29,12 @@ export function VisionCategoryList({
   onUpdateCategory,
   onCancelEdit,
 }: VisionCategoryListProps) {
-  const [deletingCategory, setDeletingCategory] = useState<
-    VisionCategory | undefined
-  >(undefined)
-
-  const handleDeleteClick = (category: VisionCategory) => {
-    setDeletingCategory(category)
-  }
+  const deleteConfirm = useDeleteConfirm<VisionCategory>()
 
   const handleDeleteConfirm = async () => {
-    if (!deletingCategory) return
-    await onDelete(deletingCategory)
-    setDeletingCategory(undefined)
+    if (!deleteConfirm.deletingItem) return
+    await onDelete(deleteConfirm.deletingItem)
+    deleteConfirm.clearDeletingItem()
   }
 
   return (
@@ -111,7 +105,7 @@ export function VisionCategoryList({
                     size="icon"
                     onClick={(e) => {
                       e.stopPropagation()
-                      handleDeleteClick(category)
+                      deleteConfirm.handleDeleteClick(category)
                     }}
                     className="h-7 w-7"
                     aria-label="削除"
@@ -126,10 +120,10 @@ export function VisionCategoryList({
       </div>
 
       <DeleteConfirmDialog
-        open={deletingCategory !== undefined}
-        onCancel={() => setDeletingCategory(undefined)}
+        open={deleteConfirm.deletingItem !== undefined}
+        onCancel={deleteConfirm.handleDeleteCancel}
         onConfirm={handleDeleteConfirm}
-        message={`「${deletingCategory?.name}」を削除しますか？`}
+        message={`「${deleteConfirm.deletingItem?.name}」を削除しますか？`}
       />
     </>
   )
