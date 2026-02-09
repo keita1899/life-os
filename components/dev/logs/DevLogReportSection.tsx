@@ -11,7 +11,7 @@ import {
   FormItem,
 } from '@/components/ui/form'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
-import { Textarea } from '@/components/ui/textarea'
+import { AutoResizeTextarea } from '@/components/ui/textarea-autosize'
 import { Loader2 } from 'lucide-react'
 import type { DevDailyLog, UpdateDevDailyLogInput } from '@/lib/types/dev-daily-log'
 
@@ -34,7 +34,6 @@ export function DevLogReportSection({
   isLoading: isLoadingLog,
   onUpdate,
 }: DevLogReportSectionProps) {
-  const textareaRef = useRef<HTMLTextAreaElement>(null)
   const lastSavedRef = useRef<string>(devDailyLog?.report ?? '')
   const onUpdateRef = useRef(onUpdate)
   const [isSaving, setIsSaving] = useState(false)
@@ -80,16 +79,6 @@ export function DevLogReportSection({
     return () => clearTimeout(id)
   }, [savedMessage])
 
-  useEffect(() => {
-    const textarea = textareaRef.current
-    if (!textarea) return
-
-    textarea.style.height = 'auto'
-    const scrollHeight = textarea.scrollHeight
-    const minHeight = 200
-    textarea.style.height = `${Math.max(scrollHeight, minHeight)}px`
-  }, [reportValue, devDailyLog])
-
   return (
     <Card className="border-stone-200/60 dark:border-stone-700/40">
       <CardHeader>
@@ -120,14 +109,12 @@ export function DevLogReportSection({
                 render={({ field }) => (
                   <FormItem>
                     <FormControl>
-                      <Textarea
+                      <AutoResizeTextarea
                         {...field}
-                        ref={(e) => {
-                          field.ref(e)
-                          textareaRef.current = e
-                        }}
+                        ref={field.ref}
                         placeholder="今日の日報を書いてください..."
-                        className="min-h-[200px] resize-none overflow-hidden"
+                        className="min-h-[200px] overflow-hidden"
+                        minRows={8}
                       />
                     </FormControl>
                   </FormItem>
