@@ -4,7 +4,6 @@ import { useMemo } from 'react'
 import { useMode } from '@/lib/contexts/ModeContext'
 import { CalendarView } from '@/components/calendar/CalendarView'
 import { DevCalendarView } from '@/components/calendar/DevCalendarView'
-import { MainLayout } from '@/components/layout/MainLayout'
 import { useGoals } from '@/hooks/useGoals'
 import { useDevGoals } from '@/hooks/useDevGoals'
 import { Card } from '@/components/ui/card'
@@ -30,7 +29,7 @@ export default function Home() {
   }, [devYearlyGoals])
 
   return (
-    <MainLayout>
+    <>
       <div className="container mx-auto max-w-7xl py-8 px-4 md:py-12 md:px-8 lg:px-16">
         {mode === 'life' && (
           <div className="flex flex-col gap-6">
@@ -83,6 +82,6 @@ export default function Home() {
         )}
       </div>
       {mode === 'life' && <LifeHomeCreateButtons />}
-    </MainLayout>
+    </>
   )
 }

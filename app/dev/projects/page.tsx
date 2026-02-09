@@ -12,7 +12,6 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select'
-import { MainLayout } from '@/components/layout/MainLayout'
 import { useMode } from '@/lib/contexts/ModeContext'
 import { useDevProjects } from '@/hooks/useDevProjects'
 import { ProjectDialog } from '@/components/dev/projects/ProjectDialog'
@@ -60,7 +59,7 @@ export default function DevProjectsPage() {
   }
 
   return (
-    <MainLayout>
+    <>
       <div className="container mx-auto max-w-4xl py-8 px-4">
         <div className="mb-6 flex items-center justify-between">
           <h1 className="text-3xl font-bold">プロジェクト</h1>
@@ -99,6 +98,6 @@ export default function DevProjectsPage() {
           onSubmit={handleCreateProject}
         />
       </div>
-    </MainLayout>
+    </>
   )
 }

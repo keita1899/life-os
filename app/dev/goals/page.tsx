@@ -1,7 +1,6 @@
 'use client'
 
 import { useState } from 'react'
-import { MainLayout } from '@/components/layout/MainLayout'
 import { useMode } from '@/lib/contexts/ModeContext'
 import { YearSelect } from '@/components/goals/YearSelect'
 import { Loading } from '@/components/ui/loading'
@@ -214,7 +213,7 @@ export default function DevGoalsPage() {
   }
 
   return (
-    <MainLayout>
+    <>
       <div className="container mx-auto max-w-4xl py-8 px-4">
         <div className="mb-6 flex items-center justify-between">
           <h1 className="text-3xl font-bold">目標</h1>
@@ -289,6 +288,6 @@ export default function DevGoalsPage() {
           onCancel={deleteConfirm.handleDeleteCancel}
         />
       </div>
-    </MainLayout>
+    </>
   )
 }

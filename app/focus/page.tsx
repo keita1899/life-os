@@ -22,7 +22,6 @@ import {
 } from '@dnd-kit/sortable'
 import { useTasks } from '@/hooks/useTasks'
 import { useMode } from '@/lib/contexts/ModeContext'
-import { MainLayout } from '@/components/layout/MainLayout'
 import { getTodayTasks } from '@/lib/tasks/utils'
 import { EmptyListDroppable, InvisibleDroppable, FocusListContainer } from '@/components/focus/FocusDroppable'
 import { SortableTaskItem, DraggableAvailableTaskItem } from '@/components/focus/LifeFocusTaskItems'
@@ -127,7 +126,7 @@ export default function FocusPage() {
   }
 
   return (
-    <MainLayout>
+    <>
       <div className="container mx-auto max-w-7xl py-8 px-4">
         <div className="mb-6 flex items-center justify-between">
           <div className="flex items-center gap-4">
@@ -296,6 +295,6 @@ export default function FocusPage() {
         totalTimeMinutes={totalTimeMinutes}
         onClose={closeCompletionModal}
       />
-    </MainLayout>
+    </>
   )
 }

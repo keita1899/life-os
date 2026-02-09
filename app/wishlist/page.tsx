@@ -20,7 +20,6 @@ import { WishlistCategorySidebar } from '@/components/wishlist/WishlistCategoryS
 import { DeleteConfirmDialog } from '@/components/ui/delete-confirm-dialog'
 import { Loading } from '@/components/ui/loading'
 import { ErrorMessage } from '@/components/ui/error-message'
-import { MainLayout } from '@/components/layout/MainLayout'
 import { useWishlist } from '@/hooks/useWishlist'
 import { useWishlistCategories } from '@/hooks/useWishlistCategories'
 import { useMode } from '@/lib/contexts/ModeContext'
@@ -198,7 +197,7 @@ export default function WishlistPage() {
   }
 
   return (
-    <MainLayout>
+    <>
       <div className="flex min-h-[calc(100vh-3.5rem)]">
         <div className="sticky top-14 h-[calc(100vh-3.5rem)] self-start">
           <WishlistCategorySidebar
@@ -362,6 +361,6 @@ export default function WishlistPage() {
           </div>
         </div>
       </div>
-    </MainLayout>
+    </>
   )
 }

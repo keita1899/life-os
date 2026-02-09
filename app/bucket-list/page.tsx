@@ -21,7 +21,6 @@ import { DeleteConfirmDialog } from '@/components/ui/delete-confirm-dialog'
 import { Loading } from '@/components/ui/loading'
 import { ErrorMessage } from '@/components/ui/error-message'
 import { EmptyState } from '@/components/ui/empty-state'
-import { MainLayout } from '@/components/layout/MainLayout'
 import { useBucketList } from '@/hooks/useBucketList'
 import { useBucketListCategories } from '@/hooks/useBucketListCategories'
 import { useEvents } from '@/hooks/useEvents'
@@ -278,7 +277,7 @@ export default function BucketListPage() {
   }
 
   return (
-    <MainLayout>
+    <>
       <div className="flex min-h-[calc(100vh-3.5rem)]">
         <div className="sticky top-14 h-[calc(100vh-3.5rem)] self-start">
           <BucketListCategorySidebar
@@ -525,6 +524,6 @@ export default function BucketListPage() {
           </div>
         </div>
       </div>
-    </MainLayout>
+    </>
   )
 }

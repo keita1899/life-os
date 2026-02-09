@@ -21,7 +21,6 @@ import { TaskDialog } from '@/components/tasks/TaskDialog'
 import { DeleteConfirmDialog } from '@/components/ui/delete-confirm-dialog'
 import { Loading } from '@/components/ui/loading'
 import { ErrorMessage } from '@/components/ui/error-message'
-import { MainLayout } from '@/components/layout/MainLayout'
 import { FloatingActionButtons } from '@/components/floating/FloatingActionButtons'
 import { useMode } from '@/lib/contexts/ModeContext'
 import { groupTasks } from '@/lib/tasks/grouping'
@@ -191,7 +190,7 @@ export default function DevTasksPage() {
   }
 
   return (
-    <MainLayout>
+    <>
       <div className="container mx-auto max-w-4xl py-8 px-4">
         <div className="mb-6 space-y-4">
           <div className="flex items-center justify-between">
@@ -322,7 +321,7 @@ export default function DevTasksPage() {
           ]}
         />
       </div>
-    </MainLayout>
+    </>
   )
 }
 
