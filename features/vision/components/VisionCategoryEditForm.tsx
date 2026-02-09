@@ -13,7 +13,7 @@ import {
   FormMessage,
 } from '@/components/ui/form'
 import { Check, X } from 'lucide-react'
-import type { VisionCategory } from '@/lib/types/vision-category'
+import type { VisionCategory } from '../types/vision-category'
 
 const categoryFormSchema = z.object({
   name: z.string().trim().min(1, 'カテゴリー名は必須です'),

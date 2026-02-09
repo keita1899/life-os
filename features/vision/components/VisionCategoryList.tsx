@@ -5,7 +5,7 @@ import { Button } from '@/components/ui/button'
 import { Trash2, Pencil } from 'lucide-react'
 import { DeleteConfirmDialog } from '@/components/ui/delete-confirm-dialog'
 import { cn } from '@/lib/utils'
-import type { VisionCategory } from '@/lib/types/vision-category'
+import type { VisionCategory } from '../types/vision-category'
 import { VisionCategoryEditForm } from './VisionCategoryEditForm'
 
 interface VisionCategoryListProps {

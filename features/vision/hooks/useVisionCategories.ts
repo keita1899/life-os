@@ -5,12 +5,12 @@ import {
   createVisionCategory,
   updateVisionCategory,
   deleteVisionCategory,
-} from '@/lib/vision'
+} from '../lib'
 import type {
   VisionCategory,
   CreateVisionCategoryInput,
   UpdateVisionCategoryInput,
-} from '@/lib/types/vision-category'
+} from '../types/vision-category'
 import { fetcher } from '@/lib/swr'
 
 const visionCategoriesKey = 'vision-categories'

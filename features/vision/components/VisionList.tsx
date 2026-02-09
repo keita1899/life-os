@@ -5,7 +5,7 @@ import { Button } from '@/components/ui/button'
 import { EmptyState } from '@/components/ui/empty-state'
 import { VisionItem } from './VisionItem'
 import { VisionForm } from './VisionForm'
-import type { VisionItem as VisionItemType } from '@/lib/types/vision-item'
+import type { VisionItem as VisionItemType } from '../types/vision-item'
 
 interface VisionListProps {
   items: VisionItemType[]

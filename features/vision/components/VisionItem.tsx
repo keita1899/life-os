@@ -4,7 +4,7 @@ import { useState } from 'react'
 import { Pencil, Trash2 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { DeleteConfirmDialog } from '@/components/ui/delete-confirm-dialog'
-import type { VisionItem as VisionItemType } from '@/lib/types/vision-item'
+import type { VisionItem as VisionItemType } from '../types/vision-item'
 import { VisionForm } from './VisionForm'
 
 interface VisionItemProps {

@@ -3,8 +3,8 @@
 import { useState } from 'react'
 import { Loading } from '@/components/ui/loading'
 import { ErrorMessage } from '@/components/ui/error-message'
-import { useVisionCategories } from '@/hooks/useVisionCategories'
-import type { VisionCategory } from '@/lib/types/vision-category'
+import { useVisionCategories } from '../hooks/useVisionCategories'
+import type { VisionCategory } from '../types/vision-category'
 import { VisionCategoryList } from './VisionCategoryList'
 import { VisionCategoryCreateForm } from './VisionCategoryCreateForm'
 

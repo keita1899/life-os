@@ -6,12 +6,12 @@ import {
   updateVisionItem,
   deleteVisionItem,
   reorderVisionItems,
-} from '@/lib/vision'
+} from '../lib'
 import type {
   VisionItem,
   CreateVisionItemInput,
   UpdateVisionItemInput,
-} from '@/lib/types/vision-item'
+} from '../types/vision-item'
 import { fetcher } from '@/lib/swr'
 
 const visionKey = 'vision'

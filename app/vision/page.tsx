@@ -1,8 +1,13 @@
 'use client'
 
 import { useState, useMemo } from 'react'
-import { VisionCategorySidebar } from '@/components/vision/VisionCategorySidebar'
-import { VisionList } from '@/components/vision/VisionList'
+import {
+  VisionCategorySidebar,
+  VisionList,
+  useVision,
+  useVisionCategories,
+  type VisionItem,
+} from '@/features/vision'
 import {
   Accordion,
   AccordionContent,
@@ -12,10 +17,7 @@ import {
 } from '@/components/ui/accordion'
 import { Loading } from '@/components/ui/loading'
 import { ErrorMessage } from '@/components/ui/error-message'
-import { useVisionCategories } from '@/hooks/useVisionCategories'
-import { useVision } from '@/hooks/useVision'
 import { useAsyncOperation } from '@/hooks/useAsyncOperation'
-import type { VisionItem } from '@/lib/types/vision-item'
 
 export default function VisionPage() {
   const { categories } = useVisionCategories()
