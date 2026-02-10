@@ -1,9 +1,16 @@
 'use client'
 
-import { CheckSquare, Pencil, Trash2 } from 'lucide-react'
+import { useState } from 'react'
+import { CheckCircle2, CheckSquare, Circle, Pencil, Repeat, Trash2 } from 'lucide-react'
 import { formatDateDisplay } from '@/lib/date/formats'
+import { cn } from '@/lib/utils'
 import type { Task } from '@/lib/types/task'
 import { Button } from '@/components/ui/button'
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from '@/components/ui/popover'
 
 interface TaskPopoverContentProps {
   task: Task
@@ -63,5 +70,117 @@ export function TaskPopoverContent({ task, onEdit, onDelete }: TaskPopoverConten
         )}
       </div>
     </div>
+  )
+}
+
+const TASK_TRIGGER_CLASS = {
+  month: 'flex w-full items-center gap-1 truncate rounded border px-1 py-0.5 text-left text-xs hover:opacity-80',
+  week: 'flex w-full items-center gap-1 rounded border px-2 py-1.5 text-left text-xs hover:opacity-80',
+} as const
+
+const TASK_LABEL_CLASS = {
+  month: 'min-w-0 flex-1 truncate',
+  week: 'min-w-0 flex-1 font-medium line-clamp-2',
+} as const
+
+interface TaskPopoverWrapperProps {
+  task: Task
+  variant: 'month' | 'week'
+  onEdit?: (task: Task) => void
+  onDelete?: (task: Task) => void
+  onToggleCompletion?: (task: Task) => void
+  onOpenChange?: (open: boolean) => void
+}
+
+export function TaskPopoverWrapper({
+  task,
+  variant,
+  onEdit,
+  onDelete,
+  onToggleCompletion,
+  onOpenChange,
+}: TaskPopoverWrapperProps) {
+  const [isOpen, setIsOpen] = useState(false)
+
+  const handleOpenChange = (open: boolean) => {
+    setIsOpen(open)
+    onOpenChange?.(open)
+  }
+
+  return (
+    <Popover open={isOpen} onOpenChange={handleOpenChange}>
+      <PopoverTrigger asChild>
+        <button
+          className={cn(
+            TASK_TRIGGER_CLASS[variant],
+            task.completed
+              ? 'border-stone-200/60 bg-stone-900/5 text-stone-600 dark:border-stone-700/40 dark:bg-stone-900/20 dark:text-stone-400'
+              : 'border-stone-200/60 bg-stone-900/10 text-stone-900 dark:border-stone-700/40 dark:bg-stone-900/20 dark:text-stone-100',
+          )}
+          title={task.title}
+          onClick={(e) => {
+            e.stopPropagation()
+          }}
+        >
+          {onToggleCompletion && (
+            <span
+              role="button"
+              tabIndex={0}
+              className="inline-flex h-4 w-4 items-center justify-center"
+              onClick={(e) => {
+                e.preventDefault()
+                e.stopPropagation()
+                onToggleCompletion(task)
+              }}
+              onKeyDown={(e) => {
+                if (e.key !== 'Enter' && e.key !== ' ') return
+                e.preventDefault()
+                e.stopPropagation()
+                onToggleCompletion(task)
+              }}
+              aria-label={task.completed ? '未完了にする' : '完了にする'}
+            >
+              {task.completed ? (
+                <CheckCircle2 className="h-4 w-4 text-green-600 dark:text-green-400" />
+              ) : (
+                <Circle className="h-4 w-4 text-stone-400" />
+              )}
+            </span>
+          )}
+          {task.recurrenceRule && (
+            <Repeat
+              className="h-3 w-3 shrink-0 text-muted-foreground"
+              aria-label="繰り返し"
+            />
+          )}
+          <span
+            className={cn(TASK_LABEL_CLASS[variant], task.completed && 'line-through')}
+          >
+            {task.title}
+          </span>
+        </button>
+      </PopoverTrigger>
+      <PopoverContent>
+        <TaskPopoverContent
+          task={task}
+          onEdit={
+            onEdit
+              ? (t) => {
+                  handleOpenChange(false)
+                  onEdit(t)
+                }
+              : undefined
+          }
+          onDelete={
+            onDelete
+              ? (t) => {
+                  handleOpenChange(false)
+                  onDelete(t)
+                }
+              : undefined
+          }
+        />
+      </PopoverContent>
+    </Popover>
   )
 }

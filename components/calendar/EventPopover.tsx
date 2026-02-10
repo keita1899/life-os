@@ -1,7 +1,7 @@
 'use client'
 
 import { useEffect, useState } from 'react'
-import { Calendar, FileText } from 'lucide-react'
+import { Calendar, FileText, Pencil, Trash2 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import {
   EVENT_CATEGORY_LABELS,
@@ -11,11 +11,17 @@ import {
   isBarcelonaMatch,
   getBarcelonaMatchBackground,
   BARCELONA_MATCH_TITLE_COLOR,
+  BARCELONA_MATCH_TEXT_COLOR,
 } from '@/lib/football'
+import { formatEventTime } from '@/lib/calendar/utils'
 import { EventDateTime } from '@/components/events/EventDateTime'
 import type { Event } from '@/lib/types/event'
 import { Button } from '@/components/ui/button'
-import { Pencil, Trash2 } from 'lucide-react'
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from '@/components/ui/popover'
 import {
   Accordion,
   AccordionContent,
@@ -177,5 +183,140 @@ export function EventPopoverContent({
         )}
       </div>
     </div>
+  )
+}
+
+const EVENT_TRIGGER_CLASS = {
+  month: 'w-full truncate rounded px-1 py-0.5 text-left text-xs hover:opacity-80',
+  week: 'w-full rounded px-2 py-1.5 text-left text-xs hover:opacity-80',
+} as const
+
+interface EventPopoverWrapperProps {
+  event: Event
+  variant: 'month' | 'week'
+  onEdit?: (event: Event) => void
+  onDelete?: (event: Event) => void
+  onOpenChange?: (open: boolean) => void
+}
+
+export function EventPopoverWrapper({
+  event,
+  variant,
+  onEdit,
+  onDelete,
+  onOpenChange,
+}: EventPopoverWrapperProps) {
+  const [isOpen, setIsOpen] = useState(false)
+  const [isDark, setIsDark] = useState(false)
+
+  useEffect(() => {
+    const checkDarkMode = () => {
+      setIsDark(
+        document.documentElement.classList.contains('dark') ||
+          window.matchMedia('(prefers-color-scheme: dark)').matches,
+      )
+    }
+    checkDarkMode()
+    const observer = new MutationObserver(checkDarkMode)
+    observer.observe(document.documentElement, {
+      attributes: true,
+      attributeFilter: ['class'],
+    })
+    const mediaQuery = window.matchMedia('(prefers-color-scheme: dark)')
+    const handleMediaChange = () => checkDarkMode()
+    if (mediaQuery.addEventListener) {
+      mediaQuery.addEventListener('change', handleMediaChange)
+    } else {
+      mediaQuery.addListener(handleMediaChange)
+    }
+    return () => {
+      observer.disconnect()
+      if (mediaQuery.removeEventListener) {
+        mediaQuery.removeEventListener('change', handleMediaChange)
+      } else {
+        mediaQuery.removeListener(handleMediaChange)
+      }
+    }
+  }, [])
+
+  const handleOpenChange = (open: boolean) => {
+    setIsOpen(open)
+    onOpenChange?.(open)
+  }
+
+  const isBarca = isBarcelonaMatch(event)
+  const timeStr = !event.allDay ? formatEventTime(event) : null
+  const title = event.title
+
+  return (
+    <Popover open={isOpen} onOpenChange={handleOpenChange}>
+      <PopoverTrigger asChild>
+        <button
+          className={cn(
+            EVENT_TRIGGER_CLASS[variant],
+            isBarca
+              ? BARCELONA_MATCH_TEXT_COLOR
+              : 'bg-blue-900/10 text-stone-900 dark:bg-blue-900/20 dark:text-stone-100',
+          )}
+          style={
+            isBarca
+              ? { background: getBarcelonaMatchBackground(isDark) }
+              : undefined
+          }
+          title={title}
+          onClick={(e) => {
+            e.stopPropagation()
+          }}
+        >
+          {variant === 'month' ? (
+            <>
+              {timeStr && (
+                <span className="mr-1 text-[10px] opacity-70">{timeStr}</span>
+              )}
+              {isBarca ? (
+                <span style={{ color: BARCELONA_MATCH_TITLE_COLOR }}>{title}</span>
+              ) : (
+                title
+              )}
+            </>
+          ) : (
+            <div className="flex items-center gap-1.5">
+              {timeStr && (
+                <span className="text-[10px] opacity-70">{timeStr}</span>
+              )}
+              <span
+                className="font-medium line-clamp-2"
+                style={
+                  isBarca ? { color: BARCELONA_MATCH_TITLE_COLOR } : undefined
+                }
+              >
+                {title}
+              </span>
+            </div>
+          )}
+        </button>
+      </PopoverTrigger>
+      <PopoverContent>
+        <EventPopoverContent
+          event={event}
+          onEdit={
+            onEdit
+              ? (e) => {
+                  handleOpenChange(false)
+                  onEdit(e)
+                }
+              : undefined
+          }
+          onDelete={
+            onDelete
+              ? (e) => {
+                  handleOpenChange(false)
+                  onDelete(e)
+                }
+              : undefined
+          }
+        />
+      </PopoverContent>
+    </Popover>
   )
 }

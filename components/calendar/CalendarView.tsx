@@ -21,7 +21,7 @@ import {
 import { useGoals } from '@/hooks/useGoals'
 import { useEvents } from '@/hooks/useEvents'
 import { useTasks } from '@/hooks/useTasks'
-import { useSubscriptions } from '@/hooks/useSubscriptions'
+import { useSubscriptions } from '@/features/subscriptions'
 import { useCalendarView } from '@/hooks/useCalendarView'
 import { useAsyncOperation } from '@/hooks/useAsyncOperation'
 import { useUserSettings } from '@/features/settings'
@@ -39,7 +39,6 @@ import {
 import { getHolidaysForDateRange } from '@/lib/calendar/holidays'
 import type { CreateEventInput, Event, UpdateEventInput } from '@/lib/types/event'
 import type { CreateTaskInput, Task, UpdateTaskInput } from '@/lib/types/task'
-import type { Subscription } from '@/lib/types/subscription'
 import type { BucketListItem, CreateBucketListItemInput, UpdateBucketListItemInput } from '@/features/bucket-list'
 
 interface CalendarViewProps {
@@ -82,7 +81,6 @@ export function CalendarView({ initialDate }: CalendarViewProps) {
   const {
     subscriptions,
     isLoading: isLoadingSubscriptions,
-    deleteSubscription,
   } = useSubscriptions()
   const { userSettings } = useUserSettings()
   useBarcelonaMatches(userSettings?.barcelonaIcalUrl ?? null)
@@ -138,8 +136,6 @@ export function CalendarView({ initialDate }: CalendarViewProps) {
   const [isBucketListDialogOpen, setIsBucketListDialogOpen] = useState(false)
   const [editingBucketListItem, setEditingBucketListItem] = useState<BucketListItem | undefined>(undefined)
   const [deletingBucketListItem, setDeletingBucketListItem] = useState<BucketListItem | undefined>(undefined)
-  const [deletingSubscription, setDeletingSubscription] = useState<Subscription | undefined>(undefined)
-
   const isLoading =
     isLoadingGoals || isLoadingEvents || isLoadingTasks || isLoadingSubscriptions || isLoadingSettings
 
@@ -312,30 +308,6 @@ export function CalendarView({ initialDate }: CalendarViewProps) {
     }
   }
 
-  const handleEditSubscription = (subscription: Subscription) => {
-    window.location.href = '/subscriptions'
-  }
-
-  const handleDeleteSubscriptionClick = (subscription: Subscription) => {
-    setDeletingSubscription(subscription)
-  }
-
-  const handleDeleteSubscription = async () => {
-    const subscriptionToDelete = deletingSubscription
-    if (!subscriptionToDelete) return
-
-    const result = await execute(
-      async () => {
-        await deleteSubscription(subscriptionToDelete.id)
-        return true
-      },
-      'サブスクの削除に失敗しました',
-    )
-    if (result !== undefined) {
-      setDeletingSubscription(undefined)
-    }
-  }
-
   return (
     <>
       <ErrorMessage
@@ -369,8 +341,6 @@ export function CalendarView({ initialDate }: CalendarViewProps) {
             onEditTask={handleEditTask}
             onDeleteTask={handleDeleteTaskClick}
             onToggleTaskCompletion={handleToggleTaskCompletion}
-            onEditSubscription={handleEditSubscription}
-            onDeleteSubscription={handleDeleteSubscriptionClick}
           />
         ) : (
           <WeekView
@@ -386,8 +356,6 @@ export function CalendarView({ initialDate }: CalendarViewProps) {
             onEditTask={handleEditTask}
             onDeleteTask={handleDeleteTaskClick}
             onToggleTaskCompletion={handleToggleTaskCompletion}
-            onEditSubscription={handleEditSubscription}
-            onDeleteSubscription={handleDeleteSubscriptionClick}
           />
         )}
       </CalendarViewBase>
@@ -480,12 +448,6 @@ export function CalendarView({ initialDate }: CalendarViewProps) {
         onCancel={() => setDeletingBucketListItem(undefined)}
       />
 
-      <DeleteConfirmDialog
-        open={!!deletingSubscription}
-        message={`「${deletingSubscription?.name}」を削除しますか？この操作は取り消せません。`}
-        onConfirm={handleDeleteSubscription}
-        onCancel={() => setDeletingSubscription(undefined)}
-      />
     </>
   )
 }
