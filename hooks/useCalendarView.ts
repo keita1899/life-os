@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { useHotkeys } from 'react-hotkeys-hook'
-import { useUserSettings } from '@/hooks/useUserSettings'
+import { useUserSettings } from '@/features/settings'
 import {
   formatMonthYear,
   formatWeekRange,

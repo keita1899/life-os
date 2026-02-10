@@ -1,4 +1,4 @@
-import { getDatabase, handleDbError } from '../db'
+import { getDatabase, handleDbError } from '@/lib/db'
 import type {
   UserSettings,
   UpdateUserSettingsInput,
@@ -168,13 +168,4 @@ export async function updateUserSettings(
     handleDbError(err, 'update user settings')
     throw err
   }
-}
-
-export async function getBirthdate(): Promise<string | null> {
-  const settings = await getUserSettings()
-  return settings.birthday
-}
-
-export async function setBirthdate(birthday: string | null): Promise<void> {
-  await updateUserSettings({ birthday })
 }

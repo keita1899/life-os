@@ -19,7 +19,7 @@ import {
 } from '@/components/ui/dropdown-menu'
 import { cn } from '@/lib/utils'
 import { calculateAgeAtYear } from '../lib/age-calculation'
-import { useUserSettings } from '@/hooks/useUserSettings'
+import { useUserSettings } from '@/features/settings'
 import type { BucketListItem as BucketListItemType } from '../types/bucket-list-item'
 
 interface BucketListItemProps {

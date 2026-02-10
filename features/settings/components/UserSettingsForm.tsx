@@ -24,7 +24,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select'
-import type { UserSettings, UpdateUserSettingsInput } from '@/lib/types/user-settings'
+import type { UserSettings, UpdateUserSettingsInput } from '../types/user-settings'
 import { formatDateForInput } from '@/lib/date/formats'
 
 const userSettingsFormSchema = z.object({

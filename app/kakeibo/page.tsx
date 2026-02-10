@@ -17,7 +17,7 @@ import { TransactionTypeFilter } from '@/components/kakeibo/TransactionTypeFilte
 import { CategoryFilter } from '@/components/kakeibo/CategoryFilter'
 import { useTransactions, useTransactionsByMonth, useTransactionsByDateRange } from '@/hooks/useTransactions'
 import { useTransactionCategories } from '@/hooks/useTransactionCategories'
-import { useUserSettings } from '@/hooks/useUserSettings'
+import { useUserSettings } from '@/features/settings'
 import { DeleteConfirmDialog } from '@/components/ui/delete-confirm-dialog'
 import { InitialBalanceDialog } from '@/components/kakeibo/InitialBalanceDialog'
 import { getPeriodRange, type PeriodType } from '@/lib/transactions/period'

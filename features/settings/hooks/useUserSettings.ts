@@ -1,7 +1,7 @@
 import useSWR from 'swr'
 import { mutate } from 'swr'
-import { getUserSettings, updateUserSettings, getBirthdate, setBirthdate } from '@/lib/user-settings'
-import type { UserSettings, UpdateUserSettingsInput } from '@/lib/types/user-settings'
+import { getUserSettings, updateUserSettings } from '../lib'
+import type { UserSettings, UpdateUserSettingsInput } from '../types/user-settings'
 import { fetcher } from '@/lib/swr'
 
 const userSettingsKey = 'user-settings'
@@ -19,15 +19,6 @@ export function useUserSettings() {
     return result
   }
 
-  const handleGetBirthdate = async (): Promise<string | null> => {
-    return await getBirthdate()
-  }
-
-  const handleSetBirthdate = async (birthday: string | null) => {
-    await setBirthdate(birthday)
-    await mutate(userSettingsKey)
-  }
-
   return {
     userSettings: data,
     isLoading,
@@ -37,8 +28,5 @@ export function useUserSettings() {
         : 'Failed to fetch user settings'
       : null,
     updateUserSettings: handleUpdateUserSettings,
-    getBirthdate: handleGetBirthdate,
-    setBirthdate: handleSetBirthdate,
-    refreshUserSettings: () => mutate(userSettingsKey),
   }
 }
