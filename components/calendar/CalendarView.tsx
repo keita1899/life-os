@@ -12,13 +12,13 @@ import {
 import { MonthView } from './MonthView'
 import { WeekView } from './WeekView'
 import { CalendarViewBase } from './CalendarViewBase'
-import { MonthlyGoalCalendarForm } from '@/components/goals/MonthlyGoalCalendarForm'
+import { MonthlyGoalCalendarForm } from '@/features/goals'
 import {
   BucketListList,
   BucketListDialog,
   useBucketList,
 } from '@/features/bucket-list'
-import { useGoals } from '@/hooks/useGoals'
+import { useGoals } from '@/features/goals'
 import { useEvents } from '@/hooks/useEvents'
 import { useTasks } from '@/hooks/useTasks'
 import { useSubscriptions } from '@/features/subscriptions'

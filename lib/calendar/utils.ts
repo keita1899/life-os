@@ -17,7 +17,7 @@ import {
   isWithinInterval,
 } from 'date-fns'
 import { ja } from 'date-fns/locale/ja'
-import type { MonthlyGoal } from '@/lib/types/monthly-goal'
+import type { MonthlyGoal } from '@/features/goals'
 import type { Event } from '@/lib/types/event'
 
 export const weekdays = ['月', '火', '水', '木', '金', '土', '日'] as const

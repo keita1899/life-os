@@ -2,7 +2,7 @@
 
 import { useMemo } from 'react'
 import { CalendarView } from '@/components/calendar/CalendarView'
-import { useGoals } from '@/hooks/useGoals'
+import { useGoals } from '@/features/goals'
 import { Card } from '@/components/ui/card'
 import { Target } from 'lucide-react'
 import { LifeHomeCreateButtons } from '@/components/floating/LifeHomeCreateButtons'

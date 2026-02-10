@@ -34,7 +34,7 @@ import type {
   UpdateDevWeeklyGoalInput,
 } from '@/lib/types/dev-weekly-goal'
 import { fetcher } from '@/lib/swr'
-import { getYearFromDate } from '@/lib/goals/base'
+import { getYearFromDate } from '@/features/goals'
 
 export function useDevGoals(selectedYear: number) {
   const goalsKey = ['dev-goals', selectedYear]

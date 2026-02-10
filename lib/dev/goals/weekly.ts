@@ -1,6 +1,6 @@
 import { getDatabase, handleDbError } from '../../db'
 import { DB_COLUMNS } from '../../db/constants'
-import { getYearFromDate } from '../../goals/base'
+import { getYearFromDate } from '@/features/goals'
 import type {
   DevWeeklyGoal,
   CreateDevWeeklyGoalInput,

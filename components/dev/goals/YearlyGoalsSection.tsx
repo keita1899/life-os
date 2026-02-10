@@ -11,7 +11,7 @@ import {
 } from '@/components/ui/dropdown-menu'
 import { EmptyState } from '@/components/ui/empty-state'
 import { Progress } from '@/components/ui/progress'
-import { calculateProgress } from '@/lib/goals/checklist'
+import { calculateProgress } from '@/features/goals'
 import type { DevYearlyGoal } from '@/lib/types/dev-yearly-goal'
 
 interface YearlyGoalsSectionProps {

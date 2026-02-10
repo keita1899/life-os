@@ -13,7 +13,7 @@ import {
 import { useRouter } from 'next/navigation'
 import { Button } from '@/components/ui/button'
 import { CalendarPlus, CheckSquare, ChevronLeft, ChevronRight, Focus } from 'lucide-react'
-import { useGoals } from '@/hooks/useGoals'
+import { useGoals } from '@/features/goals'
 import { useTasks } from '@/hooks/useTasks'
 import { useEvents } from '@/hooks/useEvents'
 import { useDailyLog } from '@/hooks/useDailyLog'

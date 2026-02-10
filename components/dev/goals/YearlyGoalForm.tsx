@@ -15,7 +15,7 @@ import {
 } from '@/components/ui/form'
 import { Input } from '@/components/ui/input'
 import { Button } from '@/components/ui/button'
-import { ChecklistEditor } from '@/components/goals/ChecklistEditor'
+import { ChecklistEditor } from '@/features/goals'
 import type {
   DevYearlyGoal,
   CreateDevYearlyGoalInput,

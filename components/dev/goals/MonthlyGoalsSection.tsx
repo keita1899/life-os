@@ -12,7 +12,7 @@ import {
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { EmptyState } from '@/components/ui/empty-state'
 import { Progress } from '@/components/ui/progress'
-import { calculateProgress } from '@/lib/goals/checklist'
+import { calculateProgress } from '@/features/goals'
 import {
   Accordion,
   AccordionContent,
