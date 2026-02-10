@@ -1,5 +1,5 @@
-import { getDatabase, handleDbError } from '../db'
-import { DB_COLUMNS } from '../db/constants'
+import { getDatabase, handleDbError } from '@/lib/db'
+import { DB_COLUMNS } from '@/lib/db/constants'
 import type {
   Subscription,
   CreateSubscriptionInput,

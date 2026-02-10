@@ -5,7 +5,7 @@ import { SubscriptionForm } from './SubscriptionForm'
 import type {
   Subscription,
   CreateSubscriptionInput,
-} from '@/lib/types/subscription'
+} from '../types/subscription'
 
 interface SubscriptionDialogProps {
   open: boolean

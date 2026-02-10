@@ -2,7 +2,7 @@
 
 import { EmptyState } from '@/components/ui/empty-state'
 import { SubscriptionItem } from './SubscriptionItem'
-import type { Subscription } from '@/lib/types/subscription'
+import type { Subscription } from '../types/subscription'
 
 interface SubscriptionListProps {
   subscriptions: Subscription[]

@@ -14,22 +14,20 @@ import {
   AccordionItem,
   AccordionTrigger,
 } from '@/components/ui/accordion'
-import { SubscriptionList } from '@/components/subscriptions/SubscriptionList'
-import { SubscriptionDialog } from '@/components/subscriptions/SubscriptionDialog'
+import {
+  SubscriptionList,
+  SubscriptionDialog,
+  useSubscriptions,
+  calculateMonthlyTotal,
+  getUpcomingBillingSubscriptions,
+  type CreateSubscriptionInput,
+  type Subscription,
+  type UpdateSubscriptionInput,
+} from '@/features/subscriptions'
 import { DeleteConfirmDialog } from '@/components/ui/delete-confirm-dialog'
 import { Loading } from '@/components/ui/loading'
 import { ErrorMessage } from '@/components/ui/error-message'
-import { useSubscriptions } from '@/hooks/useSubscriptions'
-import {
-  calculateMonthlyTotal,
-  getUpcomingBillingSubscriptions,
-} from '@/lib/subscriptions'
 import { format } from 'date-fns'
-import type {
-  CreateSubscriptionInput,
-  Subscription,
-  UpdateSubscriptionInput,
-} from '@/lib/types/subscription'
 
 export default function SubscriptionsPage() {
   const {

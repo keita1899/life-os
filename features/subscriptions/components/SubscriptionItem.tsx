@@ -12,8 +12,8 @@ import {
 import { cn } from '@/lib/utils'
 import { format } from 'date-fns'
 import { getTodayDateString, getTomorrowDateString } from '@/lib/date/formats'
-import { formatBillingCycle } from '@/lib/subscriptions'
-import type { Subscription } from '@/lib/types/subscription'
+import { formatBillingCycle } from '../lib'
+import type { Subscription } from '../types/subscription'
 
 interface SubscriptionItemProps {
   subscription: Subscription

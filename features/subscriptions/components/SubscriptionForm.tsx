@@ -25,7 +25,7 @@ import {
 import type {
   Subscription,
   CreateSubscriptionInput,
-} from '@/lib/types/subscription'
+} from '../types/subscription'
 import { formatDateForInput } from '@/lib/date/formats'
 
 const subscriptionFormSchema = z.object({

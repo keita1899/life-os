@@ -1,5 +1,5 @@
 import type { Subscription } from '../types/subscription'
-import { getTodayDateString, getTomorrowDateString } from '../date/formats'
+import { getTodayDateString, getTomorrowDateString } from '@/lib/date/formats'
 
 export const BILLING_CYCLE_LABELS: Record<string, string> = {
   monthly: '月額',

@@ -5,12 +5,12 @@ import {
   getAllSubscriptions,
   updateSubscription,
   deleteSubscription,
-} from '@/lib/subscriptions'
+} from '../lib'
 import type {
   Subscription,
   CreateSubscriptionInput,
   UpdateSubscriptionInput,
-} from '@/lib/types/subscription'
+} from '../types/subscription'
 import { fetcher } from '@/lib/swr'
 
 const subscriptionsKey = 'subscriptions'
@@ -39,7 +39,7 @@ export function useSubscriptions() {
     return result
   }
 
-  const handleDeleteSubscription = async (id: number) => {
+  const handleDeleteSubscription = async (id: number): Promise<true> => {
     await deleteSubscription(id)
     await mutate(subscriptionsKey)
     return true
