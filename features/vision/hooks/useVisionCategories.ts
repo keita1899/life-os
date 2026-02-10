@@ -36,15 +36,17 @@ export function useVisionCategories() {
   const handleUpdateVisionCategory = async (
     id: number,
     input: UpdateVisionCategoryInput,
-  ) => {
+  ): Promise<true> => {
     await updateVisionCategory(id, input)
     await mutate(visionCategoriesKey)
+    return true
   }
 
-  const handleDeleteVisionCategory = async (id: number) => {
+  const handleDeleteVisionCategory = async (id: number): Promise<true> => {
     await deleteVisionCategory(id)
     await mutate(visionCategoriesKey)
     await mutate(visionKey)
+    return true
   }
 
   return {

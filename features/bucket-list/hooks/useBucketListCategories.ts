@@ -35,20 +35,22 @@ export function useBucketListCategories() {
   const handleUpdateBucketListCategory = async (
     id: number,
     input: UpdateBucketListCategoryInput,
-  ) => {
+  ): Promise<true> => {
     await updateBucketListCategory(id, input)
     await Promise.all([
       mutate(bucketListCategoriesKey),
       mutate('bucket-list'),
     ])
+    return true
   }
 
-  const handleDeleteBucketListCategory = async (id: number) => {
+  const handleDeleteBucketListCategory = async (id: number): Promise<true> => {
     await deleteBucketListCategory(id)
     await Promise.all([
       mutate(bucketListCategoriesKey),
       mutate('bucket-list'),
     ])
+    return true
   }
 
   return {
