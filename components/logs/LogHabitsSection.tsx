@@ -2,7 +2,7 @@
 
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { HabitItem } from '@/components/logs/HabitItem'
-import type { Habit } from '@/lib/types/habit'
+import type { Habit } from '@/features/habits'
 
 interface LogHabitsSectionProps {
   habits: Habit[]

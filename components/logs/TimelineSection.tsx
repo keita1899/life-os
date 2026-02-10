@@ -8,7 +8,7 @@ import { LogEventsSection } from '@/components/logs/LogEventsSection'
 import { LogHabitsSection } from '@/components/logs/LogHabitsSection'
 import { LogTasksSection } from '@/components/logs/LogTasksSection'
 import type { Event } from '@/lib/types/event'
-import type { Habit } from '@/lib/types/habit'
+import type { Habit } from '@/features/habits'
 import type { Task } from '@/lib/types/task'
 
 interface TimelineSectionProps {

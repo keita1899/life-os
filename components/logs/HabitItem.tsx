@@ -3,8 +3,11 @@
 import { useMemo } from 'react'
 import { CheckCircle2, Circle, Clock, Repeat } from 'lucide-react'
 import { cn } from '@/lib/utils'
-import { formatHabitScheduledTime, formatHabitFrequency } from '@/lib/habits'
-import type { Habit } from '@/lib/types/habit'
+import {
+  formatHabitScheduledTime,
+  formatHabitFrequency,
+  type Habit,
+} from '@/features/habits'
 
 interface HabitItemProps {
   habit: Habit

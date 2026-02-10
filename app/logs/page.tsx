@@ -17,8 +17,11 @@ import { useGoals } from '@/hooks/useGoals'
 import { useTasks } from '@/hooks/useTasks'
 import { useEvents } from '@/hooks/useEvents'
 import { useDailyLog } from '@/hooks/useDailyLog'
-import { useHabits } from '@/hooks/useHabits'
-import { useHabitCompletionsByDate } from '@/hooks/useHabitCompletions'
+import {
+  useHabits,
+  useHabitCompletionsByDate,
+  isHabitDueOnDate,
+} from '@/features/habits'
 import { useAsyncOperation } from '@/hooks/useAsyncOperation'
 import { useDialogState } from '@/hooks/useDialogState'
 import { useDeleteConfirm } from '@/hooks/useDeleteConfirm'
@@ -40,7 +43,6 @@ import {
   getTasksForDate,
   getEventsForDateSorted,
 } from '@/lib/logs/utils'
-import { isHabitDueOnDate } from '@/lib/habits'
 import type { Task, CreateTaskInput, UpdateTaskInput } from '@/lib/types/task'
 import type { UpdateDailyLogInput } from '@/lib/types/daily-log'
 import Link from 'next/link'
