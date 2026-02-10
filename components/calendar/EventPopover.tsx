@@ -1,7 +1,7 @@
 'use client'
 
 import { useEffect, useState } from 'react'
-import { Calendar, FileText, Pencil, Trash2 } from 'lucide-react'
+import { Calendar, FileText, Pencil, Repeat, Trash2 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import {
   EVENT_CATEGORY_LABELS,
@@ -187,8 +187,9 @@ export function EventPopoverContent({
 }
 
 const EVENT_TRIGGER_CLASS = {
-  month: 'w-full truncate rounded px-1 py-0.5 text-left text-xs hover:opacity-80',
-  week: 'w-full rounded px-2 py-1.5 text-left text-xs hover:opacity-80',
+  month:
+    'flex w-full items-center gap-0.5 truncate rounded px-1 py-0.5 text-left text-xs hover:opacity-80',
+  week: 'flex w-full items-center gap-1.5 rounded px-2 py-1.5 text-left text-xs hover:opacity-80',
 } as const
 
 interface EventPopoverWrapperProps {
@@ -270,29 +271,42 @@ export function EventPopoverWrapper({
         >
           {variant === 'month' ? (
             <>
-              {timeStr && (
-                <span className="mr-1 text-[10px] opacity-70">{timeStr}</span>
+              {event.recurrenceRule && (
+                <Repeat
+                  className="h-3 w-3 shrink-0 opacity-70"
+                  aria-label="繰り返し"
+                />
               )}
-              {isBarca ? (
-                <span style={{ color: BARCELONA_MATCH_TITLE_COLOR }}>{title}</span>
-              ) : (
-                title
-              )}
-            </>
-          ) : (
-            <div className="flex items-center gap-1.5">
               {timeStr && (
-                <span className="text-[10px] opacity-70">{timeStr}</span>
+                <span className="shrink-0 text-[10px] opacity-70">{timeStr}</span>
               )}
               <span
-                className="font-medium line-clamp-2"
+                className="min-w-0 flex-1 truncate"
+                style={isBarca ? { color: BARCELONA_MATCH_TITLE_COLOR } : undefined}
+              >
+                {title}
+              </span>
+            </>
+          ) : (
+            <>
+              {event.recurrenceRule && (
+                <Repeat
+                  className="h-3 w-3 shrink-0 opacity-70"
+                  aria-label="繰り返し"
+                />
+              )}
+              {timeStr && (
+                <span className="shrink-0 text-[10px] opacity-70">{timeStr}</span>
+              )}
+              <span
+                className="min-w-0 flex-1 font-medium line-clamp-2"
                 style={
                   isBarca ? { color: BARCELONA_MATCH_TITLE_COLOR } : undefined
                 }
               >
                 {title}
               </span>
-            </div>
+            </>
           )}
         </button>
       </PopoverTrigger>
