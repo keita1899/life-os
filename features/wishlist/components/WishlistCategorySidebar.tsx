@@ -1,10 +1,11 @@
 'use client'
 
-import { useState } from 'react'
 import { Loading } from '@/components/ui/loading'
 import { ErrorMessage } from '@/components/ui/error-message'
-import { useWishlistCategories } from '@/hooks/useWishlistCategories'
-import type { WishlistCategory } from '@/lib/types/wishlist-category'
+import { useAsyncOperation } from '@/hooks/useAsyncOperation'
+import { useEditState } from '@/hooks/useEditState'
+import { useWishlistCategories } from '../hooks/useWishlistCategories'
+import type { WishlistCategory } from '../types/wishlist-category'
 import { WishlistCategoryList } from './WishlistCategoryList'
 import { WishlistCategoryCreateForm } from './WishlistCategoryCreateForm'
 
@@ -25,57 +26,36 @@ export function WishlistCategorySidebar({
     updateWishlistCategory,
     deleteWishlistCategory,
   } = useWishlistCategories()
-  const [editingCategoryId, setEditingCategoryId] = useState<number | null>(
-    null,
-  )
-  const [operationError, setOperationError] = useState<string | null>(null)
+  const editState = useEditState()
+  const { operationError, setOperationError, execute } = useAsyncOperation()
 
   const handleCreateCategory = async (name: string) => {
-    try {
-      setOperationError(null)
-      const newCategory = await createWishlistCategory({ name })
+    const newCategory = await execute(
+      () => createWishlistCategory({ name }),
+      'カテゴリーの作成に失敗しました',
+    )
+    if (newCategory !== undefined) {
       onSelectCategory(newCategory.id.toString())
-    } catch (err) {
-      setOperationError(
-        err instanceof Error ? err.message : 'カテゴリーの作成に失敗しました',
-      )
-      throw err
     }
   }
 
-  const handleStartEdit = (category: WishlistCategory) => {
-    setEditingCategoryId(category.id)
-  }
-
-  const handleCancelEdit = () => {
-    setEditingCategoryId(null)
-  }
-
   const handleUpdateCategory = async (id: number, name: string) => {
-    try {
-      setOperationError(null)
-      await updateWishlistCategory(id, { name })
-      setEditingCategoryId(null)
-    } catch (err) {
-      setOperationError(
-        err instanceof Error ? err.message : 'カテゴリーの更新に失敗しました',
-      )
-      throw err
+    const result = await execute(
+      () => updateWishlistCategory(id, { name }),
+      'カテゴリーの更新に失敗しました',
+    )
+    if (result !== undefined) {
+      editState.cancelEdit()
     }
   }
 
   const handleDeleteCategory = async (category: WishlistCategory) => {
-    try {
-      setOperationError(null)
-      await deleteWishlistCategory(category.id)
-      if (selectedCategoryId === category.id.toString()) {
-        onSelectCategory('all')
-      }
-    } catch (err) {
-      setOperationError(
-        err instanceof Error ? err.message : 'カテゴリーの削除に失敗しました',
-      )
-      throw err
+    const result = await execute(
+      () => deleteWishlistCategory(category.id),
+      'カテゴリーの削除に失敗しました',
+    )
+    if (result !== undefined && selectedCategoryId === category.id.toString()) {
+      onSelectCategory('all')
     }
   }
 
@@ -97,12 +77,10 @@ export function WishlistCategorySidebar({
         <WishlistCategoryList
           categories={categories}
           selectedCategoryId={selectedCategoryId}
-          editingCategoryId={editingCategoryId}
+          editState={editState}
           onSelectCategory={onSelectCategory}
-          onStartEdit={handleStartEdit}
           onDelete={handleDeleteCategory}
           onUpdateCategory={handleUpdateCategory}
-          onCancelEdit={handleCancelEdit}
         />
       </div>
 

@@ -5,12 +5,12 @@ import {
   createWishlistCategory,
   updateWishlistCategory,
   deleteWishlistCategory,
-} from '@/lib/wishlist'
+} from '../lib'
 import type {
   WishlistCategory,
   CreateWishlistCategoryInput,
   UpdateWishlistCategoryInput,
-} from '@/lib/types/wishlist-category'
+} from '../types/wishlist-category'
 import { fetcher } from '@/lib/swr'
 
 const wishlistCategoriesKey = 'wishlist-categories'
@@ -35,20 +35,22 @@ export function useWishlistCategories() {
   const handleUpdateWishlistCategory = async (
     id: number,
     input: UpdateWishlistCategoryInput,
-  ) => {
+  ): Promise<true> => {
     await updateWishlistCategory(id, input)
     await Promise.all([
       mutate(wishlistCategoriesKey),
       mutate('wishlist'),
     ])
+    return true
   }
 
-  const handleDeleteWishlistCategory = async (id: number) => {
+  const handleDeleteWishlistCategory = async (id: number): Promise<true> => {
     await deleteWishlistCategory(id)
     await Promise.all([
       mutate(wishlistCategoriesKey),
       mutate('wishlist'),
     ])
+    return true
   }
 
   return {

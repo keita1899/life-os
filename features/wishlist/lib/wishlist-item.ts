@@ -1,4 +1,4 @@
-import { getDatabase, handleDbError } from '../db'
+import { getDatabase, handleDbError } from '@/lib/db'
 import type {
   WishlistItem,
   CreateWishlistItemInput,

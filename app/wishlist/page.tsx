@@ -14,15 +14,20 @@ import {
   AccordionItem,
   AccordionTrigger,
 } from '@/components/ui/accordion'
-import { WishlistList } from '@/components/wishlist/WishlistList'
-import { WishlistDialog } from '@/components/wishlist/WishlistDialog'
-import { WishlistCategorySidebar } from '@/components/wishlist/WishlistCategorySidebar'
+import {
+  WishlistList,
+  WishlistDialog,
+  WishlistCategorySidebar,
+  useWishlist,
+  useWishlistCategories,
+  calculateTotalPrice,
+  type WishlistItem,
+  type CreateWishlistItemInput,
+  type UpdateWishlistItemInput,
+} from '@/features/wishlist'
 import { DeleteConfirmDialog } from '@/components/ui/delete-confirm-dialog'
 import { Loading } from '@/components/ui/loading'
 import { ErrorMessage } from '@/components/ui/error-message'
-import { useWishlist } from '@/hooks/useWishlist'
-import { useWishlistCategories } from '@/hooks/useWishlistCategories'
-import { calculateTotalPrice } from '@/lib/wishlist'
 import {
   Select,
   SelectContent,
@@ -30,11 +35,6 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select'
-import type {
-  CreateWishlistItemInput,
-  WishlistItem,
-  UpdateWishlistItemInput,
-} from '@/lib/types/wishlist-item'
 
 export default function WishlistPage() {
   const {

@@ -2,7 +2,7 @@
 
 import { EmptyState } from '@/components/ui/empty-state'
 import { WishlistItem } from './WishlistItem'
-import type { WishlistItem as WishlistItemType } from '@/lib/types/wishlist-item'
+import type { WishlistItem as WishlistItemType } from '../types/wishlist-item'
 
 interface WishlistListProps {
   items: WishlistItemType[]

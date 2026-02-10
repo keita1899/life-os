@@ -16,7 +16,7 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
 import { cn } from '@/lib/utils'
-import type { WishlistItem as WishlistItemType } from '@/lib/types/wishlist-item'
+import type { WishlistItem as WishlistItemType } from '../types/wishlist-item'
 
 interface WishlistItemProps {
   item: WishlistItemType

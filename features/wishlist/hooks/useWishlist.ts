@@ -6,12 +6,12 @@ import {
   updateWishlistItem,
   deleteWishlistItem,
   deleteWishlistItemsByIds,
-} from '@/lib/wishlist'
+} from '../lib'
 import type {
   WishlistItem,
   CreateWishlistItemInput,
   UpdateWishlistItemInput,
-} from '@/lib/types/wishlist-item'
+} from '../types/wishlist-item'
 import { fetcher } from '@/lib/swr'
 
 const wishlistKey = 'wishlist'

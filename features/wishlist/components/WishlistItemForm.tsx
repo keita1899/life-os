@@ -21,11 +21,11 @@ import {
   PopoverTrigger,
 } from '@/components/ui/popover'
 import { ChevronDown, Plus } from 'lucide-react'
-import { useWishlistCategories } from '@/hooks/useWishlistCategories'
+import { useWishlistCategories } from '../hooks/useWishlistCategories'
 import type {
   WishlistItem,
   CreateWishlistItemInput,
-} from '@/lib/types/wishlist-item'
+} from '../types/wishlist-item'
 
 const wishlistItemFormSchema = z.object({
   name: z.string().min(1, '名前は必須です'),

@@ -2,7 +2,7 @@
 
 import { FormDialog } from '@/components/ui/form-dialog'
 import { WishlistItemForm } from './WishlistItemForm'
-import type { WishlistItem, CreateWishlistItemInput } from '@/lib/types/wishlist-item'
+import type { WishlistItem, CreateWishlistItemInput } from '../types/wishlist-item'
 
 interface WishlistDialogProps {
   open: boolean
