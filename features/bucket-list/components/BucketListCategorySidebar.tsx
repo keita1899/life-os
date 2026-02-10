@@ -1,10 +1,10 @@
 'use client'
 
-import { useState } from 'react'
 import { Loading } from '@/components/ui/loading'
 import { ErrorMessage } from '@/components/ui/error-message'
 import { useBucketListCategories } from '../hooks/useBucketListCategories'
 import { useAsyncOperation } from '@/hooks/useAsyncOperation'
+import { useEditState } from '@/hooks/useEditState'
 import type { BucketListCategory } from '../types/bucket-list-category'
 import { BucketListCategoryList } from './BucketListCategoryList'
 import { BucketListCategoryCreateForm } from './BucketListCategoryCreateForm'
@@ -26,10 +26,8 @@ export function BucketListCategorySidebar({
     updateBucketListCategory,
     deleteBucketListCategory,
   } = useBucketListCategories()
-  const [editingCategoryId, setEditingCategoryId] = useState<number | null>(
-    null,
-  )
-  const { operationError, setOperationError, execute } = useAsyncOperation()
+  const editState = useEditState()
+  const { operationError, execute } = useAsyncOperation()
 
   const handleCreateCategory = async (name: string) => {
     const result = await execute(
@@ -41,34 +39,20 @@ export function BucketListCategorySidebar({
     }
   }
 
-  const handleStartEdit = (category: BucketListCategory) => {
-    setEditingCategoryId(category.id)
-  }
-
-  const handleCancelEdit = () => {
-    setEditingCategoryId(null)
-  }
-
   const handleUpdateCategory = async (id: number, name: string) => {
     const result = await execute(
-      async () => {
-        await updateBucketListCategory(id, { name })
-        return true
-      },
+      () => updateBucketListCategory(id, { name }),
       'カテゴリーの更新に失敗しました',
     )
     if (result !== undefined) {
-      setEditingCategoryId(null)
+      editState.cancelEdit()
     }
   }
 
   const handleDeleteCategory = async (category: BucketListCategory) => {
     const categoryIdStr = category.id.toString()
     const result = await execute(
-      async () => {
-        await deleteBucketListCategory(category.id)
-        return true
-      },
+      () => deleteBucketListCategory(category.id),
       'カテゴリーの削除に失敗しました',
     )
     if (result !== undefined && selectedCategoryId === categoryIdStr) {
@@ -94,12 +78,10 @@ export function BucketListCategorySidebar({
         <BucketListCategoryList
           categories={categories}
           selectedCategoryId={selectedCategoryId}
-          editingCategoryId={editingCategoryId}
+          editState={editState}
           onSelectCategory={onSelectCategory}
-          onStartEdit={handleStartEdit}
           onDelete={handleDeleteCategory}
           onUpdateCategory={handleUpdateCategory}
-          onCancelEdit={handleCancelEdit}
         />
       </div>
 

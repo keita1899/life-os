@@ -1,9 +1,9 @@
 'use client'
 
-import { useState } from 'react'
 import { Button } from '@/components/ui/button'
 import { Trash2, Pencil } from 'lucide-react'
 import { DeleteConfirmDialog } from '@/components/ui/delete-confirm-dialog'
+import { useDeleteConfirm } from '@/hooks/useDeleteConfirm'
 import { cn } from '@/lib/utils'
 import type { BucketListCategory } from '../types/bucket-list-category'
 import { BucketListCategoryEditForm } from './BucketListCategoryEditForm'
@@ -11,36 +11,26 @@ import { BucketListCategoryEditForm } from './BucketListCategoryEditForm'
 interface BucketListCategoryListProps {
   categories: BucketListCategory[]
   selectedCategoryId: string
-  editingCategoryId: number | null
+  editState: ReturnType<typeof import('@/hooks/useEditState').useEditState>
   onSelectCategory: (categoryId: string) => void
-  onStartEdit: (category: BucketListCategory) => void
   onDelete: (category: BucketListCategory) => void
   onUpdateCategory: (id: number, name: string) => Promise<void>
-  onCancelEdit: () => void
 }
 
 export function BucketListCategoryList({
   categories,
   selectedCategoryId,
-  editingCategoryId,
+  editState,
   onSelectCategory,
-  onStartEdit,
   onDelete,
   onUpdateCategory,
-  onCancelEdit,
 }: BucketListCategoryListProps) {
-  const [deletingCategory, setDeletingCategory] = useState<
-    BucketListCategory | undefined
-  >(undefined)
-
-  const handleDeleteClick = (category: BucketListCategory) => {
-    setDeletingCategory(category)
-  }
+  const deleteConfirm = useDeleteConfirm<BucketListCategory>()
 
   const handleDeleteConfirm = async () => {
-    if (!deletingCategory) return
-    await onDelete(deletingCategory)
-    setDeletingCategory(undefined)
+    if (!deleteConfirm.deletingItem) return
+    await onDelete(deleteConfirm.deletingItem)
+    deleteConfirm.clearDeletingItem()
   }
 
   return (
@@ -77,12 +67,12 @@ export function BucketListCategoryList({
               role="button"
               tabIndex={0}
               onClick={() => {
-                if (editingCategoryId !== category.id) {
+                if (!editState.isEditing(category.id)) {
                   onSelectCategory(category.id.toString())
                 }
               }}
               onKeyDown={(e) => {
-                if (editingCategoryId === category.id) return
+                if (editState.isEditing(category.id)) return
                 if (e.key === 'Enter' || e.key === ' ') {
                   e.preventDefault()
                   onSelectCategory(category.id.toString())
@@ -94,11 +84,11 @@ export function BucketListCategoryList({
                   'bg-stone-800 font-medium',
               )}
             >
-              {editingCategoryId === category.id ? (
+              {editState.isEditing(category.id) ? (
                 <BucketListCategoryEditForm
                   category={category}
                   onSubmit={(name) => onUpdateCategory(category.id, name)}
-                  onCancel={onCancelEdit}
+                  onCancel={editState.cancelEdit}
                 />
               ) : (
                 <>
@@ -114,7 +104,7 @@ export function BucketListCategoryList({
                       size="icon"
                       onClick={(e) => {
                         e.stopPropagation()
-                        onStartEdit(category)
+                        editState.startEdit(category.id)
                       }}
                       className="h-7 w-7"
                       aria-label="編集"
@@ -126,7 +116,7 @@ export function BucketListCategoryList({
                       size="icon"
                       onClick={(e) => {
                         e.stopPropagation()
-                        handleDeleteClick(category)
+                        deleteConfirm.handleDeleteClick(category)
                       }}
                       className="h-7 w-7"
                       aria-label="削除"
@@ -154,10 +144,10 @@ export function BucketListCategoryList({
       </div>
 
       <DeleteConfirmDialog
-        open={deletingCategory !== undefined}
-        onCancel={() => setDeletingCategory(undefined)}
+        open={deleteConfirm.deletingItem !== undefined}
+        onCancel={deleteConfirm.handleDeleteCancel}
         onConfirm={handleDeleteConfirm}
-        message={`「${deletingCategory?.name}」を削除しますか？`}
+        message={`「${deleteConfirm.deletingItem?.name}」を削除しますか？`}
       />
     </>
   )

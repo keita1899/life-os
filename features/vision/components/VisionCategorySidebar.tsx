@@ -1,8 +1,9 @@
 'use client'
 
-import { useState } from 'react'
 import { Loading } from '@/components/ui/loading'
 import { ErrorMessage } from '@/components/ui/error-message'
+import { useAsyncOperation } from '@/hooks/useAsyncOperation'
+import { useEditState } from '@/hooks/useEditState'
 import { useVisionCategories } from '../hooks/useVisionCategories'
 import type { VisionCategory } from '../types/vision-category'
 import { VisionCategoryList } from './VisionCategoryList'
@@ -25,57 +26,36 @@ export function VisionCategorySidebar({
     updateVisionCategory,
     deleteVisionCategory,
   } = useVisionCategories()
-  const [editingCategoryId, setEditingCategoryId] = useState<number | null>(
-    null,
-  )
-  const [operationError, setOperationError] = useState<string | null>(null)
+  const editState = useEditState()
+  const { operationError, execute } = useAsyncOperation()
 
   const handleCreateCategory = async (name: string) => {
-    try {
-      setOperationError(null)
-      const newCategory = await createVisionCategory({ name })
+    const newCategory = await execute(
+      () => createVisionCategory({ name }),
+      'カテゴリーの作成に失敗しました',
+    )
+    if (newCategory !== undefined) {
       onSelectCategory(newCategory.id)
-    } catch (err) {
-      setOperationError(
-        err instanceof Error ? err.message : 'カテゴリーの作成に失敗しました',
-      )
-      throw err
     }
   }
 
-  const handleStartEdit = (category: VisionCategory) => {
-    setEditingCategoryId(category.id)
-  }
-
-  const handleCancelEdit = () => {
-    setEditingCategoryId(null)
-  }
-
   const handleUpdateCategory = async (id: number, name: string) => {
-    try {
-      setOperationError(null)
-      await updateVisionCategory(id, { name })
-      setEditingCategoryId(null)
-    } catch (err) {
-      setOperationError(
-        err instanceof Error ? err.message : 'カテゴリーの更新に失敗しました',
-      )
-      throw err
+    const result = await execute(
+      () => updateVisionCategory(id, { name }),
+      'カテゴリーの更新に失敗しました',
+    )
+    if (result !== undefined) {
+      editState.cancelEdit()
     }
   }
 
   const handleDeleteCategory = async (category: VisionCategory) => {
-    try {
-      setOperationError(null)
-      await deleteVisionCategory(category.id)
-      if (selectedCategoryId === category.id) {
-        onSelectCategory('all')
-      }
-    } catch (err) {
-      setOperationError(
-        err instanceof Error ? err.message : 'カテゴリーの削除に失敗しました',
-      )
-      throw err
+    const result = await execute(
+      () => deleteVisionCategory(category.id),
+      'カテゴリーの削除に失敗しました',
+    )
+    if (result !== undefined && selectedCategoryId === category.id) {
+      onSelectCategory('all')
     }
   }
 
@@ -97,12 +77,10 @@ export function VisionCategorySidebar({
         <VisionCategoryList
           categories={categories}
           selectedCategoryId={selectedCategoryId}
-          editingCategoryId={editingCategoryId}
+          editState={editState}
           onSelectCategory={onSelectCategory}
-          onStartEdit={handleStartEdit}
           onDelete={handleDeleteCategory}
           onUpdateCategory={handleUpdateCategory}
-          onCancelEdit={handleCancelEdit}
         />
       </div>
 

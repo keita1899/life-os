@@ -11,23 +11,19 @@ import { VisionCategoryEditForm } from './VisionCategoryEditForm'
 interface VisionCategoryListProps {
   categories: VisionCategory[]
   selectedCategoryId: number | 'all' | null
-  editingCategoryId: number | null
+  editState: ReturnType<typeof import('@/hooks/useEditState').useEditState>
   onSelectCategory: (categoryId: number | 'all' | null) => void
-  onStartEdit: (category: VisionCategory) => void
   onDelete: (category: VisionCategory) => void
   onUpdateCategory: (id: number, name: string) => Promise<void>
-  onCancelEdit: () => void
 }
 
 export function VisionCategoryList({
   categories,
   selectedCategoryId,
-  editingCategoryId,
+  editState,
   onSelectCategory,
-  onStartEdit,
   onDelete,
   onUpdateCategory,
-  onCancelEdit,
 }: VisionCategoryListProps) {
   const deleteConfirm = useDeleteConfirm<VisionCategory>()
 
@@ -56,12 +52,12 @@ export function VisionCategoryList({
             role="button"
             tabIndex={0}
             onClick={() => {
-              if (editingCategoryId !== category.id) {
+              if (!editState.isEditing(category.id)) {
                 onSelectCategory(category.id)
               }
             }}
             onKeyDown={(e) => {
-              if (editingCategoryId === category.id) return
+              if (editState.isEditing(category.id)) return
               if (e.key === 'Enter' || e.key === ' ') {
                 e.preventDefault()
                 onSelectCategory(category.id)
@@ -73,11 +69,11 @@ export function VisionCategoryList({
                 'bg-stone-800 font-medium',
             )}
           >
-            {editingCategoryId === category.id ? (
+            {editState.isEditing(category.id) ? (
               <VisionCategoryEditForm
                 category={category}
                 onSubmit={(name) => onUpdateCategory(category.id, name)}
-                onCancel={onCancelEdit}
+                onCancel={editState.cancelEdit}
               />
             ) : (
               <>
@@ -93,7 +89,7 @@ export function VisionCategoryList({
                     size="icon"
                     onClick={(e) => {
                       e.stopPropagation()
-                      onStartEdit(category)
+                      editState.startEdit(category.id)
                     }}
                     className="h-7 w-7"
                     aria-label="編集"
