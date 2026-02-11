@@ -7,7 +7,7 @@ import { TimelineItem, type TimelineItemType } from '@/components/logs/TimelineI
 import { LogEventsSection } from '@/components/logs/LogEventsSection'
 import { LogHabitsSection } from '@/components/logs/LogHabitsSection'
 import { LogTasksSection } from '@/components/logs/LogTasksSection'
-import type { Event } from '@/lib/types/event'
+import type { Event } from '@/features/events'
 import type { Habit } from '@/features/habits'
 import type { Task } from '@/lib/types/task'
 

@@ -4,9 +4,10 @@ import { useEffect, useState } from 'react'
 import { Calendar, FileText, Pencil, Repeat, Trash2 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import {
+  EVENT_ITEM_BG,
   EVENT_CATEGORY_LABELS,
   EVENT_CATEGORY_EMOJI,
-} from '@/lib/events/constants'
+} from '@/features/events'
 import {
   isBarcelonaMatch,
   getBarcelonaMatchBackground,
@@ -14,8 +15,7 @@ import {
   BARCELONA_MATCH_TEXT_COLOR,
 } from '@/lib/football'
 import { formatEventTime } from '@/lib/calendar/utils'
-import { EventDateTime } from '@/components/events/EventDateTime'
-import type { Event } from '@/lib/types/event'
+import { EventDateTime, type Event } from '@/features/events'
 import { Button } from '@/components/ui/button'
 import {
   Popover,
@@ -73,8 +73,6 @@ export function EventPopoverContent({
   }, [])
 
   const isBarca = isBarcelonaMatch(event)
-  const ROYAL_BLUE_BG =
-    'rounded-md bg-blue-900/10 p-2 dark:bg-blue-900/20'
 
   const categoryLabel = isBarca
     ? '⚽ Barca'
@@ -86,7 +84,7 @@ export function EventPopoverContent({
     <div
       className={cn(
         'space-y-3 rounded-md p-2',
-        !isBarca && ROYAL_BLUE_BG,
+        !isBarca && EVENT_ITEM_BG,
       )}
       style={
         isBarca
@@ -257,7 +255,7 @@ export function EventPopoverWrapper({
             EVENT_TRIGGER_CLASS[variant],
             isBarca
               ? BARCELONA_MATCH_TEXT_COLOR
-              : 'bg-blue-900/10 text-stone-900 dark:bg-blue-900/20 dark:text-stone-100',
+              : `${EVENT_ITEM_BG} text-stone-900 dark:text-stone-100`,
           )}
           style={
             isBarca

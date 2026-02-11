@@ -5,7 +5,7 @@ import { useSearchParams } from 'next/navigation'
 import { format, getYear, startOfDay, endOfDay } from 'date-fns'
 import { ja } from 'date-fns/locale/ja'
 import { parseISO, isValid, addDays, subDays } from 'date-fns'
-import { expandRecurringEvents } from '@/lib/events'
+import { expandRecurringEvents } from '@/features/events'
 import {
   toTasksWithNextOccurrenceOnly,
   getNextOccurrenceAfter,
@@ -15,7 +15,7 @@ import { Button } from '@/components/ui/button'
 import { CalendarPlus, CheckSquare, ChevronLeft, ChevronRight, Focus } from 'lucide-react'
 import { useGoals } from '@/features/goals'
 import { useTasks } from '@/hooks/useTasks'
-import { useEvents } from '@/hooks/useEvents'
+import { useEvents } from '@/features/events'
 import { useDailyLog } from '@/hooks/useDailyLog'
 import {
   useHabits,
@@ -32,10 +32,10 @@ import { LogDiarySection } from '@/components/logs/LogDiarySection'
 import { TimelineSection } from '@/components/logs/TimelineSection'
 import { createTimelineItems } from '@/lib/logs/timeline'
 import { TaskDialog } from '@/components/tasks/TaskDialog'
-import { EventDialog } from '@/components/events/EventDialog'
+import { EventDialog } from '@/features/events'
 import { DeleteConfirmDialog } from '@/components/ui/delete-confirm-dialog'
 import { RecurringTaskDeleteDialog } from '@/components/tasks/RecurringTaskDeleteDialog'
-import { RecurringEventDeleteDialog } from '@/components/events/RecurringEventDeleteDialog'
+import { RecurringEventDeleteDialog } from '@/features/events'
 import {
   getYearlyGoalsForDate,
   getMonthlyGoalsForDate,
@@ -46,7 +46,7 @@ import {
 import type { Task, CreateTaskInput, UpdateTaskInput } from '@/lib/types/task'
 import type { UpdateDailyLogInput } from '@/lib/types/daily-log'
 import Link from 'next/link'
-import type { CreateEventInput, Event, UpdateEventInput } from '@/lib/types/event'
+import type { CreateEventInput, Event, UpdateEventInput } from '@/features/events'
 import { FloatingActionButtons } from '@/components/floating/FloatingActionButtons'
 
 interface LogPageViewProps {

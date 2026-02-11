@@ -3,7 +3,7 @@
 import { LogEventItem } from '@/components/logs/LogEventItem'
 import { HabitItem } from '@/components/logs/HabitItem'
 import { LogTaskItem } from '@/components/logs/LogTaskItem'
-import type { Event } from '@/lib/types/event'
+import type { Event } from '@/features/events'
 import type { Habit } from '@/features/habits'
 import type { Task } from '@/lib/types/task'
 

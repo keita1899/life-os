@@ -3,7 +3,7 @@
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { EmptyState } from '@/components/ui/empty-state'
 import { LogEventItem } from '@/components/logs/LogEventItem'
-import type { Event } from '@/lib/types/event'
+import type { Event } from '@/features/events'
 
 interface LogEventsSectionProps {
   events: Event[]

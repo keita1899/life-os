@@ -12,7 +12,7 @@ import {
   isAfter,
 } from 'date-fns'
 import type { Task } from '@/lib/types/task'
-import type { RecurrenceRule } from '@/lib/types/event'
+import type { RecurrenceRule } from '@/features/events'
 
 function getOccurrenceDates(
   rule: RecurrenceRule,

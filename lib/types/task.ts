@@ -1,4 +1,4 @@
-import type { RecurrenceRule } from './event'
+import type { RecurrenceRule } from '@/features/events'
 
 export interface Task {
   id: number

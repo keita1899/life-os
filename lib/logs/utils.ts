@@ -3,7 +3,7 @@ import { getEventsForDate, sortEventsByTime } from '../calendar/utils'
 import { formatDateISO } from '../date/formats'
 import type { YearlyGoal, MonthlyGoal, WeeklyGoal } from '@/features/goals'
 import type { Task } from '../types/task'
-import type { Event } from '../types/event'
+import type { Event } from '@/features/events'
 import type { Subscription } from '@/features/subscriptions'
 
 export function getYearlyGoalsForDate(

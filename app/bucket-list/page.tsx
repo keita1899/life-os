@@ -29,9 +29,9 @@ import { DeleteConfirmDialog } from '@/components/ui/delete-confirm-dialog'
 import { Loading } from '@/components/ui/loading'
 import { ErrorMessage } from '@/components/ui/error-message'
 import { EmptyState } from '@/components/ui/empty-state'
-import { useEvents } from '@/hooks/useEvents'
+import { useEvents } from '@/features/events'
 import { useTasks } from '@/hooks/useTasks'
-import { EventDialog } from '@/components/events/EventDialog'
+import { EventDialog } from '@/features/events'
 import { TaskDialog } from '@/components/tasks/TaskDialog'
 import {
   Select,
@@ -40,7 +40,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select'
-import type { CreateEventInput } from '@/lib/types/event'
+import type { CreateEventInput } from '@/features/events'
 import type { CreateTaskInput } from '@/lib/types/task'
 
 export default function BucketListPage() {

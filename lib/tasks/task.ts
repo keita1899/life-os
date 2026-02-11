@@ -2,7 +2,7 @@ import { getDatabase, handleDbError } from '../db'
 import { DB_COLUMNS } from '../db/constants'
 import type { Task, CreateTaskInput, UpdateTaskInput } from '../types/task'
 
-import type { RecurrenceRule } from '../types/event'
+import type { RecurrenceRule } from '@/features/events'
 
 interface DbTask {
   id: number

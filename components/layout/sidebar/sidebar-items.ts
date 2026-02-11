@@ -59,9 +59,9 @@ export const TASK_ITEMS: SidebarItemData[] = [
     icon: Calendar,
     title: '予定',
     hoverIcon:
-      'group-hover:bg-purple-100 group-hover:text-purple-600 dark:group-hover:bg-purple-900/30 dark:group-hover:text-purple-400',
+      'group-hover:bg-sky-100 group-hover:text-sky-600 dark:group-hover:bg-sky-900/30 dark:group-hover:text-sky-400',
     activeIcon:
-      'bg-purple-100 text-purple-600 dark:bg-purple-900/30 dark:text-purple-400',
+      'bg-sky-100 text-sky-600 dark:bg-sky-900/30 dark:text-sky-400',
   },
   {
     href: '/tasks',

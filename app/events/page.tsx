@@ -15,20 +15,22 @@ import {
   AccordionItem,
   AccordionTrigger,
 } from '@/components/ui/accordion'
-import { EventList } from '@/components/events/EventList'
-import { EventDialog } from '@/components/events/EventDialog'
+import {
+  EventList,
+  EventDialog,
+  RecurringEventDeleteDialog,
+  useEvents,
+  expandRecurringEvents,
+  groupEvents,
+} from '@/features/events'
 import { DeleteConfirmDialog } from '@/components/ui/delete-confirm-dialog'
-import { RecurringEventDeleteDialog } from '@/components/events/RecurringEventDeleteDialog'
 import { Loading } from '@/components/ui/loading'
 import { ErrorMessage } from '@/components/ui/error-message'
-import { useEvents } from '@/hooks/useEvents'
-import { expandRecurringEvents } from '@/lib/events'
-import { groupEvents } from '@/lib/events/grouping'
 import type {
   CreateEventInput,
   Event,
   UpdateEventInput,
-} from '@/lib/types/event'
+} from '@/features/events'
 
 export default function EventsPage() {
   const { events, isLoading, error, createEvent, updateEvent, deleteEvent } =

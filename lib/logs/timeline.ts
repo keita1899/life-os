@@ -1,7 +1,7 @@
 import { parseISO, format } from 'date-fns'
 import { ja } from 'date-fns/locale/ja'
 import { formatHabitScheduledTime, type Habit } from '@/features/habits'
-import type { Event } from '@/lib/types/event'
+import type { Event } from '@/features/events'
 import type { Task } from '@/lib/types/task'
 import type { TimelineItemType } from '@/components/logs/TimelineItem'
 

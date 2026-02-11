@@ -19,15 +19,16 @@ import {
 } from '@/components/ui/accordion'
 import { cn } from '@/lib/utils'
 import {
+  EVENT_ITEM_BG,
   EVENT_CATEGORY_LABELS,
   EVENT_CATEGORY_EMOJI,
-} from '@/lib/events/constants'
+} from '@/features/events'
 import {
   isBarcelonaMatch,
   getBarcelonaMatchBackground,
   BARCELONA_MATCH_TITLE_COLOR,
 } from '@/lib/football'
-import type { Event } from '@/lib/types/event'
+import type { Event } from '@/features/events'
 
 interface LogEventItemProps {
   event: Event
@@ -70,9 +71,6 @@ export function LogEventItem({ event, onEdit, onDelete }: LogEventItemProps) {
 
   const isBarca = isBarcelonaMatch(event)
 
-  const ROYAL_BLUE_BG =
-    'bg-blue-900/10 dark:bg-blue-900/20'
-
   const categoryLabel = isBarca
     ? '⚽ Barca'
     : event.category
@@ -90,7 +88,7 @@ export function LogEventItem({ event, onEdit, onDelete }: LogEventItemProps) {
     <div
       className={cn(
         'group flex items-start gap-3 rounded-lg p-4',
-        !isBarca && ROYAL_BLUE_BG,
+        !isBarca && EVENT_ITEM_BG,
       )}
       style={
         isBarca
@@ -101,8 +99,8 @@ export function LogEventItem({ event, onEdit, onDelete }: LogEventItemProps) {
       <div className="mt-0.5 flex min-w-[60px] items-center gap-1 text-sm font-medium">
         {startTime ? (
           <>
-            <Clock className="h-4 w-4 shrink-0 text-blue-700 dark:text-blue-300" />
-            <span className="text-blue-700 dark:text-blue-300">{startTime}</span>
+            <Clock className="h-4 w-4 shrink-0 text-sky-700 dark:text-sky-300" />
+            <span className="text-sky-700 dark:text-sky-300">{startTime}</span>
           </>
         ) : (
           <div className="h-4 w-4 shrink-0" />
@@ -112,7 +110,7 @@ export function LogEventItem({ event, onEdit, onDelete }: LogEventItemProps) {
         <Calendar
           className={cn(
             'h-5 w-5',
-            isBarca ? 'text-white/80' : 'text-blue-600 dark:text-blue-400',
+            isBarca ? 'text-white/80' : 'text-sky-700 dark:text-sky-300',
           )}
         />
       </div>

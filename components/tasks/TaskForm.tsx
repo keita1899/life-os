@@ -26,7 +26,7 @@ import { AutoResizeTextarea } from '@/components/ui/textarea-autosize'
 import { Button } from '@/components/ui/button'
 import { useAppMode } from '@/hooks/useAppMode'
 import type { Task, CreateTaskInput } from '@/lib/types/task'
-import type { RecurrenceRule } from '@/lib/types/event'
+import type { RecurrenceRule } from '@/features/events'
 import {
   getTodayDateString,
   getTomorrowDateString,
