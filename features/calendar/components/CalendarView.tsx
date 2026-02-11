@@ -22,7 +22,7 @@ import { useGoals } from '@/features/goals'
 import { useEvents } from '@/features/events'
 import { useTasks } from '@/features/tasks'
 import { useSubscriptions } from '@/features/subscriptions'
-import { useCalendarView } from '@/hooks/useCalendarView'
+import { useCalendarView } from '../hooks/useCalendarView'
 import { useAsyncOperation } from '@/hooks/useAsyncOperation'
 import { useUserSettings } from '@/features/settings'
 import { useBarcelonaMatches } from '@/hooks/useBarcelonaMatches'
@@ -36,7 +36,7 @@ import {
   toTasksWithNextOccurrenceOnly,
   getNextOccurrenceAfter,
 } from '@/features/tasks'
-import { getHolidaysForDateRange } from '@/lib/calendar/holidays'
+import { getHolidaysForDateRange } from '../lib/holidays'
 import type { CreateEventInput, Event, UpdateEventInput } from '@/features/events'
 import type { CreateTaskInput, Task, UpdateTaskInput } from '@/features/tasks'
 import type { BucketListItem, CreateBucketListItemInput, UpdateBucketListItemInput } from '@/features/bucket-list'
@@ -202,6 +202,7 @@ export function CalendarView({ initialDate }: CalendarViewProps) {
     const updateInput: UpdateTaskInput = {
       title: input.title,
       executionDate: input.executionDate,
+      scheduledTime: input.scheduledTime,
       recurrenceRule: input.recurrenceRule,
       recurrenceDaysOfWeek: input.recurrenceDaysOfWeek,
       recurrenceDayOfMonth: input.recurrenceDayOfMonth,

@@ -1,7 +1,7 @@
 'use client'
 
 import { useMemo } from 'react'
-import { DevCalendarView } from '@/components/calendar/DevCalendarView'
+import { DevCalendarView } from '@/features/calendar'
 import { useDevGoals } from '@/hooks/useDevGoals'
 import { Card } from '@/components/ui/card'
 import { Target } from 'lucide-react'

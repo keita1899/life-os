@@ -14,7 +14,7 @@ import {
   BARCELONA_MATCH_TITLE_COLOR,
   BARCELONA_MATCH_TEXT_COLOR,
 } from '@/lib/football'
-import { formatEventTime } from '@/lib/calendar/utils'
+import { formatEventTime } from '../lib/utils'
 import { EventDateTime, type Event } from '@/features/events'
 import { Button } from '@/components/ui/button'
 import {

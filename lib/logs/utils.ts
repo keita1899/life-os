@@ -1,5 +1,5 @@
 import { getYear, getMonth, startOfWeek } from 'date-fns'
-import { getEventsForDate, sortEventsByTime } from '../calendar/utils'
+import { getEventsForDate, sortEventsByTime } from '@/features/calendar'
 import { formatDateISO } from '../date/formats'
 import type { YearlyGoal, MonthlyGoal, WeeklyGoal } from '@/features/goals'
 import type { Task } from '@/features/tasks'

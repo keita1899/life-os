@@ -6,7 +6,7 @@ import {
   formatWeekRange,
   navigateMonth,
   navigateWeek,
-} from '@/lib/calendar/utils'
+} from '@/features/calendar'
 
 export type HabitHeatmapViewMode = 'month' | 'week'
 

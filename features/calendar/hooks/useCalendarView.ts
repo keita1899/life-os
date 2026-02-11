@@ -6,7 +6,7 @@ import {
   formatWeekRange,
   navigateMonth,
   navigateWeek,
-} from '@/lib/calendar/utils'
+} from '../lib/utils'
 
 type ViewMode = 'month' | 'week'
 

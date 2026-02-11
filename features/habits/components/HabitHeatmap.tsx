@@ -1,7 +1,7 @@
 'use client'
 
 import { format } from 'date-fns'
-import { getWeekDays } from '@/lib/calendar/utils'
+import { getWeekDays } from '@/features/calendar'
 import type { Habit } from '../types/habit'
 import type { HabitHeatmapViewMode } from '../hooks/useHabitHeatmapView'
 import { HabitHeatmapMonthView } from './HabitHeatmapMonthView'

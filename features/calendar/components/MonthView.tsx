@@ -15,8 +15,8 @@ import {
   formatEventTime,
   sortEventsByTime,
   getWeekdays,
-} from '@/lib/calendar/utils'
-import { getHolidayName } from '@/lib/calendar/holidays'
+} from '../lib/utils'
+import { getHolidayName } from '../lib/holidays'
 import { EventPopoverWrapper } from './EventPopover'
 import { TaskPopoverWrapper } from './TaskPopover'
 import { SubscriptionPopoverWrapper } from './SubscriptionPopover'

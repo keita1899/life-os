@@ -13,8 +13,8 @@ import {
   getEventsForDate,
   sortEventsByTime,
   getWeekdays,
-} from '@/lib/calendar/utils'
-import { getHolidayName } from '@/lib/calendar/holidays'
+} from '../lib/utils'
+import { getHolidayName } from '../lib/holidays'
 import { ChevronDown, ChevronUp } from 'lucide-react'
 import { EventPopoverWrapper } from './EventPopover'
 import { TaskPopoverWrapper } from './TaskPopover'
