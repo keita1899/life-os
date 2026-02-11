@@ -16,15 +16,13 @@ import {
   AccordionTrigger,
 } from '@/components/ui/accordion'
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs'
-import { TaskList } from '@/components/tasks/TaskList'
-import { TaskDialog } from '@/components/tasks/TaskDialog'
+import { TaskList, TaskDialog, groupTasks } from '@/features/tasks'
 import { DeleteConfirmDialog } from '@/components/ui/delete-confirm-dialog'
 import { Loading } from '@/components/ui/loading'
 import { ErrorMessage } from '@/components/ui/error-message'
 import { FloatingActionButtons } from '@/components/floating/FloatingActionButtons'
-import { groupTasks } from '@/lib/tasks/grouping'
 import { useDevTasks } from '@/hooks/useDevTasks'
-import type { Task, CreateTaskInput } from '@/lib/types/task'
+import type { Task, CreateTaskInput } from '@/features/tasks'
 
 export default function DevTasksPage() {
   const router = useRouter()

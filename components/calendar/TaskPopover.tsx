@@ -4,7 +4,7 @@ import { useState } from 'react'
 import { CheckCircle2, CheckSquare, Circle, Pencil, Repeat, Trash2 } from 'lucide-react'
 import { formatDateDisplay } from '@/lib/date/formats'
 import { cn } from '@/lib/utils'
-import type { Task } from '@/lib/types/task'
+import type { Task } from '@/features/tasks'
 import { Button } from '@/components/ui/button'
 import {
   Popover,

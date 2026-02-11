@@ -14,7 +14,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select'
-import { TaskForm } from '@/components/tasks/TaskForm'
+import { TaskForm } from '@/features/tasks'
 import {
   Dialog,
   DialogContent,
@@ -22,7 +22,7 @@ import {
   DialogTitle,
 } from '@/components/ui/dialog'
 import { FloatingActionButtons } from '@/components/floating/FloatingActionButtons'
-import type { CreateTaskInput } from '@/lib/types/task'
+import type { CreateTaskInput } from '@/features/tasks'
 
 type DevTaskTarget =
   | { kind: 'type'; value: 'inbox' | 'learning' }

@@ -2,11 +2,12 @@
 
 import { EmptyState } from '@/components/ui/empty-state'
 import { TaskItem } from './TaskItem'
-import type { Task } from '@/lib/types/task'
+import type { Task } from '../types/task'
 
 interface TaskListProps {
   tasks: Task[]
   getTaskLabel?: (task: Task) => string | undefined
+  dateLabelMode?: 'all' | 'overdue-only'
   onEdit?: (task: Task) => void
   onDelete?: (task: Task) => void
   onToggleCompletion?: (task: Task) => void
@@ -16,6 +17,7 @@ interface TaskListProps {
 export function TaskList({
   tasks,
   getTaskLabel,
+  dateLabelMode = 'all',
   onEdit,
   onDelete,
   onToggleCompletion,
@@ -32,6 +34,7 @@ export function TaskList({
           key={task.id}
           task={task}
           label={getTaskLabel?.(task)}
+          dateLabelMode={dateLabelMode}
           onEdit={onEdit}
           onDelete={onDelete}
           onToggleCompletion={onToggleCompletion}

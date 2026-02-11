@@ -25,25 +25,19 @@ import { Input } from '@/components/ui/input'
 import { AutoResizeTextarea } from '@/components/ui/textarea-autosize'
 import { Button } from '@/components/ui/button'
 import { useAppMode } from '@/hooks/useAppMode'
-import type { Task, CreateTaskInput } from '@/lib/types/task'
-import type { RecurrenceRule } from '@/features/events'
+import type { Task, CreateTaskInput } from '../types/task'
+import {
+  RECURRENCE_OPTIONS,
+  WEEKDAY_LABELS,
+  DAYS_OF_MONTH,
+  LAST_DAY_OF_MONTH,
+  type RecurrenceRule,
+} from '@/features/events'
 import {
   getTodayDateString,
   getTomorrowDateString,
   formatDateForInput,
 } from '@/lib/date/formats'
-
-const RECURRENCE_OPTIONS: { value: '' | RecurrenceRule; label: string }[] = [
-  { value: '', label: 'なし' },
-  { value: 'daily', label: '毎日' },
-  { value: 'weekly', label: '毎週' },
-  { value: 'monthly', label: '毎月' },
-]
-
-const WEEKDAY_LABELS = ['日', '月', '火', '水', '木', '金', '土'] as const
-
-const DAYS_OF_MONTH = Array.from({ length: 31 }, (_, i) => i + 1)
-const LAST_DAY_OF_MONTH = 0
 
 const taskFormSchema = z.object({
   title: z.string().min(1, 'タイトルは必須です'),
@@ -93,7 +87,7 @@ export const TaskForm = ({
           recurrenceDaysOfWeek: initialData.recurrenceDaysOfWeek ?? [],
           recurrenceDayOfMonth: initialData.recurrenceDayOfMonth,
           recurrenceEndDate: initialData.recurrenceEndDate ?? '',
-          memo: (initialData as any).memo ?? '',
+          memo: initialData.memo ?? '',
         }
       : {
           title: defaultTitle ?? '',

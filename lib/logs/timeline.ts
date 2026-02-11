@@ -2,14 +2,9 @@ import { parseISO, format } from 'date-fns'
 import { ja } from 'date-fns/locale/ja'
 import { formatHabitScheduledTime, type Habit } from '@/features/habits'
 import type { Event } from '@/features/events'
-import type { Task } from '@/lib/types/task'
+import type { Task } from '@/features/tasks'
 import type { TimelineItemType } from '@/components/logs/TimelineItem'
-
-function isValidTimeFormat(time: string | null): boolean {
-  if (!time || time.trim() === '') return false
-  const trimmed = time.trim()
-  return /^\d{2}:\d{2}$/.test(trimmed)
-}
+import { isValidTimeFormat } from '@/lib/date/formats'
 
 function getEventTime(event: Event): string {
   if (event.allDay) return '00:00'

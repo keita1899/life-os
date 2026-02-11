@@ -7,8 +7,8 @@ import {
   deleteTask,
   deleteCompletedTasks,
   updateOverdueTasksToToday,
-} from '@/lib/tasks'
-import type { Task, CreateTaskInput, UpdateTaskInput } from '@/lib/types/task'
+} from '../lib'
+import type { Task, CreateTaskInput, UpdateTaskInput } from '../types/task'
 import { fetcher } from '@/lib/swr'
 
 const tasksKey = 'tasks'

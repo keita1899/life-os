@@ -20,14 +20,14 @@ import {
 } from '@/features/bucket-list'
 import { useGoals } from '@/features/goals'
 import { useEvents } from '@/features/events'
-import { useTasks } from '@/hooks/useTasks'
+import { useTasks } from '@/features/tasks'
 import { useSubscriptions } from '@/features/subscriptions'
 import { useCalendarView } from '@/hooks/useCalendarView'
 import { useAsyncOperation } from '@/hooks/useAsyncOperation'
 import { useUserSettings } from '@/features/settings'
 import { useBarcelonaMatches } from '@/hooks/useBarcelonaMatches'
 import { EventDialog } from '@/features/events'
-import { TaskDialog } from '@/components/tasks/TaskDialog'
+import { TaskDialog } from '@/features/tasks'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { DeleteConfirmDialog } from '@/components/ui/delete-confirm-dialog'
 import { ErrorMessage } from '@/components/ui/error-message'
@@ -35,10 +35,10 @@ import { expandRecurringEvents } from '@/features/events'
 import {
   toTasksWithNextOccurrenceOnly,
   getNextOccurrenceAfter,
-} from '@/lib/tasks'
+} from '@/features/tasks'
 import { getHolidaysForDateRange } from '@/lib/calendar/holidays'
 import type { CreateEventInput, Event, UpdateEventInput } from '@/features/events'
-import type { CreateTaskInput, Task, UpdateTaskInput } from '@/lib/types/task'
+import type { CreateTaskInput, Task, UpdateTaskInput } from '@/features/tasks'
 import type { BucketListItem, CreateBucketListItemInput, UpdateBucketListItemInput } from '@/features/bucket-list'
 
 interface CalendarViewProps {

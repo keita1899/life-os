@@ -7,4 +7,5 @@ export {
   deleteCompletedDevTasks,
   updateOverdueDevTasksToToday,
 } from './task'
+export { getTodayDevTasks } from './utils'
 

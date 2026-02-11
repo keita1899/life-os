@@ -22,7 +22,7 @@ import {
 } from '@dnd-kit/sortable'
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { useDevTasks } from '@/hooks/useDevTasks'
-import { getTodayDevTasks } from '@/lib/tasks/utils'
+import { getTodayDevTasks } from '@/lib/dev/tasks'
 import { EmptyListDroppable, InvisibleDroppable, FocusListContainer } from '@/components/focus/FocusDroppable'
 import { SortableDevTaskItem, DraggableAvailableDevTaskItem } from '@/components/focus/DevFocusTaskItems'
 import { FocusSession } from '@/components/focus/FocusSession'

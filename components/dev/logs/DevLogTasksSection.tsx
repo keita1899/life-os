@@ -1,8 +1,8 @@
 'use client'
 
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
-import { TaskList } from '@/components/tasks/TaskList'
-import type { Task } from '@/lib/types/task'
+import { TaskList } from '@/features/tasks'
+import type { Task } from '@/features/tasks'
 
 interface DevLogTasksSectionProps {
   tasks: Task[]
@@ -30,6 +30,7 @@ export function DevLogTasksSection({
         <TaskList
           tasks={tasks}
           getTaskLabel={getTargetLabel}
+          dateLabelMode="overdue-only"
           onToggleCompletion={onToggleCompletion}
           onEdit={onEdit}
           onDelete={onDelete}

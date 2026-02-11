@@ -9,12 +9,12 @@ import { expandRecurringEvents } from '@/features/events'
 import {
   toTasksWithNextOccurrenceOnly,
   getNextOccurrenceAfter,
-} from '@/lib/tasks'
+} from '@/features/tasks'
 import { useRouter } from 'next/navigation'
 import { Button } from '@/components/ui/button'
 import { CalendarPlus, CheckSquare, ChevronLeft, ChevronRight, Focus } from 'lucide-react'
 import { useGoals } from '@/features/goals'
-import { useTasks } from '@/hooks/useTasks'
+import { useTasks } from '@/features/tasks'
 import { useEvents } from '@/features/events'
 import { useDailyLog } from '@/hooks/useDailyLog'
 import {
@@ -31,10 +31,10 @@ import { LogGoalsSection } from '@/components/logs/LogGoalsSection'
 import { LogDiarySection } from '@/components/logs/LogDiarySection'
 import { TimelineSection } from '@/components/logs/TimelineSection'
 import { createTimelineItems } from '@/lib/logs/timeline'
-import { TaskDialog } from '@/components/tasks/TaskDialog'
+import { TaskDialog } from '@/features/tasks'
 import { EventDialog } from '@/features/events'
 import { DeleteConfirmDialog } from '@/components/ui/delete-confirm-dialog'
-import { RecurringTaskDeleteDialog } from '@/components/tasks/RecurringTaskDeleteDialog'
+import { RecurringTaskDeleteDialog } from '@/features/tasks'
 import { RecurringEventDeleteDialog } from '@/features/events'
 import {
   getYearlyGoalsForDate,
@@ -43,7 +43,7 @@ import {
   getTasksForDate,
   getEventsForDateSorted,
 } from '@/lib/logs/utils'
-import type { Task, CreateTaskInput, UpdateTaskInput } from '@/lib/types/task'
+import type { Task, CreateTaskInput, UpdateTaskInput } from '@/features/tasks'
 import type { UpdateDailyLogInput } from '@/lib/types/daily-log'
 import Link from 'next/link'
 import type { CreateEventInput, Event, UpdateEventInput } from '@/features/events'

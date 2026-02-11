@@ -21,7 +21,7 @@ import { EventPopoverWrapper } from './EventPopover'
 import { TaskPopoverWrapper } from './TaskPopover'
 import { SubscriptionPopoverWrapper } from './SubscriptionPopover'
 import type { Event } from '@/features/events'
-import type { Task } from '@/lib/types/task'
+import type { Task } from '@/features/tasks'
 import type { Subscription } from '@/features/subscriptions'
 import { getTasksForDate, getSubscriptionsForDate } from '@/lib/logs/utils'
 

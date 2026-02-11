@@ -18,41 +18,19 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
 import { cn } from '@/lib/utils'
-import type { Task } from '@/lib/types/task'
+import { getDateLabel } from '@/lib/date/labels'
+import { isValidTimeFormat } from '@/lib/date/formats'
+import {
+  getRecurrenceLabel,
+  DATE_LABEL_STYLES,
+} from '@/features/tasks'
+import type { Task } from '@/features/tasks'
 
 interface LogTaskItemProps {
   task: Task
   onToggleCompletion?: (task: Task) => void
   onEdit?: (task: Task) => void
   onDelete?: (task: Task) => void
-}
-
-const WEEKDAY_LABELS = ['日', '月', '火', '水', '木', '金', '土'] as const
-
-function getRecurrenceLabel(task: Task): string {
-  if (!task.recurrenceRule) return ''
-  if (task.recurrenceRule === 'daily') return '毎日'
-  if (task.recurrenceRule === 'weekly') {
-    const days = task.recurrenceDaysOfWeek
-    if (days?.length) {
-      const labels = days.map((d) => WEEKDAY_LABELS[d]).join('・')
-      return `毎週 ${labels} 曜日`
-    }
-    return '毎週'
-  }
-  if (task.recurrenceRule === 'monthly') {
-    const dom = task.recurrenceDayOfMonth
-    if (dom === 0) return '毎月末'
-    if (dom != null) return `毎月${dom}日`
-    return '毎月'
-  }
-  return ''
-}
-
-function isValidTimeFormat(time: string | null): boolean {
-  if (!time || time.trim() === '') return false
-  const trimmed = time.trim()
-  return /^\d{2}:\d{2}$/.test(trimmed)
 }
 
 export function LogTaskItem({
@@ -65,6 +43,11 @@ export function LogTaskItem({
     () => isValidTimeFormat(task.scheduledTime),
     [task.scheduledTime],
   )
+  const showOverdueLabel = useMemo(() => {
+    if (task.completed) return false
+    const label = getDateLabel(task.executionDate)
+    return label?.type === 'overdue'
+  }, [task.completed, task.executionDate])
 
   return (
     <div
@@ -105,15 +88,17 @@ export function LogTaskItem({
         )}
       </div>
       <div className="flex-1">
-        <div
-          className={cn(
-            'text-sm font-medium',
-            task.completed
-              ? 'text-stone-500 line-through dark:text-stone-400'
-              : 'text-stone-900 dark:text-stone-100',
-          )}
-        >
-          {task.title}
+        <div className="flex flex-wrap items-center gap-2">
+          <span
+            className={cn(
+              'text-sm font-medium',
+              task.completed
+                ? 'text-stone-500 line-through dark:text-stone-400'
+                : 'text-stone-900 dark:text-stone-100',
+            )}
+          >
+            {task.title}
+          </span>
         </div>
         {task.recurrenceRule && (
           <div className="mt-1 flex flex-wrap items-center gap-2 text-xs text-muted-foreground">
@@ -125,6 +110,16 @@ export function LogTaskItem({
         )}
       </div>
       <div className="mt-0.5 flex items-center gap-2">
+        {showOverdueLabel && (
+          <span
+            className={cn(
+              'rounded-md px-2.5 py-1 text-sm font-medium',
+              DATE_LABEL_STYLES.overdue,
+            )}
+          >
+            期限切れ
+          </span>
+        )}
         <div className="flex min-w-[40px] items-center justify-end">
           <DropdownMenu>
             <DropdownMenuTrigger asChild>

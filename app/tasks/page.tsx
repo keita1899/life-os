@@ -15,23 +15,23 @@ import {
   AccordionItem,
   AccordionTrigger,
 } from '@/components/ui/accordion'
-import { TaskList } from '@/components/tasks/TaskList'
-import { TaskDialog } from '@/components/tasks/TaskDialog'
-import { DeleteConfirmDialog } from '@/components/ui/delete-confirm-dialog'
-import { RecurringTaskDeleteDialog } from '@/components/tasks/RecurringTaskDeleteDialog'
-import { Loading } from '@/components/ui/loading'
-import { ErrorMessage } from '@/components/ui/error-message'
-import { FloatingActionButtons } from '@/components/floating/FloatingActionButtons'
-import { useTasks } from '@/hooks/useTasks'
-import { groupTasks } from '@/lib/tasks/grouping'
 import {
+  TaskList,
+  TaskDialog,
+  RecurringTaskDeleteDialog,
+  useTasks,
+  groupTasks,
   toTasksWithNextOccurrenceOnly,
   getNextOccurrenceAfter,
   getNextOccurrenceDate,
-} from '@/lib/tasks'
+} from '@/features/tasks'
+import { DeleteConfirmDialog } from '@/components/ui/delete-confirm-dialog'
+import { Loading } from '@/components/ui/loading'
+import { ErrorMessage } from '@/components/ui/error-message'
+import { FloatingActionButtons } from '@/components/floating/FloatingActionButtons'
 import { getTodayDateString } from '@/lib/date/formats'
 import { parseISO } from 'date-fns'
-import type { CreateTaskInput, Task, UpdateTaskInput } from '@/lib/types/task'
+import type { CreateTaskInput, Task, UpdateTaskInput } from '@/features/tasks'
 
 export default function TasksPage() {
   const router = useRouter()

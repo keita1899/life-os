@@ -5,7 +5,7 @@ import { HabitItem } from '@/components/logs/HabitItem'
 import { LogTaskItem } from '@/components/logs/LogTaskItem'
 import type { Event } from '@/features/events'
 import type { Habit } from '@/features/habits'
-import type { Task } from '@/lib/types/task'
+import type { Task } from '@/features/tasks'
 
 export type TimelineItemType = 
   | { type: 'event'; data: Event }

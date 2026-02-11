@@ -30,9 +30,8 @@ import { Loading } from '@/components/ui/loading'
 import { ErrorMessage } from '@/components/ui/error-message'
 import { EmptyState } from '@/components/ui/empty-state'
 import { useEvents } from '@/features/events'
-import { useTasks } from '@/hooks/useTasks'
+import { useTasks, TaskDialog } from '@/features/tasks'
 import { EventDialog } from '@/features/events'
-import { TaskDialog } from '@/components/tasks/TaskDialog'
 import {
   Select,
   SelectContent,
@@ -41,7 +40,7 @@ import {
   SelectValue,
 } from '@/components/ui/select'
 import type { CreateEventInput } from '@/features/events'
-import type { CreateTaskInput } from '@/lib/types/task'
+import type { CreateTaskInput } from '@/features/tasks'
 
 export default function BucketListPage() {
   const {

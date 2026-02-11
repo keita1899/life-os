@@ -92,4 +92,3 @@ export const RecurringTaskDeleteDialog = ({
     </Dialog>
   )
 }
-

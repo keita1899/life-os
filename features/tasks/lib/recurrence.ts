@@ -11,7 +11,7 @@ import {
   getDaysInMonth,
   isAfter,
 } from 'date-fns'
-import type { Task } from '@/lib/types/task'
+import type { Task } from '../types/task'
 import type { RecurrenceRule } from '@/features/events'
 
 function getOccurrenceDates(

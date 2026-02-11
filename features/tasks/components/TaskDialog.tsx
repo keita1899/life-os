@@ -2,7 +2,7 @@
 
 import { FormDialog } from '@/components/ui/form-dialog'
 import { TaskForm } from './TaskForm'
-import type { Task, CreateTaskInput } from '@/lib/types/task'
+import type { Task, CreateTaskInput } from '../types/task'
 
 interface TaskDialogProps {
   open: boolean

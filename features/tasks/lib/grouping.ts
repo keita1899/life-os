@@ -5,7 +5,7 @@ import {
   getTomorrowDateString,
 } from '@/lib/date/formats'
 import { categorizeDate } from '@/lib/date/labels'
-import type { Task } from '@/lib/types/task'
+import type { Task } from '../types/task'
 
 export type TaskGroup = {
   key: string

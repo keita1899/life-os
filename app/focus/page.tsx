@@ -20,8 +20,7 @@ import {
   sortableKeyboardCoordinates,
   verticalListSortingStrategy,
 } from '@dnd-kit/sortable'
-import { useTasks } from '@/hooks/useTasks'
-import { getTodayTasks } from '@/lib/tasks/utils'
+import { useTasks, getTodayTasks } from '@/features/tasks'
 import { EmptyListDroppable, InvisibleDroppable, FocusListContainer } from '@/components/focus/FocusDroppable'
 import { SortableTaskItem, DraggableAvailableTaskItem } from '@/components/focus/LifeFocusTaskItems'
 import { FocusSession } from '@/components/focus/FocusSession'
@@ -30,7 +29,7 @@ import { useFocusTasks } from '@/hooks/useFocusTasks'
 import { useFocusDragAndDrop } from '@/hooks/useFocusDragAndDrop'
 import { useFocusSession } from '@/hooks/useFocusSession'
 import { useSessionHistory } from '@/hooks/useSessionHistory'
-import type { Task } from '@/lib/types/task'
+import type { Task } from '@/features/tasks'
 
 export default function FocusPage() {
   const router = useRouter()

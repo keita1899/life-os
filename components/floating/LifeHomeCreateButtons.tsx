@@ -3,12 +3,10 @@
 import { useState } from 'react'
 import { CalendarPlus, CheckSquare } from 'lucide-react'
 import { ErrorMessage } from '@/components/ui/error-message'
-import { TaskDialog } from '@/components/tasks/TaskDialog'
+import { TaskDialog, useTasks, type CreateTaskInput } from '@/features/tasks'
 import { EventDialog, useEvents } from '@/features/events'
-import { useTasks } from '@/hooks/useTasks'
 import { useAsyncOperation } from '@/hooks/useAsyncOperation'
 import { FloatingActionButtons } from '@/components/floating/FloatingActionButtons'
-import type { CreateTaskInput } from '@/lib/types/task'
 import type { CreateEventInput } from '@/features/events'
 
 export function LifeHomeCreateButtons() {

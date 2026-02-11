@@ -23,7 +23,7 @@ import { ErrorMessage } from '@/components/ui/error-message'
 import { DevLogGoalsSection } from '@/components/dev/logs/DevLogGoalsSection'
 import { DevLogTasksSection } from '@/components/dev/logs/DevLogTasksSection'
 import { DevLogReportSection } from '@/components/dev/logs/DevLogReportSection'
-import { TaskForm } from '@/components/tasks/TaskForm'
+import { TaskForm } from '@/features/tasks'
 import {
   Dialog,
   DialogContent,
@@ -45,7 +45,7 @@ import {
   getDevWeeklyGoalsForDate,
   getDevTasksForDate,
 } from '@/lib/dev/logs/utils'
-import type { Task, CreateTaskInput } from '@/lib/types/task'
+import type { Task, CreateTaskInput } from '@/features/tasks'
 import type { UpdateDevDailyLogInput } from '@/lib/types/dev-daily-log'
 import Link from 'next/link'
 
