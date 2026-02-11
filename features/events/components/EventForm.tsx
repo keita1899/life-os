@@ -25,7 +25,13 @@ import {
 } from '@/components/ui/select'
 import { AutoResizeTextarea } from '@/components/ui/textarea-autosize'
 import { getTodayDateString } from '@/lib/date/formats'
-import { EVENT_CATEGORIES } from '../lib/constants'
+import {
+  EVENT_CATEGORIES,
+  RECURRENCE_OPTIONS,
+  WEEKDAY_LABELS,
+  DAYS_OF_MONTH,
+  LAST_DAY_OF_MONTH,
+} from '../lib'
 import { getEventFormValues } from '../lib/form'
 import type {
   Event,
@@ -41,18 +47,6 @@ const EVENT_CATEGORY_VALUES = EVENT_CATEGORIES.filter(
   NonNullable<EventCategory>,
   ...NonNullable<EventCategory>[],
 ]
-
-const RECURRENCE_OPTIONS: { value: '' | RecurrenceRule; label: string }[] = [
-  { value: '', label: 'なし' },
-  { value: 'daily', label: '毎日' },
-  { value: 'weekly', label: '毎週' },
-  { value: 'monthly', label: '毎月' },
-]
-
-const WEEKDAY_LABELS = ['日', '月', '火', '水', '木', '金', '土'] as const
-
-const DAYS_OF_MONTH = Array.from({ length: 31 }, (_, i) => i + 1)
-const LAST_DAY_OF_MONTH = 0
 
 const eventFormSchema = z.object({
   title: z.string().min(1, 'タイトルは必須です'),
