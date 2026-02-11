@@ -3,6 +3,7 @@
 import { useMemo } from 'react'
 import { CheckCircle2, Circle, Clock, Repeat } from 'lucide-react'
 import { cn } from '@/lib/utils'
+import { isValidTimeFormat } from '@/lib/date/formats'
 import {
   formatHabitScheduledTime,
   formatHabitFrequency,
@@ -13,12 +14,6 @@ interface HabitItemProps {
   habit: Habit
   completed: boolean
   onToggle?: (habit: Habit) => void
-}
-
-function isValidTimeFormat(time: string | null): boolean {
-  if (!time || time.trim() === '') return false
-  const trimmed = time.trim()
-  return /^\d{2}:\d{2}$/.test(trimmed)
 }
 
 export function HabitItem({
