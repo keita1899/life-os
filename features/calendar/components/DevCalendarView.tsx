@@ -10,7 +10,9 @@ import { useDevCalendarTasks } from '@/hooks/useDevCalendarTasks'
 import { useDevProjects } from '@/hooks/useDevProjects'
 import { useCalendarView } from '../hooks/useCalendarView'
 import { useAsyncOperation } from '@/hooks/useAsyncOperation'
-import { useMemo, useState } from 'react'
+import { useDialogState } from '@/hooks/useDialogState'
+import { useDeleteConfirm } from '@/hooks/useDeleteConfirm'
+import { useMemo } from 'react'
 import { startOfMonth, endOfMonth, startOfWeek, endOfWeek } from 'date-fns'
 import { getHolidaysForDateRange } from '../lib/holidays'
 import type { Task } from '@/features/tasks'
@@ -121,15 +123,14 @@ export function DevCalendarView({ initialDate }: DevCalendarViewProps) {
     isLoadingGoals || isLoadingTasks || isLoadingProjects || isLoadingSettings
 
   const { operationError, setOperationError, execute } = useAsyncOperation()
-  const [isTaskDialogOpen, setIsTaskDialogOpen] = useState(false)
-  const [editingTask, setEditingTask] = useState<Task | undefined>(undefined)
-  const [deletingTask, setDeletingTask] = useState<Task | undefined>(undefined)
+  const taskDialog = useDialogState<Task>()
+  const taskDeleteConfirm = useDeleteConfirm<Task>()
 
   const handleEditTask = (task: Task) => {
     const devTask = devTaskById.get(task.id)
     if (!devTask) return
 
-    setEditingTask({
+    const taskForEdit: Task = {
       id: devTask.id,
       title: devTask.title,
       executionDate: devTask.executionDate,
@@ -144,11 +145,12 @@ export function DevCalendarView({ initialDate }: DevCalendarViewProps) {
       memo: devTask.memo,
       createdAt: devTask.createdAt,
       updatedAt: devTask.updatedAt,
-    })
-    setIsTaskDialogOpen(true)
+    }
+    taskDialog.handleEdit(taskForEdit)
   }
 
   const handleUpdateTask = async (input: CreateTaskInput) => {
+    const editingTask = taskDialog.editingItem
     if (!editingTask) return
 
     const taskId = editingTask.id
@@ -165,17 +167,12 @@ export function DevCalendarView({ initialDate }: DevCalendarViewProps) {
       'タスクの更新に失敗しました',
     )
     if (result !== undefined) {
-      setIsTaskDialogOpen(false)
-      setEditingTask(undefined)
+      taskDialog.handleDialogClose(false)
     }
   }
 
-  const handleDeleteTaskClick = (task: Task) => {
-    setDeletingTask(task)
-  }
-
   const handleDeleteTask = async () => {
-    const taskToDelete = deletingTask
+    const taskToDelete = taskDeleteConfirm.deletingItem
     if (!taskToDelete) return
 
     const result = await execute(
@@ -187,7 +184,7 @@ export function DevCalendarView({ initialDate }: DevCalendarViewProps) {
       'タスクの削除に失敗しました',
     )
     if (result !== undefined) {
-      setDeletingTask(undefined)
+      taskDeleteConfirm.clearDeletingItem()
     }
   }
 
@@ -237,7 +234,7 @@ export function DevCalendarView({ initialDate }: DevCalendarViewProps) {
             weekStartDay={weekStartDay}
             holidays={holidays}
             onEditTask={handleEditTask}
-            onDeleteTask={handleDeleteTaskClick}
+            onDeleteTask={taskDeleteConfirm.handleDeleteClick}
             onToggleTaskCompletion={handleToggleTaskCompletion}
           />
         ) : (
@@ -250,29 +247,24 @@ export function DevCalendarView({ initialDate }: DevCalendarViewProps) {
             showWeeklyGoalForm={false}
             holidays={holidays}
             onEditTask={handleEditTask}
-            onDeleteTask={handleDeleteTaskClick}
+            onDeleteTask={taskDeleteConfirm.handleDeleteClick}
             onToggleTaskCompletion={handleToggleTaskCompletion}
           />
         )}
       </CalendarViewBase>
 
       <TaskDialog
-        open={isTaskDialogOpen}
-        onOpenChange={(open) => {
-          setIsTaskDialogOpen(open)
-          if (!open) {
-            setEditingTask(undefined)
-          }
-        }}
+        open={taskDialog.isDialogOpen}
+        onOpenChange={taskDialog.handleDialogClose}
         onSubmit={handleUpdateTask}
-        task={editingTask}
+        task={taskDialog.editingItem}
       />
 
       <DeleteConfirmDialog
-        open={!!deletingTask}
-        message={`「${deletingTask?.title}」を削除しますか？この操作は取り消せません。`}
+        open={!!taskDeleteConfirm.deletingItem}
+        message={`「${taskDeleteConfirm.deletingItem?.title}」を削除しますか？この操作は取り消せません。`}
         onConfirm={handleDeleteTask}
-        onCancel={() => setDeletingTask(undefined)}
+        onCancel={taskDeleteConfirm.handleDeleteCancel}
       />
     </>
   )

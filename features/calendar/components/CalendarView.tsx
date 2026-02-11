@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useMemo } from 'react'
+import { useMemo } from 'react'
 import Link from 'next/link'
 import {
   startOfMonth,
@@ -24,6 +24,8 @@ import { useTasks } from '@/features/tasks'
 import { useSubscriptions } from '@/features/subscriptions'
 import { useCalendarView } from '../hooks/useCalendarView'
 import { useAsyncOperation } from '@/hooks/useAsyncOperation'
+import { useDialogState } from '@/hooks/useDialogState'
+import { useDeleteConfirm } from '@/hooks/useDeleteConfirm'
 import { useUserSettings } from '@/features/settings'
 import { useBarcelonaMatches } from '@/hooks/useBarcelonaMatches'
 import { EventDialog } from '@/features/events'
@@ -127,24 +129,17 @@ export function CalendarView({ initialDate }: CalendarViewProps) {
     [rangeStart, rangeEnd],
   )
   const { operationError, setOperationError, execute } = useAsyncOperation()
-  const [isEventDialogOpen, setIsEventDialogOpen] = useState(false)
-  const [editingEvent, setEditingEvent] = useState<Event | undefined>(undefined)
-  const [deletingEvent, setDeletingEvent] = useState<Event | undefined>(undefined)
-  const [isTaskDialogOpen, setIsTaskDialogOpen] = useState(false)
-  const [editingTask, setEditingTask] = useState<Task | undefined>(undefined)
-  const [deletingTask, setDeletingTask] = useState<Task | undefined>(undefined)
-  const [isBucketListDialogOpen, setIsBucketListDialogOpen] = useState(false)
-  const [editingBucketListItem, setEditingBucketListItem] = useState<BucketListItem | undefined>(undefined)
-  const [deletingBucketListItem, setDeletingBucketListItem] = useState<BucketListItem | undefined>(undefined)
+  const eventDialog = useDialogState<Event>()
+  const eventDeleteConfirm = useDeleteConfirm<Event>()
+  const taskDialog = useDialogState<Task>()
+  const taskDeleteConfirm = useDeleteConfirm<Task>()
+  const bucketListDialog = useDialogState<BucketListItem>()
+  const bucketListDeleteConfirm = useDeleteConfirm<BucketListItem>()
   const isLoading =
     isLoadingGoals || isLoadingEvents || isLoadingTasks || isLoadingSubscriptions || isLoadingSettings
 
-  const handleEditEvent = (event: Event) => {
-    setEditingEvent(event)
-    setIsEventDialogOpen(true)
-  }
-
   const handleUpdateEvent = async (input: CreateEventInput) => {
+    const editingEvent = eventDialog.editingItem
     if (!editingEvent) return
 
     const eventId = editingEvent.id
@@ -165,17 +160,12 @@ export function CalendarView({ initialDate }: CalendarViewProps) {
       '予定の更新に失敗しました',
     )
     if (result !== undefined) {
-      setIsEventDialogOpen(false)
-      setEditingEvent(undefined)
+      eventDialog.handleDialogClose(false)
     }
   }
 
-  const handleDeleteEventClick = (event: Event) => {
-    setDeletingEvent(event)
-  }
-
   const handleDeleteEvent = async () => {
-    const eventToDelete = deletingEvent
+    const eventToDelete = eventDeleteConfirm.deletingItem
     if (!eventToDelete) return
 
     const result = await execute(
@@ -186,16 +176,12 @@ export function CalendarView({ initialDate }: CalendarViewProps) {
       '予定の削除に失敗しました',
     )
     if (result !== undefined) {
-      setDeletingEvent(undefined)
+      eventDeleteConfirm.clearDeletingItem()
     }
   }
 
-  const handleEditTask = (task: Task) => {
-    setEditingTask(task)
-    setIsTaskDialogOpen(true)
-  }
-
   const handleUpdateTask = async (input: CreateTaskInput) => {
+    const editingTask = taskDialog.editingItem
     if (!editingTask) return
 
     const taskId = editingTask.id
@@ -213,17 +199,12 @@ export function CalendarView({ initialDate }: CalendarViewProps) {
       'タスクの更新に失敗しました',
     )
     if (result !== undefined) {
-      setIsTaskDialogOpen(false)
-      setEditingTask(undefined)
+      taskDialog.handleDialogClose(false)
     }
   }
 
-  const handleDeleteTaskClick = (task: Task) => {
-    setDeletingTask(task)
-  }
-
   const handleDeleteTask = async () => {
-    const taskToDelete = deletingTask
+    const taskToDelete = taskDeleteConfirm.deletingItem
     if (!taskToDelete) return
 
     const result = await execute(
@@ -234,7 +215,7 @@ export function CalendarView({ initialDate }: CalendarViewProps) {
       'タスクの削除に失敗しました',
     )
     if (result !== undefined) {
-      setDeletingTask(undefined)
+      taskDeleteConfirm.clearDeletingItem()
     }
   }
 
@@ -264,12 +245,8 @@ export function CalendarView({ initialDate }: CalendarViewProps) {
     )
   }
 
-  const handleEditBucketListItem = (item: BucketListItem) => {
-    setEditingBucketListItem(item)
-    setIsBucketListDialogOpen(true)
-  }
-
   const handleUpdateBucketListItem = async (input: CreateBucketListItemInput) => {
+    const editingBucketListItem = bucketListDialog.editingItem
     if (!editingBucketListItem) return
 
     const itemId = editingBucketListItem.id
@@ -284,17 +261,12 @@ export function CalendarView({ initialDate }: CalendarViewProps) {
       'やりたいことの更新に失敗しました',
     )
     if (result !== undefined) {
-      setIsBucketListDialogOpen(false)
-      setEditingBucketListItem(undefined)
+      bucketListDialog.handleDialogClose(false)
     }
   }
 
-  const handleDeleteBucketListItemClick = (item: BucketListItem) => {
-    setDeletingBucketListItem(item)
-  }
-
   const handleDeleteBucketListItem = async () => {
-    const itemToDelete = deletingBucketListItem
+    const itemToDelete = bucketListDeleteConfirm.deletingItem
     if (!itemToDelete) return
 
     const result = await execute(
@@ -305,7 +277,7 @@ export function CalendarView({ initialDate }: CalendarViewProps) {
       'やりたいことの削除に失敗しました',
     )
     if (result !== undefined) {
-      setDeletingBucketListItem(undefined)
+      bucketListDeleteConfirm.clearDeletingItem()
     }
   }
 
@@ -337,10 +309,10 @@ export function CalendarView({ initialDate }: CalendarViewProps) {
             subscriptions={subscriptions}
             weekStartDay={weekStartDay}
             holidays={holidays}
-            onEditEvent={handleEditEvent}
-            onDeleteEvent={handleDeleteEventClick}
-            onEditTask={handleEditTask}
-            onDeleteTask={handleDeleteTaskClick}
+            onEditEvent={eventDialog.handleEdit}
+            onDeleteEvent={eventDeleteConfirm.handleDeleteClick}
+            onEditTask={taskDialog.handleEdit}
+            onDeleteTask={taskDeleteConfirm.handleDeleteClick}
             onToggleTaskCompletion={handleToggleTaskCompletion}
           />
         ) : (
@@ -352,10 +324,10 @@ export function CalendarView({ initialDate }: CalendarViewProps) {
             subscriptions={subscriptions}
             weekStartDay={weekStartDay}
             holidays={holidays}
-            onEditEvent={handleEditEvent}
-            onDeleteEvent={handleDeleteEventClick}
-            onEditTask={handleEditTask}
-            onDeleteTask={handleDeleteTaskClick}
+            onEditEvent={eventDialog.handleEdit}
+            onDeleteEvent={eventDeleteConfirm.handleDeleteClick}
+            onEditTask={taskDialog.handleEdit}
+            onDeleteTask={taskDeleteConfirm.handleDeleteClick}
             onToggleTaskCompletion={handleToggleTaskCompletion}
           />
         )}
@@ -377,76 +349,61 @@ export function CalendarView({ initialDate }: CalendarViewProps) {
           <CardContent>
             <BucketListList
               items={bucketListItemsForMonth}
-              onEdit={handleEditBucketListItem}
-              onDelete={handleDeleteBucketListItemClick}
+              onEdit={bucketListDialog.handleEdit}
+              onDelete={bucketListDeleteConfirm.handleDeleteClick}
             />
           </CardContent>
         </Card>
       )}
 
       <EventDialog
-        open={isEventDialogOpen}
-        onOpenChange={(open) => {
-          setIsEventDialogOpen(open)
-          if (!open) {
-            setEditingEvent(undefined)
-          }
-        }}
+        open={eventDialog.isDialogOpen}
+        onOpenChange={eventDialog.handleDialogClose}
         onSubmit={handleUpdateEvent}
-        event={editingEvent}
+        event={eventDialog.editingItem}
       />
 
       <DeleteConfirmDialog
-        open={!!deletingEvent}
+        open={!!eventDeleteConfirm.deletingItem}
         message={
-          deletingEvent?.recurrenceRule
-            ? `「${deletingEvent.title}」の繰り返し予定をすべて削除しますか？この操作は取り消せません。`
-            : `「${deletingEvent?.title}」を削除しますか？この操作は取り消せません。`
+          eventDeleteConfirm.deletingItem?.recurrenceRule
+            ? `「${eventDeleteConfirm.deletingItem.title}」の繰り返し予定をすべて削除しますか？この操作は取り消せません。`
+            : `「${eventDeleteConfirm.deletingItem?.title}」を削除しますか？この操作は取り消せません。`
         }
         onConfirm={handleDeleteEvent}
-        onCancel={() => setDeletingEvent(undefined)}
+        onCancel={eventDeleteConfirm.handleDeleteCancel}
       />
 
       <TaskDialog
-        open={isTaskDialogOpen}
-        onOpenChange={(open) => {
-          setIsTaskDialogOpen(open)
-          if (!open) {
-            setEditingTask(undefined)
-          }
-        }}
+        open={taskDialog.isDialogOpen}
+        onOpenChange={taskDialog.handleDialogClose}
         onSubmit={handleUpdateTask}
-        task={editingTask}
+        task={taskDialog.editingItem}
       />
 
       <DeleteConfirmDialog
-        open={!!deletingTask}
+        open={!!taskDeleteConfirm.deletingItem}
         message={
-          deletingTask?.recurrenceRule
-            ? `「${deletingTask?.title}」は繰り返しタスクです。削除するとすべての発生が削除されます。この操作は取り消せません。`
-            : `「${deletingTask?.title}」を削除しますか？この操作は取り消せません。`
+          taskDeleteConfirm.deletingItem?.recurrenceRule
+            ? `「${taskDeleteConfirm.deletingItem?.title}」は繰り返しタスクです。削除するとすべての発生が削除されます。この操作は取り消せません。`
+            : `「${taskDeleteConfirm.deletingItem?.title}」を削除しますか？この操作は取り消せません。`
         }
         onConfirm={handleDeleteTask}
-        onCancel={() => setDeletingTask(undefined)}
+        onCancel={taskDeleteConfirm.handleDeleteCancel}
       />
 
       <BucketListDialog
-        open={isBucketListDialogOpen}
-        onOpenChange={(open) => {
-          setIsBucketListDialogOpen(open)
-          if (!open) {
-            setEditingBucketListItem(undefined)
-          }
-        }}
+        open={bucketListDialog.isDialogOpen}
+        onOpenChange={bucketListDialog.handleDialogClose}
         onSubmit={handleUpdateBucketListItem}
-        item={editingBucketListItem}
+        item={bucketListDialog.editingItem}
       />
 
       <DeleteConfirmDialog
-        open={!!deletingBucketListItem}
-        message={`「${deletingBucketListItem?.title}」を削除しますか？この操作は取り消せません。`}
+        open={!!bucketListDeleteConfirm.deletingItem}
+        message={`「${bucketListDeleteConfirm.deletingItem?.title}」を削除しますか？この操作は取り消せません。`}
         onConfirm={handleDeleteBucketListItem}
-        onCancel={() => setDeletingBucketListItem(undefined)}
+        onCancel={bucketListDeleteConfirm.handleDeleteCancel}
       />
 
     </>
