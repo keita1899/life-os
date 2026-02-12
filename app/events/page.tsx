@@ -8,13 +8,7 @@ import { useCreateShortcut } from '@/hooks/useCreateShortcut'
 import { useDialogState } from '@/hooks/useDialogState'
 import { useDeleteConfirm } from '@/hooks/useDeleteConfirm'
 import { useAsyncOperation } from '@/hooks/useAsyncOperation'
-import {
-  Accordion,
-  AccordionContent,
-  AccordionHeader,
-  AccordionItem,
-  AccordionTrigger,
-} from '@/components/ui/accordion'
+import { GroupedAccordion } from '@/components/ui/grouped-accordion'
 import {
   EventList,
   EventDialog,
@@ -147,37 +141,31 @@ export default function EventsPage() {
       {isLoading ? (
         <Loading />
       ) : (
-        <Accordion
-          type="multiple"
-          className="w-full"
+        <GroupedAccordion
+          items={visibleGroups.map((group) => ({
+            key: group.key,
+            trigger: (
+              <div className="flex items-center gap-2">
+                <h2 className="text-lg font-semibold text-stone-900 dark:text-stone-100">
+                  {group.title}
+                </h2>
+                {group.events.length > 0 && (
+                  <span className="text-sm text-muted-foreground">
+                    {group.events.length}
+                  </span>
+                )}
+              </div>
+            ),
+            content: (
+              <EventList
+                events={group.events}
+                onEdit={handleEditEvent}
+                onDelete={deleteConfirm.handleDeleteClick}
+              />
+            ),
+          }))}
           defaultValue={visibleGroups.map((group) => group.key)}
-        >
-          {visibleGroups.map((group) => (
-            <AccordionItem key={group.key} value={group.key}>
-              <AccordionHeader>
-                <AccordionTrigger className="hover:no-underline">
-                  <div className="flex items-center gap-2">
-                    <h2 className="text-lg font-semibold text-stone-900 dark:text-stone-100">
-                      {group.title}
-                    </h2>
-                    {group.events.length > 0 && (
-                      <span className="text-sm text-muted-foreground">
-                        {group.events.length}
-                      </span>
-                    )}
-                  </div>
-                </AccordionTrigger>
-              </AccordionHeader>
-              <AccordionContent>
-                <EventList
-                  events={group.events}
-                  onEdit={handleEditEvent}
-                  onDelete={deleteConfirm.handleDeleteClick}
-                />
-              </AccordionContent>
-            </AccordionItem>
-          ))}
-        </Accordion>
+        />
       )}
 
       <EventDialog

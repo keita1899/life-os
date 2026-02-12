@@ -7,13 +7,7 @@ import { useCreateShortcut } from '@/hooks/useCreateShortcut'
 import { useDialogState } from '@/hooks/useDialogState'
 import { useDeleteConfirm } from '@/hooks/useDeleteConfirm'
 import { useAsyncOperation } from '@/hooks/useAsyncOperation'
-import {
-  Accordion,
-  AccordionContent,
-  AccordionHeader,
-  AccordionItem,
-  AccordionTrigger,
-} from '@/components/ui/accordion'
+import { GroupedAccordion } from '@/components/ui/grouped-accordion'
 import {
   BucketListList,
   BucketListDialog,
@@ -341,37 +335,35 @@ export default function BucketListPage() {
                 {filteredItems.length === 0 ? (
                   <EmptyState message="やりたいことがありません" />
                 ) : (
-                <Accordion
-                  type="multiple"
-                  className="w-full"
-                  defaultValue={defaultAccordionValues}
+                <GroupedAccordion
                   key={`${selectedYear}-${selectedCategoryId}-${items.length}`}
-                >
-                  {Array.from({ length: 12 }, (_, i) => i + 1)
-                    .filter((month) => (incompleteByMonth.byMonth[month] ?? []).length > 0)
-                    .map((month) => {
-                      const monthItems = incompleteByMonth.byMonth[month] ?? []
-                      return (
-                        <AccordionItem
-                          key={month}
-                          value={`month-${month}`}
-                          className="border-none"
-                        >
-                          <AccordionHeader>
-                            <AccordionTrigger className="hover:no-underline py-2">
-                              <span className="inline-flex items-center gap-1">
-                                <span className="text-stone-900 dark:text-stone-100">
-                                  {month}月
-                                </span>
-                                {monthItems.length > 0 && (
-                                  <span className="text-sm text-muted-foreground">
-                                    {monthItems.length}
-                                  </span>
-                                )}
+                  items={[
+                    ...Array.from({ length: 12 }, (_, i) => i + 1)
+                      .filter(
+                        (month) =>
+                          (incompleteByMonth.byMonth[month] ?? []).length > 0,
+                      )
+                      .map((month) => {
+                        const monthItems =
+                          incompleteByMonth.byMonth[month] ?? []
+                        return {
+                          key: `month-${month}`,
+                          itemClassName: 'border-none',
+                          triggerClassName: 'py-2',
+                          contentClassName: 'pt-2',
+                          trigger: (
+                            <span className="inline-flex items-center gap-1">
+                              <span className="text-stone-900 dark:text-stone-100">
+                                {month}月
                               </span>
-                            </AccordionTrigger>
-                          </AccordionHeader>
-                          <AccordionContent className="pt-2">
+                              {monthItems.length > 0 && (
+                                <span className="text-sm text-muted-foreground">
+                                  {monthItems.length}
+                                </span>
+                              )}
+                            </span>
+                          ),
+                          content: (
                             <BucketListList
                               items={monthItems}
                               onEdit={handleEditItem}
@@ -380,82 +372,86 @@ export default function BucketListPage() {
                               onConvertToEvent={handleConvertToEvent}
                               onConvertToTask={handleConvertToTask}
                             />
-                          </AccordionContent>
-                        </AccordionItem>
-                      )
-                    })}
-                  {incompleteByMonth.unset.length > 0 && (
-                    <AccordionItem
-                      value="month-unset"
-                      className="border-none"
-                    >
-                      <AccordionHeader>
-                        <AccordionTrigger className="hover:no-underline py-2">
-                          <span className="inline-flex items-center gap-1">
-                            <span className="text-stone-900 dark:text-stone-100">
-                              未定
-                            </span>
-                            {incompleteByMonth.unset.length > 0 && (
-                              <span className="text-sm text-muted-foreground">
-                                {incompleteByMonth.unset.length}
+                          ),
+                        }
+                      }),
+                    ...(incompleteByMonth.unset.length > 0
+                      ? [
+                          {
+                            key: 'month-unset',
+                            itemClassName: 'border-none',
+                            triggerClassName: 'py-2',
+                            contentClassName: 'pt-2',
+                            trigger: (
+                              <span className="inline-flex items-center gap-1">
+                                <span className="text-stone-900 dark:text-stone-100">
+                                  未定
+                                </span>
+                                <span className="text-sm text-muted-foreground">
+                                  {incompleteByMonth.unset.length}
+                                </span>
                               </span>
-                            )}
-                          </span>
-                        </AccordionTrigger>
-                      </AccordionHeader>
-                      <AccordionContent className="pt-2">
-                        <BucketListList
-                          items={incompleteByMonth.unset}
-                          onEdit={handleEditItem}
-                          onDelete={deleteConfirm.handleDeleteClick}
-                          onToggleCompletion={handleToggleCompletion}
-                          onConvertToEvent={handleConvertToEvent}
-                          onConvertToTask={handleConvertToTask}
-                        />
-                      </AccordionContent>
-                    </AccordionItem>
-                  )}
-                  {completedItems.length > 0 && (
-                    <AccordionItem value="completed" className="border-none">
-                      <AccordionHeader>
-                        <AccordionTrigger className="hover:no-underline py-2">
-                          <span className="inline-flex items-center gap-1">
-                            <span className="text-stone-900 dark:text-stone-100">
-                              達成済み
-                            </span>
-                            <span className="text-sm text-muted-foreground">
-                              {completedItems.length}
-                            </span>
-                          </span>
-                        </AccordionTrigger>
-                      </AccordionHeader>
-                      <AccordionContent className="pt-2">
-                        <div className="space-y-4">
-                          <BucketListList
-                            items={completedItems}
-                            onEdit={handleEditItem}
-                            onDelete={deleteConfirm.handleDeleteClick}
-                            onToggleCompletion={handleToggleCompletion}
-                            onConvertToEvent={handleConvertToEvent}
-                            onConvertToTask={handleConvertToTask}
-                          />
-                          <div className="flex justify-end">
-                            <Button
-                              type="button"
-                              variant="outline"
-                              size="sm"
-                              className="text-destructive hover:text-destructive hover:bg-destructive/10"
-                              onClick={handleDeleteCompletedItemsClick}
-                            >
-                              <Trash2 className="mr-2 h-4 w-4" />
-                              達成済みを一括削除
-                            </Button>
-                          </div>
-                        </div>
-                      </AccordionContent>
-                    </AccordionItem>
-                  )}
-                </Accordion>
+                            ),
+                            content: (
+                              <BucketListList
+                                items={incompleteByMonth.unset}
+                                onEdit={handleEditItem}
+                                onDelete={deleteConfirm.handleDeleteClick}
+                                onToggleCompletion={handleToggleCompletion}
+                                onConvertToEvent={handleConvertToEvent}
+                                onConvertToTask={handleConvertToTask}
+                              />
+                            ),
+                          },
+                        ]
+                      : []),
+                    ...(completedItems.length > 0
+                      ? [
+                          {
+                            key: 'completed',
+                            itemClassName: 'border-none',
+                            triggerClassName: 'py-2',
+                            contentClassName: 'pt-2',
+                            trigger: (
+                              <span className="inline-flex items-center gap-1">
+                                <span className="text-stone-900 dark:text-stone-100">
+                                  達成済み
+                                </span>
+                                <span className="text-sm text-muted-foreground">
+                                  {completedItems.length}
+                                </span>
+                              </span>
+                            ),
+                            content: (
+                              <div className="space-y-4">
+                                <BucketListList
+                                  items={completedItems}
+                                  onEdit={handleEditItem}
+                                  onDelete={deleteConfirm.handleDeleteClick}
+                                  onToggleCompletion={handleToggleCompletion}
+                                  onConvertToEvent={handleConvertToEvent}
+                                  onConvertToTask={handleConvertToTask}
+                                />
+                                <div className="flex justify-end">
+                                  <Button
+                                    type="button"
+                                    variant="outline"
+                                    size="sm"
+                                    className="text-destructive hover:text-destructive hover:bg-destructive/10"
+                                    onClick={handleDeleteCompletedItemsClick}
+                                  >
+                                    <Trash2 className="mr-2 h-4 w-4" />
+                                    達成済みを一括削除
+                                  </Button>
+                                </div>
+                              </div>
+                            ),
+                          },
+                        ]
+                      : []),
+                  ]}
+                  defaultValue={defaultAccordionValues}
+                />
                 )}
               </>
             )}

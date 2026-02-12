@@ -7,13 +7,7 @@ import { useCreateShortcut } from '@/hooks/useCreateShortcut'
 import { useDialogState } from '@/hooks/useDialogState'
 import { useDeleteConfirm } from '@/hooks/useDeleteConfirm'
 import { useAsyncOperation } from '@/hooks/useAsyncOperation'
-import {
-  Accordion,
-  AccordionContent,
-  AccordionHeader,
-  AccordionItem,
-  AccordionTrigger,
-} from '@/components/ui/accordion'
+import { GroupedAccordion } from '@/components/ui/grouped-accordion'
 import {
   WishlistList,
   WishlistDialog,
@@ -248,18 +242,11 @@ export default function WishlistPage() {
                     </SelectContent>
                   </Select>
                 </div>
-                <Accordion
-                  type="multiple"
-                  className="w-full"
-                  defaultValue={
-                    purchasedItems.length > 0
-                      ? ['unpurchased', 'purchased']
-                      : ['unpurchased']
-                  }
-                >
-                  <AccordionItem value="unpurchased">
-                    <AccordionHeader>
-                      <AccordionTrigger className="hover:no-underline">
+                <GroupedAccordion
+                  items={[
+                    {
+                      key: 'unpurchased',
+                      trigger: (
                         <div className="flex items-center gap-2">
                           <h2 className="text-lg font-semibold text-stone-900 dark:text-stone-100">
                             未購入
@@ -270,58 +257,64 @@ export default function WishlistPage() {
                             </span>
                           )}
                         </div>
-                      </AccordionTrigger>
-                    </AccordionHeader>
-                    <AccordionContent>
-                      <div className="space-y-4">
-                        <WishlistList
-                          items={unpurchasedItems}
-                          onEdit={handleEditItem}
-                          onDelete={deleteConfirm.handleDeleteClick}
-                          onToggleCompletion={handleTogglePurchased}
-                        />
-                      </div>
-                    </AccordionContent>
-                  </AccordionItem>
-                  {purchasedItems.length > 0 && (
-                    <AccordionItem value="purchased">
-                      <AccordionHeader>
-                        <AccordionTrigger className="hover:no-underline">
-                          <div className="flex items-center gap-2">
-                            <h2 className="text-lg font-semibold text-stone-900 dark:text-stone-100">
-                              購入済
-                            </h2>
-                            <span className="text-sm text-muted-foreground">
-                              {purchasedItems.length}
-                            </span>
-                          </div>
-                        </AccordionTrigger>
-                      </AccordionHeader>
-                      <AccordionContent>
+                      ),
+                      content: (
                         <div className="space-y-4">
                           <WishlistList
-                            items={purchasedItems}
+                            items={unpurchasedItems}
                             onEdit={handleEditItem}
                             onDelete={deleteConfirm.handleDeleteClick}
                             onToggleCompletion={handleTogglePurchased}
                           />
-                          <div className="flex justify-end">
-                            <Button
-                              type="button"
-                              variant="outline"
-                              size="sm"
-                              className="text-destructive hover:text-destructive hover:bg-destructive/10"
-                              onClick={handleDeletePurchasedItemsClick}
-                            >
-                              <Trash2 className="mr-2 h-4 w-4" />
-                              購入済みを一括削除
-                            </Button>
-                          </div>
                         </div>
-                      </AccordionContent>
-                    </AccordionItem>
-                  )}
-                </Accordion>
+                      ),
+                    },
+                    ...(purchasedItems.length > 0
+                      ? [
+                          {
+                            key: 'purchased' as const,
+                            trigger: (
+                              <div className="flex items-center gap-2">
+                                <h2 className="text-lg font-semibold text-stone-900 dark:text-stone-100">
+                                  購入済
+                                </h2>
+                                <span className="text-sm text-muted-foreground">
+                                  {purchasedItems.length}
+                                </span>
+                              </div>
+                            ),
+                            content: (
+                              <div className="space-y-4">
+                                <WishlistList
+                                  items={purchasedItems}
+                                  onEdit={handleEditItem}
+                                  onDelete={deleteConfirm.handleDeleteClick}
+                                  onToggleCompletion={handleTogglePurchased}
+                                />
+                                <div className="flex justify-end">
+                                  <Button
+                                    type="button"
+                                    variant="outline"
+                                    size="sm"
+                                    className="text-destructive hover:text-destructive hover:bg-destructive/10"
+                                    onClick={handleDeletePurchasedItemsClick}
+                                  >
+                                    <Trash2 className="mr-2 h-4 w-4" />
+                                    購入済みを一括削除
+                                  </Button>
+                                </div>
+                              </div>
+                            ),
+                          },
+                        ]
+                      : []),
+                  ]}
+                  defaultValue={
+                    purchasedItems.length > 0
+                      ? ['unpurchased', 'purchased']
+                      : ['unpurchased']
+                  }
+                />
               </>
             )}
 

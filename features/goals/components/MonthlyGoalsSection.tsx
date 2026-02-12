@@ -12,13 +12,7 @@ import {
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card'
 import { EmptyState } from '@/components/ui/empty-state'
 import { Progress } from '@/components/ui/progress'
-import {
-  Accordion,
-  AccordionContent,
-  AccordionHeader,
-  AccordionItem,
-  AccordionTrigger,
-} from '@/components/ui/accordion'
+import { GroupedAccordion } from '@/components/ui/grouped-accordion'
 import { calculateProgress } from '../lib/checklist'
 import type { MonthlyGoal } from '../types/monthly-goal'
 
@@ -208,31 +202,22 @@ export const MonthlyGoalsSection = ({
       )}
 
       <div className="px-6">
-        <Accordion type="multiple" className="w-full" defaultValue={[]}>
-        {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12].map((month) => {
-          const monthGoals = monthlyGoalsByMonth[month] || []
-          const isCurrentMonth =
-            selectedYear === currentYear && month === currentMonth
-
-          return (
-            <AccordionItem
-              key={month}
-              value={`month-${month}`}
-              className={
-                isCurrentMonth ? 'border-stone-300 dark:border-stone-700' : ''
-              }
-            >
-              <AccordionHeader>
-                <AccordionTrigger
-                  className={
-                    isCurrentMonth ? 'text-blue-600 dark:text-blue-400' : ''
-                  }
-                >
-                  {month}月
-                </AccordionTrigger>
-              </AccordionHeader>
-              <AccordionContent>
-                {monthGoals.length === 0 ? (
+        <GroupedAccordion
+          items={[1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12].map((month) => {
+            const monthGoals = monthlyGoalsByMonth[month] || []
+            const isCurrentMonth =
+              selectedYear === currentYear && month === currentMonth
+            return {
+              key: `month-${month}`,
+              itemClassName: isCurrentMonth
+                ? 'border-stone-300 dark:border-stone-700'
+                : '',
+              triggerClassName: isCurrentMonth
+                ? 'text-blue-600 dark:text-blue-400'
+                : '',
+              trigger: `${month}月`,
+              content:
+                monthGoals.length === 0 ? (
                   <EmptyState message="この月の目標はありません" />
                 ) : (
                   <div className="grid gap-4 grid-cols-1">
@@ -246,12 +231,11 @@ export const MonthlyGoalsSection = ({
                       />
                     ))}
                   </div>
-                )}
-              </AccordionContent>
-            </AccordionItem>
-          )
-        })}
-        </Accordion>
+                ),
+            }
+          })}
+          defaultValue={[]}
+        />
       </div>
     </div>
   )

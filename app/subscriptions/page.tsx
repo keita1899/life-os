@@ -7,13 +7,7 @@ import { useCreateShortcut } from '@/hooks/useCreateShortcut'
 import { useDialogState } from '@/hooks/useDialogState'
 import { useDeleteConfirm } from '@/hooks/useDeleteConfirm'
 import { useAsyncOperation } from '@/hooks/useAsyncOperation'
-import {
-  Accordion,
-  AccordionContent,
-  AccordionHeader,
-  AccordionItem,
-  AccordionTrigger,
-} from '@/components/ui/accordion'
+import { GroupedAccordion } from '@/components/ui/grouped-accordion'
 import {
   SubscriptionList,
   SubscriptionDialog,
@@ -170,46 +164,40 @@ export default function SubscriptionsPage() {
       {isLoading ? (
         <Loading />
       ) : (
-        <Accordion
-          type="multiple"
-          className="w-full"
+        <GroupedAccordion
+          items={groupedSubscriptions.map((group) => ({
+            key: group.key,
+            trigger: (
+              <div className="flex w-full items-center gap-2">
+                <h2 className="text-lg font-semibold text-stone-900 dark:text-stone-100">
+                  {group.title}
+                </h2>
+                {group.subscriptions.length > 0 && (
+                  <span className="text-sm text-muted-foreground">
+                    {group.subscriptions.length}
+                  </span>
+                )}
+                {group.key === 'active' && monthlyTotal > 0 && (
+                  <span className="ml-auto text-lg text-muted-foreground">
+                    月額合計:{' '}
+                    <span className="font-semibold text-foreground tabular-nums">
+                      {monthlyTotal.toLocaleString()}円
+                    </span>
+                  </span>
+                )}
+              </div>
+            ),
+            content: (
+              <SubscriptionList
+                subscriptions={group.subscriptions}
+                onEdit={handleEditSubscription}
+                onDelete={deleteConfirm.handleDeleteClick}
+                onToggleActive={handleToggleActive}
+              />
+            ),
+          }))}
           defaultValue={['active']}
-        >
-          {groupedSubscriptions.map((group) => (
-            <AccordionItem key={group.key} value={group.key}>
-              <AccordionHeader className="flex items-center justify-between">
-                <AccordionTrigger className="hover:no-underline flex-1">
-                  <div className="flex w-full items-center gap-2">
-                    <h2 className="text-lg font-semibold text-stone-900 dark:text-stone-100">
-                      {group.title}
-                    </h2>
-                    {group.subscriptions.length > 0 && (
-                      <span className="text-sm text-muted-foreground">
-                        {group.subscriptions.length}
-                      </span>
-                    )}
-                    {group.key === 'active' && monthlyTotal > 0 && (
-                      <span className="ml-auto text-lg text-muted-foreground">
-                        月額合計:{' '}
-                        <span className="font-semibold text-foreground tabular-nums">
-                          {monthlyTotal.toLocaleString()}円
-                        </span>
-                      </span>
-                    )}
-                  </div>
-                </AccordionTrigger>
-              </AccordionHeader>
-              <AccordionContent>
-                <SubscriptionList
-                  subscriptions={group.subscriptions}
-                  onEdit={handleEditSubscription}
-                  onDelete={deleteConfirm.handleDeleteClick}
-                  onToggleActive={handleToggleActive}
-                />
-              </AccordionContent>
-            </AccordionItem>
-          ))}
-        </Accordion>
+        />
       )}
 
       <SubscriptionDialog

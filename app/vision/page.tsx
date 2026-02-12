@@ -8,13 +8,7 @@ import {
   useVisionCategories,
   type VisionItem,
 } from '@/features/vision'
-import {
-  Accordion,
-  AccordionContent,
-  AccordionHeader,
-  AccordionItem,
-  AccordionTrigger,
-} from '@/components/ui/accordion'
+import { GroupedAccordion } from '@/components/ui/grouped-accordion'
 import { Loading } from '@/components/ui/loading'
 import { ErrorMessage } from '@/components/ui/error-message'
 import { useAsyncOperation } from '@/hooks/useAsyncOperation'
@@ -137,38 +131,30 @@ export default function VisionPage() {
               groupedItemsByCategory.filter(
                 ({ categoryId }) => categoryId !== null,
               ).length > 0 ? (
-                <Accordion
-                  type="multiple"
+                <GroupedAccordion
+                  items={groupedItemsByCategory
+                    .filter(({ categoryId }) => categoryId !== null)
+                    .map(({ categoryId, category, items }) => ({
+                      key: categoryId!.toString(),
+                      itemClassName: 'border-none',
+                      triggerClassName: 'text-lg font-semibold py-2',
+                      contentClassName: 'pt-2',
+                      trigger: category?.name,
+                      content: (
+                        <VisionList
+                          items={items}
+                          onUpdate={handleUpdateItem}
+                          onDelete={handleDeleteItem}
+                          onCreate={(title) =>
+                            handleCreateItem(title).then(() => {})
+                          }
+                          showCreateForm={false}
+                        />
+                      ),
+                    }))}
                   defaultValue={defaultAccordionValues}
                   className="space-y-2"
-                >
-                  {groupedItemsByCategory
-                    .filter(({ categoryId }) => categoryId !== null)
-                    .map(({ categoryId, category, items }) => (
-                      <AccordionItem
-                        key={categoryId!}
-                        value={categoryId!.toString()}
-                        className="border-none"
-                      >
-                        <AccordionHeader>
-                          <AccordionTrigger className="text-lg font-semibold py-2">
-                            {category?.name}
-                          </AccordionTrigger>
-                        </AccordionHeader>
-                        <AccordionContent className="pt-2">
-                          <VisionList
-                            items={items}
-                            onUpdate={handleUpdateItem}
-                            onDelete={handleDeleteItem}
-                            onCreate={(title) =>
-                              handleCreateItem(title).then(() => {})
-                            }
-                            showCreateForm={false}
-                          />
-                        </AccordionContent>
-                      </AccordionItem>
-                    ))}
-                </Accordion>
+                />
               ) : (
                 <VisionList
                   items={[]}
