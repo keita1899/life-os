@@ -118,6 +118,17 @@ function DevProjectPageContent(): ReactElement | null {
     [groupedTasks],
   )
 
+  const [openAccordionKeys, setOpenAccordionKeys] = useState<string[]>([])
+
+  const accordionValue = useMemo(() => {
+    const keys = visibleGroups.map((g) => g.key)
+    if (openAccordionKeys.length === 0) return keys
+    const newKeys = keys.filter((k) => !openAccordionKeys.includes(k))
+    if (newKeys.length > 0)
+      return [...new Set([...openAccordionKeys, ...newKeys])]
+    return openAccordionKeys
+  }, [visibleGroups, openAccordionKeys])
+
   const handleUpdate = async (input: {
     name: string
     startDate?: string | null
@@ -343,6 +354,8 @@ function DevProjectPageContent(): ReactElement | null {
                 <Loading />
               ) : (
                 <GroupedAccordion
+                  value={accordionValue}
+                  onValueChange={setOpenAccordionKeys}
                   items={visibleGroups.map((group) => ({
                     key: group.key,
                     trigger: (
@@ -407,7 +420,6 @@ function DevProjectPageContent(): ReactElement | null {
                       </div>
                     ),
                   }))}
-                  defaultValue={visibleGroups.map((group) => group.key)}
                 />
               )}
             </section>

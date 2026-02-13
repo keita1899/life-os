@@ -65,6 +65,17 @@ export default function SubscriptionsPage() {
     ]
   }, [subscriptions])
 
+  const [openAccordionKeys, setOpenAccordionKeys] = useState<string[]>([])
+
+  const accordionValue = useMemo(() => {
+    const keys = groupedSubscriptions.map((g) => g.key)
+    if (openAccordionKeys.length === 0) return keys
+    const newKeys = keys.filter((k) => !openAccordionKeys.includes(k))
+    if (newKeys.length > 0)
+      return [...new Set([...openAccordionKeys, ...newKeys])]
+    return openAccordionKeys
+  }, [groupedSubscriptions, openAccordionKeys])
+
   const monthlyTotal = useMemo(() => {
     return calculateMonthlyTotal(subscriptions)
   }, [subscriptions])
@@ -165,6 +176,8 @@ export default function SubscriptionsPage() {
         <Loading />
       ) : (
         <GroupedAccordion
+          value={accordionValue}
+          onValueChange={setOpenAccordionKeys}
           items={groupedSubscriptions.map((group) => ({
             key: group.key,
             trigger: (
@@ -196,7 +209,6 @@ export default function SubscriptionsPage() {
               />
             ),
           }))}
-          defaultValue={['active']}
         />
       )}
 

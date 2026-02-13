@@ -135,15 +135,6 @@ export const MonthlyGoalsSection = ({
     return monthly
   }, [goals])
 
-  const defaultOpenMonth = useMemo(() => {
-    const currentDate = new Date()
-    const isCurrentYear = selectedYear === currentDate.getFullYear()
-    if (isCurrentYear) {
-      return [`month-${currentDate.getMonth() + 1}`]
-    }
-    return []
-  }, [selectedYear])
-
   return (
     <div>
       <div className="mb-6 flex items-center justify-between px-6">
@@ -189,7 +180,9 @@ export const MonthlyGoalsSection = ({
                 ),
             }
           })}
-          defaultValue={defaultOpenMonth}
+          defaultValue={[1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12].map((m) =>
+            `month-${m}`,
+          )}
         />
       </div>
     </div>

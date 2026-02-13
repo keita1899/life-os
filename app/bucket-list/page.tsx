@@ -135,7 +135,7 @@ export default function BucketListPage() {
     [filteredItems],
   )
 
-  const defaultAccordionValues = useMemo(() => {
+  const accordionKeys = useMemo(() => {
     const values: string[] = []
     Array.from({ length: 12 }, (_, i) => i + 1)
       .filter((month) => (incompleteByMonth.byMonth[month] ?? []).length > 0)
@@ -144,6 +144,16 @@ export default function BucketListPage() {
     if (completedItems.length > 0) values.push('completed')
     return values
   }, [incompleteByMonth, completedItems.length])
+
+  const [openAccordionKeys, setOpenAccordionKeys] = useState<string[]>([])
+
+  const accordionValue = useMemo(() => {
+    if (openAccordionKeys.length === 0) return accordionKeys
+    const newKeys = accordionKeys.filter((k) => !openAccordionKeys.includes(k))
+    if (newKeys.length > 0)
+      return [...new Set([...openAccordionKeys, ...newKeys])]
+    return openAccordionKeys
+  }, [accordionKeys, openAccordionKeys])
 
   const handleCreateItem = async (input: CreateBucketListItemInput) => {
     const result = await execute(
@@ -336,7 +346,8 @@ export default function BucketListPage() {
                   <EmptyState message="やりたいことがありません" />
                 ) : (
                 <GroupedAccordion
-                  key={`${selectedYear}-${selectedCategoryId}-${items.length}`}
+                  value={accordionValue}
+                  onValueChange={setOpenAccordionKeys}
                   items={[
                     ...Array.from({ length: 12 }, (_, i) => i + 1)
                       .filter(
@@ -450,7 +461,6 @@ export default function BucketListPage() {
                         ]
                       : []),
                   ]}
-                  defaultValue={defaultAccordionValues}
                 />
                 )}
               </>

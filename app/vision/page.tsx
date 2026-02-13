@@ -73,12 +73,22 @@ export default function VisionPage() {
       })
   }, [items, categories, selectedCategoryId])
 
-  const defaultAccordionValues = useMemo(() => {
+  const accordionKeys = useMemo(() => {
     if (!groupedItemsByCategory) return []
-    return groupedItemsByCategory.map(({ categoryId }) =>
-      categoryId.toString(),
-    )
+    return groupedItemsByCategory
+      .filter(({ categoryId }) => categoryId !== null)
+      .map(({ categoryId }) => categoryId!.toString())
   }, [groupedItemsByCategory])
+
+  const [openAccordionKeys, setOpenAccordionKeys] = useState<string[]>([])
+
+  const accordionValue = useMemo(() => {
+    if (openAccordionKeys.length === 0) return accordionKeys
+    const newKeys = accordionKeys.filter((k) => !openAccordionKeys.includes(k))
+    if (newKeys.length > 0)
+      return [...new Set([...openAccordionKeys, ...newKeys])]
+    return openAccordionKeys
+  }, [accordionKeys, openAccordionKeys])
 
   const handleCreateItem = async (title: string) => {
     await execute(
@@ -132,6 +142,8 @@ export default function VisionPage() {
                 ({ categoryId }) => categoryId !== null,
               ).length > 0 ? (
                 <GroupedAccordion
+                  value={accordionValue}
+                  onValueChange={setOpenAccordionKeys}
                   items={groupedItemsByCategory
                     .filter(({ categoryId }) => categoryId !== null)
                     .map(({ categoryId, category, items }) => ({
@@ -152,7 +164,6 @@ export default function VisionPage() {
                         />
                       ),
                     }))}
-                  defaultValue={defaultAccordionValues}
                   className="space-y-2"
                 />
               ) : (

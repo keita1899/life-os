@@ -99,6 +99,22 @@ export default function WishlistPage() {
     [filteredItems],
   )
 
+  const accordionKeys = useMemo(
+    () =>
+      purchasedItems.length > 0 ? ['unpurchased', 'purchased'] : ['unpurchased'],
+    [purchasedItems.length],
+  )
+
+  const [openAccordionKeys, setOpenAccordionKeys] = useState<string[]>([])
+
+  const accordionValue = useMemo(() => {
+    if (openAccordionKeys.length === 0) return accordionKeys
+    const newKeys = accordionKeys.filter((k) => !openAccordionKeys.includes(k))
+    if (newKeys.length > 0)
+      return [...new Set([...openAccordionKeys, ...newKeys])]
+    return openAccordionKeys
+  }, [accordionKeys, openAccordionKeys])
+
   const totalPrice = useMemo(() => {
     return calculateTotalPrice(unpurchasedItems)
   }, [unpurchasedItems])
@@ -243,6 +259,8 @@ export default function WishlistPage() {
                   </Select>
                 </div>
                 <GroupedAccordion
+                  value={accordionValue}
+                  onValueChange={setOpenAccordionKeys}
                   items={[
                     {
                       key: 'unpurchased',
@@ -309,11 +327,6 @@ export default function WishlistPage() {
                         ]
                       : []),
                   ]}
-                  defaultValue={
-                    purchasedItems.length > 0
-                      ? ['unpurchased', 'purchased']
-                      : ['unpurchased']
-                  }
                 />
               </>
             )}

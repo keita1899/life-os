@@ -79,6 +79,17 @@ export default function DevTasksPage() {
     [groupedTasks],
   )
 
+  const [openAccordionKeys, setOpenAccordionKeys] = useState<string[]>([])
+
+  const accordionValue = useMemo(() => {
+    const keys = visibleGroups.map((g) => g.key)
+    if (openAccordionKeys.length === 0) return keys
+    const newKeys = keys.filter((k) => !openAccordionKeys.includes(k))
+    if (newKeys.length > 0)
+      return [...new Set([...openAccordionKeys, ...newKeys])]
+    return openAccordionKeys
+  }, [visibleGroups, openAccordionKeys])
+
   useCreateShortcut({
     onCreate: handleCreateClick,
     enabled: !isDialogOpen,
@@ -206,6 +217,8 @@ export default function DevTasksPage() {
           <Loading />
         ) : (
           <GroupedAccordion
+            value={accordionValue}
+            onValueChange={setOpenAccordionKeys}
             items={visibleGroups.map((group) => ({
               key: group.key,
               trigger: (
@@ -263,7 +276,6 @@ export default function DevTasksPage() {
                 </div>
               ),
             }))}
-            defaultValue={visibleGroups.map((group) => group.key)}
           />
         )}
 
