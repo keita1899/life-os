@@ -1,20 +1,8 @@
 'use client'
 
 import { useMemo } from 'react'
-import {
-  CheckCircle2,
-  Circle,
-  MoreVertical,
-  Pencil,
-  Trash2,
-} from 'lucide-react'
-import { Button } from '@/components/ui/button'
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu'
+import { CheckCircle2, Circle } from 'lucide-react'
+import { EditDeleteDropdownMenu } from '@/components/ui/edit-delete-dropdown-menu'
 import { cn } from '@/lib/utils'
 import type { WishlistItem as WishlistItemType } from '../types/wishlist-item'
 
@@ -101,36 +89,13 @@ export function WishlistItem({
         </div>
       </div>
       <div className="mt-0.5 flex items-center justify-end">
-        <DropdownMenu>
-          <DropdownMenuTrigger asChild>
-            <Button
-              type="button"
-              variant="ghost"
-              size="sm"
-              className="h-8 w-8 p-0 opacity-0 transition-opacity group-hover:opacity-100 focus-visible:opacity-100"
-            >
-              <MoreVertical className="h-4 w-4" />
-              <span className="sr-only">メニュー</span>
-            </Button>
-          </DropdownMenuTrigger>
-          <DropdownMenuContent align="end">
-            {!item.purchased && onEdit && (
-              <DropdownMenuItem onClick={() => onEdit(item)}>
-                <Pencil className="mr-2 h-4 w-4" />
-                <span>編集</span>
-              </DropdownMenuItem>
-            )}
-            {onDelete && (
-              <DropdownMenuItem
-                onClick={() => onDelete(item)}
-                className="text-destructive focus:text-destructive"
-              >
-                <Trash2 className="mr-2 h-4 w-4" />
-                <span>削除</span>
-              </DropdownMenuItem>
-            )}
-          </DropdownMenuContent>
-        </DropdownMenu>
+        <EditDeleteDropdownMenu
+          onEdit={
+            !item.purchased && onEdit ? () => onEdit(item) : undefined
+          }
+          onDelete={onDelete ? () => onDelete(item) : undefined}
+          triggerClassName="opacity-0 transition-opacity group-hover:opacity-100 focus-visible:opacity-100"
+        />
       </div>
     </div>
   )

@@ -5,14 +5,7 @@ import { useHabitCompletions } from '../hooks/useHabitCompletions'
 import { isHabitDueOnDate, formatHabitScheduledTime } from '../lib'
 import type { Habit } from '../types/habit'
 import { cn } from '@/lib/utils'
-import { Button } from '@/components/ui/button'
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu'
-import { MoreVertical, Pencil, Trash2 } from 'lucide-react'
+import { EditDeleteDropdownMenu } from '@/components/ui/edit-delete-dropdown-menu'
 
 export interface HabitHeatmapRowProps {
   habit: Habit
@@ -170,38 +163,11 @@ export function HabitHeatmapRow({
         {rate !== null ? `${rate}%` : '−'}
       </td>
       <td className="w-12 shrink-0 border-b border-stone-200 p-1 dark:border-stone-800">
-        {(onEdit || onDelete) && (
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button
-                type="button"
-                variant="ghost"
-                size="icon"
-                className="h-7 w-7 opacity-0 transition-opacity group-hover:opacity-100 focus:opacity-100"
-              >
-                <MoreVertical className="h-4 w-4" />
-                <span className="sr-only">メニューを開く</span>
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end">
-              {onEdit && (
-                <DropdownMenuItem onClick={() => onEdit(habit)}>
-                  <Pencil className="mr-2 h-4 w-4" />
-                  編集
-                </DropdownMenuItem>
-              )}
-              {onDelete && (
-                <DropdownMenuItem
-                  onClick={() => onDelete(habit)}
-                  className="text-destructive focus:text-destructive"
-                >
-                  <Trash2 className="mr-2 h-4 w-4" />
-                  削除
-                </DropdownMenuItem>
-              )}
-            </DropdownMenuContent>
-          </DropdownMenu>
-        )}
+        <EditDeleteDropdownMenu
+          onEdit={onEdit ? () => onEdit(habit) : undefined}
+          onDelete={onDelete ? () => onDelete(habit) : undefined}
+          triggerClassName="h-7 w-7 opacity-0 transition-opacity group-hover:opacity-100 focus:opacity-100"
+        />
       </td>
     </tr>
   )

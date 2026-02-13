@@ -1,14 +1,9 @@
 'use client'
 
 import { useMemo } from 'react'
-import { MoreVertical, Pencil, Trash2, ExternalLink, Power } from 'lucide-react'
+import { ExternalLink, Power } from 'lucide-react'
 import { Button } from '@/components/ui/button'
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu'
+import { EditDeleteDropdownMenu } from '@/components/ui/edit-delete-dropdown-menu'
 import { cn } from '@/lib/utils'
 import { format } from 'date-fns'
 import { getTodayDateString, getTomorrowDateString } from '@/lib/date/formats'
@@ -125,36 +120,11 @@ export function SubscriptionItem({
         </div>
       </div>
       <div className="mt-0.5 flex min-w-[40px] items-center justify-end">
-        <DropdownMenu>
-          <DropdownMenuTrigger asChild>
-            <Button
-              type="button"
-              variant="ghost"
-              size="sm"
-              className="h-8 w-8 p-0 opacity-0 transition-opacity group-hover:opacity-100"
-            >
-              <MoreVertical className="h-4 w-4" />
-              <span className="sr-only">メニュー</span>
-            </Button>
-          </DropdownMenuTrigger>
-          <DropdownMenuContent align="end">
-            {onEdit && (
-              <DropdownMenuItem onClick={() => onEdit(subscription)}>
-                <Pencil className="mr-2 h-4 w-4" />
-                <span>編集</span>
-              </DropdownMenuItem>
-            )}
-            {onDelete && (
-              <DropdownMenuItem
-                onClick={() => onDelete(subscription)}
-                className="text-destructive focus:text-destructive"
-              >
-                <Trash2 className="mr-2 h-4 w-4" />
-                <span>削除</span>
-              </DropdownMenuItem>
-            )}
-          </DropdownMenuContent>
-        </DropdownMenu>
+        <EditDeleteDropdownMenu
+          onEdit={onEdit ? () => onEdit(subscription) : undefined}
+          onDelete={onDelete ? () => onDelete(subscription) : undefined}
+          triggerClassName="opacity-0 transition-opacity group-hover:opacity-100"
+        />
       </div>
     </div>
   )

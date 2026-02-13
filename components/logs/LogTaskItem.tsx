@@ -6,17 +6,8 @@ import {
   Circle,
   Clock,
   Repeat,
-  MoreVertical,
-  Pencil,
-  Trash2,
 } from 'lucide-react'
-import { Button } from '@/components/ui/button'
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu'
+import { EditDeleteDropdownMenu } from '@/components/ui/edit-delete-dropdown-menu'
 import { cn } from '@/lib/utils'
 import { getDateLabel } from '@/lib/date/labels'
 import { isValidTimeFormat } from '@/lib/date/formats'
@@ -121,36 +112,13 @@ export function LogTaskItem({
           </span>
         )}
         <div className="flex min-w-[40px] items-center justify-end">
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button
-                type="button"
-                variant="ghost"
-                size="sm"
-                className="h-8 w-8 p-0 opacity-0 transition-opacity group-hover:opacity-100"
-              >
-                <MoreVertical className="h-4 w-4" />
-                <span className="sr-only">メニュー</span>
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end">
-              {!task.completed && onEdit && (
-                <DropdownMenuItem onClick={() => onEdit(task)}>
-                  <Pencil className="mr-2 h-4 w-4" />
-                  <span>編集</span>
-                </DropdownMenuItem>
-              )}
-              {onDelete && (
-                <DropdownMenuItem
-                  onClick={() => onDelete(task)}
-                  className="text-destructive focus:text-destructive"
-                >
-                  <Trash2 className="mr-2 h-4 w-4" />
-                  <span>削除</span>
-                </DropdownMenuItem>
-              )}
-            </DropdownMenuContent>
-          </DropdownMenu>
+          <EditDeleteDropdownMenu
+            onEdit={
+              !task.completed && onEdit ? () => onEdit(task) : undefined
+            }
+            onDelete={onDelete ? () => onDelete(task) : undefined}
+            triggerClassName="opacity-0 transition-opacity group-hover:opacity-100"
+          />
         </div>
       </div>
     </div>

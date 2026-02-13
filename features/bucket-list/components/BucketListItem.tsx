@@ -4,19 +4,13 @@ import { useMemo } from 'react'
 import {
   CheckCircle2,
   Circle,
-  MoreVertical,
-  Pencil,
-  Trash2,
   Calendar,
   CheckSquare,
 } from 'lucide-react'
-import { Button } from '@/components/ui/button'
 import {
-  DropdownMenu,
-  DropdownMenuContent,
   DropdownMenuItem,
-  DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
+import { EditDeleteDropdownMenu } from '@/components/ui/edit-delete-dropdown-menu'
 import { cn } from '@/lib/utils'
 import { calculateAgeAtYear } from '../lib/age-calculation'
 import { useUserSettings } from '@/features/settings'
@@ -131,48 +125,26 @@ export function BucketListItem({
         </div>
       </div>
       <div className="mt-0.5 flex items-center justify-end">
-        <DropdownMenu>
-          <DropdownMenuTrigger asChild>
-            <Button
-              type="button"
-              variant="ghost"
-              size="sm"
-              className="h-8 w-8 p-0 opacity-0 transition-opacity group-hover:opacity-100"
-            >
-              <MoreVertical className="h-4 w-4" />
-              <span className="sr-only">メニュー</span>
-            </Button>
-          </DropdownMenuTrigger>
-          <DropdownMenuContent align="end">
-            {!item.completed && onEdit && (
-              <DropdownMenuItem onClick={() => onEdit(item)}>
-                <Pencil className="mr-2 h-4 w-4" />
-                <span>編集</span>
-              </DropdownMenuItem>
-            )}
-            {!item.completed && onConvertToEvent && (
-              <DropdownMenuItem onClick={() => onConvertToEvent(item)}>
-                <Calendar className="mr-2 h-4 w-4" />
-                <span>予定に変換</span>
-              </DropdownMenuItem>
-            )}
-            {!item.completed && onConvertToTask && (
-              <DropdownMenuItem onClick={() => onConvertToTask(item)}>
-                <CheckSquare className="mr-2 h-4 w-4" />
-                <span>タスクに変換</span>
-              </DropdownMenuItem>
-            )}
-            {onDelete && (
-              <DropdownMenuItem
-                onClick={() => onDelete(item)}
-                className="text-destructive focus:text-destructive"
-              >
-                <Trash2 className="mr-2 h-4 w-4" />
-                <span>削除</span>
-              </DropdownMenuItem>
-            )}
-          </DropdownMenuContent>
-        </DropdownMenu>
+        <EditDeleteDropdownMenu
+          onEdit={
+            !item.completed && onEdit ? () => onEdit(item) : undefined
+          }
+          onDelete={onDelete ? () => onDelete(item) : undefined}
+          triggerClassName="opacity-0 transition-opacity group-hover:opacity-100"
+        >
+          {!item.completed && onConvertToEvent && (
+            <DropdownMenuItem onClick={() => onConvertToEvent(item)}>
+              <Calendar className="mr-2 h-4 w-4" />
+              <span>予定に変換</span>
+            </DropdownMenuItem>
+          )}
+          {!item.completed && onConvertToTask && (
+            <DropdownMenuItem onClick={() => onConvertToTask(item)}>
+              <CheckSquare className="mr-2 h-4 w-4" />
+              <span>タスクに変換</span>
+            </DropdownMenuItem>
+          )}
+        </EditDeleteDropdownMenu>
       </div>
     </div>
   )

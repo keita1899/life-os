@@ -1,14 +1,9 @@
 'use client'
 
 import { useState, useMemo } from 'react'
-import { Pencil, Trash2, MoreVertical, CheckCircle2, Circle, ChevronDown, ChevronUp } from 'lucide-react'
+import { CheckCircle2, Circle, ChevronDown, ChevronUp } from 'lucide-react'
 import { Button } from '@/components/ui/button'
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu'
+import { EditDeleteDropdownMenu } from '@/components/ui/edit-delete-dropdown-menu'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { EmptyState } from '@/components/ui/empty-state'
 import { Progress } from '@/components/ui/progress'
@@ -110,32 +105,10 @@ function MonthlyGoalCard({
         </CardContent>
       )}
       <div className="absolute right-4 top-4 flex items-center justify-end opacity-0 transition-opacity group-hover:opacity-100">
-        <DropdownMenu>
-          <DropdownMenuTrigger asChild>
-            <Button
-              type="button"
-              variant="ghost"
-              size="sm"
-              className="h-8 w-8 p-0"
-            >
-              <MoreVertical className="h-4 w-4" />
-              <span className="sr-only">メニュー</span>
-            </Button>
-          </DropdownMenuTrigger>
-          <DropdownMenuContent align="end">
-            <DropdownMenuItem onClick={() => onEditClick(goal)}>
-              <Pencil className="mr-2 h-4 w-4" />
-              <span>編集</span>
-            </DropdownMenuItem>
-            <DropdownMenuItem
-              onClick={(e) => onDeleteClick(e, goal)}
-              className="text-destructive focus:text-destructive"
-            >
-              <Trash2 className="mr-2 h-4 w-4" />
-              <span>削除</span>
-            </DropdownMenuItem>
-          </DropdownMenuContent>
-        </DropdownMenu>
+        <EditDeleteDropdownMenu
+          onEdit={() => onEditClick(goal)}
+          onDelete={(e) => onDeleteClick(e, goal)}
+        />
       </div>
     </Card>
   )

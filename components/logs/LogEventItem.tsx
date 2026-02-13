@@ -1,16 +1,10 @@
 'use client'
 
 import { useMemo, useEffect, useState } from 'react'
-import { Calendar, MoreVertical, Pencil, Trash2, FileText, Clock } from 'lucide-react'
+import { Calendar, FileText, Clock } from 'lucide-react'
 import { format, parseISO } from 'date-fns'
 import { ja } from 'date-fns/locale/ja'
-import { Button } from '@/components/ui/button'
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu'
+import { EditDeleteDropdownMenu } from '@/components/ui/edit-delete-dropdown-menu'
 import {
   Accordion,
   AccordionContent,
@@ -169,38 +163,10 @@ export function LogEventItem({ event, onEdit, onDelete }: LogEventItemProps) {
         )}
       </div>
       <div className="flex min-w-[40px] items-center justify-end gap-2 opacity-0 transition-opacity group-hover:opacity-100">
-        {(onEdit || onDelete) && (
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button
-                type="button"
-                variant="ghost"
-                size="sm"
-                className="h-8 w-8 p-0"
-              >
-                <MoreVertical className="h-4 w-4" />
-                <span className="sr-only">メニューを開く</span>
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end">
-              {onEdit && (
-                <DropdownMenuItem onClick={() => onEdit(event)}>
-                  <Pencil className="mr-2 h-4 w-4" />
-                  編集
-                </DropdownMenuItem>
-              )}
-              {onDelete && (
-                <DropdownMenuItem
-                  onClick={() => onDelete(event)}
-                  className="text-destructive focus:text-destructive"
-                >
-                  <Trash2 className="mr-2 h-4 w-4" />
-                  削除
-                </DropdownMenuItem>
-              )}
-            </DropdownMenuContent>
-          </DropdownMenu>
-        )}
+        <EditDeleteDropdownMenu
+          onEdit={onEdit ? () => onEdit(event) : undefined}
+          onDelete={onDelete ? () => onDelete(event) : undefined}
+        />
       </div>
     </div>
   )
