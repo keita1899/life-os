@@ -1,8 +1,7 @@
 'use client'
 
-import { Button } from '@/components/ui/button'
-import { Trash2, Pencil } from 'lucide-react'
 import { DeleteConfirmDialog } from '@/components/ui/delete-confirm-dialog'
+import { EditDeleteDropdownMenu } from '@/components/ui/edit-delete-dropdown-menu'
 import { useDeleteConfirm } from '@/hooks/useDeleteConfirm'
 import { cn } from '@/lib/utils'
 import type { VisionCategory } from '../types/vision-category'
@@ -81,33 +80,13 @@ export function VisionCategoryList({
                   {category.name}
                 </div>
                 <div
-                  className="flex shrink-0 items-center gap-0.5 opacity-0 transition-opacity group-hover:opacity-100"
+                  className="flex shrink-0 items-center opacity-0 transition-opacity group-hover:opacity-100"
                   onClick={(e) => e.stopPropagation()}
                 >
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    onClick={(e) => {
-                      e.stopPropagation()
-                      editState.startEdit(category.id)
-                    }}
-                    className="h-7 w-7"
-                    aria-label="編集"
-                  >
-                    <Pencil className="h-4 w-4" />
-                  </Button>
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    onClick={(e) => {
-                      e.stopPropagation()
-                      deleteConfirm.handleDeleteClick(category)
-                    }}
-                    className="h-7 w-7"
-                    aria-label="削除"
-                  >
-                    <Trash2 className="h-4 w-4" />
-                  </Button>
+                  <EditDeleteDropdownMenu
+                    onEdit={() => editState.startEdit(category.id)}
+                    onDelete={() => deleteConfirm.handleDeleteClick(category)}
+                  />
                 </div>
               </>
             )}
