@@ -28,6 +28,8 @@ function mapDbProjectToProject(dbProject: DbDevProject): DevProject {
   }
 }
 
+const MAX_UNRELEASED_PROJECTS = 10
+
 async function getUnreleasedProjectCount(): Promise<number> {
   const db = await getDatabase()
   try {
@@ -103,8 +105,10 @@ export async function createDevProject(
 
   if (isUnreleased) {
     const unreleasedCount = await getUnreleasedProjectCount()
-    if (unreleasedCount >= 3) {
-      throw new Error('未リリースのプロジェクトは3つまで作成できます')
+    if (unreleasedCount >= MAX_UNRELEASED_PROJECTS) {
+      throw new Error(
+        `下書き・進行中のプロジェクトは${MAX_UNRELEASED_PROJECTS}件まで作成できます`,
+      )
     }
   }
 
@@ -141,7 +145,7 @@ export async function createDevProject(
   } catch (err) {
     if (
       err instanceof Error &&
-      err.message.includes('未リリースのプロジェクトは3つまで')
+      err.message.includes('下書き・進行中のプロジェクトは')
     ) {
       throw err
     }
@@ -168,8 +172,10 @@ export async function updateDevProject(
 
   if (isUnreleased && !wasUnreleased) {
     const unreleasedCount = await getUnreleasedProjectCount()
-    if (unreleasedCount >= 3) {
-      throw new Error('未リリースのプロジェクトは3つまで作成できます')
+    if (unreleasedCount >= MAX_UNRELEASED_PROJECTS) {
+      throw new Error(
+        `下書き・進行中のプロジェクトは${MAX_UNRELEASED_PROJECTS}件まで作成できます`,
+      )
     }
   }
 
@@ -220,7 +226,7 @@ export async function updateDevProject(
   } catch (err) {
     if (
       err instanceof Error &&
-      err.message.includes('未リリースのプロジェクトは3つまで')
+      err.message.includes('下書き・進行中のプロジェクトは')
     ) {
       throw err
     }
