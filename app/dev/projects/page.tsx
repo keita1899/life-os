@@ -68,7 +68,7 @@ export default function DevProjectsPage() {
                 <SelectItem value="released">リリース済み</SelectItem>
               </SelectContent>
             </Select>
-            <Button onClick={handleCreateClick}>
+            <Button onClick={handleCreateClick} title="⌘N で作成">
               <Plus className="mr-2 h-4 w-4" />
               プロジェクトを作成
             </Button>
