@@ -2,8 +2,10 @@
 
 import { useState, useMemo, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
-import { Trash2, Calendar, Focus, Plus } from 'lucide-react'
+import { useFocusShortcut } from '@/hooks/useFocusShortcut'
+import { Trash2, Calendar, Focus } from 'lucide-react'
 import { Button } from '@/components/ui/button'
+import { CreateButton } from '@/components/ui/create-button'
 import { useCreateShortcut } from '@/hooks/useCreateShortcut'
 import { useDialogState } from '@/hooks/useDialogState'
 import { useDeleteConfirm } from '@/hooks/useDeleteConfirm'
@@ -29,6 +31,7 @@ import type { CreateTaskInput, Task, UpdateTaskInput } from '@/features/tasks'
 
 export default function TasksPage() {
   const router = useRouter()
+  useFocusShortcut({ path: '/focus' })
   const {
     tasks,
     isLoading,
@@ -244,10 +247,7 @@ export default function TasksPage() {
             <div>
               <h1 className="text-3xl font-bold">タスク</h1>
             </div>
-            <Button onClick={handleCreateClick}>
-              <Plus className="mr-2 h-4 w-4" />
-              タスクを作成
-            </Button>
+            <CreateButton label="タスクを作成" onClick={handleCreateClick} />
           </div>
         </div>
 

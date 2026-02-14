@@ -3,6 +3,7 @@
 import type { ReactElement } from 'react'
 import Link from 'next/link'
 import { useRouter, useSearchParams } from 'next/navigation'
+import { useFocusShortcut } from '@/hooks/useFocusShortcut'
 import { useMemo, Suspense } from 'react'
 import useSWR from 'swr'
 import { mutate } from 'swr'
@@ -13,12 +14,14 @@ import { fetcher } from '@/lib/swr'
 import { deleteDevProject, getDevProjectById, updateDevProject } from '@/lib/dev/projects'
 import type { DevProject, ProjectStatus } from '@/lib/types/dev-project'
 import { Button } from '@/components/ui/button'
+import { CreateButton } from '@/components/ui/create-button'
 import { ProjectDialog } from '@/components/dev/projects/ProjectDialog'
 import { DeleteConfirmDialog } from '@/components/ui/delete-confirm-dialog'
 import { useState } from 'react'
 import { TaskDialog, TaskList, groupTasks } from '@/features/tasks'
 import type { CreateTaskInput, Task } from '@/features/tasks'
 import { useDevTasks } from '@/hooks/useDevTasks'
+import { useCreateShortcut } from '@/hooks/useCreateShortcut'
 import { useDialogState } from '@/hooks/useDialogState'
 import { useDeleteConfirm } from '@/hooks/useDeleteConfirm'
 import { useAsyncOperation } from '@/hooks/useAsyncOperation'
@@ -53,6 +56,10 @@ function DevProjectPageContent(): ReactElement | null {
   const idParam = searchParams.get('id')
   const projectId = idParam ? Number(idParam) : NaN
 
+  useFocusShortcut({
+    path: Number.isFinite(projectId) ? `/dev/focus?projectId=${projectId}` : '/dev/focus',
+  })
+
   const shouldFetch = Number.isFinite(projectId)
 
   const { data, error, isLoading } = useSWR<DevProject | null>(
@@ -80,6 +87,10 @@ function DevProjectPageContent(): ReactElement | null {
   })
 
   const taskDialog = useDialogState<Task>()
+  useCreateShortcut({
+    onCreate: taskDialog.handleCreateClick,
+    enabled: shouldFetch && !taskDialog.isDialogOpen,
+  })
   const deleteConfirm = useDeleteConfirm<Task>()
   const [isDeletingCompletedDialogOpen, setIsDeletingCompletedDialogOpen] =
     useState(false)
@@ -342,12 +353,11 @@ function DevProjectPageContent(): ReactElement | null {
             <section className="space-y-4">
               <div className="flex items-center justify-between">
                 <h2 className="text-xl font-semibold">タスク</h2>
-                <Button
+                <CreateButton
+                  label="タスクを作成"
                   onClick={taskDialog.handleCreateClick}
                   disabled={!Number.isFinite(projectId)}
-                >
-                  タスクを作成
-                </Button>
+                />
               </div>
 
               {isTasksLoading ? (
