@@ -1,28 +1,24 @@
 'use client'
 
 import { Suspense, useCallback, useMemo, useState } from 'react'
-import { useSearchParams } from 'next/navigation'
-import { format, getYear } from 'date-fns'
-import { ja } from 'date-fns/locale/ja'
-import { parseISO, isValid, addDays, subDays } from 'date-fns'
+import { getYear } from 'date-fns'
 import { useRouter } from 'next/navigation'
-import { Button } from '@/components/ui/button'
-import { ChevronLeft, ChevronRight, CheckSquare, Focus } from 'lucide-react'
+import { CheckSquare, Focus } from 'lucide-react'
 import { useDevGoals } from '@/hooks/useDevGoals'
 import { useDevCalendarTasks } from '@/hooks/useDevCalendarTasks'
 import { useDevProjects } from '@/hooks/useDevProjects'
 import { createDevTask, updateDevTask, deleteDevTask } from '@/lib/dev/tasks'
 import { mutate } from 'swr'
 import { useUserSettings } from '@/features/settings'
-import { useDevDailyLog } from '@/hooks/useDevDailyLog'
 import { useDialogState } from '@/hooks/useDialogState'
 import { useAsyncOperation } from '@/hooks/useAsyncOperation'
 import { useDeleteConfirm } from '@/hooks/useDeleteConfirm'
 import { Loading } from '@/components/ui/loading'
 import { ErrorMessage } from '@/components/ui/error-message'
+import { useLogView } from '@/hooks/useLogView'
+import { LogViewHeader } from '@/components/logs/LogViewHeader'
 import { DevLogGoalsSection } from '@/components/dev/logs/DevLogGoalsSection'
-import { DevLogTasksSection } from '@/components/dev/logs/DevLogTasksSection'
-import { DevLogReportSection } from '@/components/dev/logs/DevLogReportSection'
+import { DevLogDayContent } from '@/components/dev/logs/DevLogDayContent'
 import { TaskForm } from '@/features/tasks'
 import {
   Dialog,
@@ -43,15 +39,18 @@ import {
   getDevYearlyGoalsForDate,
   getDevMonthlyGoalsForDate,
   getDevWeeklyGoalsForDate,
-  getDevTasksForDate,
 } from '@/lib/dev/logs/utils'
 import type { Task, CreateTaskInput } from '@/features/tasks'
-import type { UpdateDevDailyLogInput } from '@/lib/types/dev-daily-log'
 import Link from 'next/link'
 
 interface DevLogPageViewProps {
-  logDate: Date
-  date: string
+  currentDate: Date
+  dateString: string
+  datesToShow: Date[]
+  displayTitle: string
+  basePath: string
+  onPrev: () => void
+  onNext: () => void
 }
 
 type DevTaskTarget =
@@ -70,9 +69,17 @@ function parseDevTaskTarget(value: string): DevTaskTarget | null {
   return null
 }
 
-function DevLogPageView({ logDate, date }: DevLogPageViewProps) {
+function DevLogPageView({
+  currentDate,
+  dateString,
+  datesToShow,
+  displayTitle,
+  basePath,
+  onPrev,
+  onNext,
+}: DevLogPageViewProps) {
   const router = useRouter()
-  const year = getYear(logDate)
+  const year = getYear(currentDate)
   const {
     yearlyGoals: allYearlyGoals,
     monthlyGoals: allMonthlyGoals,
@@ -92,27 +99,21 @@ function DevLogPageView({ logDate, date }: DevLogPageViewProps) {
   const deleteConfirm = useDeleteConfirm<Task>()
   const { operationError, setOperationError, execute } = useAsyncOperation()
   const { userSettings } = useUserSettings()
-  const {
-    devDailyLog,
-    isLoading: isLoadingDailyLog,
-    createDevDailyLog,
-    updateDevDailyLog,
-    error: dailyLogError,
-  } = useDevDailyLog(date)
 
   const weekStartDay = userSettings?.weekStartDay ?? 1
+  const goalsDate = datesToShow[0] ?? currentDate
 
   const yearlyGoals = useMemo(
-    () => getDevYearlyGoalsForDate(allYearlyGoals, logDate),
-    [allYearlyGoals, logDate],
+    () => getDevYearlyGoalsForDate(allYearlyGoals, goalsDate),
+    [allYearlyGoals, goalsDate],
   )
   const monthlyGoals = useMemo(
-    () => getDevMonthlyGoalsForDate(allMonthlyGoals, logDate),
-    [allMonthlyGoals, logDate],
+    () => getDevMonthlyGoalsForDate(allMonthlyGoals, goalsDate),
+    [allMonthlyGoals, goalsDate],
   )
   const weeklyGoals = useMemo(
-    () => getDevWeeklyGoalsForDate(allWeeklyGoals, logDate, weekStartDay),
-    [allWeeklyGoals, logDate, weekStartDay],
+    () => getDevWeeklyGoalsForDate(allWeeklyGoals, goalsDate, weekStartDay),
+    [allWeeklyGoals, goalsDate, weekStartDay],
   )
 
   const projectNameById = useMemo(() => {
@@ -120,43 +121,6 @@ function DevLogPageView({ logDate, date }: DevLogPageViewProps) {
     projects.forEach((p) => map.set(p.id, p.name))
     return map
   }, [projects])
-
-  const devTasksForDate = useMemo(
-    () => getDevTasksForDate(allDevTasks, logDate),
-    [allDevTasks, logDate],
-  )
-
-  const tasks: Task[] = useMemo(() => {
-    return devTasksForDate.map((t) => ({
-      id: t.id,
-      title: t.title,
-      executionDate: t.executionDate,
-      completed: t.completed,
-      order: t.order,
-      scheduledTime: null,
-      recurrenceRule: null,
-      recurrenceDaysOfWeek: null,
-      recurrenceDayOfMonth: null,
-      recurrenceEndDate: null,
-      recurrenceExcludedDates: [],
-      memo: t.memo,
-      createdAt: t.createdAt,
-      updatedAt: t.updatedAt,
-    }))
-  }, [devTasksForDate])
-
-  const getTaskTargetLabel = useCallback(
-    (task: Task) => {
-      const devTask = allDevTasks.find((t) => t.id === task.id)
-      if (!devTask) return ''
-      return devTask.projectId
-        ? projectNameById.get(devTask.projectId) ?? `プロジェクト#${devTask.projectId}`
-        : devTask.type === 'learning'
-          ? '学習'
-          : 'Inbox'
-    },
-    [allDevTasks, projectNameById],
-  )
 
   const getTargetValueForTask = useCallback(
     (task: Task) => {
@@ -170,18 +134,6 @@ function DevLogPageView({ logDate, date }: DevLogPageViewProps) {
     },
     [allDevTasks],
   )
-
-  const formattedDate = format(logDate, 'yyyy年M月d日(E)', { locale: ja })
-  const prevDate = subDays(logDate, 1)
-  const nextDate = addDays(logDate, 1)
-
-  const handlePrevDate = () => {
-    router.push(`/dev/logs?date=${format(prevDate, 'yyyy-MM-dd')}`)
-  }
-
-  const handleNextDate = () => {
-    router.push(`/dev/logs?date=${format(nextDate, 'yyyy-MM-dd')}`)
-  }
 
   const handleEditTask = (task: Task) => {
     const devTask = allDevTasks.find((t) => t.id === task.id)
@@ -212,7 +164,7 @@ function DevLogPageView({ logDate, date }: DevLogPageViewProps) {
             title: input.title,
             projectId: null,
             type: target.value,
-            executionDate: input.executionDate ?? date,
+            executionDate: input.executionDate ?? dateString,
             memo: input.memo,
           })
         } else {
@@ -220,7 +172,7 @@ function DevLogPageView({ logDate, date }: DevLogPageViewProps) {
             title: input.title,
             projectId: target.projectId,
             type: 'inbox',
-            executionDate: input.executionDate ?? date,
+            executionDate: input.executionDate ?? dateString,
             memo: input.memo,
           })
         }
@@ -290,19 +242,6 @@ function DevLogPageView({ logDate, date }: DevLogPageViewProps) {
     }
   }
 
-  const handleUpdateReport = async (input: UpdateDevDailyLogInput) => {
-    await execute(
-      async () => {
-        if (devDailyLog) {
-          await updateDevDailyLog(input)
-        } else {
-          await createDevDailyLog({ logDate: date, report: input.report })
-        }
-      },
-      '日報の保存に失敗しました',
-    )
-  }
-
   const handleUpdateExecutionDate = async (
     task: Task,
     executionDate: string | null,
@@ -328,38 +267,18 @@ function DevLogPageView({ logDate, date }: DevLogPageViewProps) {
     )
   }
 
-  const isLoading =
-    isLoadingGoals || isLoadingTasks || isLoadingDailyLog
-  const error = goalsError || tasksError || dailyLogError
+  const isLoading = isLoadingGoals || isLoadingTasks
+  const error = goalsError || tasksError
 
   return (
     <>
       <div className="container mx-auto max-w-7xl py-8 px-4">
-        <div className="mb-6">
-          <div className="flex items-center justify-between">
-            <h1 className="text-3xl font-bold">{formattedDate}のログ</h1>
-            <div className="flex items-center gap-2">
-              <Button
-                variant="outline"
-                size="icon"
-                onClick={handlePrevDate}
-                className="h-8 w-8"
-              >
-                <ChevronLeft className="h-4 w-4" />
-                <span className="sr-only">前日</span>
-              </Button>
-              <Button
-                variant="outline"
-                size="icon"
-                onClick={handleNextDate}
-                className="h-8 w-8"
-              >
-                <ChevronRight className="h-4 w-4" />
-                <span className="sr-only">翌日</span>
-              </Button>
-            </div>
-          </div>
-        </div>
+        <LogViewHeader
+          displayTitle={displayTitle}
+          basePath={basePath}
+          onPrev={onPrev}
+          onNext={onNext}
+        />
 
         <ErrorMessage
           message={operationError || error || ''}
@@ -369,30 +288,27 @@ function DevLogPageView({ logDate, date }: DevLogPageViewProps) {
         {isLoading ? (
           <Loading />
         ) : (
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-            <div className="space-y-6">
-              <DevLogGoalsSection
-                yearlyGoals={yearlyGoals}
-                monthlyGoals={monthlyGoals}
-                weeklyGoals={weeklyGoals}
-                currentDate={logDate}
-              />
-              <DevLogReportSection
-                devDailyLog={devDailyLog}
-                isLoading={isLoadingDailyLog}
-                onUpdate={handleUpdateReport}
-              />
-            </div>
-            <div>
-              <DevLogTasksSection
-                tasks={tasks}
-                getTargetLabel={getTaskTargetLabel}
-                onToggleCompletion={handleToggleTaskCompletion}
-                onEdit={handleEditTask}
-                onDelete={deleteConfirm.handleDeleteClick}
-                onUpdateExecutionDate={handleUpdateExecutionDate}
-              />
-            </div>
+          <div className="space-y-8">
+            <DevLogGoalsSection
+              yearlyGoals={yearlyGoals}
+              monthlyGoals={monthlyGoals}
+              weeklyGoals={weeklyGoals}
+              currentDate={goalsDate}
+            />
+            {datesToShow.map((logDate) => (
+              <div key={logDate.toISOString()} className="space-y-6">
+                <DevLogDayContent
+                  logDate={logDate}
+                  allDevTasks={allDevTasks}
+                  projects={projects}
+                  execute={execute}
+                  onToggleTask={handleToggleTaskCompletion}
+                  onEditTask={handleEditTask}
+                  onDeleteTask={deleteConfirm.handleDeleteClick}
+                  onUpdateExecutionDate={handleUpdateExecutionDate}
+                />
+              </div>
+            ))}
           </div>
         )}
 
@@ -433,7 +349,7 @@ function DevLogPageView({ logDate, date }: DevLogPageViewProps) {
                 }
                 onCancel={() => taskDialog.handleDialogClose(false)}
                 initialData={taskDialog.editingItem}
-                defaultExecutionDate={date}
+                defaultExecutionDate={dateString}
                 submitLabel={taskDialog.editingItem ? '更新' : '作成'}
               />
             </div>
@@ -469,18 +385,15 @@ function DevLogPageView({ logDate, date }: DevLogPageViewProps) {
 }
 
 function DevLogPageContent() {
-  const searchParams = useSearchParams()
-  const dateParam = searchParams.get('date')
-  const date = dateParam || format(new Date(), 'yyyy-MM-dd')
+  const logView = useLogView({ basePath: '/dev/logs' })
 
-  const logDate = parseISO(date)
-  if (!isValid(logDate)) {
+  if (!logView.isValidDate) {
     return (
       <div className="container mx-auto max-w-7xl py-8 px-4">
         <div className="text-center">
           <h1 className="text-2xl font-bold text-destructive">無効な日付です</h1>
           <Link
-            href="/"
+            href="/dev"
             className="mt-4 inline-block text-sm text-muted-foreground hover:text-foreground"
           >
             ← ホームに戻る
@@ -490,7 +403,17 @@ function DevLogPageContent() {
     )
   }
 
-  return <DevLogPageView logDate={logDate} date={date} />
+  return (
+    <DevLogPageView
+      currentDate={logView.currentDate}
+      dateString={logView.dateString}
+      datesToShow={logView.datesToShow}
+      displayTitle={logView.displayTitle}
+      basePath="/dev/logs"
+      onPrev={logView.handlePrev}
+      onNext={logView.handleNext}
+    />
+  )
 }
 
 export default function DevLogPage() {
