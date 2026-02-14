@@ -47,6 +47,18 @@ export function LayoutClient({ children }: LayoutClientProps) {
     { enableOnFormTags: false, preventDefault: true },
     [mode, router],
   )
+  useHotkeys(
+    'm',
+    () => router.push(mode === 'development' ? '/dev?view=month' : '/?view=month'),
+    { enableOnFormTags: false, preventDefault: true },
+    [mode, router],
+  )
+  useHotkeys(
+    'w',
+    () => router.push(mode === 'development' ? '/dev?view=week' : '/?view=week'),
+    { enableOnFormTags: false, preventDefault: true },
+    [mode, router],
+  )
 
   const handleOpenChange = useCallback((open: boolean): void => {
     setIsSidebarOpen(open)
