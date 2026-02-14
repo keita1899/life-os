@@ -13,12 +13,14 @@ import { useHabits } from '@/features/habits'
 import { useAsyncOperation } from '@/hooks/useAsyncOperation'
 import { useDialogState } from '@/hooks/useDialogState'
 import { useDeleteConfirm } from '@/hooks/useDeleteConfirm'
-import { useLogView } from '@/hooks/useLogView'
+import { useLogView } from '@/features/logs'
 import { Loading } from '@/components/ui/loading'
 import { ErrorMessage } from '@/components/ui/error-message'
-import { LogGoalsSection } from '@/components/logs/LogGoalsSection'
-import { LogDayContent } from '@/components/logs/LogDayContent'
-import { LogViewHeader } from '@/components/logs/LogViewHeader'
+import {
+  LogGoalsSection,
+  LogDayContent,
+  LogViewHeader,
+} from '@/features/logs'
 import { TaskDialog } from '@/features/tasks'
 import { EventDialog } from '@/features/events'
 import { DeleteConfirmDialog } from '@/components/ui/delete-confirm-dialog'
@@ -28,7 +30,7 @@ import {
   getYearlyGoalsForDate,
   getMonthlyGoalsForDate,
   getWeeklyGoalsForDate,
-} from '@/lib/logs/utils'
+} from '@/features/logs'
 import type { Task, CreateTaskInput, UpdateTaskInput } from '@/features/tasks'
 import Link from 'next/link'
 import type { CreateEventInput, Event, UpdateEventInput } from '@/features/events'

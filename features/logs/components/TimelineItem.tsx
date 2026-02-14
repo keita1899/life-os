@@ -1,13 +1,13 @@
 'use client'
 
-import { LogEventItem } from '@/components/logs/LogEventItem'
-import { HabitItem } from '@/components/logs/HabitItem'
-import { LogTaskItem } from '@/components/logs/LogTaskItem'
+import { LogEventItem } from './LogEventItem'
+import { HabitItem } from './HabitItem'
+import { LogTaskItem } from './LogTaskItem'
 import type { Event } from '@/features/events'
 import type { Habit } from '@/features/habits'
 import type { Task } from '@/features/tasks'
 
-export type TimelineItemType = 
+export type TimelineItemType =
   | { type: 'event'; data: Event }
   | { type: 'habit'; data: Habit; completed: boolean }
   | { type: 'task'; data: Task }

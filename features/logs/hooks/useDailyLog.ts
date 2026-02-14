@@ -4,12 +4,12 @@ import {
   getDailyLogByDate,
   createDailyLog,
   updateDailyLog,
-} from '@/lib/logs'
+} from '../lib'
 import type {
   DailyLog,
   CreateDailyLogInput,
   UpdateDailyLogInput,
-} from '@/lib/types/daily-log'
+} from '../types/daily-log'
 import { fetcher } from '@/lib/swr'
 
 export function useDailyLog(logDate: string) {

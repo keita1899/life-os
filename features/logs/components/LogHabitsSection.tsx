@@ -1,7 +1,7 @@
 'use client'
 
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
-import { HabitItem } from '@/components/logs/HabitItem'
+import { HabitItem } from './HabitItem'
 import type { Habit } from '@/features/habits'
 
 interface LogHabitsSectionProps {

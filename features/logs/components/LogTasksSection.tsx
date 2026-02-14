@@ -2,7 +2,7 @@
 
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { EmptyState } from '@/components/ui/empty-state'
-import { LogTaskItem } from '@/components/logs/LogTaskItem'
+import { LogTaskItem } from './LogTaskItem'
 import type { Task } from '@/features/tasks'
 
 interface LogTasksSectionProps {

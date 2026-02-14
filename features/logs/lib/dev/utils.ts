@@ -1,9 +1,9 @@
 import { getYear, getMonth, startOfWeek } from 'date-fns'
-import { formatDateISO } from '../../date/formats'
-import type { DevYearlyGoal } from '../../types/dev-yearly-goal'
-import type { DevMonthlyGoal } from '../../types/dev-monthly-goal'
-import type { DevWeeklyGoal } from '../../types/dev-weekly-goal'
-import type { DevTask } from '../../types/dev-task'
+import { formatDateISO } from '@/lib/date/formats'
+import type { DevYearlyGoal } from '@/lib/types/dev-yearly-goal'
+import type { DevMonthlyGoal } from '@/lib/types/dev-monthly-goal'
+import type { DevWeeklyGoal } from '@/lib/types/dev-weekly-goal'
+import type { DevTask } from '@/lib/types/dev-task'
 
 export function getDevYearlyGoalsForDate(
   goals: DevYearlyGoal[],

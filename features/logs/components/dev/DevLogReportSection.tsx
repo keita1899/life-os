@@ -13,56 +13,56 @@ import {
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { AutoResizeTextarea } from '@/components/ui/textarea-autosize'
 import { Loader2 } from 'lucide-react'
-import type { DailyLog, UpdateDailyLogInput } from '@/lib/types/daily-log'
+import type { DevDailyLog, UpdateDevDailyLogInput } from '../../types/dev-daily-log'
 
 const AUTO_SAVE_DELAY_MS = 800
 
-const diaryFormSchema = z.object({
-  diary: z.string().optional(),
+const reportFormSchema = z.object({
+  report: z.string().optional(),
 })
 
-type DiaryFormValues = z.infer<typeof diaryFormSchema>
+type ReportFormValues = z.infer<typeof reportFormSchema>
 
-interface LogDiarySectionProps {
-  dailyLog: DailyLog | null | undefined
+interface DevLogReportSectionProps {
+  devDailyLog: DevDailyLog | null | undefined
   isLoading: boolean
-  onUpdate: (input: UpdateDailyLogInput) => Promise<void>
+  onUpdate: (input: UpdateDevDailyLogInput) => Promise<void>
 }
 
-export function LogDiarySection({
-  dailyLog,
+export function DevLogReportSection({
+  devDailyLog,
   isLoading: isLoadingLog,
   onUpdate,
-}: LogDiarySectionProps) {
-  const lastSavedRef = useRef<string>(dailyLog?.diary ?? '')
+}: DevLogReportSectionProps) {
+  const lastSavedRef = useRef<string>(devDailyLog?.report ?? '')
   const onUpdateRef = useRef(onUpdate)
   const [isSaving, setIsSaving] = useState(false)
   const [savedMessage, setSavedMessage] = useState(false)
 
   onUpdateRef.current = onUpdate
 
-  const form = useForm<DiaryFormValues>({
-    resolver: zodResolver(diaryFormSchema),
+  const form = useForm<ReportFormValues>({
+    resolver: zodResolver(reportFormSchema),
     values: {
-      diary: dailyLog?.diary || '',
+      report: devDailyLog?.report || '',
     },
   })
 
-  const diaryValue = form.watch('diary')
+  const reportValue = form.watch('report')
 
   useEffect(() => {
-    lastSavedRef.current = dailyLog?.diary ?? ''
-  }, [dailyLog?.diary])
+    lastSavedRef.current = devDailyLog?.report ?? ''
+  }, [devDailyLog?.report])
 
   useEffect(() => {
-    const value = diaryValue ?? ''
+    const value = reportValue ?? ''
     if (value === lastSavedRef.current) return
 
     const timeoutId = setTimeout(async () => {
       const normalized = value.trim() || null
       setIsSaving(true)
       try {
-        await onUpdateRef.current({ diary: normalized })
+        await onUpdateRef.current({ report: normalized })
         lastSavedRef.current = normalized ?? ''
         setSavedMessage(true)
       } finally {
@@ -71,7 +71,7 @@ export function LogDiarySection({
     }, AUTO_SAVE_DELAY_MS)
 
     return () => clearTimeout(timeoutId)
-  }, [diaryValue])
+  }, [reportValue])
 
   useEffect(() => {
     if (!savedMessage) return
@@ -83,7 +83,7 @@ export function LogDiarySection({
     <Card className="border-stone-200/60 dark:border-stone-700/40">
       <CardHeader>
         <div className="flex items-center justify-between">
-          <CardTitle className="text-lg">日記</CardTitle>
+          <CardTitle className="text-lg">日報</CardTitle>
           {isSaving && (
             <span className="flex items-center gap-1 text-sm text-muted-foreground">
               <Loader2 className="h-4 w-4 animate-spin" />
@@ -105,15 +105,15 @@ export function LogDiarySection({
             <form className="space-y-4">
               <FormField
                 control={form.control}
-                name="diary"
+                name="report"
                 render={({ field }) => (
                   <FormItem>
                     <FormControl>
                       <AutoResizeTextarea
                         {...field}
                         ref={field.ref}
-                        placeholder="今日の日記を書いてください..."
-                        className="min-h-[200px] overflow-hidden focus-visible:ring-0 focus-visible:ring-offset-0"
+                        placeholder="今日の日報を書いてください..."
+                        className="min-h-[200px] overflow-hidden"
                         minRows={8}
                       />
                     </FormControl>

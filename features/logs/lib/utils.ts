@@ -1,6 +1,6 @@
 import { getYear, getMonth, startOfWeek } from 'date-fns'
 import { getEventsForDate, sortEventsByTime } from '@/features/events'
-import { formatDateISO } from '../date/formats'
+import { formatDateISO } from '@/lib/date/formats'
 import type { YearlyGoal, MonthlyGoal, WeeklyGoal } from '@/features/goals'
 import type { Event } from '@/features/events'
 
@@ -29,7 +29,7 @@ export function getWeeklyGoalsForDate(
   const weekStart = startOfWeek(date, { weekStartsOn })
   weekStart.setHours(0, 0, 0, 0)
   const weekStartDate = formatDateISO(weekStart)
-  
+
   return goals.filter((goal) => goal.weekStartDate === weekStartDate)
 }
 

@@ -4,12 +4,12 @@ import {
   getDevDailyLogByDate,
   createDevDailyLog,
   updateDevDailyLog,
-} from '@/lib/dev/logs'
+} from '../lib/dev'
 import type {
   DevDailyLog,
   CreateDevDailyLogInput,
   UpdateDevDailyLogInput,
-} from '@/lib/types/dev-daily-log'
+} from '../types/dev-daily-log'
 import { fetcher } from '@/lib/swr'
 
 export function useDevDailyLog(logDate: string) {

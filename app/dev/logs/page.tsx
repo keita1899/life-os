@@ -16,10 +16,12 @@ import { useAsyncOperation } from '@/hooks/useAsyncOperation'
 import { useDeleteConfirm } from '@/hooks/useDeleteConfirm'
 import { Loading } from '@/components/ui/loading'
 import { ErrorMessage } from '@/components/ui/error-message'
-import { useLogView } from '@/hooks/useLogView'
-import { LogViewHeader } from '@/components/logs/LogViewHeader'
-import { DevLogGoalsSection } from '@/components/dev/logs/DevLogGoalsSection'
-import { DevLogDayContent } from '@/components/dev/logs/DevLogDayContent'
+import {
+  useLogView,
+  LogViewHeader,
+  DevLogGoalsSection,
+  DevLogDayContent,
+} from '@/features/logs'
 import { TaskForm } from '@/features/tasks'
 import {
   Dialog,
@@ -40,7 +42,7 @@ import {
   getDevYearlyGoalsForDate,
   getDevMonthlyGoalsForDate,
   getDevWeeklyGoalsForDate,
-} from '@/lib/dev/logs/utils'
+} from '@/features/logs'
 import type { Task, CreateTaskInput } from '@/features/tasks'
 import Link from 'next/link'
 

@@ -3,7 +3,7 @@ import { ja } from 'date-fns/locale/ja'
 import { formatHabitScheduledTime, type Habit } from '@/features/habits'
 import type { Event } from '@/features/events'
 import type { Task } from '@/features/tasks'
-import type { TimelineItemType } from '@/components/logs/TimelineItem'
+import type { TimelineItemType } from '../components/TimelineItem'
 import { isValidTimeFormat } from '@/lib/date/formats'
 
 function getEventTime(event: Event): string {

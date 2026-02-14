@@ -2,7 +2,7 @@
 
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { EmptyState } from '@/components/ui/empty-state'
-import { LogEventItem } from '@/components/logs/LogEventItem'
+import { LogEventItem } from './LogEventItem'
 import type { Event } from '@/features/events'
 
 interface LogEventsSectionProps {
