@@ -5,7 +5,7 @@ import { YearlyGoalForm } from './YearlyGoalForm'
 import type {
   DevYearlyGoal,
   CreateDevYearlyGoalInput,
-} from '@/lib/types/dev-yearly-goal'
+} from '../types/dev-yearly-goal'
 
 interface YearlyGoalDialogProps {
   open: boolean

@@ -7,7 +7,7 @@ import { EditDeleteDropdownMenu } from '@/components/ui/edit-delete-dropdown-men
 import { EmptyState } from '@/components/ui/empty-state'
 import { Progress } from '@/components/ui/progress'
 import { calculateProgress } from '@/features/goals'
-import type { DevYearlyGoal } from '@/lib/types/dev-yearly-goal'
+import type { DevYearlyGoal } from '../types/dev-yearly-goal'
 
 interface YearlyGoalsSectionProps {
   goals: DevYearlyGoal[]

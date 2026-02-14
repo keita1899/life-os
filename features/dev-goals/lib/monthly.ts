@@ -1,11 +1,11 @@
-import { getDatabase, handleDbError } from '../../db'
-import { DB_COLUMNS } from '../../db/constants'
+import { getDatabase, handleDbError } from '@/lib/db'
+import { DB_COLUMNS } from '@/lib/db/constants'
 import type {
   DevMonthlyGoal,
   CreateDevMonthlyGoalInput,
   UpdateDevMonthlyGoalInput,
-} from '../../types/dev-monthly-goal'
-import type { ChecklistItem } from '../../types/checklist-item'
+} from '../types/dev-monthly-goal'
+import type { ChecklistItem } from '@/lib/types/checklist-item'
 
 interface DbDevMonthlyGoal {
   id: number

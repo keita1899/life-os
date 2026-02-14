@@ -4,9 +4,11 @@ import { useRouter } from 'next/navigation'
 import { MonthView } from './MonthView'
 import { WeekView } from './WeekView'
 import { CalendarViewBase } from './CalendarViewBase'
-import { MonthlyGoalCalendarForm } from '@/components/dev/goals/MonthlyGoalCalendarForm'
-import { WeeklyGoalForm } from '@/components/dev/goals/WeeklyGoalForm'
-import { useDevGoals } from '@/hooks/useDevGoals'
+import {
+  MonthlyGoalCalendarForm,
+  WeeklyGoalForm,
+  useDevGoals,
+} from '@/features/dev-goals'
 import { useDevCalendarTasks } from '@/hooks/useDevCalendarTasks'
 import { useDevProjects } from '@/hooks/useDevProjects'
 import { useCalendarView } from '../hooks/useCalendarView'

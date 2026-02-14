@@ -1,11 +1,11 @@
-import { getDatabase, handleDbError } from '../../db'
-import { DB_COLUMNS } from '../../db/constants'
+import { getDatabase, handleDbError } from '@/lib/db'
+import { DB_COLUMNS } from '@/lib/db/constants'
 import { getYearFromDate } from '@/features/goals'
 import type {
   DevWeeklyGoal,
   CreateDevWeeklyGoalInput,
   UpdateDevWeeklyGoalInput,
-} from '../../types/dev-weekly-goal'
+} from '../types/dev-weekly-goal'
 
 interface DbDevWeeklyGoal {
   id: number

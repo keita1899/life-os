@@ -3,7 +3,7 @@
 import { Suspense, useMemo } from 'react'
 import { DevCalendarView } from '@/features/calendar'
 import { Loading } from '@/components/ui/loading'
-import { useDevGoals } from '@/hooks/useDevGoals'
+import { useDevGoals } from '@/features/dev-goals'
 import { Card } from '@/components/ui/card'
 import { Target } from 'lucide-react'
 import { DevHomeTaskCreateButton } from '@/components/floating/DevHomeTaskCreateButton'

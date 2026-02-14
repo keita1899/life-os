@@ -19,7 +19,7 @@ import { ChecklistEditor } from '@/features/goals'
 import type {
   DevYearlyGoal,
   CreateDevYearlyGoalInput,
-} from '@/lib/types/dev-yearly-goal'
+} from '../types/dev-yearly-goal'
 import type { ChecklistItem } from '@/lib/types/checklist-item'
 
 const yearlyGoalFormSchema = z.object({

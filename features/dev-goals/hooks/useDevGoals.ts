@@ -1,38 +1,38 @@
 import useSWR, { mutate } from 'swr'
-import { getDevYearlyAndMonthlyGoalsByYear } from '@/lib/dev/goals/index'
+import { getDevYearlyAndMonthlyGoalsByYear } from '../lib/index'
 import {
   createDevYearlyGoal,
   updateDevYearlyGoal,
   deleteDevYearlyGoal,
   toggleDevYearlyGoalAchievement,
-} from '@/lib/dev/goals/yearly'
+} from '../lib/yearly'
 import {
   createDevMonthlyGoal,
   updateDevMonthlyGoal,
   deleteDevMonthlyGoal,
   toggleDevMonthlyGoalAchievement,
-} from '@/lib/dev/goals/monthly'
+} from '../lib/monthly'
 import {
   createDevWeeklyGoal,
   updateDevWeeklyGoal,
   deleteDevWeeklyGoal,
   toggleDevWeeklyGoalAchievement,
-} from '@/lib/dev/goals/weekly'
+} from '../lib/weekly'
 import type {
   DevYearlyGoal,
   CreateDevYearlyGoalInput,
   UpdateDevYearlyGoalInput,
-} from '@/lib/types/dev-yearly-goal'
+} from '../types/dev-yearly-goal'
 import type {
   DevMonthlyGoal,
   CreateDevMonthlyGoalInput,
   UpdateDevMonthlyGoalInput,
-} from '@/lib/types/dev-monthly-goal'
+} from '../types/dev-monthly-goal'
 import type {
   DevWeeklyGoal,
   CreateDevWeeklyGoalInput,
   UpdateDevWeeklyGoalInput,
-} from '@/lib/types/dev-weekly-goal'
+} from '../types/dev-weekly-goal'
 import { fetcher } from '@/lib/swr'
 import { getYearFromDate } from '@/features/goals'
 

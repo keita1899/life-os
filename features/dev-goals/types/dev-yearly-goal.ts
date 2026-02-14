@@ -1,26 +1,23 @@
-import type { ChecklistItem } from './checklist-item'
+import type { ChecklistItem } from '@/lib/types/checklist-item'
 
-export interface DevMonthlyGoal {
+export interface DevYearlyGoal {
   id: number
   title: string
   year: number
-  month: number
   achieved: boolean
   checklist: ChecklistItem[]
   createdAt: string
   updatedAt: string
 }
 
-export interface CreateDevMonthlyGoalInput {
+export interface CreateDevYearlyGoalInput {
   title: string
   year?: number
-  month: number
   checklist?: ChecklistItem[]
 }
 
-export interface UpdateDevMonthlyGoalInput {
+export interface UpdateDevYearlyGoalInput {
   title?: string
   year?: number
-  month?: number
   checklist?: ChecklistItem[]
 }

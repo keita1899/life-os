@@ -9,7 +9,7 @@ import { EmptyState } from '@/components/ui/empty-state'
 import { Progress } from '@/components/ui/progress'
 import { calculateProgress } from '@/features/goals'
 import { GroupedAccordion } from '@/components/ui/grouped-accordion'
-import type { DevMonthlyGoal } from '@/lib/types/dev-monthly-goal'
+import type { DevMonthlyGoal } from '../types/dev-monthly-goal'
 
 interface MonthlyGoalsSectionProps {
   goals: DevMonthlyGoal[]

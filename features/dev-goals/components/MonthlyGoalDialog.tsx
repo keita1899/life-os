@@ -6,7 +6,7 @@ import { MonthlyGoalForm } from './MonthlyGoalForm'
 import type {
   DevMonthlyGoal,
   CreateDevMonthlyGoalInput,
-} from '@/lib/types/dev-monthly-goal'
+} from '../types/dev-monthly-goal'
 
 interface MonthlyGoalDialogProps {
   open: boolean

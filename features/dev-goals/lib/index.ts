@@ -1,9 +1,9 @@
 import { getDevYearlyGoalsByYear } from './yearly'
 import { getDevMonthlyGoalsByYear } from './monthly'
 import { getDevWeeklyGoalsByYear } from './weekly'
-import type { DevYearlyGoal } from '../../types/dev-yearly-goal'
-import type { DevMonthlyGoal } from '../../types/dev-monthly-goal'
-import type { DevWeeklyGoal } from '../../types/dev-weekly-goal'
+import type { DevYearlyGoal } from '../types/dev-yearly-goal'
+import type { DevMonthlyGoal } from '../types/dev-monthly-goal'
+import type { DevWeeklyGoal } from '../types/dev-weekly-goal'
 
 export async function getDevYearlyGoalsByYearOnly(
   year: number,

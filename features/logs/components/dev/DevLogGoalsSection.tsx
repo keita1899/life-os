@@ -2,9 +2,11 @@
 
 import { Flag, Map, Zap } from 'lucide-react'
 import { getYear, getMonth } from 'date-fns'
-import type { DevYearlyGoal } from '@/lib/types/dev-yearly-goal'
-import type { DevMonthlyGoal } from '@/lib/types/dev-monthly-goal'
-import type { DevWeeklyGoal } from '@/lib/types/dev-weekly-goal'
+import type {
+  DevYearlyGoal,
+  DevMonthlyGoal,
+  DevWeeklyGoal,
+} from '@/features/dev-goals'
 
 interface DevLogGoalsSectionProps {
   yearlyGoals: DevYearlyGoal[]
