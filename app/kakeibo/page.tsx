@@ -1,12 +1,11 @@
 'use client'
 
 import { useState, useMemo, useEffect } from 'react'
-import { Plus } from 'lucide-react'
 import { useCreateShortcut } from '@/hooks/useCreateShortcut'
 import { useDialogState } from '@/hooks/useDialogState'
 import { useDeleteConfirm } from '@/hooks/useDeleteConfirm'
 import { useAsyncOperation } from '@/hooks/useAsyncOperation'
-import { Button } from '@/components/ui/button'
+import { CreateButton } from '@/components/ui/create-button'
 import {
   TransactionDialog,
   TransactionList,
@@ -297,10 +296,7 @@ export default function KakeiboPage() {
           <div className="text-sm text-muted-foreground">
             取引一覧{filteredTransactions.length > 0 ? ` ${filteredTransactions.length}` : ''}
           </div>
-          <Button onClick={handleCreateClick}>
-            <Plus className="mr-2 h-4 w-4" />
-            取引を作成
-          </Button>
+          <CreateButton label="取引を作成" onClick={handleCreateClick} />
         </div>
 
         <div className="mb-4">

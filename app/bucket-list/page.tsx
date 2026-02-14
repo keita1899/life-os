@@ -1,8 +1,9 @@
 'use client'
 
 import { useState, useMemo } from 'react'
-import { Trash2, Plus } from 'lucide-react'
+import { Trash2 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
+import { CreateButton } from '@/components/ui/create-button'
 import { useCreateShortcut } from '@/hooks/useCreateShortcut'
 import { useDialogState } from '@/hooks/useDialogState'
 import { useDeleteConfirm } from '@/hooks/useDeleteConfirm'
@@ -286,10 +287,7 @@ export default function BucketListPage() {
           <div className="mx-auto max-w-3xl p-8">
             <div className="mb-6 flex items-center justify-between">
               <h1 className="text-3xl font-bold">{selectedCategoryName}</h1>
-              <Button onClick={handleCreateClick}>
-                <Plus className="mr-2 h-4 w-4" />
-                やりたいことを作成
-              </Button>
+              <CreateButton label="やりたいことを作成" onClick={handleCreateClick} />
             </div>
 
             <ErrorMessage

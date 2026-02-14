@@ -2,8 +2,7 @@
 
 import { useState, useMemo } from 'react'
 import { startOfDay, subYears, addMonths } from 'date-fns'
-import { Plus } from 'lucide-react'
-import { Button } from '@/components/ui/button'
+import { CreateButton } from '@/components/ui/create-button'
 import { useCreateShortcut } from '@/hooks/useCreateShortcut'
 import { useDialogState } from '@/hooks/useDialogState'
 import { useDeleteConfirm } from '@/hooks/useDeleteConfirm'
@@ -137,10 +136,7 @@ export default function EventsPage() {
             <div>
               <h1 className="text-3xl font-bold">予定</h1>
             </div>
-            <Button onClick={handleCreateClick}>
-              <Plus className="mr-2 h-4 w-4" />
-              予定を作成
-            </Button>
+            <CreateButton label="予定を作成" onClick={handleCreateClick} />
           </div>
         </div>
 

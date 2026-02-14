@@ -2,8 +2,8 @@
 
 import { useMemo } from 'react'
 import { format } from 'date-fns'
-import { Plus } from 'lucide-react'
 import { Button } from '@/components/ui/button'
+import { CreateButton } from '@/components/ui/create-button'
 import { useCreateShortcut } from '@/hooks/useCreateShortcut'
 import { useDialogState } from '@/hooks/useDialogState'
 import { useDeleteConfirm } from '@/hooks/useDeleteConfirm'
@@ -163,10 +163,7 @@ export default function HabitsPage() {
       <div className="container mx-auto max-w-5xl py-8 px-4">
         <div className="mb-6 flex items-center justify-between">
           <h1 className="text-3xl font-bold">習慣</h1>
-          <Button onClick={handleCreateClick}>
-            <Plus className="mr-2 h-4 w-4" />
-            習慣を作成
-          </Button>
+          <CreateButton label="習慣を作成" onClick={handleCreateClick} />
         </div>
 
         <ErrorMessage
@@ -179,14 +176,12 @@ export default function HabitsPage() {
         ) : sortedHabits.length === 0 ? (
           <div className="text-center">
             <EmptyState message="習慣がありません">
-              <Button
+              <CreateButton
+                label="習慣を作成"
                 variant="outline"
                 className="mt-4"
                 onClick={handleCreateClick}
-              >
-                <Plus className="mr-2 h-4 w-4" />
-                習慣を作成
-              </Button>
+              />
             </EmptyState>
           </div>
         ) : (

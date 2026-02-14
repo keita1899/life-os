@@ -1,8 +1,7 @@
 'use client'
 
 import { useState } from 'react'
-import { Plus } from 'lucide-react'
-import { Button } from '@/components/ui/button'
+import { CreateButton } from '@/components/ui/create-button'
 import { useCreateShortcut } from '@/hooks/useCreateShortcut'
 import { useDialogState } from '@/hooks/useDialogState'
 import {
@@ -68,10 +67,11 @@ export default function DevProjectsPage() {
                 <SelectItem value="released">リリース済み</SelectItem>
               </SelectContent>
             </Select>
-            <Button onClick={handleCreateClick} title="⌘N で作成">
-              <Plus className="mr-2 h-4 w-4" />
-              プロジェクトを作成
-            </Button>
+            <CreateButton
+              label="プロジェクトを作成"
+              onClick={handleCreateClick}
+              title="⌘N で作成"
+            />
           </div>
         </div>
 
