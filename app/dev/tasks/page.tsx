@@ -2,7 +2,7 @@
 
 import { useMemo, useState } from 'react'
 import { useRouter } from 'next/navigation'
-import { useFocusShortcut } from '@/hooks/useFocusShortcut'
+import { useFocusShortcut } from '@/features/focus'
 import { Trash2, Calendar, Focus } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { CreateButton } from '@/components/ui/create-button'

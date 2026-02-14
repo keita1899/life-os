@@ -3,7 +3,7 @@
 import type { ReactElement } from 'react'
 import Link from 'next/link'
 import { useRouter, useSearchParams } from 'next/navigation'
-import { useFocusShortcut } from '@/hooks/useFocusShortcut'
+import { useFocusShortcut } from '@/features/focus'
 import { useMemo, Suspense } from 'react'
 import useSWR from 'swr'
 import { mutate } from 'swr'

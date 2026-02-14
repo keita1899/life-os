@@ -9,8 +9,11 @@ import { useDevCalendarTasks } from '@/hooks/useDevCalendarTasks'
 import { updateDevTask } from '@/lib/dev/tasks'
 import { getTodayDevTasks } from '@/lib/dev/tasks'
 import { mutate } from 'swr'
-import { FocusView } from '@/components/focus/FocusView'
-import { SortableDevTaskItem, DraggableAvailableDevTaskItem } from '@/components/focus/DevFocusTaskItems'
+import {
+  FocusView,
+  SortableDevTaskItem,
+  DraggableAvailableDevTaskItem,
+} from '@/features/focus'
 import type { DevTask } from '@/lib/types/dev-task'
 
 function DevFocusPageContent() {

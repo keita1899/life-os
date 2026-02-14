@@ -1,6 +1,6 @@
 import { useState, useMemo } from 'react'
 import { useRouter } from 'next/navigation'
-import { useStopwatch } from '@/components/focus/Stopwatch'
+import { useStopwatch } from './useStopwatch'
 
 interface TaskLike {
   id: number
@@ -18,7 +18,7 @@ export function useFocusSession<T extends TaskLike>({
 }: UseFocusSessionOptions<T>) {
   const router = useRouter()
   const stopwatch = useStopwatch()
-  
+
   const [isSessionActive, setIsSessionActive] = useState(false)
   const [sessionTasks, setSessionTasks] = useState<T[]>([])
   const [currentTaskIndex, setCurrentTaskIndex] = useState(0)

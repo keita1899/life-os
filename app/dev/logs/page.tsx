@@ -3,7 +3,7 @@
 import { Suspense, useCallback, useMemo, useState } from 'react'
 import { getYear } from 'date-fns'
 import { useRouter } from 'next/navigation'
-import { useFocusShortcut } from '@/hooks/useFocusShortcut'
+import { useFocusShortcut } from '@/features/focus'
 import { CheckSquare, Focus } from 'lucide-react'
 import { useDevGoals } from '@/hooks/useDevGoals'
 import { useDevCalendarTasks } from '@/hooks/useDevCalendarTasks'

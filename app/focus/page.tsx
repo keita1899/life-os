@@ -2,8 +2,11 @@
 
 import { useMemo } from 'react'
 import { useTasks, getTodayTasks } from '@/features/tasks'
-import { FocusView } from '@/components/focus/FocusView'
-import { SortableTaskItem, DraggableAvailableTaskItem } from '@/components/focus/LifeFocusTaskItems'
+import {
+  FocusView,
+  SortableTaskItem,
+  DraggableAvailableTaskItem,
+} from '@/features/focus'
 import type { Task } from '@/features/tasks'
 
 export default function FocusPage() {

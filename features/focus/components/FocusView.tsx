@@ -20,13 +20,13 @@ import {
   sortableKeyboardCoordinates,
   verticalListSortingStrategy,
 } from '@dnd-kit/sortable'
-import { EmptyListDroppable, InvisibleDroppable, FocusListContainer } from '@/components/focus/FocusDroppable'
-import { FocusSession } from '@/components/focus/FocusSession'
-import { FocusCompletionModal } from '@/components/focus/FocusCompletionModal'
-import { useFocusTasks } from '@/hooks/useFocusTasks'
-import { useFocusDragAndDrop } from '@/hooks/useFocusDragAndDrop'
-import { useFocusSession } from '@/hooks/useFocusSession'
-import { useSessionHistory } from '@/hooks/useSessionHistory'
+import { EmptyListDroppable, InvisibleDroppable, FocusListContainer } from './FocusDroppable'
+import { FocusSession } from './FocusSession'
+import { FocusCompletionModal } from './FocusCompletionModal'
+import { useFocusTasks } from '../hooks/useFocusTasks'
+import { useFocusDragAndDrop } from '../hooks/useFocusDragAndDrop'
+import { useFocusSession } from '../hooks/useFocusSession'
+import { useSessionHistory } from '../hooks/useSessionHistory'
 
 interface TaskLike {
   id: number
