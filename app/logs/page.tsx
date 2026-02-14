@@ -4,6 +4,7 @@ import { Suspense, useMemo } from 'react'
 import { getYear, parseISO } from 'date-fns'
 import { getNextOccurrenceAfter } from '@/features/tasks'
 import { useRouter } from 'next/navigation'
+import { useFocusShortcut } from '@/hooks/useFocusShortcut'
 import { CalendarPlus, CheckSquare, Focus } from 'lucide-react'
 import { useGoals } from '@/features/goals'
 import { useTasks } from '@/features/tasks'
@@ -53,6 +54,7 @@ function LogPageView({
   onNext,
 }: LogPageViewProps) {
   const router = useRouter()
+  useFocusShortcut({ path: '/focus' })
   const year = getYear(currentDate)
   const {
     yearlyGoals: allYearlyGoals,

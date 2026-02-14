@@ -3,6 +3,7 @@
 import { Suspense, useCallback, useMemo, useState } from 'react'
 import { getYear } from 'date-fns'
 import { useRouter } from 'next/navigation'
+import { useFocusShortcut } from '@/hooks/useFocusShortcut'
 import { CheckSquare, Focus } from 'lucide-react'
 import { useDevGoals } from '@/hooks/useDevGoals'
 import { useDevCalendarTasks } from '@/hooks/useDevCalendarTasks'
@@ -79,6 +80,7 @@ function DevLogPageView({
   onNext,
 }: DevLogPageViewProps) {
   const router = useRouter()
+  useFocusShortcut({ path: '/dev/focus' })
   const year = getYear(currentDate)
   const {
     yearlyGoals: allYearlyGoals,
