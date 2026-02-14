@@ -12,7 +12,7 @@ import {
   MonthlyGoalsSection,
   updateDevYearlyGoal,
   updateDevMonthlyGoal,
-} from '@/features/dev-goals'
+} from '@/features/dev/goals'
 import { useDeleteConfirm } from '@/hooks/useDeleteConfirm'
 import { useAsyncOperation } from '@/hooks/useAsyncOperation'
 import { DeleteConfirmDialog } from '@/components/ui/delete-confirm-dialog'
@@ -21,7 +21,7 @@ import type {
   DevMonthlyGoal,
   CreateDevYearlyGoalInput,
   CreateDevMonthlyGoalInput,
-} from '@/features/dev-goals'
+} from '@/features/dev/goals'
 
 export default function DevGoalsPage() {
   const [selectedYear, setSelectedYear] = useState(new Date().getFullYear())

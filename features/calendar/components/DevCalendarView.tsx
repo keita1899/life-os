@@ -8,7 +8,7 @@ import {
   MonthlyGoalCalendarForm,
   WeeklyGoalForm,
   useDevGoals,
-} from '@/features/dev-goals'
+} from '@/features/dev/goals'
 import { useDevCalendarTasks } from '@/hooks/useDevCalendarTasks'
 import { useDevProjects } from '@/features/dev/projects'
 import { useCalendarView } from '../hooks/useCalendarView'

@@ -4,7 +4,7 @@ import type {
   DevYearlyGoal,
   DevMonthlyGoal,
   DevWeeklyGoal,
-} from '@/features/dev-goals'
+} from '@/features/dev/goals'
 import type { DevTask } from '@/lib/types/dev-task'
 
 export function getDevYearlyGoalsForDate(

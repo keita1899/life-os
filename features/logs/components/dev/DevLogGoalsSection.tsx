@@ -6,7 +6,7 @@ import type {
   DevYearlyGoal,
   DevMonthlyGoal,
   DevWeeklyGoal,
-} from '@/features/dev-goals'
+} from '@/features/dev/goals'
 
 interface DevLogGoalsSectionProps {
   yearlyGoals: DevYearlyGoal[]
