@@ -4,7 +4,7 @@ import type {
   DevTask,
   CreateDevTaskInput,
   UpdateDevTaskInput,
-} from '@/lib/types/dev-task'
+} from '../types/dev-task'
 
 interface DbDevTask {
   id: number

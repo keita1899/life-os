@@ -9,7 +9,7 @@ import {
   WeeklyGoalForm,
   useDevGoals,
 } from '@/features/dev/goals'
-import { useDevCalendarTasks } from '@/hooks/useDevCalendarTasks'
+import { useDevCalendarTasks } from '@/features/dev/tasks'
 import { useDevProjects } from '@/features/dev/projects'
 import { useCalendarView } from '../hooks/useCalendarView'
 import { useAsyncOperation } from '@/hooks/useAsyncOperation'
@@ -23,8 +23,8 @@ import { TaskDialog } from '@/features/tasks'
 import { DeleteConfirmDialog } from '@/components/ui/delete-confirm-dialog'
 import { ErrorMessage } from '@/components/ui/error-message'
 import type { CreateTaskInput } from '@/features/tasks'
-import type { DevTask } from '@/lib/types/dev-task'
-import { deleteDevTask, updateDevTask } from '@/lib/dev/tasks'
+import type { DevTask } from '@/features/dev/tasks'
+import { deleteDevTask, updateDevTask } from '@/features/dev/tasks'
 import { mutate } from 'swr'
 
 interface DevCalendarViewProps {

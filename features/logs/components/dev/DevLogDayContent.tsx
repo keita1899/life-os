@@ -6,7 +6,7 @@ import { useDevDailyLog } from '../../hooks/useDevDailyLog'
 import { getDevTasksForDate } from '../../lib/dev/utils'
 import { DevLogReportSection } from './DevLogReportSection'
 import { DevLogTasksSection } from './DevLogTasksSection'
-import type { DevTask } from '@/lib/types/dev-task'
+import type { DevTask } from '@/features/dev/tasks'
 import type { Task } from '@/features/tasks'
 import type { DevProject } from '@/features/dev/projects'
 

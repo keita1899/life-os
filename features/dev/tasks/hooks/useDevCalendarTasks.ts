@@ -1,6 +1,6 @@
 import useSWR from 'swr'
-import { getAllDevTasks } from '@/lib/dev/tasks'
-import type { DevTask } from '@/lib/types/dev-task'
+import { getAllDevTasks } from '../lib'
+import type { DevTask } from '../types/dev-task'
 import { fetcher } from '@/lib/swr'
 
 const devCalendarTasksKey = 'dev-calendar-tasks'

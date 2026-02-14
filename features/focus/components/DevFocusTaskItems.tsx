@@ -4,7 +4,7 @@ import { GripVertical, X } from 'lucide-react'
 import { useSortable } from '@dnd-kit/sortable'
 import { CSS } from '@dnd-kit/utilities'
 import { Button } from '@/components/ui/button'
-import type { DevTask } from '@/lib/types/dev-task'
+import type { DevTask } from '@/features/dev/tasks'
 
 interface SortableDevTaskItemProps {
   task: DevTask

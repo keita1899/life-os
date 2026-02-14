@@ -4,17 +4,19 @@ import { useMemo, useState, Suspense } from 'react'
 import { useSearchParams } from 'next/navigation'
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { Loading } from '@/components/ui/loading'
-import { useDevTasks } from '@/hooks/useDevTasks'
-import { useDevCalendarTasks } from '@/hooks/useDevCalendarTasks'
-import { updateDevTask } from '@/lib/dev/tasks'
-import { getTodayDevTasks } from '@/lib/dev/tasks'
+import {
+  useDevTasks,
+  useDevCalendarTasks,
+  updateDevTask,
+  getTodayDevTasks,
+} from '@/features/dev/tasks'
 import { mutate } from 'swr'
 import {
   FocusView,
   SortableDevTaskItem,
   DraggableAvailableDevTaskItem,
 } from '@/features/focus'
-import type { DevTask } from '@/lib/types/dev-task'
+import type { DevTask } from '@/features/dev/tasks'
 
 function DevFocusPageContent() {
   const searchParams = useSearchParams()

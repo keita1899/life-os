@@ -7,12 +7,12 @@ import {
   deleteDevTask,
   deleteCompletedDevTasks,
   updateOverdueDevTasksToToday,
-} from '@/lib/dev/tasks'
+} from '../lib'
 import type {
   DevTask,
   CreateDevTaskInput,
   UpdateDevTaskInput,
-} from '@/lib/types/dev-task'
+} from '../types/dev-task'
 import { fetcher } from '@/lib/swr'
 
 type DevTaskProjectFilter = number | null

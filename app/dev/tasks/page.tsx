@@ -17,7 +17,7 @@ import { DeleteConfirmDialog } from '@/components/ui/delete-confirm-dialog'
 import { Loading } from '@/components/ui/loading'
 import { ErrorMessage } from '@/components/ui/error-message'
 import { FloatingActionButtons } from '@/components/floating/FloatingActionButtons'
-import { useDevTasks } from '@/hooks/useDevTasks'
+import { useDevTasks } from '@/features/dev/tasks'
 import type { Task, CreateTaskInput } from '@/features/tasks'
 
 export default function DevTasksPage() {

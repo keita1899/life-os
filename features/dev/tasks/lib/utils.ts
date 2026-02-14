@@ -4,7 +4,7 @@ import {
   getTomorrowDateString,
 } from '@/lib/date/formats'
 import { categorizeDate } from '@/lib/date/labels'
-import type { DevTask } from '@/lib/types/dev-task'
+import type { DevTask } from '../types/dev-task'
 
 export function getTodayDevTasks(tasks: DevTask[]): DevTask[] {
   const today = getTodayDate()
