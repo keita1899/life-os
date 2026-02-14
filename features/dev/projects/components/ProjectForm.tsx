@@ -26,7 +26,7 @@ import {
 import type {
   DevProject,
   CreateDevProjectInput,
-} from '@/lib/types/dev-project'
+} from '../types/dev-project'
 
 const projectFormSchema = z.object({
   name: z.string().min(1, 'プロジェクト名は必須です'),

@@ -2,7 +2,7 @@
 
 import Link from 'next/link'
 import { Badge } from '@/components/ui/badge'
-import type { DevProject, ProjectStatus } from '@/lib/types/dev-project'
+import type { DevProject, ProjectStatus } from '../types/dev-project'
 
 interface ProjectCardProps {
   project: DevProject

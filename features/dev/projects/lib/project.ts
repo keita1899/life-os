@@ -1,10 +1,10 @@
-import { getDatabase, handleDbError } from '../../db'
+import { getDatabase, handleDbError } from '@/lib/db'
 import type {
   DevProject,
   CreateDevProjectInput,
   UpdateDevProjectInput,
   ProjectStatus,
-} from '../../types/dev-project'
+} from '../types/dev-project'
 
 interface DbDevProject {
   id: number

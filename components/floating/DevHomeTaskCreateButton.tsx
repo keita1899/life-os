@@ -3,7 +3,7 @@
 import { useMemo, useState } from 'react'
 import { CheckSquare } from 'lucide-react'
 import { ErrorMessage } from '@/components/ui/error-message'
-import { useDevProjects } from '@/hooks/useDevProjects'
+import { useDevProjects } from '@/features/dev/projects'
 import { useAsyncOperation } from '@/hooks/useAsyncOperation'
 import { createDevTask } from '@/lib/dev/tasks'
 import { mutate } from 'swr'

@@ -3,7 +3,7 @@
 import type { ReactElement } from 'react'
 import { FormDialog } from '@/components/ui/form-dialog'
 import { ProjectForm } from './ProjectForm'
-import type { DevProject, CreateDevProjectInput } from '@/lib/types/dev-project'
+import type { DevProject, CreateDevProjectInput } from '../types/dev-project'
 
 interface ProjectDialogProps {
   open: boolean

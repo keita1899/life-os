@@ -8,7 +8,7 @@ import { DevLogReportSection } from './DevLogReportSection'
 import { DevLogTasksSection } from './DevLogTasksSection'
 import type { DevTask } from '@/lib/types/dev-task'
 import type { Task } from '@/features/tasks'
-import type { DevProject } from '@/lib/types/dev-project'
+import type { DevProject } from '@/features/dev/projects'
 
 interface DevLogDayContentProps {
   logDate: Date

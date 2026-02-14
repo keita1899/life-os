@@ -11,11 +11,15 @@ import { Loading } from '@/components/ui/loading'
 import { ErrorMessage } from '@/components/ui/error-message'
 import { Badge } from '@/components/ui/badge'
 import { fetcher } from '@/lib/swr'
-import { deleteDevProject, getDevProjectById, updateDevProject } from '@/lib/dev/projects'
-import type { DevProject, ProjectStatus } from '@/lib/types/dev-project'
+import {
+  deleteDevProject,
+  getDevProjectById,
+  updateDevProject,
+  ProjectDialog,
+} from '@/features/dev/projects'
+import type { DevProject, ProjectStatus } from '@/features/dev/projects'
 import { Button } from '@/components/ui/button'
 import { CreateButton } from '@/components/ui/create-button'
-import { ProjectDialog } from '@/components/dev/projects/ProjectDialog'
 import { DeleteConfirmDialog } from '@/components/ui/delete-confirm-dialog'
 import { useState } from 'react'
 import { TaskDialog, TaskList, groupTasks } from '@/features/tasks'

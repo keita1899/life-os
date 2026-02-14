@@ -5,12 +5,12 @@ import {
   createDevProject,
   updateDevProject,
   deleteDevProject,
-} from '@/lib/dev/projects'
+} from '../lib'
 import type {
   DevProject,
   CreateDevProjectInput,
   UpdateDevProjectInput,
-} from '@/lib/types/dev-project'
+} from '../types/dev-project'
 import { fetcher } from '@/lib/swr'
 
 const devProjectsKey = 'dev-projects'

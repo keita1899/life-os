@@ -4,7 +4,7 @@ import type { ReactElement } from 'react'
 import { useMemo } from 'react'
 import { EmptyState } from '@/components/ui/empty-state'
 import { ProjectCard } from './ProjectCard'
-import type { DevProject } from '@/lib/types/dev-project'
+import type { DevProject } from '../types/dev-project'
 
 interface ProjectListProps {
   projects: DevProject[]

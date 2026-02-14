@@ -10,7 +10,7 @@ import {
   useDevGoals,
 } from '@/features/dev-goals'
 import { useDevCalendarTasks } from '@/hooks/useDevCalendarTasks'
-import { useDevProjects } from '@/hooks/useDevProjects'
+import { useDevProjects } from '@/features/dev/projects'
 import { useCalendarView } from '../hooks/useCalendarView'
 import { useAsyncOperation } from '@/hooks/useAsyncOperation'
 import { useDialogState } from '@/hooks/useDialogState'

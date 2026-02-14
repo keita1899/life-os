@@ -11,11 +11,13 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select'
-import { useDevProjects } from '@/hooks/useDevProjects'
-import { ProjectDialog } from '@/components/dev/projects/ProjectDialog'
-import { ProjectList } from '@/components/dev/projects/ProjectList'
+import {
+  ProjectDialog,
+  ProjectList,
+  useDevProjects,
+} from '@/features/dev/projects'
 import { Loading } from '@/components/ui/loading'
-import type { CreateDevProjectInput } from '@/lib/types/dev-project'
+import type { CreateDevProjectInput } from '@/features/dev/projects'
 
 export default function DevProjectsPage() {
   const {
