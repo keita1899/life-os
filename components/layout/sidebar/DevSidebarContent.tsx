@@ -24,13 +24,15 @@ interface DevSidebarContentProps {
 export function DevSidebarContent({ isCollapsed }: DevSidebarContentProps) {
   const pathname = usePathname()
   const activeHref = getActiveHref(pathname ?? '', DEV_HREFS)
+  const path = pathname?.split('?')[0] ?? ''
+  const isLogsPage = path === '/dev/logs'
 
   return (
     <nav className="flex flex-col">
       <SidebarItem
         item={DEV_HOME_ITEM}
         isCollapsed={isCollapsed}
-        isActive={activeHref === DEV_HOME_ITEM.href}
+        isActive={activeHref === DEV_HOME_ITEM.href || isLogsPage}
       />
       <div className="mt-2">
         {DEV_TASK_ITEMS.map((item) => (
