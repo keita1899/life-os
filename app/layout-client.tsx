@@ -37,9 +37,9 @@ export function LayoutClient({ children }: LayoutClientProps) {
 
   useHotkeys(
     'mod+h',
-    () => router.push('/'),
+    () => router.push(mode === 'development' ? '/dev' : '/'),
     { enableOnFormTags: false, preventDefault: true },
-    [router],
+    [mode, router],
   )
   useHotkeys(
     'd',
