@@ -1,5 +1,9 @@
 import type { Subscription } from '../types/subscription'
-import { getTodayDateString, getTomorrowDateString } from '@/lib/date/formats'
+import {
+  getTodayDateString,
+  getTomorrowDateString,
+  formatDateISO,
+} from '@/lib/date/formats'
 
 export const BILLING_CYCLE_LABELS: Record<string, string> = {
   monthly: '月額',
@@ -30,5 +34,16 @@ export function getUpcomingBillingSubscriptions(
     (sub) =>
       sub.active &&
       (sub.nextBillingDate === today || sub.nextBillingDate === tomorrow),
+  )
+}
+
+export function getSubscriptionsForDate(
+  subscriptions: Subscription[],
+  date: Date,
+): Subscription[] {
+  const dateStr = formatDateISO(date)
+  return subscriptions.filter(
+    (subscription) =>
+      subscription.active && subscription.nextBillingDate === dateStr,
   )
 }

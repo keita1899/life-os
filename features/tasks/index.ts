@@ -17,6 +17,7 @@ export {
   getNextOccurrenceAfter,
   groupTasks,
   getTodayTasks,
+  getTasksForDate,
   getRecurrenceLabel,
   DATE_LABEL_STYLES,
   DEFAULT_DATE_STYLE,

@@ -10,10 +10,9 @@ import {
   getWeekDays,
   formatDay,
   isToday,
-  getEventsForDate,
-  sortEventsByTime,
   getWeekdays,
 } from '../lib/utils'
+import { getEventsForDate, sortEventsByTime } from '@/features/events'
 import { getHolidayName } from '../lib/holidays'
 import { ChevronDown, ChevronUp } from 'lucide-react'
 import { EventPopoverWrapper } from './EventPopover'
@@ -24,7 +23,8 @@ import type { WeeklyGoal } from '@/features/goals'
 import type { Event } from '@/features/events'
 import type { Task } from '@/features/tasks'
 import type { Subscription } from '@/features/subscriptions'
-import { getTasksForDate, getSubscriptionsForDate } from '@/lib/logs/utils'
+import { getTasksForDate } from '@/features/tasks'
+import { getSubscriptionsForDate } from '@/features/subscriptions'
 
 function WeekDateCell({
   date,

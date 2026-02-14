@@ -11,11 +11,13 @@ import {
   formatDay,
   isCurrentMonth,
   isToday,
+  getWeekdays,
+} from '../lib/utils'
+import {
   getEventsForDate,
   formatEventTime,
   sortEventsByTime,
-  getWeekdays,
-} from '../lib/utils'
+} from '@/features/events'
 import { getHolidayName } from '../lib/holidays'
 import { EventPopoverWrapper } from './EventPopover'
 import { TaskPopoverWrapper } from './TaskPopover'
@@ -23,7 +25,8 @@ import { SubscriptionPopoverWrapper } from './SubscriptionPopover'
 import type { Event } from '@/features/events'
 import type { Task } from '@/features/tasks'
 import type { Subscription } from '@/features/subscriptions'
-import { getTasksForDate, getSubscriptionsForDate } from '@/lib/logs/utils'
+import { getTasksForDate } from '@/features/tasks'
+import { getSubscriptionsForDate } from '@/features/subscriptions'
 
 function DateCell({
   date,

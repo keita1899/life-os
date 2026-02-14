@@ -1,10 +1,8 @@
 import { getYear, getMonth, startOfWeek } from 'date-fns'
-import { getEventsForDate, sortEventsByTime } from '@/features/calendar'
+import { getEventsForDate, sortEventsByTime } from '@/features/events'
 import { formatDateISO } from '../date/formats'
 import type { YearlyGoal, MonthlyGoal, WeeklyGoal } from '@/features/goals'
-import type { Task } from '@/features/tasks'
 import type { Event } from '@/features/events'
-import type { Subscription } from '@/features/subscriptions'
 
 export function getYearlyGoalsForDate(
   goals: YearlyGoal[],
@@ -35,32 +33,12 @@ export function getWeeklyGoalsForDate(
   return goals.filter((goal) => goal.weekStartDate === weekStartDate)
 }
 
-export function getTasksForDate(tasks: Task[], date: Date): Task[] {
-  const dateStr = formatDateISO(date)
-  const filteredTasks = tasks.filter(
-    (task) => task.executionDate !== null && task.executionDate === dateStr,
-  )
-  
-  const incompleteTasks = filteredTasks.filter((task) => !task.completed)
-  const completedTasks = filteredTasks.filter((task) => task.completed)
-  
-  return [...incompleteTasks, ...completedTasks]
-}
+export { getTasksForDate } from '@/features/tasks'
+export { getSubscriptionsForDate } from '@/features/subscriptions'
 
 export function getEventsForDateSorted(
   events: Event[],
   date: Date,
 ): Event[] {
   return sortEventsByTime(getEventsForDate(events, date))
-}
-
-export function getSubscriptionsForDate(
-  subscriptions: Subscription[],
-  date: Date,
-): Subscription[] {
-  const dateStr = formatDateISO(date)
-  return subscriptions.filter(
-    (subscription) =>
-      subscription.active && subscription.nextBillingDate === dateStr,
-  )
 }

@@ -4,6 +4,7 @@ export { useSubscriptions } from './hooks/useSubscriptions'
 export {
   calculateMonthlyTotal,
   getUpcomingBillingSubscriptions,
+  getSubscriptionsForDate,
 } from './lib'
 export type {
   Subscription,

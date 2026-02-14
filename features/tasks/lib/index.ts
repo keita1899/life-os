@@ -13,7 +13,7 @@ export {
   getNextOccurrenceAfter,
 } from './recurrence'
 export { groupTasks } from './grouping'
-export { getTodayTasks } from './utils'
+export { getTodayTasks, getTasksForDate } from './utils'
 export {
   getRecurrenceLabel,
   DATE_LABEL_STYLES,

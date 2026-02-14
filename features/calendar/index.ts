@@ -15,9 +15,6 @@ export {
   getWeekDays,
   formatWeekRange,
   navigateWeek,
-  getEventsForDate,
-  formatEventTime,
-  sortEventsByTime,
   weekdays,
 } from './lib/utils'
 export {

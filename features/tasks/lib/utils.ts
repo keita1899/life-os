@@ -2,6 +2,7 @@ import {
   getTodayDate,
   getTodayDateString,
   getTomorrowDateString,
+  formatDateISO,
 } from '@/lib/date/formats'
 import { categorizeDate } from '@/lib/date/labels'
 import type { Task } from '../types/task'
@@ -21,4 +22,16 @@ export function getTodayTasks(tasks: Task[]): Task[] {
     )
     return category === 'today'
   })
+}
+
+export function getTasksForDate(tasks: Task[], date: Date): Task[] {
+  const dateStr = formatDateISO(date)
+  const filteredTasks = tasks.filter(
+    (task) => task.executionDate !== null && task.executionDate === dateStr,
+  )
+
+  const incompleteTasks = filteredTasks.filter((task) => !task.completed)
+  const completedTasks = filteredTasks.filter((task) => task.completed)
+
+  return [...incompleteTasks, ...completedTasks]
 }

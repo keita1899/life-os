@@ -20,4 +20,9 @@ export {
   DAYS_OF_MONTH,
   LAST_DAY_OF_MONTH,
 } from './recurrence-constants'
+export {
+  getEventsForDate,
+  formatEventTime,
+  sortEventsByTime,
+} from './date-utils'
 export type { Event, CreateEventInput, UpdateEventInput } from '../types/event'
