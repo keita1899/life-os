@@ -1,332 +1,103 @@
 'use client'
 
 import { useMemo, useState, Suspense } from 'react'
-import { useRouter, useSearchParams } from 'next/navigation'
-import { ArrowLeft, Play, GripVertical } from 'lucide-react'
-import { Button } from '@/components/ui/button'
-import { Loading } from '@/components/ui/loading'
-import { ErrorMessage } from '@/components/ui/error-message'
-import {
-  DndContext,
-  closestCenter,
-  KeyboardSensor,
-  PointerSensor,
-  useSensor,
-  useSensors,
-  DragOverlay,
-} from '@dnd-kit/core'
-import {
-  SortableContext,
-  sortableKeyboardCoordinates,
-  verticalListSortingStrategy,
-} from '@dnd-kit/sortable'
+import { useSearchParams } from 'next/navigation'
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs'
+import { Loading } from '@/components/ui/loading'
 import { useDevTasks } from '@/hooks/useDevTasks'
+import { useDevCalendarTasks } from '@/hooks/useDevCalendarTasks'
+import { updateDevTask } from '@/lib/dev/tasks'
 import { getTodayDevTasks } from '@/lib/dev/tasks'
-import { EmptyListDroppable, InvisibleDroppable, FocusListContainer } from '@/components/focus/FocusDroppable'
+import { mutate } from 'swr'
+import { FocusView } from '@/components/focus/FocusView'
 import { SortableDevTaskItem, DraggableAvailableDevTaskItem } from '@/components/focus/DevFocusTaskItems'
-import { FocusSession } from '@/components/focus/FocusSession'
-import { FocusCompletionModal } from '@/components/focus/FocusCompletionModal'
-import { useFocusTasks } from '@/hooks/useFocusTasks'
-import { useFocusDragAndDrop } from '@/hooks/useFocusDragAndDrop'
-import { useFocusSession } from '@/hooks/useFocusSession'
-import { useSessionHistory } from '@/hooks/useSessionHistory'
 import type { DevTask } from '@/lib/types/dev-task'
 
 function DevFocusPageContent() {
-  const router = useRouter()
   const searchParams = useSearchParams()
   const projectIdParam = searchParams.get('projectId')
+  const source = searchParams.get('source')
   const projectId = projectIdParam ? Number(projectIdParam) : null
+  const validProjectId = projectId !== null && Number.isFinite(projectId) ? projectId : null
   const [activeType, setActiveType] = useState<'inbox' | 'learning'>('inbox')
 
-  const sensors = useSensors(
-    useSensor(PointerSensor),
-    useSensor(KeyboardSensor, {
-      coordinateGetter: sortableKeyboardCoordinates,
-    }),
-  )
+  const useProjectTasks = validProjectId !== null
+  const useTaskListMode = !useProjectTasks && source === 'tasks'
 
-  const validProjectId = projectId !== null && Number.isFinite(projectId) ? projectId : null
-
-  const {
-    tasks,
-    isLoading,
-    error,
-    updateTask,
-  } = useDevTasks({
-    projectId: validProjectId,
-    type: validProjectId !== null ? undefined : activeType,
+  const devTasksResult = useDevTasks({
+    projectId: useProjectTasks ? validProjectId! : useTaskListMode ? null : undefined,
+    type: useTaskListMode ? activeType : undefined,
   })
+  const calendarTasksResult = useDevCalendarTasks()
 
-  const todayTasks = useMemo(
-    () => getTodayDevTasks(tasks),
-    [tasks],
-  )
+  const tasks = useProjectTasks
+    ? devTasksResult.tasks
+    : useTaskListMode
+      ? devTasksResult.tasks
+      : calendarTasksResult.tasks
+  const isLoading = useProjectTasks
+    ? devTasksResult.isLoading
+    : useTaskListMode
+      ? devTasksResult.isLoading
+      : calendarTasksResult.isLoading
+  const error = useProjectTasks
+    ? devTasksResult.error
+    : useTaskListMode
+      ? devTasksResult.error
+      : calendarTasksResult.error
+  const updateTask = useProjectTasks
+    ? devTasksResult.updateTask
+    : useTaskListMode
+      ? devTasksResult.updateTask
+      : async (id: number, input: { completed?: boolean; actualTime?: number }) => {
+          await updateDevTask(id, input)
+          await mutate('dev-calendar-tasks')
+        }
 
-  const {
-    focusTaskIds,
-    availableTaskIds,
-    focusTasks,
-    availableTasks,
-    toggleTask,
-    removeFromFocus,
-    moveTaskToFocus,
-    moveTaskToAvailable,
-    reorderFocusTasks,
-    reorderAvailableTasks,
-  } = useFocusTasks({ allTasks: todayTasks })
+  const todayTasks = useMemo(() => getTodayDevTasks(tasks), [tasks])
 
-  const {
-    activeId,
-    overId,
-    handleDragStart,
-    handleDragOver,
-    handleDragEnd,
-  } = useFocusDragAndDrop({
-    focusTaskIds,
-    availableTaskIds,
-    onMoveTaskToFocus: moveTaskToFocus,
-    onMoveTaskToAvailable: moveTaskToAvailable,
-    onReorderFocusTasks: reorderFocusTasks,
-    onReorderAvailableTasks: reorderAvailableTasks,
-  })
-
-  const {
-    isSessionActive,
-    sessionTasks,
-    currentTaskIndex,
-    sessionError,
-    completedTasks,
-    isCompletionModalOpen,
-    isCompleting,
-    totalTimeMinutes,
-    stopwatch,
-    startSession,
-    completeTask,
-    closeCompletionModal,
-    handleCompletionModalChange,
-  } = useFocusSession({
-    focusTasks,
-    onCompleteTask: async (taskId, timeMinutes) => {
-      await updateTask(taskId, {
-        completed: true,
-        actualTime: timeMinutes,
-      })
-    },
-  })
-
-  useSessionHistory(isSessionActive)
-
-  const activeTask = useMemo(() => {
-    if (activeId === null) return null
-    return todayTasks.find((task) => task.id === activeId) || null
-  }, [activeId, todayTasks])
-
-  const handleBack = () => {
-    router.back()
-  }
-
-  if (isSessionActive) {
-    return (
-      <FocusSession<DevTask>
-        formattedTime={stopwatch.formattedTime}
-        currentTaskIndex={currentTaskIndex}
-        sessionTasks={sessionTasks}
-        error={error}
-        sessionError={sessionError}
-        isCompleting={isCompleting}
-        onCompleteTask={completeTask}
-      />
-    )
-  }
+  const headerContent = useTaskListMode ? (
+    <div className="mb-4">
+      <Tabs
+        value={activeType}
+        onValueChange={(value) => {
+          if (value === 'inbox' || value === 'learning') {
+            setActiveType(value)
+          }
+        }}
+      >
+        <TabsList>
+          <TabsTrigger value="inbox">Inbox</TabsTrigger>
+          <TabsTrigger value="learning">学習</TabsTrigger>
+        </TabsList>
+      </Tabs>
+    </div>
+  ) : undefined
 
   return (
-    <>
-      <div className="container mx-auto max-w-7xl py-8 px-4">
-        <div className="mb-6 flex items-center justify-between">
-          <div className="flex items-center gap-4">
-            <Button variant="ghost" size="sm" onClick={handleBack}>
-              <ArrowLeft className="mr-2 h-4 w-4" />
-              戻る
-            </Button>
-            <h1 className="text-3xl font-bold">フォーカスモード</h1>
-          </div>
-          {focusTasks.length > 0 && (
-            <Button onClick={startSession} size="lg">
-              <Play className="mr-2 h-4 w-4" />
-              スタート
-            </Button>
-          )}
-        </div>
-
-        {validProjectId === null && (
-          <div className="mb-4">
-            <Tabs value={activeType} onValueChange={(value) => {
-              if (value === 'inbox' || value === 'learning') {
-                setActiveType(value)
-              }
-            }}>
-              <TabsList>
-                <TabsTrigger value="inbox">Inbox</TabsTrigger>
-                <TabsTrigger value="learning">学習</TabsTrigger>
-              </TabsList>
-            </Tabs>
-          </div>
-        )}
-
-        <ErrorMessage message={error || sessionError || ''} />
-
-        {isLoading ? (
-          <Loading />
-        ) : (
-          <DndContext
-            sensors={sensors}
-            collisionDetection={closestCenter}
-            onDragStart={handleDragStart}
-            onDragOver={handleDragOver}
-            onDragEnd={handleDragEnd}
-          >
-            <div className="space-y-6">
-              <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
-                <div className="space-y-4">
-                  <div className="text-lg font-semibold">
-                    今日のタスク{availableTasks.length > 0 ? ` ${availableTasks.length}件` : ''}
-                  </div>
-                  {availableTasks.length === 0 ? (
-                    <EmptyListDroppable id="available-tasks-list">
-                      <div className="text-muted-foreground">
-                        すべてのタスクがフォーカスリストに追加されています
-                      </div>
-                    </EmptyListDroppable>
-                  ) : (
-                    <SortableContext
-                      items={availableTasks.map((task) => task.id)}
-                      strategy={verticalListSortingStrategy}
-                    >
-                      <div className="space-y-2">
-                        {availableTasks.map((task: DevTask) => {
-                          const showSpacerAbove =
-                            activeId !== null &&
-                            focusTaskIds.includes(activeId) &&
-                            overId === task.id
-                          return (
-                            <div key={task.id}>
-                              {showSpacerAbove && (
-                                <div className="mb-2 h-[72px] rounded-lg border-2 border-dashed border-primary bg-primary/5" />
-                              )}
-                              <DraggableAvailableDevTaskItem
-                                task={task}
-                                onToggle={() => toggleTask(task.id)}
-                              />
-                            </div>
-                          )
-                        })}
-                        {activeId !== null &&
-                          focusTaskIds.includes(activeId) &&
-                          overId === 'available-tasks-list' && (
-                            <div className="mb-2 h-[72px] rounded-lg border-2 border-dashed border-primary bg-primary/5" />
-                          )}
-                        {activeId !== null &&
-                          focusTaskIds.includes(activeId) &&
-                          overId === 'available-tasks-list-end' && (
-                            <div className="mb-2 h-[72px] rounded-lg border-2 border-dashed border-primary bg-primary/5" />
-                          )}
-                        <InvisibleDroppable id="available-tasks-list-end">
-                          <div className="h-8" />
-                        </InvisibleDroppable>
-                      </div>
-                    </SortableContext>
-                  )}
-                </div>
-
-                <div className="space-y-4">
-                  <div className="text-lg font-semibold">
-                    フォーカスタスク{focusTasks.length > 0 ? ` ${focusTasks.length}件` : ''}
-                  </div>
-                  {focusTasks.length === 0 ? (
-                    <EmptyListDroppable id="focus-tasks-list">
-                      <div className="text-muted-foreground">
-                        フォーカスタスクが選択されていません
-                      </div>
-                    </EmptyListDroppable>
-                  ) : (
-                    <FocusListContainer
-                      isOver={
-                        activeId !== null &&
-                        !focusTaskIds.includes(activeId) &&
-                        (overId === 'focus-tasks-list-container' ||
-                          (typeof overId === 'number' &&
-                            focusTaskIds.includes(overId)) ||
-                          overId === 'focus-tasks-list-end')
-                      }
-                      hasItems={focusTasks.length > 0}
-                    >
-                      <SortableContext
-                        items={focusTaskIds}
-                        strategy={verticalListSortingStrategy}
-                      >
-                        <div className="space-y-2">
-                          {focusTasks.map((task: DevTask, index: number) => {
-                            const showSpacerAbove =
-                              activeId !== null &&
-                              !focusTaskIds.includes(activeId) &&
-                              overId === task.id
-                            return (
-                              <div key={task.id}>
-                                {showSpacerAbove && (
-                                  <div className="mb-2 h-[72px] rounded-lg border-2 border-dashed border-primary bg-primary/5" />
-                                )}
-                                <SortableDevTaskItem
-                                  task={task}
-                                  index={index}
-                                  onToggle={() => toggleTask(task.id)}
-                                  onRemove={() => removeFromFocus(task.id)}
-                                />
-                              </div>
-                            )
-                          })}
-                          {activeId !== null &&
-                            !focusTaskIds.includes(activeId) &&
-                            overId === 'focus-tasks-list-end' && (
-                              <div className="mb-2 h-[72px] rounded-lg border-2 border-dashed border-primary bg-primary/5" />
-                            )}
-                          <InvisibleDroppable id="focus-tasks-list-end">
-                            <div className="h-8" />
-                          </InvisibleDroppable>
-                        </div>
-                      </SortableContext>
-                    </FocusListContainer>
-                  )}
-                </div>
-              </div>
-            </div>
-            <DragOverlay>
-              {activeTask && (
-                <div className="flex items-center gap-3 rounded-lg border border-stone-200 bg-card p-4 shadow-lg dark:border-stone-800">
-                  <GripVertical className="h-5 w-5 text-muted-foreground" />
-                  <input
-                    type="checkbox"
-                    checked={focusTaskIds.includes(activeTask.id)}
-                    readOnly
-                    className="h-4 w-4 rounded border-stone-300 text-primary focus:ring-2 focus:ring-primary"
-                  />
-                  <div className="flex-1 font-medium">{activeTask.title}</div>
-                </div>
-              )}
-            </DragOverlay>
-          </DndContext>
-        )}
-      </div>
-
-      <FocusCompletionModal<DevTask>
-        open={isCompletionModalOpen}
-        onOpenChange={handleCompletionModalChange}
-        completedTasks={completedTasks}
-        totalTimeMinutes={totalTimeMinutes}
-        onClose={closeCompletionModal}
-      />
-    </>
+    <FocusView<DevTask>
+      tasks={todayTasks}
+      isLoading={isLoading}
+      error={error}
+      onCompleteTask={async (taskId, timeMinutes) => {
+        await updateTask(taskId, {
+          completed: true,
+          actualTime: timeMinutes,
+        })
+      }}
+      renderAvailableItem={(task, onToggle) => (
+        <DraggableAvailableDevTaskItem task={task} onToggle={onToggle} />
+      )}
+      renderFocusItem={(task, index, onToggle, onRemove) => (
+        <SortableDevTaskItem
+          task={task}
+          index={index}
+          onToggle={onToggle}
+          onRemove={onRemove}
+        />
+      )}
+      headerContent={headerContent}
+    />
   )
 }
 
