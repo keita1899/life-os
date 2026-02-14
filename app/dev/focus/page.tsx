@@ -11,11 +11,11 @@ import {
   getTodayDevTasks,
 } from '@/features/dev/tasks'
 import { mutate } from 'swr'
+import { FocusView } from '@/features/focus'
 import {
-  FocusView,
   SortableDevTaskItem,
   DraggableAvailableDevTaskItem,
-} from '@/features/focus'
+} from '@/features/dev/focus'
 import type { DevTask } from '@/features/dev/tasks'
 
 function DevFocusPageContent() {
