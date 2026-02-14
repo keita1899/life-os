@@ -4,7 +4,7 @@ import {
   getDevDailyLogByDate,
   createDevDailyLog,
   updateDevDailyLog,
-} from '../lib/dev'
+} from '../lib'
 import type {
   DevDailyLog,
   CreateDevDailyLogInput,

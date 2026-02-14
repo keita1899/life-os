@@ -4,7 +4,7 @@ import type {
   DevDailyLog,
   CreateDevDailyLogInput,
   UpdateDevDailyLogInput,
-} from '../../types/dev-daily-log'
+} from '../types/dev-daily-log'
 
 interface DbDevDailyLog {
   id: number

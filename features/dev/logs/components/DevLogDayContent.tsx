@@ -2,8 +2,8 @@
 
 import { useCallback, useMemo } from 'react'
 import { format } from 'date-fns'
-import { useDevDailyLog } from '../../hooks/useDevDailyLog'
-import { getDevTasksForDate } from '../../lib/dev/utils'
+import { useDevDailyLog } from '../hooks/useDevDailyLog'
+import { getDevTasksForDate } from '../lib/utils'
 import { DevLogReportSection } from './DevLogReportSection'
 import { DevLogTasksSection } from './DevLogTasksSection'
 import type { DevTask } from '@/features/dev/tasks'

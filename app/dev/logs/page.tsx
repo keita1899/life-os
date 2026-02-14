@@ -20,12 +20,14 @@ import { useAsyncOperation } from '@/hooks/useAsyncOperation'
 import { useDeleteConfirm } from '@/hooks/useDeleteConfirm'
 import { Loading } from '@/components/ui/loading'
 import { ErrorMessage } from '@/components/ui/error-message'
+import { useLogView, LogViewHeader } from '@/features/logs'
 import {
-  useLogView,
-  LogViewHeader,
   DevLogGoalsSection,
   DevLogDayContent,
-} from '@/features/logs'
+  getDevYearlyGoalsForDate,
+  getDevMonthlyGoalsForDate,
+  getDevWeeklyGoalsForDate,
+} from '@/features/dev/logs'
 import { TaskForm } from '@/features/tasks'
 import {
   Dialog,
@@ -42,11 +44,6 @@ import {
 } from '@/components/ui/select'
 import { DeleteConfirmDialog } from '@/components/ui/delete-confirm-dialog'
 import { FloatingActionButtons } from '@/components/floating/FloatingActionButtons'
-import {
-  getDevYearlyGoalsForDate,
-  getDevMonthlyGoalsForDate,
-  getDevWeeklyGoalsForDate,
-} from '@/features/logs'
 import type { Task, CreateTaskInput } from '@/features/tasks'
 import Link from 'next/link'
 

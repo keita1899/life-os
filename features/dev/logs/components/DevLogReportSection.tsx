@@ -13,7 +13,7 @@ import {
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { AutoResizeTextarea } from '@/components/ui/textarea-autosize'
 import { Loader2 } from 'lucide-react'
-import type { DevDailyLog, UpdateDevDailyLogInput } from '../../types/dev-daily-log'
+import type { DevDailyLog, UpdateDevDailyLogInput } from '../types/dev-daily-log'
 
 const AUTO_SAVE_DELAY_MS = 800
 
