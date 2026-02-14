@@ -1,5 +1,6 @@
 'use client'
 
+import { useRouter } from 'next/navigation'
 import { MonthView } from './MonthView'
 import { WeekView } from './WeekView'
 import { CalendarViewBase } from './CalendarViewBase'
@@ -29,6 +30,7 @@ interface DevCalendarViewProps {
 }
 
 export function DevCalendarView({ initialDate }: DevCalendarViewProps) {
+  const router = useRouter()
   const {
     currentDate,
     viewMode,
@@ -208,6 +210,7 @@ export function DevCalendarView({ initialDate }: DevCalendarViewProps) {
         displayTitle={displayTitle}
         viewMode={viewMode}
         onViewModeChange={setViewMode}
+        onNavigateToLog={() => router.push('/dev/logs')}
         onPrev={handlePrev}
         onNext={handleNext}
         isLoading={isLoading}

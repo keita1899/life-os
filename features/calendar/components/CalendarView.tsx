@@ -2,6 +2,7 @@
 
 import { useMemo } from 'react'
 import Link from 'next/link'
+import { useRouter } from 'next/navigation'
 import {
   startOfMonth,
   endOfMonth,
@@ -48,6 +49,7 @@ interface CalendarViewProps {
 }
 
 export function CalendarView({ initialDate }: CalendarViewProps) {
+  const router = useRouter()
   const {
     currentDate,
     viewMode,
@@ -291,6 +293,7 @@ export function CalendarView({ initialDate }: CalendarViewProps) {
         displayTitle={displayTitle}
         viewMode={viewMode}
         onViewModeChange={setViewMode}
+        onNavigateToLog={() => router.push('/logs')}
         onPrev={handlePrev}
         onNext={handleNext}
         isLoading={isLoading}

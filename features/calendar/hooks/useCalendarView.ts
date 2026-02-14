@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { useHotkeys } from 'react-hotkeys-hook'
+import { usePathname, useRouter, useSearchParams } from 'next/navigation'
 import { useUserSettings } from '@/features/settings'
 import {
   formatMonthYear,
@@ -10,34 +10,33 @@ import {
 
 type ViewMode = 'month' | 'week'
 
+function isValidViewMode(value: string): value is ViewMode {
+  return value === 'month' || value === 'week'
+}
+
 interface UseCalendarViewOptions {
   initialDate?: Date
 }
 
 export function useCalendarView({ initialDate }: UseCalendarViewOptions = {}) {
+  const router = useRouter()
+  const pathname = usePathname()
+  const searchParams = useSearchParams()
   const { userSettings, isLoading: isLoadingSettings } = useUserSettings()
   const [currentDate, setCurrentDate] = useState(initialDate || new Date())
-  const [viewModeOverride, setViewModeOverride] = useState<ViewMode | null>(null)
 
   const weekStartDay = userSettings?.weekStartDay ?? 0
-
   const defaultView = userSettings?.defaultCalendarView
   const resolvedDefaultView: ViewMode = defaultView === 'week' ? 'week' : 'month'
-  const viewMode: ViewMode = viewModeOverride ?? resolvedDefaultView
-  const setViewMode = (next: ViewMode) => setViewModeOverride(next)
+  const viewFromUrl = searchParams.get('view')
+  const viewMode: ViewMode =
+    isValidViewMode(viewFromUrl ?? '') ? (viewFromUrl as ViewMode) : resolvedDefaultView
 
-  useHotkeys(
-    'm',
-    () => setViewMode('month'),
-    { enableOnFormTags: false, preventDefault: true },
-    [],
-  )
-  useHotkeys(
-    'w',
-    () => setViewMode('week'),
-    { enableOnFormTags: false, preventDefault: true },
-    [],
-  )
+  const setViewMode = (next: ViewMode) => {
+    const params = new URLSearchParams(searchParams.toString())
+    params.set('view', next)
+    router.push(`${pathname}?${params.toString()}`)
+  }
 
   const handlePrev = () => {
     setCurrentDate((prev) =>

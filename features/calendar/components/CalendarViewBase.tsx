@@ -4,25 +4,16 @@ import { type ReactNode } from 'react'
 import { ChevronLeft, ChevronRight } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select'
+import { DayWeekMonthSelect } from '@/components/ui/day-week-month-select'
 import { cn } from '@/lib/utils'
 
 type ViewMode = 'month' | 'week'
-
-function isValidViewMode(value: string): value is ViewMode {
-  return value === 'month' || value === 'week'
-}
 
 interface CalendarViewBaseProps {
   displayTitle: string
   viewMode: ViewMode
   onViewModeChange: (mode: ViewMode) => void
+  onNavigateToLog?: () => void
   onPrev: () => void
   onNext: () => void
   isLoading: boolean
@@ -34,12 +25,18 @@ export function CalendarViewBase({
   displayTitle,
   viewMode,
   onViewModeChange,
+  onNavigateToLog,
   onPrev,
   onNext,
   isLoading,
   children,
   cardClassName,
 }: CalendarViewBaseProps) {
+  const handleViewChange = (value: 'day' | 'week' | 'month') => {
+    if (value === 'day') onNavigateToLog?.()
+    else onViewModeChange(value)
+  }
+
   return (
     <div className="w-full space-y-4">
       <Card className={cn('border-border shadow-none', cardClassName)}>
@@ -47,36 +44,10 @@ export function CalendarViewBase({
           <div className="flex items-center justify-between">
             <CardTitle className="text-2xl">{displayTitle}</CardTitle>
             <div className="flex items-center gap-2">
-              <Select
+              <DayWeekMonthSelect
                 value={viewMode}
-                onValueChange={(value) => {
-                  if (isValidViewMode(value)) {
-                    onViewModeChange(value)
-                  }
-                }}
-              >
-                <SelectTrigger className="w-24">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="month">
-                    <span className="flex items-center justify-between w-full">
-                      <span>月</span>
-                      <span className="ml-4 text-xs text-muted-foreground">
-                        M
-                      </span>
-                    </span>
-                  </SelectItem>
-                  <SelectItem value="week">
-                    <span className="flex items-center justify-between w-full">
-                      <span>週</span>
-                      <span className="ml-4 text-xs text-muted-foreground">
-                        W
-                      </span>
-                    </span>
-                  </SelectItem>
-                </SelectContent>
-              </Select>
+                onValueChange={handleViewChange}
+              />
               <Button
                 variant="outline"
                 size="icon"

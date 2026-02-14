@@ -1,7 +1,8 @@
 'use client'
 
-import { useMemo } from 'react'
+import { Suspense, useMemo } from 'react'
 import { DevCalendarView } from '@/features/calendar'
+import { Loading } from '@/components/ui/loading'
 import { useDevGoals } from '@/hooks/useDevGoals'
 import { Card } from '@/components/ui/card'
 import { Target } from 'lucide-react'
@@ -40,7 +41,9 @@ export default function DevHome() {
             </Card>
           )}
           <div className="flex-1">
-            <DevCalendarView />
+            <Suspense fallback={<Loading />}>
+              <DevCalendarView />
+            </Suspense>
           </div>
           <DevHomeTaskCreateButton />
         </div>
