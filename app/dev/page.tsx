@@ -1,11 +1,12 @@
 'use client'
 
-import { useMemo } from 'react'
-import { DevCalendarView } from '@/components/calendar/DevCalendarView'
-import { useDevGoals } from '@/hooks/useDevGoals'
+import { Suspense, useMemo } from 'react'
+import { DevCalendarView } from '@/features/calendar'
+import { Loading } from '@/components/ui/loading'
+import { useDevGoals } from '@/features/dev/goals'
 import { Card } from '@/components/ui/card'
 import { Target } from 'lucide-react'
-import { DevHomeTaskCreateButton } from '@/components/floating/DevHomeTaskCreateButton'
+import { DevHomeTaskCreateButton } from '@/features/dev/home'
 
 export default function DevHome() {
   const currentYear = new Date().getFullYear()
@@ -40,7 +41,9 @@ export default function DevHome() {
             </Card>
           )}
           <div className="flex-1">
-            <DevCalendarView />
+            <Suspense fallback={<Loading />}>
+              <DevCalendarView />
+            </Suspense>
           </div>
           <DevHomeTaskCreateButton />
         </div>

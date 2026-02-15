@@ -26,13 +26,15 @@ interface LifeSidebarContentProps {
 export function LifeSidebarContent({ isCollapsed }: LifeSidebarContentProps) {
   const pathname = usePathname()
   const activeHref = getActiveHref(pathname ?? '', LIFE_HREFS)
+  const path = pathname?.split('?')[0] ?? ''
+  const isLogsPage = path === '/logs'
 
   return (
     <nav className="flex flex-col">
       <SidebarItem
         item={HOME_ITEM}
         isCollapsed={isCollapsed}
-        isActive={activeHref === HOME_ITEM.href}
+        isActive={activeHref === HOME_ITEM.href || isLogsPage}
       />
       <div className="mt-2">
         {TASK_ITEMS.map((item) => (

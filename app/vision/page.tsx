@@ -1,21 +1,17 @@
 'use client'
 
 import { useState, useMemo } from 'react'
-import { VisionCategorySidebar } from '@/components/vision/VisionCategorySidebar'
-import { VisionList } from '@/components/vision/VisionList'
 import {
-  Accordion,
-  AccordionContent,
-  AccordionHeader,
-  AccordionItem,
-  AccordionTrigger,
-} from '@/components/ui/accordion'
+  VisionCategorySidebar,
+  VisionList,
+  useVision,
+  useVisionCategories,
+  type VisionItem,
+} from '@/features/vision'
+import { GroupedAccordion } from '@/components/ui/grouped-accordion'
 import { Loading } from '@/components/ui/loading'
 import { ErrorMessage } from '@/components/ui/error-message'
-import { useVisionCategories } from '@/hooks/useVisionCategories'
-import { useVision } from '@/hooks/useVision'
 import { useAsyncOperation } from '@/hooks/useAsyncOperation'
-import type { VisionItem } from '@/lib/types/vision-item'
 
 export default function VisionPage() {
   const { categories } = useVisionCategories()
@@ -77,12 +73,22 @@ export default function VisionPage() {
       })
   }, [items, categories, selectedCategoryId])
 
-  const defaultAccordionValues = useMemo(() => {
+  const accordionKeys = useMemo(() => {
     if (!groupedItemsByCategory) return []
-    return groupedItemsByCategory.map(({ categoryId }) =>
-      categoryId.toString(),
-    )
+    return groupedItemsByCategory
+      .filter(({ categoryId }) => categoryId !== null)
+      .map(({ categoryId }) => categoryId!.toString())
   }, [groupedItemsByCategory])
+
+  const [openAccordionKeys, setOpenAccordionKeys] = useState<string[]>([])
+
+  const accordionValue = useMemo(() => {
+    if (openAccordionKeys.length === 0) return accordionKeys
+    const newKeys = accordionKeys.filter((k) => !openAccordionKeys.includes(k))
+    if (newKeys.length > 0)
+      return [...new Set([...openAccordionKeys, ...newKeys])]
+    return openAccordionKeys
+  }, [accordionKeys, openAccordionKeys])
 
   const handleCreateItem = async (title: string) => {
     await execute(
@@ -135,38 +141,31 @@ export default function VisionPage() {
               groupedItemsByCategory.filter(
                 ({ categoryId }) => categoryId !== null,
               ).length > 0 ? (
-                <Accordion
-                  type="multiple"
-                  defaultValue={defaultAccordionValues}
-                  className="space-y-2"
-                >
-                  {groupedItemsByCategory
+                <GroupedAccordion
+                  value={accordionValue}
+                  onValueChange={setOpenAccordionKeys}
+                  items={groupedItemsByCategory
                     .filter(({ categoryId }) => categoryId !== null)
-                    .map(({ categoryId, category, items }) => (
-                      <AccordionItem
-                        key={categoryId!}
-                        value={categoryId!.toString()}
-                        className="border-none"
-                      >
-                        <AccordionHeader>
-                          <AccordionTrigger className="text-lg font-semibold py-2">
-                            {category?.name}
-                          </AccordionTrigger>
-                        </AccordionHeader>
-                        <AccordionContent className="pt-2">
-                          <VisionList
-                            items={items}
-                            onUpdate={handleUpdateItem}
-                            onDelete={handleDeleteItem}
-                            onCreate={(title) =>
-                              handleCreateItem(title).then(() => {})
-                            }
-                            showCreateForm={false}
-                          />
-                        </AccordionContent>
-                      </AccordionItem>
-                    ))}
-                </Accordion>
+                    .map(({ categoryId, category, items }) => ({
+                      key: categoryId!.toString(),
+                      itemClassName: 'border-none',
+                      triggerClassName: 'text-lg font-semibold py-2',
+                      contentClassName: 'pt-2',
+                      trigger: category?.name,
+                      content: (
+                        <VisionList
+                          items={items}
+                          onUpdate={handleUpdateItem}
+                          onDelete={handleDeleteItem}
+                          onCreate={(title) =>
+                            handleCreateItem(title).then(() => {})
+                          }
+                          showCreateForm={false}
+                        />
+                      ),
+                    }))}
+                  className="space-y-2"
+                />
               ) : (
                 <VisionList
                   items={[]}

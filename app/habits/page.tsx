@@ -1,25 +1,28 @@
 'use client'
 
-import { useState, useMemo } from 'react'
+import { useMemo } from 'react'
 import { format } from 'date-fns'
-import { Plus } from 'lucide-react'
 import { Button } from '@/components/ui/button'
+import { CreateButton } from '@/components/ui/create-button'
 import { useCreateShortcut } from '@/hooks/useCreateShortcut'
 import { useDialogState } from '@/hooks/useDialogState'
 import { useDeleteConfirm } from '@/hooks/useDeleteConfirm'
 import { useAsyncOperation } from '@/hooks/useAsyncOperation'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
-import { HabitDialog } from '@/components/habits/HabitDialog'
-import { HabitHeatmap } from '@/components/habits/HabitHeatmap'
+import {
+  HabitDialog,
+  HabitHeatmap,
+  useHabits,
+  useHabitCompletionsByDate,
+  getCompletionsByDate,
+  useHabitHeatmapView,
+  type Habit,
+  type CreateHabitInput,
+} from '@/features/habits'
 import { DeleteConfirmDialog } from '@/components/ui/delete-confirm-dialog'
 import { EmptyState } from '@/components/ui/empty-state'
 import { Loading } from '@/components/ui/loading'
 import { ErrorMessage } from '@/components/ui/error-message'
-import { useHabits } from '@/hooks/useHabits'
-import { useHabitCompletionsByDate } from '@/hooks/useHabitCompletions'
-import { getCompletionsByDate } from '@/lib/habits'
-import { useHabitHeatmapView } from '@/hooks/useHabitHeatmapView'
-import type { Habit, CreateHabitInput } from '@/lib/types/habit'
 import { ChevronLeft, ChevronRight } from 'lucide-react'
 
 export default function HabitsPage() {
@@ -128,36 +131,31 @@ export default function HabitsPage() {
 
   const handleToggleToday = async (habit: Habit) => {
     const completed = completedHabitIdsToday.has(habit.id)
-    try {
-      setOperationError(null)
-      if (completed) {
-        await deleteHabitCompletion(habit.id, todayStr)
-      } else {
-        await createHabitCompletion(habit.id, todayStr)
-      }
-    } catch (err) {
-      setOperationError(
-        err instanceof Error ? err.message : '習慣の完了状態の更新に失敗しました',
-      )
-    }
+    await execute(
+      async () => {
+        if (completed) {
+          await deleteHabitCompletion(habit.id, todayStr)
+        } else {
+          await createHabitCompletion(habit.id, todayStr)
+        }
+      },
+      '習慣の完了状態の更新に失敗しました',
+    )
   }
 
   const handleToggleDate = async (habit: Habit, dateStr: string) => {
-    try {
-      setOperationError(null)
-      const completions = await getCompletionsByDate(dateStr)
-      const isCompleted = completions.some((c) => c.habitId === habit.id)
-      
-      if (isCompleted) {
-        await deleteHabitCompletion(habit.id, dateStr)
-      } else {
-        await createHabitCompletion(habit.id, dateStr)
-      }
-    } catch (err) {
-      setOperationError(
-        err instanceof Error ? err.message : '習慣の完了状態の更新に失敗しました',
-      )
-    }
+    await execute(
+      async () => {
+        const completions = await getCompletionsByDate(dateStr)
+        const isCompleted = completions.some((c) => c.habitId === habit.id)
+        if (isCompleted) {
+          await deleteHabitCompletion(habit.id, dateStr)
+        } else {
+          await createHabitCompletion(habit.id, dateStr)
+        }
+      },
+      '習慣の完了状態の更新に失敗しました',
+    )
   }
 
   return (
@@ -165,10 +163,7 @@ export default function HabitsPage() {
       <div className="container mx-auto max-w-5xl py-8 px-4">
         <div className="mb-6 flex items-center justify-between">
           <h1 className="text-3xl font-bold">習慣</h1>
-          <Button onClick={handleCreateClick}>
-            <Plus className="mr-2 h-4 w-4" />
-            習慣を作成
-          </Button>
+          <CreateButton label="習慣を作成" onClick={handleCreateClick} />
         </div>
 
         <ErrorMessage
@@ -181,14 +176,12 @@ export default function HabitsPage() {
         ) : sortedHabits.length === 0 ? (
           <div className="text-center">
             <EmptyState message="習慣がありません">
-              <Button
+              <CreateButton
+                label="習慣を作成"
                 variant="outline"
                 className="mt-4"
                 onClick={handleCreateClick}
-              >
-                <Plus className="mr-2 h-4 w-4" />
-                習慣を作成
-              </Button>
+              />
             </EmptyState>
           </div>
         ) : (

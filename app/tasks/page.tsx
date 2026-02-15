@@ -2,39 +2,36 @@
 
 import { useState, useMemo, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
-import { Trash2, Calendar, Focus, Plus } from 'lucide-react'
+import { useFocusShortcut } from '@/features/focus'
+import { Trash2, Calendar, Focus } from 'lucide-react'
 import { Button } from '@/components/ui/button'
+import { CreateButton } from '@/components/ui/create-button'
 import { useCreateShortcut } from '@/hooks/useCreateShortcut'
 import { useDialogState } from '@/hooks/useDialogState'
 import { useDeleteConfirm } from '@/hooks/useDeleteConfirm'
 import { useAsyncOperation } from '@/hooks/useAsyncOperation'
+import { GroupedAccordion } from '@/components/ui/grouped-accordion'
 import {
-  Accordion,
-  AccordionContent,
-  AccordionHeader,
-  AccordionItem,
-  AccordionTrigger,
-} from '@/components/ui/accordion'
-import { TaskList } from '@/components/tasks/TaskList'
-import { TaskDialog } from '@/components/tasks/TaskDialog'
-import { DeleteConfirmDialog } from '@/components/ui/delete-confirm-dialog'
-import { RecurringTaskDeleteDialog } from '@/components/tasks/RecurringTaskDeleteDialog'
-import { Loading } from '@/components/ui/loading'
-import { ErrorMessage } from '@/components/ui/error-message'
-import { FloatingActionButtons } from '@/components/floating/FloatingActionButtons'
-import { useTasks } from '@/hooks/useTasks'
-import { groupTasks } from '@/lib/tasks/grouping'
-import {
+  TaskList,
+  TaskDialog,
+  RecurringTaskDeleteDialog,
+  useTasks,
+  groupTasks,
   toTasksWithNextOccurrenceOnly,
   getNextOccurrenceAfter,
   getNextOccurrenceDate,
-} from '@/lib/tasks'
+} from '@/features/tasks'
+import { DeleteConfirmDialog } from '@/components/ui/delete-confirm-dialog'
+import { Loading } from '@/components/ui/loading'
+import { ErrorMessage } from '@/components/ui/error-message'
+import { FloatingActionButtons } from '@/components/floating/FloatingActionButtons'
 import { getTodayDateString } from '@/lib/date/formats'
 import { parseISO } from 'date-fns'
-import type { CreateTaskInput, Task, UpdateTaskInput } from '@/lib/types/task'
+import type { CreateTaskInput, Task, UpdateTaskInput } from '@/features/tasks'
 
 export default function TasksPage() {
   const router = useRouter()
+  useFocusShortcut({ path: '/focus' })
   const {
     tasks,
     isLoading,
@@ -92,6 +89,17 @@ export default function TasksPage() {
       ),
     [groupedTasks],
   )
+
+  const [openAccordionKeys, setOpenAccordionKeys] = useState<string[]>([])
+
+  const accordionValue = useMemo(() => {
+    const keys = visibleGroups.map((g) => g.key)
+    if (openAccordionKeys.length === 0) return keys
+    const newKeys = keys.filter((k) => !openAccordionKeys.includes(k))
+    if (newKeys.length > 0)
+      return [...new Set([...openAccordionKeys, ...newKeys])]
+    return openAccordionKeys
+  }, [visibleGroups, openAccordionKeys])
 
   const handleCreateTask = async (input: CreateTaskInput) => {
     const result = await execute(
@@ -239,10 +247,7 @@ export default function TasksPage() {
             <div>
               <h1 className="text-3xl font-bold">タスク</h1>
             </div>
-            <Button onClick={handleCreateClick}>
-              <Plus className="mr-2 h-4 w-4" />
-              タスクを作成
-            </Button>
+            <CreateButton label="タスクを作成" onClick={handleCreateClick} />
           </div>
         </div>
 
@@ -254,72 +259,67 @@ export default function TasksPage() {
       {isLoading ? (
         <Loading />
       ) : (
-        <Accordion
-          type="multiple"
-          className="w-full"
-          defaultValue={visibleGroups.map((group) => group.key)}
-        >
-          {visibleGroups.map((group) => (
-            <AccordionItem key={group.key} value={group.key}>
-              <AccordionHeader>
-                <AccordionTrigger className="hover:no-underline">
-                  <div className="flex w-full items-center justify-between">
-                    <div className="flex items-center gap-2">
-                      <h2 className="text-lg font-semibold text-stone-900 dark:text-stone-100">
-                        {group.title}
-                      </h2>
-                      {group.tasks.length > 0 && (
-                        <span className="text-sm text-muted-foreground">
-                          {group.tasks.length}
-                        </span>
-                      )}
-                    </div>
-                    {group.key === 'overdue' && group.tasks.length > 0 && (
-                      <Button
-                        type="button"
-                        variant="outline"
-                        size="sm"
-                        className="mr-2"
-                        onClick={(e) => {
-                          e.stopPropagation()
-                          handleUpdateOverdueTasksToToday()
-                        }}
-                      >
-                        <Calendar className="mr-2 h-4 w-4" />
-                        今日に戻す
-                      </Button>
-                    )}
-                  </div>
-                </AccordionTrigger>
-              </AccordionHeader>
-              <AccordionContent>
-                <div className="space-y-4">
-                  <TaskList
-                    tasks={group.tasks}
-                    onEdit={handleEditTask}
-                    onDelete={deleteConfirm.handleDeleteClick}
-                    onToggleCompletion={handleToggleCompletion}
-                    onUpdateExecutionDate={handleUpdateExecutionDate}
-                  />
-                  {group.key === 'completed' && group.tasks.length > 0 && (
-                    <div className="flex justify-end">
-                      <Button
-                        type="button"
-                        variant="outline"
-                        size="sm"
-                        className="text-destructive hover:text-destructive hover:bg-destructive/10"
-                        onClick={handleDeleteCompletedTasksClick}
-                      >
-                        <Trash2 className="mr-2 h-4 w-4" />
-                        完了済みを一括削除
-                      </Button>
-                    </div>
+        <GroupedAccordion
+          value={accordionValue}
+          onValueChange={setOpenAccordionKeys}
+          items={visibleGroups.map((group) => ({
+            key: group.key,
+            trigger: (
+              <div className="flex w-full items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <h2 className="text-lg font-semibold text-stone-900 dark:text-stone-100">
+                    {group.title}
+                  </h2>
+                  {group.tasks.length > 0 && (
+                    <span className="text-sm text-muted-foreground">
+                      {group.tasks.length}
+                    </span>
                   )}
                 </div>
-              </AccordionContent>
-            </AccordionItem>
-          ))}
-        </Accordion>
+                {group.key === 'overdue' && group.tasks.length > 0 && (
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    className="mr-2"
+                    onClick={(e) => {
+                      e.stopPropagation()
+                      handleUpdateOverdueTasksToToday()
+                    }}
+                  >
+                    <Calendar className="mr-2 h-4 w-4" />
+                    今日に戻す
+                  </Button>
+                )}
+              </div>
+            ),
+            content: (
+              <div className="space-y-4">
+                <TaskList
+                  tasks={group.tasks}
+                  onEdit={handleEditTask}
+                  onDelete={deleteConfirm.handleDeleteClick}
+                  onToggleCompletion={handleToggleCompletion}
+                  onUpdateExecutionDate={handleUpdateExecutionDate}
+                />
+                {group.key === 'completed' && group.tasks.length > 0 && (
+                  <div className="flex justify-end">
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      className="text-destructive hover:text-destructive hover:bg-destructive/10"
+                      onClick={handleDeleteCompletedTasksClick}
+                    >
+                      <Trash2 className="mr-2 h-4 w-4" />
+                      完了済みを一括削除
+                    </Button>
+                  </div>
+                )}
+              </div>
+            ),
+          }))}
+        />
       )}
 
       <TaskDialog

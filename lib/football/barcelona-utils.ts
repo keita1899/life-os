@@ -1,4 +1,4 @@
-import type { EventCategory } from '../types/event'
+import type { EventCategory } from '@/features/events'
 
 export function isBarcelonaMatch(event: {
   title: string

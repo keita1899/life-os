@@ -1,35 +1,26 @@
 'use client'
 
 import { useState, useMemo } from 'react'
-import { Plus } from 'lucide-react'
-import { Button } from '@/components/ui/button'
+import { CreateButton } from '@/components/ui/create-button'
 import { useCreateShortcut } from '@/hooks/useCreateShortcut'
 import { useDialogState } from '@/hooks/useDialogState'
 import { useDeleteConfirm } from '@/hooks/useDeleteConfirm'
 import { useAsyncOperation } from '@/hooks/useAsyncOperation'
+import { GroupedAccordion } from '@/components/ui/grouped-accordion'
 import {
-  Accordion,
-  AccordionContent,
-  AccordionHeader,
-  AccordionItem,
-  AccordionTrigger,
-} from '@/components/ui/accordion'
-import { SubscriptionList } from '@/components/subscriptions/SubscriptionList'
-import { SubscriptionDialog } from '@/components/subscriptions/SubscriptionDialog'
+  SubscriptionList,
+  SubscriptionDialog,
+  useSubscriptions,
+  calculateMonthlyTotal,
+  getUpcomingBillingSubscriptions,
+  type CreateSubscriptionInput,
+  type Subscription,
+  type UpdateSubscriptionInput,
+} from '@/features/subscriptions'
 import { DeleteConfirmDialog } from '@/components/ui/delete-confirm-dialog'
 import { Loading } from '@/components/ui/loading'
 import { ErrorMessage } from '@/components/ui/error-message'
-import { useSubscriptions } from '@/hooks/useSubscriptions'
-import {
-  calculateMonthlyTotal,
-  getUpcomingBillingSubscriptions,
-} from '@/lib/subscriptions'
 import { format } from 'date-fns'
-import type {
-  CreateSubscriptionInput,
-  Subscription,
-  UpdateSubscriptionInput,
-} from '@/lib/types/subscription'
 
 export default function SubscriptionsPage() {
   const {
@@ -72,6 +63,17 @@ export default function SubscriptionsPage() {
       },
     ]
   }, [subscriptions])
+
+  const [openAccordionKeys, setOpenAccordionKeys] = useState<string[]>([])
+
+  const accordionValue = useMemo(() => {
+    const keys = groupedSubscriptions.map((g) => g.key)
+    if (openAccordionKeys.length === 0) return keys
+    const newKeys = keys.filter((k) => !openAccordionKeys.includes(k))
+    if (newKeys.length > 0)
+      return [...new Set([...openAccordionKeys, ...newKeys])]
+    return openAccordionKeys
+  }, [groupedSubscriptions, openAccordionKeys])
 
   const monthlyTotal = useMemo(() => {
     return calculateMonthlyTotal(subscriptions)
@@ -138,10 +140,7 @@ export default function SubscriptionsPage() {
         <div className="mb-6">
           <div className="flex items-center justify-between">
             <h1 className="text-3xl font-bold">サブスク</h1>
-            <Button onClick={handleCreateClick}>
-              <Plus className="mr-2 h-4 w-4" />
-              サブスクを作成
-            </Button>
+            <CreateButton label="サブスクを作成" onClick={handleCreateClick} />
           </div>
         </div>
 
@@ -172,46 +171,41 @@ export default function SubscriptionsPage() {
       {isLoading ? (
         <Loading />
       ) : (
-        <Accordion
-          type="multiple"
-          className="w-full"
-          defaultValue={['active']}
-        >
-          {groupedSubscriptions.map((group) => (
-            <AccordionItem key={group.key} value={group.key}>
-              <AccordionHeader className="flex items-center justify-between">
-                <AccordionTrigger className="hover:no-underline flex-1">
-                  <div className="flex w-full items-center gap-2">
-                    <h2 className="text-lg font-semibold text-stone-900 dark:text-stone-100">
-                      {group.title}
-                    </h2>
-                    {group.subscriptions.length > 0 && (
-                      <span className="text-sm text-muted-foreground">
-                        {group.subscriptions.length}
-                      </span>
-                    )}
-                    {group.key === 'active' && monthlyTotal > 0 && (
-                      <span className="ml-auto text-lg text-muted-foreground">
-                        月額合計:{' '}
-                        <span className="font-semibold text-foreground tabular-nums">
-                          {monthlyTotal.toLocaleString()}円
-                        </span>
-                      </span>
-                    )}
-                  </div>
-                </AccordionTrigger>
-              </AccordionHeader>
-              <AccordionContent>
-                <SubscriptionList
-                  subscriptions={group.subscriptions}
-                  onEdit={handleEditSubscription}
-                  onDelete={deleteConfirm.handleDeleteClick}
-                  onToggleActive={handleToggleActive}
-                />
-              </AccordionContent>
-            </AccordionItem>
-          ))}
-        </Accordion>
+        <GroupedAccordion
+          value={accordionValue}
+          onValueChange={setOpenAccordionKeys}
+          items={groupedSubscriptions.map((group) => ({
+            key: group.key,
+            trigger: (
+              <div className="flex w-full items-center gap-2">
+                <h2 className="text-lg font-semibold text-stone-900 dark:text-stone-100">
+                  {group.title}
+                </h2>
+                {group.subscriptions.length > 0 && (
+                  <span className="text-sm text-muted-foreground">
+                    {group.subscriptions.length}
+                  </span>
+                )}
+                {group.key === 'active' && monthlyTotal > 0 && (
+                  <span className="ml-auto text-lg text-muted-foreground">
+                    月額合計:{' '}
+                    <span className="font-semibold text-foreground tabular-nums">
+                      {monthlyTotal.toLocaleString()}円
+                    </span>
+                  </span>
+                )}
+              </div>
+            ),
+            content: (
+              <SubscriptionList
+                subscriptions={group.subscriptions}
+                onEdit={handleEditSubscription}
+                onDelete={deleteConfirm.handleDeleteClick}
+                onToggleActive={handleToggleActive}
+              />
+            ),
+          }))}
+        />
       )}
 
       <SubscriptionDialog

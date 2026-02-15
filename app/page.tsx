@@ -1,8 +1,9 @@
 'use client'
 
-import { useMemo } from 'react'
-import { CalendarView } from '@/components/calendar/CalendarView'
-import { useGoals } from '@/hooks/useGoals'
+import { Suspense, useMemo } from 'react'
+import { CalendarView } from '@/features/calendar'
+import { Loading } from '@/components/ui/loading'
+import { useGoals } from '@/features/goals'
 import { Card } from '@/components/ui/card'
 import { Target } from 'lucide-react'
 import { LifeHomeCreateButtons } from '@/components/floating/LifeHomeCreateButtons'
@@ -37,7 +38,9 @@ export default function Home() {
             </Card>
           )}
           <div className="flex-1">
-            <CalendarView />
+            <Suspense fallback={<Loading />}>
+              <CalendarView />
+            </Suspense>
           </div>
         </div>
       </div>

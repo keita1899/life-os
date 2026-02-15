@@ -1,33 +1,32 @@
 'use client'
 
 import { useState, useMemo } from 'react'
-import { Trash2, Plus } from 'lucide-react'
+import { Trash2 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
+import { CreateButton } from '@/components/ui/create-button'
 import { useCreateShortcut } from '@/hooks/useCreateShortcut'
 import { useDialogState } from '@/hooks/useDialogState'
 import { useDeleteConfirm } from '@/hooks/useDeleteConfirm'
 import { useAsyncOperation } from '@/hooks/useAsyncOperation'
+import { GroupedAccordion } from '@/components/ui/grouped-accordion'
 import {
-  Accordion,
-  AccordionContent,
-  AccordionHeader,
-  AccordionItem,
-  AccordionTrigger,
-} from '@/components/ui/accordion'
-import { BucketListList } from '@/components/bucket-list/BucketListList'
-import { BucketListDialog } from '@/components/bucket-list/BucketListDialog'
-import { BucketListCategorySidebar } from '@/components/bucket-list/BucketListCategorySidebar'
+  BucketListList,
+  BucketListDialog,
+  BucketListCategorySidebar,
+  useBucketList,
+  useBucketListCategories,
+  getDateFromBucketItem,
+  type CreateBucketListItemInput,
+  type BucketListItem,
+  type UpdateBucketListItemInput,
+} from '@/features/bucket-list'
 import { DeleteConfirmDialog } from '@/components/ui/delete-confirm-dialog'
 import { Loading } from '@/components/ui/loading'
 import { ErrorMessage } from '@/components/ui/error-message'
 import { EmptyState } from '@/components/ui/empty-state'
-import { useBucketList } from '@/hooks/useBucketList'
-import { useBucketListCategories } from '@/hooks/useBucketListCategories'
-import { useEvents } from '@/hooks/useEvents'
-import { useTasks } from '@/hooks/useTasks'
-import { getDateFromBucketItem } from '@/lib/bucket-list/conversion'
-import { EventDialog } from '@/components/events/EventDialog'
-import { TaskDialog } from '@/components/tasks/TaskDialog'
+import { useEvents } from '@/features/events'
+import { useTasks, TaskDialog } from '@/features/tasks'
+import { EventDialog } from '@/features/events'
 import {
   Select,
   SelectContent,
@@ -35,13 +34,8 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select'
-import type {
-  CreateBucketListItemInput,
-  BucketListItem,
-  UpdateBucketListItemInput,
-} from '@/lib/types/bucket-list-item'
-import type { CreateEventInput } from '@/lib/types/event'
-import type { CreateTaskInput } from '@/lib/types/task'
+import type { CreateEventInput } from '@/features/events'
+import type { CreateTaskInput } from '@/features/tasks'
 
 export default function BucketListPage() {
   const {
@@ -82,7 +76,7 @@ export default function BucketListPage() {
     items.forEach((item) => {
       if (item.targetYear !== null) years.add(item.targetYear)
     })
-    return Array.from(years).sort((a, b) => b - a)
+    return Array.from(years).sort((a, b) => a - b)
   }, [items])
 
   const filteredItems = useMemo(() => {
@@ -142,7 +136,7 @@ export default function BucketListPage() {
     [filteredItems],
   )
 
-  const defaultAccordionValues = useMemo(() => {
+  const accordionKeys = useMemo(() => {
     const values: string[] = []
     Array.from({ length: 12 }, (_, i) => i + 1)
       .filter((month) => (incompleteByMonth.byMonth[month] ?? []).length > 0)
@@ -151,6 +145,16 @@ export default function BucketListPage() {
     if (completedItems.length > 0) values.push('completed')
     return values
   }, [incompleteByMonth, completedItems.length])
+
+  const [openAccordionKeys, setOpenAccordionKeys] = useState<string[]>([])
+
+  const accordionValue = useMemo(() => {
+    if (openAccordionKeys.length === 0) return accordionKeys
+    const newKeys = accordionKeys.filter((k) => !openAccordionKeys.includes(k))
+    if (newKeys.length > 0)
+      return [...new Set([...openAccordionKeys, ...newKeys])]
+    return openAccordionKeys
+  }, [accordionKeys, openAccordionKeys])
 
   const handleCreateItem = async (input: CreateBucketListItemInput) => {
     const result = await execute(
@@ -283,10 +287,7 @@ export default function BucketListPage() {
           <div className="mx-auto max-w-3xl p-8">
             <div className="mb-6 flex items-center justify-between">
               <h1 className="text-3xl font-bold">{selectedCategoryName}</h1>
-              <Button onClick={handleCreateClick}>
-                <Plus className="mr-2 h-4 w-4" />
-                やりたいことを作成
-              </Button>
+              <CreateButton label="やりたいことを作成" onClick={handleCreateClick} />
             </div>
 
             <ErrorMessage
@@ -321,8 +322,6 @@ export default function BucketListPage() {
                   </div>
                 )}
               </div>
-            ) : filteredItems.length === 0 ? (
-              <EmptyState message="やりたいことがありません" />
             ) : (
               <>
                 <div className="mb-4 flex justify-end">
@@ -341,37 +340,39 @@ export default function BucketListPage() {
                     </SelectContent>
                   </Select>
                 </div>
-                <Accordion
-                  type="multiple"
-                  className="w-full"
-                  defaultValue={defaultAccordionValues}
-                  key={`${selectedYear}-${selectedCategoryId}-${items.length}`}
-                >
-                  {Array.from({ length: 12 }, (_, i) => i + 1)
-                    .filter((month) => (incompleteByMonth.byMonth[month] ?? []).length > 0)
-                    .map((month) => {
-                      const monthItems = incompleteByMonth.byMonth[month] ?? []
-                      return (
-                        <AccordionItem
-                          key={month}
-                          value={`month-${month}`}
-                          className="border-none"
-                        >
-                          <AccordionHeader>
-                            <AccordionTrigger className="hover:no-underline py-2">
-                              <span className="inline-flex items-center gap-1">
-                                <span className="text-stone-900 dark:text-stone-100">
-                                  {month}月
-                                </span>
-                                {monthItems.length > 0 && (
-                                  <span className="text-sm text-muted-foreground">
-                                    {monthItems.length}
-                                  </span>
-                                )}
+                {filteredItems.length === 0 ? (
+                  <EmptyState message="やりたいことがありません" />
+                ) : (
+                <GroupedAccordion
+                  value={accordionValue}
+                  onValueChange={setOpenAccordionKeys}
+                  items={[
+                    ...Array.from({ length: 12 }, (_, i) => i + 1)
+                      .filter(
+                        (month) =>
+                          (incompleteByMonth.byMonth[month] ?? []).length > 0,
+                      )
+                      .map((month) => {
+                        const monthItems =
+                          incompleteByMonth.byMonth[month] ?? []
+                        return {
+                          key: `month-${month}`,
+                          itemClassName: 'border-none',
+                          triggerClassName: 'py-2',
+                          contentClassName: 'pt-2',
+                          trigger: (
+                            <span className="inline-flex items-center gap-1">
+                              <span className="text-stone-900 dark:text-stone-100">
+                                {month}月
                               </span>
-                            </AccordionTrigger>
-                          </AccordionHeader>
-                          <AccordionContent className="pt-2">
+                              {monthItems.length > 0 && (
+                                <span className="text-sm text-muted-foreground">
+                                  {monthItems.length}
+                                </span>
+                              )}
+                            </span>
+                          ),
+                          content: (
                             <BucketListList
                               items={monthItems}
                               onEdit={handleEditItem}
@@ -380,82 +381,86 @@ export default function BucketListPage() {
                               onConvertToEvent={handleConvertToEvent}
                               onConvertToTask={handleConvertToTask}
                             />
-                          </AccordionContent>
-                        </AccordionItem>
-                      )
-                    })}
-                  {incompleteByMonth.unset.length > 0 && (
-                    <AccordionItem
-                      value="month-unset"
-                      className="border-none"
-                    >
-                      <AccordionHeader>
-                        <AccordionTrigger className="hover:no-underline py-2">
-                          <span className="inline-flex items-center gap-1">
-                            <span className="text-stone-900 dark:text-stone-100">
-                              未定
-                            </span>
-                            {incompleteByMonth.unset.length > 0 && (
-                              <span className="text-sm text-muted-foreground">
-                                {incompleteByMonth.unset.length}
+                          ),
+                        }
+                      }),
+                    ...(incompleteByMonth.unset.length > 0
+                      ? [
+                          {
+                            key: 'month-unset',
+                            itemClassName: 'border-none',
+                            triggerClassName: 'py-2',
+                            contentClassName: 'pt-2',
+                            trigger: (
+                              <span className="inline-flex items-center gap-1">
+                                <span className="text-stone-900 dark:text-stone-100">
+                                  未定
+                                </span>
+                                <span className="text-sm text-muted-foreground">
+                                  {incompleteByMonth.unset.length}
+                                </span>
                               </span>
-                            )}
-                          </span>
-                        </AccordionTrigger>
-                      </AccordionHeader>
-                      <AccordionContent className="pt-2">
-                        <BucketListList
-                          items={incompleteByMonth.unset}
-                          onEdit={handleEditItem}
-                          onDelete={deleteConfirm.handleDeleteClick}
-                          onToggleCompletion={handleToggleCompletion}
-                          onConvertToEvent={handleConvertToEvent}
-                          onConvertToTask={handleConvertToTask}
-                        />
-                      </AccordionContent>
-                    </AccordionItem>
-                  )}
-                  {completedItems.length > 0 && (
-                    <AccordionItem value="completed" className="border-none">
-                      <AccordionHeader>
-                        <AccordionTrigger className="hover:no-underline py-2">
-                          <span className="inline-flex items-center gap-1">
-                            <span className="text-stone-900 dark:text-stone-100">
-                              達成済み
-                            </span>
-                            <span className="text-sm text-muted-foreground">
-                              {completedItems.length}
-                            </span>
-                          </span>
-                        </AccordionTrigger>
-                      </AccordionHeader>
-                      <AccordionContent className="pt-2">
-                        <div className="space-y-4">
-                          <BucketListList
-                            items={completedItems}
-                            onEdit={handleEditItem}
-                            onDelete={deleteConfirm.handleDeleteClick}
-                            onToggleCompletion={handleToggleCompletion}
-                            onConvertToEvent={handleConvertToEvent}
-                            onConvertToTask={handleConvertToTask}
-                          />
-                          <div className="flex justify-end">
-                            <Button
-                              type="button"
-                              variant="outline"
-                              size="sm"
-                              className="text-destructive hover:text-destructive hover:bg-destructive/10"
-                              onClick={handleDeleteCompletedItemsClick}
-                            >
-                              <Trash2 className="mr-2 h-4 w-4" />
-                              達成済みを一括削除
-                            </Button>
-                          </div>
-                        </div>
-                      </AccordionContent>
-                    </AccordionItem>
-                  )}
-                </Accordion>
+                            ),
+                            content: (
+                              <BucketListList
+                                items={incompleteByMonth.unset}
+                                onEdit={handleEditItem}
+                                onDelete={deleteConfirm.handleDeleteClick}
+                                onToggleCompletion={handleToggleCompletion}
+                                onConvertToEvent={handleConvertToEvent}
+                                onConvertToTask={handleConvertToTask}
+                              />
+                            ),
+                          },
+                        ]
+                      : []),
+                    ...(completedItems.length > 0
+                      ? [
+                          {
+                            key: 'completed',
+                            itemClassName: 'border-none',
+                            triggerClassName: 'py-2',
+                            contentClassName: 'pt-2',
+                            trigger: (
+                              <span className="inline-flex items-center gap-1">
+                                <span className="text-stone-900 dark:text-stone-100">
+                                  達成済み
+                                </span>
+                                <span className="text-sm text-muted-foreground">
+                                  {completedItems.length}
+                                </span>
+                              </span>
+                            ),
+                            content: (
+                              <div className="space-y-4">
+                                <BucketListList
+                                  items={completedItems}
+                                  onEdit={handleEditItem}
+                                  onDelete={deleteConfirm.handleDeleteClick}
+                                  onToggleCompletion={handleToggleCompletion}
+                                  onConvertToEvent={handleConvertToEvent}
+                                  onConvertToTask={handleConvertToTask}
+                                />
+                                <div className="flex justify-end">
+                                  <Button
+                                    type="button"
+                                    variant="outline"
+                                    size="sm"
+                                    className="text-destructive hover:text-destructive hover:bg-destructive/10"
+                                    onClick={handleDeleteCompletedItemsClick}
+                                  >
+                                    <Trash2 className="mr-2 h-4 w-4" />
+                                    達成済みを一括削除
+                                  </Button>
+                                </div>
+                              </div>
+                            ),
+                          },
+                        ]
+                      : []),
+                  ]}
+                />
+                )}
               </>
             )}
 

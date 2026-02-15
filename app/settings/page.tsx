@@ -4,10 +4,12 @@ import { useState } from 'react'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Loading } from '@/components/ui/loading'
 import { ErrorMessage } from '@/components/ui/error-message'
-import { UserSettingsForm } from '@/components/settings/UserSettingsForm'
-import { useUserSettings } from '@/hooks/useUserSettings'
+import {
+  UserSettingsForm,
+  useUserSettings,
+  type UpdateUserSettingsInput,
+} from '@/features/settings'
 import { useAsyncOperation } from '@/hooks/useAsyncOperation'
-import type { UpdateUserSettingsInput } from '@/lib/types/user-settings'
 
 export default function SettingsPage() {
   const {

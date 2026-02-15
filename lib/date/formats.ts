@@ -102,3 +102,8 @@ export function formatDateTimeForInput(
 
   return { date: dateStr, time: timeStr }
 }
+
+export function isValidTimeFormat(time: string | null): boolean {
+  if (!time || time.trim() === '') return false
+  return /^\d{2}:\d{2}$/.test(time.trim())
+}

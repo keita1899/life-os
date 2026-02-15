@@ -37,13 +37,25 @@ export function LayoutClient({ children }: LayoutClientProps) {
 
   useHotkeys(
     'mod+h',
-    () => router.push('/'),
+    () => router.push(mode === 'development' ? '/dev' : '/'),
     { enableOnFormTags: false, preventDefault: true },
-    [router],
+    [mode, router],
   )
   useHotkeys(
     'd',
     () => router.push(mode === 'development' ? '/dev/logs' : '/logs'),
+    { enableOnFormTags: false, preventDefault: true },
+    [mode, router],
+  )
+  useHotkeys(
+    'm',
+    () => router.push(mode === 'development' ? '/dev?view=month' : '/?view=month'),
+    { enableOnFormTags: false, preventDefault: true },
+    [mode, router],
+  )
+  useHotkeys(
+    'w',
+    () => router.push(mode === 'development' ? '/dev?view=week' : '/?view=week'),
     { enableOnFormTags: false, preventDefault: true },
     [mode, router],
   )

@@ -1,27 +1,27 @@
 'use client'
 
 import { useState } from 'react'
-import { YearSelect } from '@/components/goals/YearSelect'
+import { YearSelect } from '@/features/goals'
 import { Loading } from '@/components/ui/loading'
 import { ErrorMessage } from '@/components/ui/error-message'
-import { useDevGoals } from '@/hooks/useDevGoals'
+import {
+  useDevGoals,
+  YearlyGoalDialog,
+  MonthlyGoalDialog,
+  YearlyGoalsSection,
+  MonthlyGoalsSection,
+  updateDevYearlyGoal,
+  updateDevMonthlyGoal,
+} from '@/features/dev/goals'
 import { useDeleteConfirm } from '@/hooks/useDeleteConfirm'
 import { useAsyncOperation } from '@/hooks/useAsyncOperation'
-import { YearlyGoalDialog } from '@/components/dev/goals/YearlyGoalDialog'
-import { MonthlyGoalDialog } from '@/components/dev/goals/MonthlyGoalDialog'
 import { DeleteConfirmDialog } from '@/components/ui/delete-confirm-dialog'
-import { YearlyGoalsSection } from '@/components/dev/goals/YearlyGoalsSection'
-import { MonthlyGoalsSection } from '@/components/dev/goals/MonthlyGoalsSection'
-import { updateDevYearlyGoal } from '@/lib/dev/goals/yearly'
-import { updateDevMonthlyGoal } from '@/lib/dev/goals/monthly'
 import type {
   DevYearlyGoal,
-  CreateDevYearlyGoalInput,
-} from '@/lib/types/dev-yearly-goal'
-import type {
   DevMonthlyGoal,
+  CreateDevYearlyGoalInput,
   CreateDevMonthlyGoalInput,
-} from '@/lib/types/dev-monthly-goal'
+} from '@/features/dev/goals'
 
 export default function DevGoalsPage() {
   const [selectedYear, setSelectedYear] = useState(new Date().getFullYear())

@@ -1,60 +1,63 @@
 'use client'
 
-import { Suspense, useMemo, useState } from 'react'
-import { useSearchParams } from 'next/navigation'
-import { format, getYear, startOfDay, endOfDay } from 'date-fns'
-import { ja } from 'date-fns/locale/ja'
-import { parseISO, isValid, addDays, subDays } from 'date-fns'
-import { expandRecurringEvents } from '@/lib/events'
-import {
-  toTasksWithNextOccurrenceOnly,
-  getNextOccurrenceAfter,
-} from '@/lib/tasks'
+import { Suspense, useMemo } from 'react'
+import { getYear, parseISO } from 'date-fns'
+import { getNextOccurrenceAfter } from '@/features/tasks'
 import { useRouter } from 'next/navigation'
-import { Button } from '@/components/ui/button'
-import { CalendarPlus, CheckSquare, ChevronLeft, ChevronRight, Focus } from 'lucide-react'
-import { useGoals } from '@/hooks/useGoals'
-import { useTasks } from '@/hooks/useTasks'
-import { useEvents } from '@/hooks/useEvents'
-import { useDailyLog } from '@/hooks/useDailyLog'
-import { useHabits } from '@/hooks/useHabits'
-import { useHabitCompletionsByDate } from '@/hooks/useHabitCompletions'
+import { useFocusShortcut } from '@/features/focus'
+import { CalendarPlus, CheckSquare, Focus } from 'lucide-react'
+import { useGoals } from '@/features/goals'
+import { useTasks } from '@/features/tasks'
+import { useEvents } from '@/features/events'
+import { useHabits } from '@/features/habits'
 import { useAsyncOperation } from '@/hooks/useAsyncOperation'
 import { useDialogState } from '@/hooks/useDialogState'
 import { useDeleteConfirm } from '@/hooks/useDeleteConfirm'
+import { useLogView } from '@/features/logs'
 import { Loading } from '@/components/ui/loading'
 import { ErrorMessage } from '@/components/ui/error-message'
-import { LogGoalsSection } from '@/components/logs/LogGoalsSection'
-import { LogDiarySection } from '@/components/logs/LogDiarySection'
-import { TimelineSection } from '@/components/logs/TimelineSection'
-import { createTimelineItems } from '@/lib/logs/timeline'
-import { TaskDialog } from '@/components/tasks/TaskDialog'
-import { EventDialog } from '@/components/events/EventDialog'
+import {
+  LogGoalsSection,
+  LogDayContent,
+  LogViewHeader,
+} from '@/features/logs'
+import { TaskDialog } from '@/features/tasks'
+import { EventDialog } from '@/features/events'
 import { DeleteConfirmDialog } from '@/components/ui/delete-confirm-dialog'
-import { RecurringTaskDeleteDialog } from '@/components/tasks/RecurringTaskDeleteDialog'
-import { RecurringEventDeleteDialog } from '@/components/events/RecurringEventDeleteDialog'
+import { RecurringTaskDeleteDialog } from '@/features/tasks'
+import { RecurringEventDeleteDialog } from '@/features/events'
 import {
   getYearlyGoalsForDate,
   getMonthlyGoalsForDate,
   getWeeklyGoalsForDate,
-  getTasksForDate,
-  getEventsForDateSorted,
-} from '@/lib/logs/utils'
-import { isHabitDueOnDate } from '@/lib/habits'
-import type { Task, CreateTaskInput, UpdateTaskInput } from '@/lib/types/task'
-import type { UpdateDailyLogInput } from '@/lib/types/daily-log'
+} from '@/features/logs'
+import type { Task, CreateTaskInput, UpdateTaskInput } from '@/features/tasks'
 import Link from 'next/link'
-import type { CreateEventInput, Event, UpdateEventInput } from '@/lib/types/event'
+import type { CreateEventInput, Event, UpdateEventInput } from '@/features/events'
 import { FloatingActionButtons } from '@/components/floating/FloatingActionButtons'
 
 interface LogPageViewProps {
-  logDate: Date
-  date: string
+  currentDate: Date
+  dateString: string
+  datesToShow: Date[]
+  displayTitle: string
+  basePath: string
+  onPrev: () => void
+  onNext: () => void
 }
 
-function LogPageView({ logDate, date }: LogPageViewProps) {
+function LogPageView({
+  currentDate,
+  dateString,
+  datesToShow,
+  displayTitle,
+  basePath,
+  onPrev,
+  onNext,
+}: LogPageViewProps) {
   const router = useRouter()
-  const year = getYear(logDate)
+  useFocusShortcut({ path: '/focus' })
+  const year = getYear(currentDate)
   const {
     yearlyGoals: allYearlyGoals,
     monthlyGoals: allMonthlyGoals,
@@ -84,68 +87,21 @@ function LogPageView({ logDate, date }: LogPageViewProps) {
     updateEvent,
     deleteEvent,
   } = useEvents()
-  const {
-    dailyLog,
-    isLoading: isLoadingDailyLog,
-    createDailyLog,
-    updateDailyLog,
-  } = useDailyLog(date)
   const { habits: allHabits, isLoading: isLoadingHabits } = useHabits()
-  const {
-    completions: habitCompletions,
-    isLoading: isLoadingHabitCompletions,
-    createCompletion: createHabitCompletion,
-    deleteCompletion: deleteHabitCompletion,
-  } = useHabitCompletionsByDate(date)
 
+  const goalsDate = datesToShow[0] ?? currentDate
   const yearlyGoals = useMemo(
-    () => getYearlyGoalsForDate(allYearlyGoals, logDate),
-    [allYearlyGoals, logDate],
+    () => getYearlyGoalsForDate(allYearlyGoals, goalsDate),
+    [allYearlyGoals, goalsDate],
   )
   const monthlyGoals = useMemo(
-    () => getMonthlyGoalsForDate(allMonthlyGoals, logDate),
-    [allMonthlyGoals, logDate],
+    () => getMonthlyGoalsForDate(allMonthlyGoals, goalsDate),
+    [allMonthlyGoals, goalsDate],
   )
   const weeklyGoals = useMemo(
-    () => getWeeklyGoalsForDate(allWeeklyGoals, logDate),
-    [allWeeklyGoals, logDate],
+    () => getWeeklyGoalsForDate(allWeeklyGoals, goalsDate),
+    [allWeeklyGoals, goalsDate],
   )
-  const tasks = useMemo(() => {
-    const withNextOnly = toTasksWithNextOccurrenceOnly(allTasks, logDate)
-    return getTasksForDate(withNextOnly, logDate)
-  }, [allTasks, logDate])
-  const events = useMemo(() => {
-    const rangeStart = startOfDay(logDate)
-    const rangeEnd = endOfDay(logDate)
-    const expanded = expandRecurringEvents(allEvents, rangeStart, rangeEnd)
-    return getEventsForDateSorted(expanded, logDate)
-  }, [allEvents, logDate])
-
-  const habitsForDate = useMemo(() => {
-    return allHabits.filter((h) => isHabitDueOnDate(h, logDate))
-  }, [allHabits, logDate])
-
-  const completedHabitIds = useMemo(
-    () => new Set(habitCompletions.map((c) => c.habitId)),
-    [habitCompletions],
-  )
-
-  const timelineItems = useMemo(
-    () => createTimelineItems(events, habitsForDate, tasks, completedHabitIds),
-    [events, habitsForDate, tasks, completedHabitIds],
-  )
-
-  const formattedDate = format(logDate, 'yyyy年M月d日(E)', { locale: ja })
-  const prevDate = subDays(logDate, 1)
-  const nextDate = addDays(logDate, 1)
-
-  const handlePrevDate = () => {
-    router.push(`/logs?date=${format(prevDate, 'yyyy-MM-dd')}`)
-  }
-
-  const handleNextDate = () => {
-    router.push(`/logs?date=${format(nextDate, 'yyyy-MM-dd')}`)
-  }
 
   const handleCreateTask = async (input: CreateTaskInput) => {
     const result = await execute(
@@ -304,70 +260,19 @@ function LogPageView({ logDate, date }: LogPageViewProps) {
     }
   }
 
-  const handleUpdateDiary = async (input: UpdateDailyLogInput) => {
-    await execute(
-      async () => {
-        if (dailyLog) {
-          await updateDailyLog(input)
-        } else {
-          await createDailyLog({ logDate: date, diary: input.diary })
-        }
-      },
-      '日記の保存に失敗しました',
-    )
-  }
-
-  const handleToggleHabit = async (habit: { id: number }) => {
-    const completed = completedHabitIds.has(habit.id)
-    await execute(
-      async () => {
-        if (completed) {
-          await deleteHabitCompletion(habit.id, date)
-        } else {
-          await createHabitCompletion(habit.id, date)
-        }
-      },
-      '習慣の完了状態の更新に失敗しました',
-    )
-  }
-
   const isLoading =
-    isLoadingGoals ||
-    isLoadingTasks ||
-    isLoadingEvents ||
-    isLoadingDailyLog ||
-    isLoadingHabits ||
-    isLoadingHabitCompletions
+    isLoadingGoals || isLoadingTasks || isLoadingEvents || isLoadingHabits
   const error = goalsError || tasksError || eventsError
 
   return (
     <>
       <div className="container mx-auto max-w-7xl py-8 px-4">
-        <div className="mb-6">
-          <div className="flex items-center justify-between">
-            <h1 className="text-3xl font-bold">{formattedDate}のログ</h1>
-          <div className="flex items-center gap-2">
-            <Button
-              variant="outline"
-              size="icon"
-              onClick={handlePrevDate}
-              className="h-8 w-8"
-            >
-              <ChevronLeft className="h-4 w-4" />
-              <span className="sr-only">前日</span>
-            </Button>
-            <Button
-              variant="outline"
-              size="icon"
-              onClick={handleNextDate}
-              className="h-8 w-8"
-            >
-              <ChevronRight className="h-4 w-4" />
-              <span className="sr-only">翌日</span>
-            </Button>
-          </div>
-        </div>
-      </div>
+        <LogViewHeader
+          displayTitle={displayTitle}
+          basePath={basePath}
+          onPrev={onPrev}
+          onNext={onNext}
+        />
 
       <ErrorMessage
         message={operationError || error || ''}
@@ -377,35 +282,29 @@ function LogPageView({ logDate, date }: LogPageViewProps) {
       {isLoading ? (
         <Loading />
       ) : (
-        <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
-          <div className="space-y-6">
-            <LogGoalsSection
-              yearlyGoals={yearlyGoals}
-              monthlyGoals={monthlyGoals}
-              weeklyGoals={weeklyGoals}
-              currentDate={logDate}
-            />
-            <LogDiarySection
-              dailyLog={dailyLog}
-              isLoading={isLoadingDailyLog}
-              onUpdate={handleUpdateDiary}
-            />
-          </div>
-          <div className="space-y-6">
-            <TimelineSection
-              items={timelineItems}
-              events={events}
-              habits={habitsForDate}
-              tasks={tasks}
-              completedHabitIds={completedHabitIds}
-              onEditEvent={eventDialog.handleEdit}
-              onDeleteEvent={deleteEventConfirm.handleDeleteClick}
-              onToggleHabit={handleToggleHabit}
-              onToggleTask={handleToggleTaskCompletion}
-              onEditTask={taskDialog.handleEdit}
-              onDeleteTask={deleteTaskConfirm.handleDeleteClick}
-            />
-          </div>
+        <div className="space-y-8">
+          <LogGoalsSection
+            yearlyGoals={yearlyGoals}
+            monthlyGoals={monthlyGoals}
+            weeklyGoals={weeklyGoals}
+            currentDate={goalsDate}
+          />
+          {datesToShow.map((logDate) => (
+            <div key={logDate.toISOString()} className="space-y-6">
+              <LogDayContent
+                logDate={logDate}
+                allTasks={allTasks}
+                allEvents={allEvents}
+                allHabits={allHabits}
+                execute={execute}
+                onToggleTask={handleToggleTaskCompletion}
+                onEditTask={taskDialog.handleEdit}
+                onDeleteTask={deleteTaskConfirm.handleDeleteClick}
+                onEditEvent={eventDialog.handleEdit}
+                onDeleteEvent={deleteEventConfirm.handleDeleteClick}
+              />
+            </div>
+          ))}
         </div>
       )}
 
@@ -437,7 +336,7 @@ function LogPageView({ logDate, date }: LogPageViewProps) {
         onOpenChange={eventDialog.handleDialogClose}
         onSubmit={eventDialog.editingItem ? handleUpdateEvent : handleCreateEvent}
         event={eventDialog.editingItem}
-        defaultStartDate={date}
+        defaultStartDate={dateString}
       />
 
       <TaskDialog
@@ -445,7 +344,7 @@ function LogPageView({ logDate, date }: LogPageViewProps) {
         onOpenChange={taskDialog.handleDialogClose}
         onSubmit={taskDialog.editingItem ? handleUpdateTask : handleCreateTask}
         task={taskDialog.editingItem}
-        defaultExecutionDate={date}
+        defaultExecutionDate={dateString}
       />
 
       {deleteTaskConfirm.deletingItem?.recurrenceRule ? (
@@ -485,14 +384,11 @@ function LogPageView({ logDate, date }: LogPageViewProps) {
 }
 
 function LogPageContent() {
-  const searchParams = useSearchParams()
-  const dateParam = searchParams.get('date')
-  const date = dateParam || format(new Date(), 'yyyy-MM-dd')
+  const logView = useLogView({ basePath: '/logs' })
 
-  const logDate = parseISO(date)
-  if (!isValid(logDate)) {
+  if (!logView.isValidDate) {
     return (
-      <div className="container mx-auto max-w-4xl py-8 px-4">
+      <div className="container mx-auto max-w-7xl py-8 px-4">
         <div className="text-center">
           <h1 className="text-2xl font-bold text-destructive">無効な日付です</h1>
           <Link
@@ -506,7 +402,17 @@ function LogPageContent() {
     )
   }
 
-  return <LogPageView logDate={logDate} date={date} />
+  return (
+    <LogPageView
+      currentDate={logView.currentDate}
+      dateString={logView.dateString}
+      datesToShow={logView.datesToShow}
+      displayTitle={logView.displayTitle}
+      basePath="/logs"
+      onPrev={logView.handlePrev}
+      onNext={logView.handleNext}
+    />
+  )
 }
 
 export default function LogPage() {

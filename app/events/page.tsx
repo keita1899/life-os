@@ -2,33 +2,28 @@
 
 import { useState, useMemo } from 'react'
 import { startOfDay, subYears, addMonths } from 'date-fns'
-import { Plus } from 'lucide-react'
-import { Button } from '@/components/ui/button'
+import { CreateButton } from '@/components/ui/create-button'
 import { useCreateShortcut } from '@/hooks/useCreateShortcut'
 import { useDialogState } from '@/hooks/useDialogState'
 import { useDeleteConfirm } from '@/hooks/useDeleteConfirm'
 import { useAsyncOperation } from '@/hooks/useAsyncOperation'
+import { GroupedAccordion } from '@/components/ui/grouped-accordion'
 import {
-  Accordion,
-  AccordionContent,
-  AccordionHeader,
-  AccordionItem,
-  AccordionTrigger,
-} from '@/components/ui/accordion'
-import { EventList } from '@/components/events/EventList'
-import { EventDialog } from '@/components/events/EventDialog'
+  EventList,
+  EventDialog,
+  RecurringEventDeleteDialog,
+  useEvents,
+  expandRecurringEvents,
+  groupEvents,
+} from '@/features/events'
 import { DeleteConfirmDialog } from '@/components/ui/delete-confirm-dialog'
-import { RecurringEventDeleteDialog } from '@/components/events/RecurringEventDeleteDialog'
 import { Loading } from '@/components/ui/loading'
 import { ErrorMessage } from '@/components/ui/error-message'
-import { useEvents } from '@/hooks/useEvents'
-import { expandRecurringEvents } from '@/lib/events'
-import { groupEvents } from '@/lib/events/grouping'
 import type {
   CreateEventInput,
   Event,
   UpdateEventInput,
-} from '@/lib/types/event'
+} from '@/features/events'
 
 export default function EventsPage() {
   const { events, isLoading, error, createEvent, updateEvent, deleteEvent } =
@@ -59,6 +54,17 @@ export default function EventsPage() {
       ),
     [groupedEvents],
   )
+
+  const [openAccordionKeys, setOpenAccordionKeys] = useState<string[]>([])
+
+  const accordionValue = useMemo(() => {
+    const keys = visibleGroups.map((g) => g.key)
+    if (openAccordionKeys.length === 0) return keys
+    const newKeys = keys.filter((k) => !openAccordionKeys.includes(k))
+    if (newKeys.length > 0)
+      return [...new Set([...openAccordionKeys, ...newKeys])]
+    return openAccordionKeys
+  }, [visibleGroups, openAccordionKeys])
 
   const handleCreateEvent = async (input: CreateEventInput) => {
     const result = await execute(
@@ -130,10 +136,7 @@ export default function EventsPage() {
             <div>
               <h1 className="text-3xl font-bold">予定</h1>
             </div>
-            <Button onClick={handleCreateClick}>
-              <Plus className="mr-2 h-4 w-4" />
-              予定を作成
-            </Button>
+            <CreateButton label="予定を作成" onClick={handleCreateClick} />
           </div>
         </div>
 
@@ -145,37 +148,32 @@ export default function EventsPage() {
       {isLoading ? (
         <Loading />
       ) : (
-        <Accordion
-          type="multiple"
-          className="w-full"
-          defaultValue={visibleGroups.map((group) => group.key)}
-        >
-          {visibleGroups.map((group) => (
-            <AccordionItem key={group.key} value={group.key}>
-              <AccordionHeader>
-                <AccordionTrigger className="hover:no-underline">
-                  <div className="flex items-center gap-2">
-                    <h2 className="text-lg font-semibold text-stone-900 dark:text-stone-100">
-                      {group.title}
-                    </h2>
-                    {group.events.length > 0 && (
-                      <span className="text-sm text-muted-foreground">
-                        {group.events.length}
-                      </span>
-                    )}
-                  </div>
-                </AccordionTrigger>
-              </AccordionHeader>
-              <AccordionContent>
-                <EventList
-                  events={group.events}
-                  onEdit={handleEditEvent}
-                  onDelete={deleteConfirm.handleDeleteClick}
-                />
-              </AccordionContent>
-            </AccordionItem>
-          ))}
-        </Accordion>
+        <GroupedAccordion
+          value={accordionValue}
+          onValueChange={setOpenAccordionKeys}
+          items={visibleGroups.map((group) => ({
+            key: group.key,
+            trigger: (
+              <div className="flex items-center gap-2">
+                <h2 className="text-lg font-semibold text-stone-900 dark:text-stone-100">
+                  {group.title}
+                </h2>
+                {group.events.length > 0 && (
+                  <span className="text-sm text-muted-foreground">
+                    {group.events.length}
+                  </span>
+                )}
+              </div>
+            ),
+            content: (
+              <EventList
+                events={group.events}
+                onEdit={handleEditEvent}
+                onDelete={deleteConfirm.handleDeleteClick}
+              />
+            ),
+          }))}
+        />
       )}
 
       <EventDialog
