@@ -21,3 +21,5 @@ export type {
   CreateWeeklyGoalInput,
   UpdateWeeklyGoalInput,
 } from './types/weekly-goal'
+export type { ChecklistItem } from './types/checklist-item'
+export { MAX_CHECKLIST_ITEMS } from './types/checklist-item'

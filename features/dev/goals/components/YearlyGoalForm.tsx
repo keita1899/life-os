@@ -20,7 +20,7 @@ import type {
   DevYearlyGoal,
   CreateDevYearlyGoalInput,
 } from '../types/dev-yearly-goal'
-import type { ChecklistItem } from '@/lib/types/checklist-item'
+import type { ChecklistItem } from '@/features/goals'
 
 const yearlyGoalFormSchema = z.object({
   title: z.string().min(1, 'タイトルは必須です'),

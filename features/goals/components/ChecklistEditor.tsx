@@ -4,8 +4,7 @@ import { Input } from '@/components/ui/input'
 import { Button } from '@/components/ui/button'
 import { X, Plus } from 'lucide-react'
 import { cn } from '@/lib/utils'
-import type { ChecklistItem } from '@/lib/types/checklist-item'
-import { MAX_CHECKLIST_ITEMS } from '@/lib/types/checklist-item'
+import { type ChecklistItem, MAX_CHECKLIST_ITEMS } from '@/features/goals'
 
 interface ChecklistEditorProps {
   items: ChecklistItem[]

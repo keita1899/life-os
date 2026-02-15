@@ -20,7 +20,7 @@ import type {
   MonthlyGoal,
   CreateMonthlyGoalInput,
 } from '../types/monthly-goal'
-import type { ChecklistItem } from '@/lib/types/checklist-item'
+import type { ChecklistItem } from '@/features/goals'
 
 const monthlyGoalFormSchema = z.object({
   title: z.string().min(1, 'タイトルは必須です'),

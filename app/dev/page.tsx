@@ -6,7 +6,7 @@ import { Loading } from '@/components/ui/loading'
 import { useDevGoals } from '@/features/dev/goals'
 import { Card } from '@/components/ui/card'
 import { Target } from 'lucide-react'
-import { DevHomeTaskCreateButton } from '@/components/floating/DevHomeTaskCreateButton'
+import { DevHomeTaskCreateButton } from '@/features/dev/home'
 
 export default function DevHome() {
   const currentYear = new Date().getFullYear()

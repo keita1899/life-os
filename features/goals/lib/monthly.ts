@@ -5,7 +5,7 @@ import type {
   CreateMonthlyGoalInput,
   UpdateMonthlyGoalInput,
 } from '../types/monthly-goal'
-import type { ChecklistItem } from '@/lib/types/checklist-item'
+import type { ChecklistItem } from '@/features/goals'
 
 interface DbMonthlyGoal {
   id: number

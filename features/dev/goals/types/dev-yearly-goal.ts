@@ -1,4 +1,4 @@
-import type { ChecklistItem } from '@/lib/types/checklist-item'
+import type { ChecklistItem } from '@/features/goals'
 
 export interface DevYearlyGoal {
   id: number

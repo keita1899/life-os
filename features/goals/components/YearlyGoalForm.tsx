@@ -17,7 +17,7 @@ import { Input } from '@/components/ui/input'
 import { Button } from '@/components/ui/button'
 import { ChecklistEditor } from './ChecklistEditor'
 import type { YearlyGoal, CreateYearlyGoalInput } from '../types/yearly-goal'
-import type { ChecklistItem } from '@/lib/types/checklist-item'
+import type { ChecklistItem } from '@/features/goals'
 
 const yearlyGoalFormSchema = z.object({
   title: z.string().min(1, 'タイトルは必須です'),

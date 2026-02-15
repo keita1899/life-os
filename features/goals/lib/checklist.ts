@@ -1,4 +1,4 @@
-import type { ChecklistItem } from '@/lib/types/checklist-item'
+import type { ChecklistItem } from '@/features/goals'
 
 export function calculateProgress(checklist: ChecklistItem[]): number {
   if (checklist.length === 0) return 0
