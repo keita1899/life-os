@@ -417,6 +417,7 @@ export const migration001: Migration = {
     )
     const devTaskColumns = new Set(devTaskColumnRows.map((r) => r.name))
 
+    let devTasksRebuilt = false
     if (devTaskColumns.has('category_id') || devTaskColumns.has('estimated_time')) {
       await db.execute('ALTER TABLE dev_tasks RENAME TO dev_tasks_old')
 
@@ -477,15 +478,16 @@ export const migration001: Migration = {
       )
 
       await db.execute('DROP TABLE dev_tasks_old')
+      devTasksRebuilt = true
     }
 
-    if (!devTaskColumns.has('type')) {
+    if (!devTasksRebuilt && !devTaskColumns.has('type')) {
       await db.execute(
         "ALTER TABLE dev_tasks ADD COLUMN type TEXT NOT NULL DEFAULT 'inbox'",
       )
     }
 
-    if (!devTaskColumns.has('memo')) {
+    if (!devTasksRebuilt && !devTaskColumns.has('memo')) {
       await db.execute('ALTER TABLE dev_tasks ADD COLUMN memo TEXT')
     }
 
