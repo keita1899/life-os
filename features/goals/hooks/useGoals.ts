@@ -1,5 +1,3 @@
-import useSWR from 'swr'
-import { mutate } from 'swr'
 import { getYearlyAndMonthlyGoalsByYear } from '../lib'
 import {
   createYearlyGoal,
@@ -18,139 +16,50 @@ import {
   deleteWeeklyGoal,
   toggleWeeklyGoalAchievement,
 } from '../lib/weekly'
-import type { YearlyGoal, CreateYearlyGoalInput } from '../types/yearly-goal'
-import type {
-  MonthlyGoal,
-  CreateMonthlyGoalInput,
-  UpdateMonthlyGoalInput,
-} from '../types/monthly-goal'
-import type {
-  WeeklyGoal,
-  CreateWeeklyGoalInput,
-  UpdateWeeklyGoalInput,
-} from '../types/weekly-goal'
-import { fetcher } from '@/lib/swr'
-import { SWR_KEYS } from '@/lib/swr-keys'
 import { getYearFromDate } from '../lib/base'
+import { SWR_KEYS } from '@/lib/swr-keys'
+import { useGoalsCore } from './useGoalsCore'
+import type { YearlyGoal } from '../types/yearly-goal'
+import type { MonthlyGoal } from '../types/monthly-goal'
+import type { WeeklyGoal } from '../types/weekly-goal'
 
 export function useGoals(selectedYear: number) {
-  const goalsKey = SWR_KEYS.goals(selectedYear)
-
-  const {
-    data = { yearlyGoals: [], monthlyGoals: [], weeklyGoals: [] },
-    error,
-    isLoading,
-  } = useSWR<{
+  return useGoalsCore({
+    selectedYear,
+    api: {
+      fetchGoals: getYearlyAndMonthlyGoalsByYear,
+      createYearlyGoal: createYearlyGoal as unknown as (input: Record<string, unknown>) => Promise<unknown>,
+      createMonthlyGoal: createMonthlyGoal as unknown as (input: Record<string, unknown>) => Promise<unknown>,
+      createWeeklyGoal: createWeeklyGoal as unknown as (input: Record<string, unknown>) => Promise<unknown>,
+      updateMonthlyGoal: updateMonthlyGoal as unknown as (id: number, input: Record<string, unknown>) => Promise<unknown>,
+      updateWeeklyGoal: updateWeeklyGoal as unknown as (id: number, input: Record<string, unknown>) => Promise<unknown>,
+      deleteYearlyGoal,
+      deleteMonthlyGoal,
+      deleteWeeklyGoal,
+      toggleYearlyGoalAchievement: toggleYearlyGoalAchievement as unknown as (id: number) => Promise<unknown>,
+      toggleMonthlyGoalAchievement: toggleMonthlyGoalAchievement as unknown as (id: number) => Promise<unknown>,
+      toggleWeeklyGoalAchievement: toggleWeeklyGoalAchievement as unknown as (id: number) => Promise<unknown>,
+      getYearFromDate,
+    },
+    goalsKey: SWR_KEYS.goals,
+    errorMessage: 'Failed to fetch goals',
+  }) as {
     yearlyGoals: YearlyGoal[]
     monthlyGoals: MonthlyGoal[]
     weeklyGoals: WeeklyGoal[]
-  }>(goalsKey, () =>
-    fetcher(() => getYearlyAndMonthlyGoalsByYear(selectedYear)),
-  )
-
-  const handleCreateYearlyGoal = async (input: CreateYearlyGoalInput) => {
-    await createYearlyGoal(input)
-    const yearToRefresh = input.year ?? selectedYear
-    await Promise.all([
-      mutate(SWR_KEYS.goals(yearToRefresh)),
-      yearToRefresh === selectedYear ? Promise.resolve() : mutate(goalsKey),
-    ])
-  }
-
-  const handleCreateMonthlyGoal = async (input: CreateMonthlyGoalInput) => {
-    await createMonthlyGoal(input)
-    const yearToRefresh = input.year ?? selectedYear
-    await Promise.all([
-      mutate(SWR_KEYS.goals(yearToRefresh)),
-      yearToRefresh === selectedYear ? Promise.resolve() : mutate(goalsKey),
-    ])
-  }
-
-  const handleCreateWeeklyGoal = async (input: CreateWeeklyGoalInput) => {
-    await createWeeklyGoal(input)
-    const yearToRefresh = getYearFromDate(input.weekStartDate)
-    await Promise.all([
-      mutate(SWR_KEYS.goals(yearToRefresh)),
-      yearToRefresh === selectedYear ? Promise.resolve() : mutate(goalsKey),
-    ])
-  }
-
-  const handleDeleteYearlyGoal = async (id: number) => {
-    await deleteYearlyGoal(id)
-    await mutate(goalsKey)
-  }
-
-  const handleUpdateMonthlyGoal = async (
-    id: number,
-    input: UpdateMonthlyGoalInput,
-  ) => {
-    await updateMonthlyGoal(id, input)
-    const yearToRefresh = input.year ?? selectedYear
-    await Promise.all([
-      mutate(SWR_KEYS.goals(yearToRefresh)),
-      yearToRefresh === selectedYear ? Promise.resolve() : mutate(goalsKey),
-    ])
-  }
-
-  const handleDeleteMonthlyGoal = async (id: number) => {
-    await deleteMonthlyGoal(id)
-    await mutate(goalsKey)
-  }
-
-  const handleUpdateWeeklyGoal = async (
-    id: number,
-    input: UpdateWeeklyGoalInput,
-  ) => {
-    await updateWeeklyGoal(id, input)
-    const yearToRefresh =
-      input.year ?? getYearFromDate(input.weekStartDate) ?? selectedYear
-    await Promise.all([
-      mutate(SWR_KEYS.goals(yearToRefresh)),
-      yearToRefresh === selectedYear ? Promise.resolve() : mutate(goalsKey),
-    ])
-  }
-
-  const handleDeleteWeeklyGoal = async (id: number) => {
-    await deleteWeeklyGoal(id)
-    await mutate(goalsKey)
-  }
-
-  const handleToggleYearlyGoalAchievement = async (id: number) => {
-    await toggleYearlyGoalAchievement(id)
-    await mutate(goalsKey)
-  }
-
-  const handleToggleMonthlyGoalAchievement = async (id: number) => {
-    await toggleMonthlyGoalAchievement(id)
-    await mutate(goalsKey)
-  }
-
-  const handleToggleWeeklyGoalAchievement = async (id: number) => {
-    await toggleWeeklyGoalAchievement(id)
-    await mutate(goalsKey)
-  }
-
-  return {
-    yearlyGoals: data.yearlyGoals,
-    monthlyGoals: data.monthlyGoals,
-    weeklyGoals: data.weeklyGoals,
-    isLoading,
-    error: error
-      ? error instanceof Error
-        ? error.message
-        : 'Failed to fetch goals'
-      : null,
-    createYearlyGoal: handleCreateYearlyGoal,
-    createMonthlyGoal: handleCreateMonthlyGoal,
-    createWeeklyGoal: handleCreateWeeklyGoal,
-    updateMonthlyGoal: handleUpdateMonthlyGoal,
-    updateWeeklyGoal: handleUpdateWeeklyGoal,
-    deleteYearlyGoal: handleDeleteYearlyGoal,
-    deleteMonthlyGoal: handleDeleteMonthlyGoal,
-    deleteWeeklyGoal: handleDeleteWeeklyGoal,
-    toggleYearlyGoalAchievement: handleToggleYearlyGoalAchievement,
-    toggleMonthlyGoalAchievement: handleToggleMonthlyGoalAchievement,
-    toggleWeeklyGoalAchievement: handleToggleWeeklyGoalAchievement,
-    refreshGoals: () => mutate(goalsKey),
+    isLoading: boolean
+    error: string | null
+    createYearlyGoal: (input: unknown) => Promise<void>
+    createMonthlyGoal: (input: unknown) => Promise<void>
+    createWeeklyGoal: (input: unknown) => Promise<void>
+    updateMonthlyGoal: (id: number, input: unknown) => Promise<void>
+    updateWeeklyGoal: (id: number, input: unknown) => Promise<void>
+    deleteYearlyGoal: (id: number) => Promise<void>
+    deleteMonthlyGoal: (id: number) => Promise<void>
+    deleteWeeklyGoal: (id: number) => Promise<void>
+    toggleYearlyGoalAchievement: (id: number) => Promise<void>
+    toggleMonthlyGoalAchievement: (id: number) => Promise<void>
+    toggleWeeklyGoalAchievement: (id: number) => Promise<void>
+    refreshGoals: () => void
   }
 }
