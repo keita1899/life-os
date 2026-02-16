@@ -7,6 +7,7 @@ import { useDevProjects } from '@/features/dev/projects'
 import { useAsyncOperation } from '@/hooks/useAsyncOperation'
 import { createDevTask } from '@/features/dev/tasks'
 import { mutate } from 'swr'
+import { SWR_KEYS } from '@/lib/swr-keys'
 import {
   Select,
   SelectContent,
@@ -69,7 +70,7 @@ export function DevHomeTaskCreateButton() {
             executionDate: input.executionDate,
           })
         }
-        await mutate('dev-calendar-tasks')
+        await mutate(SWR_KEYS.devTasks)
         return true
       },
       'タスクの作成に失敗しました',

@@ -11,25 +11,22 @@ import type {
   CreateVisionCategoryInput,
   UpdateVisionCategoryInput,
 } from '../types/vision-category'
-import { fetcher } from '@/lib/swr'
-
-const visionCategoriesKey = 'vision-categories'
-const visionKey = 'vision'
+import { SWR_KEYS } from '@/lib/swr-keys'
 
 export function useVisionCategories() {
   const {
     data = [],
     error,
     isLoading,
-  } = useSWR<VisionCategory[]>(visionCategoriesKey, () =>
-    fetcher(() => getAllVisionCategories()),
+  } = useSWR<VisionCategory[]>(SWR_KEYS.visionCategories, () =>
+    getAllVisionCategories(),
   )
 
   const handleCreateVisionCategory = async (
     input: CreateVisionCategoryInput,
   ): Promise<VisionCategory> => {
     const newCategory = await createVisionCategory(input)
-    await mutate(visionCategoriesKey)
+    await mutate(SWR_KEYS.visionCategories)
     return newCategory
   }
 
@@ -38,14 +35,14 @@ export function useVisionCategories() {
     input: UpdateVisionCategoryInput,
   ): Promise<true> => {
     await updateVisionCategory(id, input)
-    await mutate(visionCategoriesKey)
+    await mutate(SWR_KEYS.visionCategories)
     return true
   }
 
   const handleDeleteVisionCategory = async (id: number): Promise<true> => {
     await deleteVisionCategory(id)
-    await mutate(visionCategoriesKey)
-    await mutate(visionKey)
+    await mutate(SWR_KEYS.visionCategories)
+    await mutate(SWR_KEYS.vision)
     return true
   }
 

@@ -7,10 +7,10 @@ import { useFocusShortcut } from '@/features/focus'
 import { useMemo, Suspense } from 'react'
 import useSWR from 'swr'
 import { mutate } from 'swr'
+import { SWR_KEYS } from '@/lib/swr-keys'
 import { Loading } from '@/components/ui/loading'
 import { ErrorMessage } from '@/components/ui/error-message'
 import { Badge } from '@/components/ui/badge'
-import { fetcher } from '@/lib/swr'
 import {
   deleteDevProject,
   getDevProjectById,
@@ -67,8 +67,8 @@ function DevProjectPageContent(): ReactElement | null {
   const shouldFetch = Number.isFinite(projectId)
 
   const { data, error, isLoading } = useSWR<DevProject | null>(
-    shouldFetch ? `dev-project-${projectId}` : null,
-    () => fetcher(() => getDevProjectById(projectId)),
+    shouldFetch ? SWR_KEYS.devProject(projectId) : null,
+    () => getDevProjectById(projectId),
   )
 
   const projectDialog = useDialogState<DevProject>()
@@ -153,8 +153,8 @@ function DevProjectPageContent(): ReactElement | null {
     if (!Number.isFinite(projectId)) return
     await updateDevProject(projectId, input)
     await Promise.all([
-      mutate(`dev-project-${projectId}`),
-      mutate('dev-projects'),
+      mutate(SWR_KEYS.devProject(projectId)),
+      mutate(SWR_KEYS.devProjects),
     ])
     projectDialog.handleDialogClose(false)
   }
@@ -164,7 +164,7 @@ function DevProjectPageContent(): ReactElement | null {
     try {
       setDeleteError(null)
       await deleteDevProject(projectId)
-      await mutate('dev-projects')
+      await mutate(SWR_KEYS.devProjects)
       router.push('/dev/projects')
     } catch (err) {
       setDeleteError(err instanceof Error ? err.message : '削除に失敗しました')

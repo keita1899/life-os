@@ -26,6 +26,7 @@ import type { CreateTaskInput } from '@/features/tasks'
 import type { DevTask } from '@/features/dev/tasks'
 import { deleteDevTask, updateDevTask } from '@/features/dev/tasks'
 import { mutate } from 'swr'
+import { SWR_KEYS } from '@/lib/swr-keys'
 
 interface DevCalendarViewProps {
   initialDate?: Date
@@ -165,7 +166,7 @@ export function DevCalendarView({ initialDate }: DevCalendarViewProps) {
           executionDate: input.executionDate,
           memo: input.memo,
         })
-        await mutate('dev-calendar-tasks')
+        await mutate(SWR_KEYS.devTasks)
         return true
       },
       'タスクの更新に失敗しました',
@@ -182,7 +183,7 @@ export function DevCalendarView({ initialDate }: DevCalendarViewProps) {
     const result = await execute(
       async () => {
         await deleteDevTask(taskToDelete.id)
-        await mutate('dev-calendar-tasks')
+        await mutate(SWR_KEYS.devTasks)
         return true
       },
       'タスクの削除に失敗しました',
@@ -196,7 +197,7 @@ export function DevCalendarView({ initialDate }: DevCalendarViewProps) {
     await execute(
       async () => {
         await updateDevTask(task.id, { completed: !task.completed })
-        await mutate('dev-calendar-tasks')
+        await mutate(SWR_KEYS.devTasks)
       },
       'タスクの完了状態の更新に失敗しました',
     )

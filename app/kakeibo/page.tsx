@@ -28,6 +28,7 @@ import { Loading } from '@/components/ui/loading'
 import { useUserSettings } from '@/features/settings'
 import { DeleteConfirmDialog } from '@/components/ui/delete-confirm-dialog'
 import { mutate } from 'swr'
+import { SWR_KEYS, isTransactionsRelatedKey } from '@/lib/swr-keys'
 
 export default function KakeiboPage() {
   const [periodType, setPeriodType] = useState<PeriodType>('thisMonth')
@@ -194,7 +195,8 @@ export default function KakeiboPage() {
     const result = await execute(async () => {
       const created = await createTransaction(input)
       await refreshTransactions()
-      await mutate(`transactions-${selectedYear}-${selectedMonth}`)
+      await mutate(SWR_KEYS.transactionsByMonth(Number(selectedYear), Number(selectedMonth)))
+      await mutate(isTransactionsRelatedKey)
       return created
     }, '取引の作成に失敗しました')
     if (result !== undefined) {
@@ -215,11 +217,8 @@ export default function KakeiboPage() {
         isFixed: input.isFixed,
       })
       await refreshTransactions()
-      await mutate(`transactions-${selectedYear}-${selectedMonth}`)
-      await mutate(
-        (key) =>
-          typeof key === 'string' && key.startsWith('transactions-range-'),
-      )
+      await mutate(SWR_KEYS.transactionsByMonth(Number(selectedYear), Number(selectedMonth)))
+      await mutate(isTransactionsRelatedKey)
       return updated
     }, '取引の更新に失敗しました')
     if (result !== undefined) {
@@ -234,11 +233,8 @@ export default function KakeiboPage() {
     const result = await execute(async () => {
       await deleteTransaction(transaction.id)
       await refreshTransactions()
-      await mutate(`transactions-${selectedYear}-${selectedMonth}`)
-      await mutate(
-        (key) =>
-          typeof key === 'string' && key.startsWith('transactions-range-'),
-      )
+      await mutate(SWR_KEYS.transactionsByMonth(Number(selectedYear), Number(selectedMonth)))
+      await mutate(isTransactionsRelatedKey)
       return true
     }, '取引の削除に失敗しました')
     if (result !== undefined) {

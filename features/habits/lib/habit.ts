@@ -1,4 +1,5 @@
 import { getDatabase, handleDbError } from '@/lib/db'
+import { buildUpdateParams, type FieldMapping } from '@/lib/db/build-update-params'
 import { DB_COLUMNS } from '@/lib/db/constants'
 import type {
   Habit,
@@ -94,57 +95,44 @@ export async function createHabit(input: CreateHabitInput): Promise<Habit> {
   }
 }
 
+const HABIT_UPDATE_MAPPING: FieldMapping<UpdateHabitInput> = [
+  { key: 'name', column: 'name' },
+  { key: 'scheduledTime', column: 'scheduled_time', transform: (v) => v ?? null },
+  { key: 'frequencyType', column: 'frequency_type' },
+  { key: 'frequencyDays', column: 'frequency_days', transform: (v) => v ?? null },
+  { key: 'frequencyDayOfMonth', column: 'frequency_day_of_month', transform: (v) => v ?? null },
+  { key: 'order', column: '"order"' },
+]
+
 export async function updateHabit(
   id: number,
   input: UpdateHabitInput,
 ): Promise<Habit> {
   const db = await getDatabase()
-  const updateFields: string[] = []
-  const updateValues: unknown[] = []
 
-  if (input.name !== undefined) {
-    updateFields.push('name = ?')
-    updateValues.push(input.name)
-  }
-  if (input.scheduledTime !== undefined) {
-    updateFields.push('scheduled_time = ?')
-    updateValues.push(input.scheduledTime ?? null)
-  }
-  if (input.frequencyType !== undefined) {
-    updateFields.push('frequency_type = ?')
-    updateValues.push(input.frequencyType)
-  }
-  if (input.frequencyDays !== undefined) {
-    updateFields.push('frequency_days = ?')
-    updateValues.push(input.frequencyDays ?? null)
-  }
-  if (input.frequencyDayOfMonth !== undefined) {
-    updateFields.push('frequency_day_of_month = ?')
-    updateValues.push(input.frequencyDayOfMonth ?? null)
-  }
-  if (input.order !== undefined) {
-    updateFields.push('"order" = ?')
-    updateValues.push(input.order)
-  }
+  const params = buildUpdateParams(input, HABIT_UPDATE_MAPPING)
 
-  if (updateFields.length === 0) {
-    const result = await db.select<DbHabit[]>(
-      `SELECT ${habitColumns()} FROM habits WHERE id = ?`,
-      [id],
-    )
-    if (result.length === 0) {
-      throw new Error('Habit not found')
+  if (params === null) {
+    try {
+      const result = await db.select<DbHabit[]>(
+        `SELECT ${habitColumns()} FROM habits WHERE id = ?`,
+        [id],
+      )
+      if (result.length === 0) {
+        throw new Error('Habit not found')
+      }
+      return mapDbHabitToHabit(result[0])
+    } catch (err) {
+      handleDbError(err, 'update habit')
     }
-    return mapDbHabitToHabit(result[0])
   }
 
-  updateFields.push('updated_at = CURRENT_TIMESTAMP')
-  updateValues.push(id)
+  params.values.push(id)
 
   try {
     await db.execute(
-      `UPDATE habits SET ${updateFields.join(', ')} WHERE id = ?`,
-      updateValues,
+      `UPDATE habits SET ${params.fields.join(', ')} WHERE id = ?`,
+      params.values,
     )
 
     const result = await db.select<DbHabit[]>(

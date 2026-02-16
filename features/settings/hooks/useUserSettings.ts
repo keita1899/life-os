@@ -2,20 +2,20 @@ import useSWR from 'swr'
 import { mutate } from 'swr'
 import { getUserSettings, updateUserSettings } from '../lib'
 import type { UserSettings, UpdateUserSettingsInput } from '../types/user-settings'
-import { fetcher } from '@/lib/swr'
-
-const userSettingsKey = 'user-settings'
+import { SWR_KEYS } from '@/lib/swr-keys'
 
 export function useUserSettings() {
   const {
     data,
     error,
     isLoading,
-  } = useSWR<UserSettings>(userSettingsKey, () => fetcher(() => getUserSettings()))
+  } = useSWR<UserSettings>(SWR_KEYS.userSettings, () =>
+    getUserSettings(),
+  )
 
   const handleUpdateUserSettings = async (input: UpdateUserSettingsInput) => {
     const result = await updateUserSettings(input)
-    await mutate(userSettingsKey)
+    await mutate(SWR_KEYS.userSettings)
     return result
   }
 

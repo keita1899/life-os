@@ -11,9 +11,7 @@ import type {
   CreateDevProjectInput,
   UpdateDevProjectInput,
 } from '../types/dev-project'
-import { fetcher } from '@/lib/swr'
-
-const devProjectsKey = 'dev-projects'
+import { SWR_KEYS } from '@/lib/swr-keys'
 
 interface UseDevProjectsResult {
   projects: DevProject[]
@@ -30,15 +28,15 @@ export function useDevProjects(): UseDevProjectsResult {
     data = [],
     error,
     isLoading,
-  } = useSWR<DevProject[]>(devProjectsKey, () =>
-    fetcher(() => getAllDevProjects()),
+  } = useSWR<DevProject[]>(SWR_KEYS.devProjects, () =>
+    getAllDevProjects(),
   )
 
   const handleCreateProject = async (
     input: CreateDevProjectInput,
   ): Promise<void> => {
     await createDevProject(input)
-    await mutate(devProjectsKey)
+    await mutate(SWR_KEYS.devProjects)
   }
 
   const handleUpdateProject = async (
@@ -46,16 +44,16 @@ export function useDevProjects(): UseDevProjectsResult {
     input: UpdateDevProjectInput,
   ): Promise<void> => {
     await updateDevProject(id, input)
-    await mutate(devProjectsKey)
+    await mutate(SWR_KEYS.devProjects)
   }
 
   const handleDeleteProject = async (id: number): Promise<void> => {
     await deleteDevProject(id)
-    await mutate(devProjectsKey)
+    await mutate(SWR_KEYS.devProjects)
   }
 
   const refreshProjects = async (): Promise<DevProject[] | undefined> => {
-    return await mutate(devProjectsKey)
+    return await mutate(SWR_KEYS.devProjects)
   }
 
   return {

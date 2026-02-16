@@ -1,4 +1,5 @@
 import { getDatabase, handleDbError } from '@/lib/db'
+import { buildUpdateParams, type FieldMapping } from '@/lib/db/build-update-params'
 import type {
   UserSettings,
   UpdateUserSettingsInput,
@@ -80,6 +81,17 @@ export async function getUserSettings(): Promise<UserSettings> {
   }
 }
 
+const USER_SETTINGS_UPDATE_MAPPING: FieldMapping<UpdateUserSettingsInput> = [
+  { key: 'birthday', column: 'birthday', transform: (v) => v || null },
+  { key: 'defaultCalendarView', column: 'default_calendar_view' },
+  { key: 'weekStartDay', column: 'week_start_day' },
+  { key: 'morningReviewTime', column: 'morning_review_time', transform: (v) => v || null },
+  { key: 'eveningReviewTime', column: 'evening_review_time', transform: (v) => v || null },
+  { key: 'barcelonaIcalUrl', column: 'barcelona_ical_url', transform: (v) => v || null },
+  { key: 'initialBalance', column: 'initial_balance', transform: (v) => v ?? null },
+  { key: 'defaultHabitView', column: 'default_habit_view' },
+]
+
 export async function updateUserSettings(
   input: UpdateUserSettingsInput,
 ): Promise<UserSettings> {
@@ -99,60 +111,18 @@ export async function updateUserSettings(
     currentSettings = await getUserSettings()
   }
 
-  const updateFields: string[] = []
-  const updateValues: unknown[] = []
+  const params = buildUpdateParams(input, USER_SETTINGS_UPDATE_MAPPING)
 
-  if (input.birthday !== undefined) {
-    updateFields.push('birthday = ?')
-    updateValues.push(input.birthday || null)
-  }
-
-  if (input.defaultCalendarView !== undefined) {
-    updateFields.push('default_calendar_view = ?')
-    updateValues.push(input.defaultCalendarView)
-  }
-
-  if (input.weekStartDay !== undefined) {
-    updateFields.push('week_start_day = ?')
-    updateValues.push(input.weekStartDay)
-  }
-
-  if (input.morningReviewTime !== undefined) {
-    updateFields.push('morning_review_time = ?')
-    updateValues.push(input.morningReviewTime || null)
-  }
-
-  if (input.eveningReviewTime !== undefined) {
-    updateFields.push('evening_review_time = ?')
-    updateValues.push(input.eveningReviewTime || null)
-  }
-
-  if (input.barcelonaIcalUrl !== undefined) {
-    updateFields.push('barcelona_ical_url = ?')
-    updateValues.push(input.barcelonaIcalUrl || null)
-  }
-
-  if (input.initialBalance !== undefined) {
-    updateFields.push('initial_balance = ?')
-    updateValues.push(input.initialBalance ?? null)
-  }
-
-  if (input.defaultHabitView !== undefined) {
-    updateFields.push('default_habit_view = ?')
-    updateValues.push(input.defaultHabitView)
-  }
-
-  if (updateFields.length === 0) {
+  if (params === null) {
     return currentSettings
   }
 
-  updateFields.push('updated_at = CURRENT_TIMESTAMP')
-  updateValues.push(currentSettings.id)
+  params.values.push(currentSettings.id)
 
   try {
     await db.execute(
-      `UPDATE user_settings SET ${updateFields.join(', ')} WHERE id = ?`,
-      updateValues,
+      `UPDATE user_settings SET ${params.fields.join(', ')} WHERE id = ?`,
+      params.values,
     )
 
     const result = await db.select<DbUserSettings[]>(
@@ -166,6 +136,5 @@ export async function updateUserSettings(
     return mapDbUserSettingsToUserSettings(result[0])
   } catch (err) {
     handleDbError(err, 'update user settings')
-    throw err
   }
 }

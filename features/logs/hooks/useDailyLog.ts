@@ -10,27 +10,27 @@ import type {
   CreateDailyLogInput,
   UpdateDailyLogInput,
 } from '../types/daily-log'
-import { fetcher } from '@/lib/swr'
+import { SWR_KEYS } from '@/lib/swr-keys'
 
 export function useDailyLog(logDate: string) {
-  const dailyLogKey = ['daily-log', logDate]
+  const key = SWR_KEYS.dailyLog(logDate)
 
   const {
     data,
     error,
     isLoading,
-  } = useSWR<DailyLog | null>(dailyLogKey, () =>
-    fetcher(() => getDailyLogByDate(logDate)),
+  } = useSWR<DailyLog | null>(key, () =>
+    getDailyLogByDate(logDate),
   )
 
   const handleCreateDailyLog = async (input: CreateDailyLogInput) => {
     await createDailyLog(input)
-    await mutate(dailyLogKey)
+    await mutate(key)
   }
 
   const handleUpdateDailyLog = async (input: UpdateDailyLogInput) => {
     await updateDailyLog(logDate, input)
-    await mutate(dailyLogKey)
+    await mutate(key)
   }
 
   return {
@@ -43,6 +43,6 @@ export function useDailyLog(logDate: string) {
       : null,
     createDailyLog: handleCreateDailyLog,
     updateDailyLog: handleUpdateDailyLog,
-    refreshDailyLog: () => mutate(dailyLogKey),
+    refreshDailyLog: () => mutate(key),
   }
 }

@@ -1,5 +1,4 @@
-import useSWR from 'swr'
-import { mutate } from 'swr'
+import useSWR, { useSWRConfig } from 'swr'
 import {
   getAllHabits,
   createHabit,
@@ -7,32 +6,51 @@ import {
   deleteHabit,
 } from '../lib'
 import type { Habit, CreateHabitInput, UpdateHabitInput } from '../types/habit'
-import { fetcher } from '@/lib/swr'
-
-const habitsKey = 'habits'
+import { SWR_KEYS } from '@/lib/swr-keys'
 
 export function useHabits() {
   const {
     data = [],
     error,
     isLoading,
-  } = useSWR<Habit[]>(habitsKey, () => fetcher(() => getAllHabits()))
+  } = useSWR<Habit[]>(SWR_KEYS.habits, () => getAllHabits())
+  const { mutate } = useSWRConfig()
 
   const handleCreateHabit = async (input: CreateHabitInput) => {
     const result = await createHabit(input)
-    await mutate(habitsKey)
+    await mutate(
+      SWR_KEYS.habits,
+      (current: Habit[] | undefined) => [...(current ?? []), result],
+      { revalidate: false },
+    )
     return result
   }
 
   const handleUpdateHabit = async (id: number, input: UpdateHabitInput) => {
     const result = await updateHabit(id, input)
-    await mutate(habitsKey)
+    await mutate(
+      SWR_KEYS.habits,
+      (current: Habit[] | undefined) =>
+        (current ?? []).map((h) => (h.id === id ? result : h)),
+      { revalidate: false },
+    )
     return result
   }
 
   const handleDeleteHabit = async (id: number) => {
-    await deleteHabit(id)
-    await mutate(habitsKey)
+    await mutate(
+      SWR_KEYS.habits,
+      async (current: Habit[] | undefined) => {
+        await deleteHabit(id)
+        return (current ?? []).filter((h) => h.id !== id)
+      },
+      {
+        optimisticData: (current: Habit[] | undefined) =>
+          (current ?? []).filter((h) => h.id !== id),
+        revalidate: false,
+        rollbackOnError: true,
+      },
+    )
     return true
   }
 
@@ -47,6 +65,6 @@ export function useHabits() {
     createHabit: handleCreateHabit,
     updateHabit: handleUpdateHabit,
     deleteHabit: handleDeleteHabit,
-    refreshHabits: () => mutate(habitsKey),
+    refreshHabits: () => mutate(SWR_KEYS.habits),
   }
 }

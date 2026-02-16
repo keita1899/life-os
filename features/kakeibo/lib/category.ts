@@ -1,4 +1,5 @@
 import { getDatabase, handleDbError } from '@/lib/db'
+import { buildUpdateParams, type FieldMapping } from '@/lib/db/build-update-params'
 import { DB_COLUMNS } from '@/lib/db/constants'
 import type {
   TransactionCategory,
@@ -97,6 +98,10 @@ export async function createTransactionCategory(
   }
 }
 
+const TRANSACTION_CATEGORY_UPDATE_MAPPING: FieldMapping<UpdateTransactionCategoryInput> = [
+  { key: 'name', column: 'name' },
+]
+
 export async function updateTransactionCategory(
   type: TransactionCategoryType,
   id: number,
@@ -104,15 +109,9 @@ export async function updateTransactionCategory(
 ): Promise<TransactionCategory> {
   const db = await getDatabase()
 
-  const updateFields: string[] = []
-  const updateValues: unknown[] = []
+  const params = buildUpdateParams(input, TRANSACTION_CATEGORY_UPDATE_MAPPING)
 
-  if (input.name !== undefined) {
-    updateFields.push('name = ?')
-    updateValues.push(input.name)
-  }
-
-  if (updateFields.length === 0) {
+  if (params === null) {
     const result = await db.select<DbTransactionCategory[]>(
       `SELECT ${DB_COLUMNS.TRANSACTION_CATEGORIES.join(', ')} FROM transaction_categories
        WHERE id = ? AND type = ?`,
@@ -124,13 +123,12 @@ export async function updateTransactionCategory(
     return mapDbTransactionCategoryToTransactionCategory(result[0])
   }
 
-  updateFields.push('updated_at = CURRENT_TIMESTAMP')
-  updateValues.push(id, type)
+  params.values.push(id, type)
 
   try {
     await db.execute(
-      `UPDATE transaction_categories SET ${updateFields.join(', ')} WHERE id = ? AND type = ?`,
-      updateValues,
+      `UPDATE transaction_categories SET ${params.fields.join(', ')} WHERE id = ? AND type = ?`,
+      params.values,
     )
 
     const result = await db.select<DbTransactionCategory[]>(

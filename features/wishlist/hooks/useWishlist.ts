@@ -12,22 +12,20 @@ import type {
   CreateWishlistItemInput,
   UpdateWishlistItemInput,
 } from '../types/wishlist-item'
-import { fetcher } from '@/lib/swr'
-
-const wishlistKey = 'wishlist'
+import { SWR_KEYS } from '@/lib/swr-keys'
 
 export function useWishlist() {
   const {
     data = [],
     error,
     isLoading,
-  } = useSWR<WishlistItem[]>(wishlistKey, () =>
-    fetcher(() => getAllWishlistItems()),
+  } = useSWR<WishlistItem[]>(SWR_KEYS.wishlist, () =>
+    getAllWishlistItems(),
   )
 
   const handleCreateWishlistItem = async (input: CreateWishlistItemInput) => {
     const result = await createWishlistItem(input)
-    await mutate(wishlistKey)
+    await mutate(SWR_KEYS.wishlist)
     return result
   }
 
@@ -36,19 +34,19 @@ export function useWishlist() {
     input: UpdateWishlistItemInput,
   ) => {
     const result = await updateWishlistItem(id, input)
-    await mutate(wishlistKey)
+    await mutate(SWR_KEYS.wishlist)
     return result
   }
 
   const handleDeleteWishlistItem = async (id: number) => {
     await deleteWishlistItem(id)
-    await mutate(wishlistKey)
+    await mutate(SWR_KEYS.wishlist)
     return true
   }
 
   const handleDeleteWishlistItemsByIds = async (ids: number[]) => {
     await deleteWishlistItemsByIds(ids)
-    await mutate(wishlistKey)
+    await mutate(SWR_KEYS.wishlist)
     return true
   }
 

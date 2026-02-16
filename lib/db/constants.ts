@@ -1,5 +1,10 @@
-export const DB_COLUMNS = {
-  EVENTS: [
+// ────────────────────────────────────────────
+// Single Source of Truth: テーブルスキーマ定義
+// カラムを追加・変更する場合はここだけを編集する
+// ────────────────────────────────────────────
+
+const SCHEMA = {
+  events: [
     'id',
     'title',
     'start_datetime',
@@ -16,7 +21,7 @@ export const DB_COLUMNS = {
     'created_at',
     'updated_at',
   ],
-  TASKS: [
+  tasks: [
     'id',
     'title',
     'execution_date',
@@ -28,10 +33,20 @@ export const DB_COLUMNS = {
     'recurrence_day_of_month',
     'recurrence_end_date',
     'recurrence_excluded_dates',
+    'memo',
     'created_at',
     'updated_at',
   ],
-  MONTHLY_GOALS: [
+  yearly_goals: [
+    'id',
+    'title',
+    'year',
+    'achieved',
+    'checklist',
+    'created_at',
+    'updated_at',
+  ],
+  monthly_goals: [
     'id',
     'title',
     'year',
@@ -41,16 +56,7 @@ export const DB_COLUMNS = {
     'created_at',
     'updated_at',
   ],
-  YEARLY_GOALS: [
-    'id',
-    'title',
-    'year',
-    'achieved',
-    'checklist',
-    'created_at',
-    'updated_at',
-  ],
-  WEEKLY_GOALS: [
+  weekly_goals: [
     'id',
     'title',
     'year',
@@ -59,7 +65,7 @@ export const DB_COLUMNS = {
     'created_at',
     'updated_at',
   ],
-  USER_SETTINGS: [
+  user_settings: [
     'id',
     'birthday',
     'default_calendar_view',
@@ -68,16 +74,17 @@ export const DB_COLUMNS = {
     'evening_review_time',
     'barcelona_ical_url',
     'initial_balance',
+    'default_habit_view',
     'created_at',
     'updated_at',
   ],
-  BUCKET_LIST_CATEGORIES: [
+  bucket_list_categories: [
     'id',
     'name',
     'created_at',
     'updated_at',
   ],
-  BUCKET_LIST_ITEMS: [
+  bucket_list_items: [
     'id',
     'title',
     'category_id',
@@ -89,23 +96,25 @@ export const DB_COLUMNS = {
     'created_at',
     'updated_at',
   ],
-  WISHLIST_CATEGORIES: [
+  wishlist_categories: [
     'id',
     'name',
     'created_at',
     'updated_at',
   ],
-  WISHLIST_ITEMS: [
+  wishlist_items: [
     'id',
     'name',
     'category_id',
     'target_year',
+    'target_month',
     'price',
+    'purchased',
     'order',
     'created_at',
     'updated_at',
   ],
-  SUBSCRIPTIONS: [
+  subscriptions: [
     'id',
     'name',
     'monthly_price',
@@ -117,21 +126,14 @@ export const DB_COLUMNS = {
     'created_at',
     'updated_at',
   ],
-  DAILY_LOGS: [
+  daily_logs: [
     'id',
     'log_date',
     'diary',
     'created_at',
     'updated_at',
   ],
-  DEV_DAILY_LOGS: [
-    'id',
-    'log_date',
-    'report',
-    'created_at',
-    'updated_at',
-  ],
-  HABITS: [
+  habits: [
     'id',
     'name',
     'scheduled_time',
@@ -142,13 +144,39 @@ export const DB_COLUMNS = {
     'created_at',
     'updated_at',
   ],
-  HABIT_COMPLETIONS: [
+  habit_completions: [
     'id',
     'habit_id',
     'completed_date',
     'created_at',
   ],
-  DEV_YEARLY_GOALS: [
+  transaction_categories: [
+    'id',
+    'type',
+    'name',
+    'created_at',
+    'updated_at',
+  ],
+  transactions: [
+    'id',
+    'date',
+    'type',
+    'name',
+    'amount',
+    'category_id',
+    'is_fixed',
+    'created_at',
+    'updated_at',
+  ],
+  // ── Dev tables ──
+  dev_daily_logs: [
+    'id',
+    'log_date',
+    'report',
+    'created_at',
+    'updated_at',
+  ],
+  dev_yearly_goals: [
     'id',
     'title',
     'year',
@@ -157,7 +185,7 @@ export const DB_COLUMNS = {
     'created_at',
     'updated_at',
   ],
-  DEV_MONTHLY_GOALS: [
+  dev_monthly_goals: [
     'id',
     'title',
     'year',
@@ -167,7 +195,7 @@ export const DB_COLUMNS = {
     'created_at',
     'updated_at',
   ],
-  DEV_WEEKLY_GOALS: [
+  dev_weekly_goals: [
     'id',
     'title',
     'year',
@@ -176,7 +204,16 @@ export const DB_COLUMNS = {
     'created_at',
     'updated_at',
   ],
-  DEV_TASKS: [
+  dev_projects: [
+    'id',
+    'name',
+    'start_date',
+    'end_date',
+    'status',
+    'created_at',
+    'updated_at',
+  ],
+  dev_tasks: [
     'id',
     'title',
     'project_id',
@@ -189,13 +226,13 @@ export const DB_COLUMNS = {
     'created_at',
     'updated_at',
   ],
-  VISION_CATEGORIES: [
+  vision_categories: [
     'id',
     'name',
     'created_at',
     'updated_at',
   ],
-  VISION_ITEMS: [
+  vision_items: [
     'id',
     'title',
     'category_id',
@@ -203,22 +240,34 @@ export const DB_COLUMNS = {
     'created_at',
     'updated_at',
   ],
-  TRANSACTION_CATEGORIES: [
-    'id',
-    'type',
-    'name',
-    'created_at',
-    'updated_at',
-  ],
-  TRANSACTIONS: [
-    'id',
-    'date',
-    'type',
-    'name',
-    'amount',
-    'category_id',
-    'is_fixed',
-    'created_at',
-    'updated_at',
-  ],
 } as const
+
+// ────────────────────────────────────────────
+// 後方互換の DB_COLUMNS（SCHEMA から自動導出）
+// ────────────────────────────────────────────
+
+type UpperSnake<S extends string> =
+  S extends `${infer A}_${infer B}`
+    ? `${Uppercase<A>}_${UpperSnake<B>}`
+    : Uppercase<S>
+
+type DbColumns = {
+  [K in keyof typeof SCHEMA as UpperSnake<K & string>]: (typeof SCHEMA)[K]
+}
+
+function toUpperSnake(s: string): string {
+  return s.toUpperCase()
+}
+
+function buildDbColumns(): DbColumns {
+  const result: Record<string, readonly string[]> = {}
+  for (const [key, value] of Object.entries(SCHEMA)) {
+    result[toUpperSnake(key)] = value
+  }
+  return result as DbColumns
+}
+
+export const DB_COLUMNS = buildDbColumns()
+
+// Re-export SCHEMA for migration files and other uses
+export { SCHEMA }

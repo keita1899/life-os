@@ -1,4 +1,5 @@
 import { getDatabase, handleDbError } from '@/lib/db'
+import { buildUpdateParams, type FieldMapping } from '@/lib/db/build-update-params'
 import type {
   VisionItem,
   CreateVisionItemInput,
@@ -154,61 +155,54 @@ export async function createVisionItem(
   }
 }
 
+const VISION_ITEM_UPDATE_MAPPING: FieldMapping<UpdateVisionItemInput> = [
+  { key: 'title', column: 'title' },
+  { key: 'categoryId', column: 'category_id', transform: (v) => v || null },
+  { key: 'order', column: '"order"' },
+]
+
 export async function updateVisionItem(
   id: number,
   input: UpdateVisionItemInput,
 ): Promise<VisionItem> {
   const db = await getDatabase()
 
-  const updateFields: string[] = []
-  const updateValues: unknown[] = []
+  const params = buildUpdateParams(input, VISION_ITEM_UPDATE_MAPPING)
 
-  if (input.title !== undefined) {
-    updateFields.push('title = ?')
-    updateValues.push(input.title)
-  }
-
-  if (input.categoryId !== undefined) {
-    updateFields.push('category_id = ?')
-    updateValues.push(input.categoryId || null)
-  }
-
-  if (input.order !== undefined) {
-    updateFields.push('"order" = ?')
-    updateValues.push(input.order)
-  }
-
-  if (updateFields.length === 0) {
-    const result = await db.select<DbVisionItemWithCategory[]>(
-      `SELECT 
-        vi.id,
-        vi.title,
-        vi.category_id,
-        vi."order",
-        vi.created_at,
-        vi.updated_at,
-        vc.id as category_id_from_join,
-        vc.name as category_name,
-        vc.created_at as category_created_at,
-        vc.updated_at as category_updated_at
-      FROM vision_items vi
-      LEFT JOIN vision_categories vc ON vi.category_id = vc.id
-      WHERE vi.id = ?`,
-      [id],
-    )
-    if (result.length === 0) {
-      throw new Error('Vision item not found')
+  if (params === null) {
+    try {
+      const result = await db.select<DbVisionItemWithCategory[]>(
+        `SELECT 
+          vi.id,
+          vi.title,
+          vi.category_id,
+          vi."order",
+          vi.created_at,
+          vi.updated_at,
+          vc.id as category_id_from_join,
+          vc.name as category_name,
+          vc.created_at as category_created_at,
+          vc.updated_at as category_updated_at
+        FROM vision_items vi
+        LEFT JOIN vision_categories vc ON vi.category_id = vc.id
+        WHERE vi.id = ?`,
+        [id],
+      )
+      if (result.length === 0) {
+        throw new Error('Vision item not found')
+      }
+      return mapDbVisionItemToVisionItem(result[0])
+    } catch (err) {
+      handleDbError(err, 'update vision item')
     }
-    return mapDbVisionItemToVisionItem(result[0])
   }
 
-  updateFields.push('updated_at = CURRENT_TIMESTAMP')
-  updateValues.push(id)
+  params.values.push(id)
 
   try {
     await db.execute(
-      `UPDATE vision_items SET ${updateFields.join(', ')} WHERE id = ?`,
-      updateValues,
+      `UPDATE vision_items SET ${params.fields.join(', ')} WHERE id = ?`,
+      params.values,
     )
 
     const result = await db.select<DbVisionItemWithCategory[]>(

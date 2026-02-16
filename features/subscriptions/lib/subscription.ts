@@ -1,4 +1,5 @@
 import { getDatabase, handleDbError } from '@/lib/db'
+import { buildUpdateParams, type FieldMapping } from '@/lib/db/build-update-params'
 import { DB_COLUMNS } from '@/lib/db/constants'
 import type {
   Subscription,
@@ -123,51 +124,25 @@ export async function createSubscription(
   }
 }
 
+const SUBSCRIPTION_UPDATE_MAPPING: FieldMapping<UpdateSubscriptionInput> = [
+  { key: 'name', column: 'name' },
+  { key: 'monthlyPrice', column: 'monthly_price' },
+  { key: 'billingCycle', column: 'billing_cycle' },
+  { key: 'nextBillingDate', column: 'next_billing_date' },
+  { key: 'startDate', column: 'start_date', transform: (v) => v || null },
+  { key: 'cancellationUrl', column: 'cancellation_url', transform: (v) => v || null },
+  { key: 'active', column: 'active', transform: (v) => (v ? 1 : 0) },
+]
+
 export async function updateSubscription(
   id: number,
   input: UpdateSubscriptionInput,
 ): Promise<Subscription> {
   const db = await getDatabase()
 
-  const updateFields: string[] = []
-  const updateValues: unknown[] = []
+  const params = buildUpdateParams(input, SUBSCRIPTION_UPDATE_MAPPING)
 
-  if (input.name !== undefined) {
-    updateFields.push('name = ?')
-    updateValues.push(input.name)
-  }
-
-  if (input.monthlyPrice !== undefined) {
-    updateFields.push('monthly_price = ?')
-    updateValues.push(input.monthlyPrice)
-  }
-
-  if (input.billingCycle !== undefined) {
-    updateFields.push('billing_cycle = ?')
-    updateValues.push(input.billingCycle)
-  }
-
-  if (input.nextBillingDate !== undefined) {
-    updateFields.push('next_billing_date = ?')
-    updateValues.push(input.nextBillingDate)
-  }
-
-  if (input.startDate !== undefined) {
-    updateFields.push('start_date = ?')
-    updateValues.push(input.startDate || null)
-  }
-
-  if (input.cancellationUrl !== undefined) {
-    updateFields.push('cancellation_url = ?')
-    updateValues.push(input.cancellationUrl || null)
-  }
-
-  if (input.active !== undefined) {
-    updateFields.push('active = ?')
-    updateValues.push(input.active ? 1 : 0)
-  }
-
-  if (updateFields.length === 0) {
+  if (params === null) {
     try {
       const result = await db.select<DbSubscription[]>(
         `SELECT ${DB_COLUMNS.SUBSCRIPTIONS.join(', ')} FROM subscriptions
@@ -183,13 +158,12 @@ export async function updateSubscription(
     }
   }
 
-  updateFields.push('updated_at = CURRENT_TIMESTAMP')
-  updateValues.push(id)
+  params.values.push(id)
 
   try {
     await db.execute(
-      `UPDATE subscriptions SET ${updateFields.join(', ')} WHERE id = ?`,
-      updateValues,
+      `UPDATE subscriptions SET ${params.fields.join(', ')} WHERE id = ?`,
+      params.values,
     )
 
     const result = await db.select<DbSubscription[]>(

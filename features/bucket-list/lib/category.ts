@@ -1,4 +1,5 @@
 import { getDatabase, handleDbError } from '@/lib/db'
+import { buildUpdateParams, type FieldMapping } from '@/lib/db/build-update-params'
 import { DB_COLUMNS } from '@/lib/db/constants'
 import type {
   BucketListCategory,
@@ -88,21 +89,19 @@ export async function createBucketListCategory(
   }
 }
 
+const BUCKET_LIST_CATEGORY_UPDATE_MAPPING: FieldMapping<UpdateBucketListCategoryInput> = [
+  { key: 'name', column: 'name' },
+]
+
 export async function updateBucketListCategory(
   id: number,
   input: UpdateBucketListCategoryInput,
 ): Promise<BucketListCategory> {
   const db = await getDatabase()
 
-  const updateFields: string[] = []
-  const updateValues: unknown[] = []
+  const params = buildUpdateParams(input, BUCKET_LIST_CATEGORY_UPDATE_MAPPING)
 
-  if (input.name !== undefined) {
-    updateFields.push('name = ?')
-    updateValues.push(input.name)
-  }
-
-  if (updateFields.length === 0) {
+  if (params === null) {
     const result = await db.select<DbBucketListCategory[]>(
       `SELECT ${DB_COLUMNS.BUCKET_LIST_CATEGORIES.join(', ')} FROM bucket_list_categories
        WHERE id = ?`,
@@ -114,13 +113,12 @@ export async function updateBucketListCategory(
     return mapDbBucketListCategoryToBucketListCategory(result[0])
   }
 
-  updateFields.push('updated_at = CURRENT_TIMESTAMP')
-  updateValues.push(id)
+  params.values.push(id)
 
   try {
     await db.execute(
-      `UPDATE bucket_list_categories SET ${updateFields.join(', ')} WHERE id = ?`,
-      updateValues,
+      `UPDATE bucket_list_categories SET ${params.fields.join(', ')} WHERE id = ?`,
+      params.values,
     )
 
     const result = await db.select<DbBucketListCategory[]>(

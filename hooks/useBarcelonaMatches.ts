@@ -3,6 +3,7 @@
 import { useEffect, useRef, useCallback } from 'react'
 import { mutate } from 'swr'
 import { syncBarcelonaMatches } from '@/lib/football/barcelona'
+import { SWR_KEYS } from '@/lib/swr-keys'
 
 const STORAGE_KEY = 'barcelona-sync-last-time'
 const SYNC_INTERVAL_MS = 24 * 60 * 60 * 1000
@@ -34,7 +35,7 @@ export function useBarcelonaMatches(barcelonaIcalUrl: string | null) {
     try {
       await syncBarcelonaMatches(barcelonaIcalUrl)
       setLastSyncTime(Date.now())
-      await mutate('events')
+      await mutate(SWR_KEYS.events)
     } catch (error) {
       console.error('Failed to sync Barcelona matches:', error)
     } finally {

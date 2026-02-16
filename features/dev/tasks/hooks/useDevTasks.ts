@@ -13,11 +13,10 @@ import type {
   CreateDevTaskInput,
   UpdateDevTaskInput,
 } from '../types/dev-task'
-import { fetcher } from '@/lib/swr'
+import { SWR_KEYS } from '@/lib/swr-keys'
 
 type DevTaskProjectFilter = number | null
 type DevTaskTypeFilter = DevTask['type']
-const devCalendarTasksKey = 'dev-calendar-tasks'
 
 interface UseDevTasksResult {
   tasks: DevTask[]
@@ -38,19 +37,19 @@ export function useDevTasks(input: {
   const { projectId, type } = input
 
   const shouldFetch = projectId !== undefined
-  const key = shouldFetch ? ['dev-tasks', projectId, type ?? 'all'] : null
+  const key = shouldFetch
+    ? SWR_KEYS.devTasksByProject(projectId, type ?? 'all')
+    : null
 
   const {
     data = [],
     error,
     isLoading,
   } = useSWR<DevTask[]>(key, () =>
-    fetcher(() =>
-      getDevTasks({
-        projectId: projectId as DevTaskProjectFilter,
-        type,
-      }),
-    ),
+    getDevTasks({
+      projectId: projectId as DevTaskProjectFilter,
+      type,
+    }),
   )
 
   const refreshTasks = async (): Promise<DevTask[] | undefined> => {
@@ -60,7 +59,7 @@ export function useDevTasks(input: {
 
   const handleCreateTask = async (createInput: CreateDevTaskInput) => {
     const result = await createDevTask(createInput)
-    await Promise.all([refreshTasks(), mutate(devCalendarTasksKey)])
+    await Promise.all([refreshTasks(), mutate(SWR_KEYS.devTasks)])
     return result
   }
 
@@ -69,13 +68,13 @@ export function useDevTasks(input: {
     updateInput: UpdateDevTaskInput,
   ) => {
     const result = await updateDevTask(id, updateInput)
-    await Promise.all([refreshTasks(), mutate(devCalendarTasksKey)])
+    await Promise.all([refreshTasks(), mutate(SWR_KEYS.devTasks)])
     return result
   }
 
   const handleDeleteTask = async (id: number) => {
     await deleteDevTask(id)
-    await Promise.all([refreshTasks(), mutate(devCalendarTasksKey)])
+    await Promise.all([refreshTasks(), mutate(SWR_KEYS.devTasks)])
     return true
   }
 
@@ -84,7 +83,7 @@ export function useDevTasks(input: {
     completed: boolean,
   ): Promise<void> => {
     await updateDevTask(id, { completed })
-    await Promise.all([refreshTasks(), mutate(devCalendarTasksKey)])
+    await Promise.all([refreshTasks(), mutate(SWR_KEYS.devTasks)])
   }
 
   const handleDeleteCompletedTasks = async () => {
@@ -93,7 +92,7 @@ export function useDevTasks(input: {
       projectId,
       type,
     })
-    await Promise.all([refreshTasks(), mutate(devCalendarTasksKey)])
+    await Promise.all([refreshTasks(), mutate(SWR_KEYS.devTasks)])
     return count
   }
 
@@ -103,7 +102,7 @@ export function useDevTasks(input: {
       projectId,
       type,
     })
-    await Promise.all([refreshTasks(), mutate(devCalendarTasksKey)])
+    await Promise.all([refreshTasks(), mutate(SWR_KEYS.devTasks)])
     return count
   }
 

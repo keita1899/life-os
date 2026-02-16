@@ -11,22 +11,20 @@ import type {
   CreateVisionItemInput,
   UpdateVisionItemInput,
 } from '../types/vision-item'
-import { fetcher } from '@/lib/swr'
-
-const visionKey = 'vision'
+import { SWR_KEYS } from '@/lib/swr-keys'
 
 export function useVision() {
   const {
     data = [],
     error,
     isLoading,
-  } = useSWR<VisionItem[]>(visionKey, () =>
-    fetcher(() => getAllVisionItems()),
+  } = useSWR<VisionItem[]>(SWR_KEYS.vision, () =>
+    getAllVisionItems(),
   )
 
   const handleCreateVisionItem = async (input: CreateVisionItemInput) => {
     await createVisionItem(input)
-    await mutate(visionKey)
+    await mutate(SWR_KEYS.vision)
   }
 
   const handleUpdateVisionItem = async (
@@ -34,12 +32,12 @@ export function useVision() {
     input: UpdateVisionItemInput,
   ) => {
     await updateVisionItem(id, input)
-    await mutate(visionKey)
+    await mutate(SWR_KEYS.vision)
   }
 
   const handleDeleteVisionItem = async (id: number) => {
     await deleteVisionItem(id)
-    await mutate(visionKey)
+    await mutate(SWR_KEYS.vision)
   }
 
   return {

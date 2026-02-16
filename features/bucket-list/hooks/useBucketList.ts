@@ -12,22 +12,20 @@ import type {
   CreateBucketListItemInput,
   UpdateBucketListItemInput,
 } from '../types/bucket-list-item'
-import { fetcher } from '@/lib/swr'
-
-const bucketListKey = 'bucket-list'
+import { SWR_KEYS } from '@/lib/swr-keys'
 
 export function useBucketList() {
   const {
     data = [],
     error,
     isLoading,
-  } = useSWR<BucketListItem[]>(bucketListKey, () =>
-    fetcher(() => getAllBucketListItems()),
+  } = useSWR<BucketListItem[]>(SWR_KEYS.bucketList, () =>
+    getAllBucketListItems(),
   )
 
   const handleCreateBucketListItem = async (input: CreateBucketListItemInput) => {
     const result = await createBucketListItem(input)
-    await mutate(bucketListKey)
+    await mutate(SWR_KEYS.bucketList)
     return result
   }
 
@@ -36,13 +34,13 @@ export function useBucketList() {
     input: UpdateBucketListItemInput,
   ) => {
     const result = await updateBucketListItem(id, input)
-    await mutate(bucketListKey)
+    await mutate(SWR_KEYS.bucketList)
     return result
   }
 
   const handleDeleteBucketListItem = async (id: number) => {
     await deleteBucketListItem(id)
-    await mutate(bucketListKey)
+    await mutate(SWR_KEYS.bucketList)
     return true
   }
 
@@ -51,12 +49,12 @@ export function useBucketList() {
     completed: boolean,
   ) => {
     await updateBucketListItem(id, { completed })
-    await mutate(bucketListKey)
+    await mutate(SWR_KEYS.bucketList)
   }
 
   const handleDeleteBucketListItemsByIds = async (ids: number[]) => {
     await deleteBucketListItemsByIds(ids)
-    await mutate(bucketListKey)
+    await mutate(SWR_KEYS.bucketList)
     return true
   }
 
