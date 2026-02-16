@@ -747,6 +747,9 @@ export const migration001: Migration = {
     if (!tasksColumns.has('recurrence_excluded_dates')) {
       await db.execute('ALTER TABLE tasks ADD COLUMN recurrence_excluded_dates TEXT')
     }
+    if (!tasksColumns.has('memo')) {
+      await db.execute('ALTER TABLE tasks ADD COLUMN memo TEXT')
+    }
 
     // bucket_list_items: add target_month
     try {

@@ -31,6 +31,7 @@ const TASK_UPDATE_MAPPING: FieldMapping<UpdateTaskInput> = [
     transform: (v) =>
       Array.isArray(v) && v.length > 0 ? JSON.stringify(v) : null,
   },
+  { key: 'memo', column: 'memo', transform: (v) => v ?? null },
 ]
 
 interface DbTask {
@@ -45,6 +46,7 @@ interface DbTask {
   recurrence_day_of_month: number | null
   recurrence_end_date: string | null
   recurrence_excluded_dates: string | null
+  memo: string | null
   created_at: string
   updated_at: string
 }
@@ -79,6 +81,7 @@ function mapDbTaskToTask(dbTask: DbTask): Task {
     recurrenceDayOfMonth: dbTask.recurrence_day_of_month,
     recurrenceEndDate: dbTask.recurrence_end_date,
     recurrenceExcludedDates: excludedDates,
+    memo: dbTask.memo ?? null,
     createdAt: dbTask.created_at,
     updatedAt: dbTask.updated_at,
   }
@@ -105,8 +108,8 @@ export async function createTask(input: CreateTaskInput): Promise<Task> {
 
   try {
     await db.execute(
-      `INSERT INTO tasks (title, execution_date, "order", scheduled_time, recurrence_rule, recurrence_days_of_week, recurrence_day_of_month, recurrence_end_date, recurrence_excluded_dates)
-       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+      `INSERT INTO tasks (title, execution_date, "order", scheduled_time, recurrence_rule, recurrence_days_of_week, recurrence_day_of_month, recurrence_end_date, recurrence_excluded_dates, memo)
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
       [
         input.title,
         input.executionDate || null,
@@ -117,6 +120,7 @@ export async function createTask(input: CreateTaskInput): Promise<Task> {
         input.recurrenceDayOfMonth ?? null,
         input.recurrenceEndDate || null,
         null,
+        input.memo ?? null,
       ],
     )
 
