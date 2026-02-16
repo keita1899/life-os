@@ -1,6 +1,7 @@
 import {
   createDailyLogApi,
   DEV_DAILY_LOG_CONFIG,
+  type DailyLogShape,
 } from '@/features/logs/lib/core/daily-log-api'
 import type {
   DevDailyLog,
@@ -10,13 +11,7 @@ import type {
 
 const api = createDailyLogApi(DEV_DAILY_LOG_CONFIG)
 
-function toDevDailyLog(shape: {
-  id: number
-  logDate: string
-  content: string | null
-  createdAt: string
-  updatedAt: string
-}): DevDailyLog {
+function toDevDailyLog(shape: DailyLogShape): DevDailyLog {
   const { content, ...rest } = shape
   return { ...rest, report: content }
 }
@@ -25,7 +20,7 @@ export async function getDevDailyLogByDate(
   logDate: string,
 ): Promise<DevDailyLog | null> {
   const result = await api.getByDate(logDate)
-  return result ? toDevDailyLog(result as never) : null
+  return result ? toDevDailyLog(result) : null
 }
 
 export async function createDevDailyLog(
@@ -35,7 +30,7 @@ export async function createDevDailyLog(
     logDate: input.logDate,
     content: input.report,
   })
-  return toDevDailyLog(result as never)
+  return toDevDailyLog(result)
 }
 
 export async function updateDevDailyLog(
@@ -43,7 +38,7 @@ export async function updateDevDailyLog(
   input: UpdateDevDailyLogInput,
 ): Promise<DevDailyLog> {
   const result = await api.update(logDate, { content: input.report })
-  return toDevDailyLog(result as never)
+  return toDevDailyLog(result)
 }
 
 export async function deleteDevDailyLog(logDate: string): Promise<void> {

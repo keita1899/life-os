@@ -8,12 +8,30 @@ interface DailyLogConfig {
   errorContext: string
 }
 
-interface DailyLogShape {
+export interface DailyLogShape {
   id: number
   logDate: string
   content: string | null
   createdAt: string
   updatedAt: string
+}
+
+interface DbRow {
+  id: number
+  log_date: string
+  created_at: string
+  updated_at: string
+  [key: string]: unknown
+}
+
+function mapRow(row: DbRow, contentColumn: string): DailyLogShape {
+  return {
+    id: row.id,
+    logDate: row.log_date,
+    content: (row[contentColumn] as string | null) ?? null,
+    createdAt: row.created_at as string,
+    updatedAt: row.updated_at as string,
+  }
 }
 
 interface CreateInput {
@@ -33,19 +51,12 @@ export function createDailyLogApi(config: DailyLogConfig) {
     async getByDate(logDate: string): Promise<DailyLogShape | null> {
       const db = await getDatabase()
       try {
-        const result = await db.select<Array<Record<string, unknown>>>(
+        const result = await db.select<DbRow[]>(
           `SELECT ${cols} FROM ${table} WHERE log_date = ? LIMIT 1`,
           [logDate],
         )
         if (result.length === 0) return null
-        const row = result[0]
-        return {
-          id: row.id as number,
-          logDate: row.log_date as string,
-          content: (row[contentColumn] as string | null) ?? null,
-          createdAt: row.created_at as string,
-          updatedAt: row.updated_at as string,
-        }
+        return mapRow(result[0], contentColumn)
       } catch (err) {
         handleDbError(err, errorContext)
       }
@@ -58,21 +69,14 @@ export function createDailyLogApi(config: DailyLogConfig) {
           `INSERT INTO ${table} (log_date, ${contentColumn}) VALUES (?, ?)`,
           [input.logDate, input.content ?? null],
         )
-        const result = await db.select<Array<Record<string, unknown>>>(
+        const result = await db.select<DbRow[]>(
           `SELECT ${cols} FROM ${table} WHERE log_date = ? LIMIT 1`,
           [input.logDate],
         )
         if (result.length === 0) {
           throw new Error('Failed to create daily log: record not found after insert')
         }
-        const row = result[0]
-        return {
-          id: row.id as number,
-          logDate: row.log_date as string,
-          content: (row[contentColumn] as string | null) ?? null,
-          createdAt: row.created_at as string,
-          updatedAt: row.updated_at as string,
-        }
+        return mapRow(result[0], contentColumn)
       } catch (err) {
         handleDbError(err, errorContext)
       }
@@ -81,25 +85,25 @@ export function createDailyLogApi(config: DailyLogConfig) {
     async update(logDate: string, input: UpdateInput): Promise<DailyLogShape> {
       const db = await getDatabase()
       try {
-        await db.execute(
-          `UPDATE ${table} SET ${contentColumn} = ?, updated_at = CURRENT_TIMESTAMP WHERE log_date = ?`,
-          [input.content ?? null, logDate],
-        )
-        const result = await db.select<Array<Record<string, unknown>>>(
+        if ('content' in input && input.content !== undefined) {
+          await db.execute(
+            `UPDATE ${table} SET ${contentColumn} = ?, updated_at = CURRENT_TIMESTAMP WHERE log_date = ?`,
+            [input.content ?? null, logDate],
+          )
+        } else {
+          await db.execute(
+            `UPDATE ${table} SET updated_at = CURRENT_TIMESTAMP WHERE log_date = ?`,
+            [logDate],
+          )
+        }
+        const result = await db.select<DbRow[]>(
           `SELECT ${cols} FROM ${table} WHERE log_date = ?`,
           [logDate],
         )
         if (result.length === 0) {
           throw new Error('Failed to update daily log: record not found after update')
         }
-        const row = result[0]
-        return {
-          id: row.id as number,
-          logDate: row.log_date as string,
-          content: (row[contentColumn] as string | null) ?? null,
-          createdAt: row.created_at as string,
-          updatedAt: row.updated_at as string,
-        }
+        return mapRow(result[0], contentColumn)
       } catch (err) {
         handleDbError(err, errorContext)
       }
