@@ -1,4 +1,5 @@
 import { getDatabase, handleDbError } from '@/lib/db'
+import { buildUpdateParams, type FieldMapping } from '@/lib/db/build-update-params'
 import { DB_COLUMNS } from '@/lib/db/constants'
 import type {
   Event,
@@ -6,6 +7,34 @@ import type {
   UpdateEventInput,
   RecurrenceRule,
 } from '../types/event'
+
+const EVENT_UPDATE_MAPPING: FieldMapping<UpdateEventInput> = [
+  { key: 'title', column: 'title' },
+  { key: 'startDatetime', column: 'start_datetime' },
+  { key: 'endDatetime', column: 'end_datetime', transform: (v) => v || null },
+  { key: 'allDay', column: 'all_day', transform: (v) => (v ? 1 : 0) },
+  { key: 'category', column: 'category', transform: (v) => v || null },
+  { key: 'description', column: 'description', transform: (v) => v || null },
+  { key: 'recurrenceRule', column: 'recurrence_rule', transform: (v) => v || null },
+  {
+    key: 'recurrenceDaysOfWeek',
+    column: 'recurrence_days_of_week',
+    transform: (v) =>
+      Array.isArray(v) && v.length > 0 ? v.join(',') : null,
+  },
+  {
+    key: 'recurrenceDayOfMonth',
+    column: 'recurrence_day_of_month',
+    transform: (v) => v ?? null,
+  },
+  { key: 'recurrenceEndDate', column: 'recurrence_end_date', transform: (v) => v || null },
+  {
+    key: 'recurrenceExcludedDates',
+    column: 'recurrence_excluded_dates',
+    transform: (v) =>
+      Array.isArray(v) && v.length > 0 ? JSON.stringify(v) : null,
+  },
+]
 
 interface DbEvent {
   id: number
@@ -141,73 +170,9 @@ export async function updateEvent(
 ): Promise<Event> {
   const db = await getDatabase()
 
-  const updateFields: string[] = []
-  const updateValues: unknown[] = []
+  const params = buildUpdateParams(input, EVENT_UPDATE_MAPPING)
 
-  if (input.title !== undefined) {
-    updateFields.push('title = ?')
-    updateValues.push(input.title)
-  }
-
-  if (input.startDatetime !== undefined) {
-    updateFields.push('start_datetime = ?')
-    updateValues.push(input.startDatetime)
-  }
-
-  if (input.endDatetime !== undefined) {
-    updateFields.push('end_datetime = ?')
-    updateValues.push(input.endDatetime || null)
-  }
-
-  if (input.allDay !== undefined) {
-    updateFields.push('all_day = ?')
-    updateValues.push(input.allDay ? 1 : 0)
-  }
-
-  if (input.category !== undefined) {
-    updateFields.push('category = ?')
-    updateValues.push(input.category || null)
-  }
-
-  if (input.description !== undefined) {
-    updateFields.push('description = ?')
-    updateValues.push(input.description || null)
-  }
-
-  if (input.recurrenceRule !== undefined) {
-    updateFields.push('recurrence_rule = ?')
-    updateValues.push(input.recurrenceRule || null)
-  }
-
-  if (input.recurrenceDaysOfWeek !== undefined) {
-    updateFields.push('recurrence_days_of_week = ?')
-    updateValues.push(
-      input.recurrenceDaysOfWeek?.length
-        ? input.recurrenceDaysOfWeek.join(',')
-        : null,
-    )
-  }
-
-  if (input.recurrenceDayOfMonth !== undefined) {
-    updateFields.push('recurrence_day_of_month = ?')
-    updateValues.push(input.recurrenceDayOfMonth ?? null)
-  }
-
-  if (input.recurrenceEndDate !== undefined) {
-    updateFields.push('recurrence_end_date = ?')
-    updateValues.push(input.recurrenceEndDate || null)
-  }
-
-  if (input.recurrenceExcludedDates !== undefined) {
-    updateFields.push('recurrence_excluded_dates = ?')
-    updateValues.push(
-      input.recurrenceExcludedDates.length > 0
-        ? JSON.stringify(input.recurrenceExcludedDates)
-        : null,
-    )
-  }
-
-  if (updateFields.length === 0) {
+  if (params === null) {
     const result = await db.select<DbEvent[]>(
       `SELECT ${DB_COLUMNS.EVENTS.join(', ')} FROM events WHERE id = ?`,
       [id],
@@ -218,13 +183,12 @@ export async function updateEvent(
     return mapDbEventToEvent(result[0])
   }
 
-  updateFields.push('updated_at = CURRENT_TIMESTAMP')
-  updateValues.push(id)
+  params.values.push(id)
 
   try {
     await db.execute(
-      `UPDATE events SET ${updateFields.join(', ')} WHERE id = ?`,
-      updateValues,
+      `UPDATE events SET ${params.fields.join(', ')} WHERE id = ?`,
+      params.values,
     )
 
     const result = await db.select<DbEvent[]>(

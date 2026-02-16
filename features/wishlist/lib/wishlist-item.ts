@@ -1,4 +1,5 @@
 import { getDatabase, handleDbError } from '@/lib/db'
+import { buildUpdateParams, type FieldMapping } from '@/lib/db/build-update-params'
 import type {
   WishlistItem,
   CreateWishlistItemInput,
@@ -155,51 +156,25 @@ export async function createWishlistItem(
   }
 }
 
+const WISHLIST_ITEM_UPDATE_MAPPING: FieldMapping<UpdateWishlistItemInput> = [
+  { key: 'name', column: 'name' },
+  { key: 'categoryId', column: 'category_id', transform: (v) => v ?? null },
+  { key: 'targetYear', column: 'target_year', transform: (v) => v ?? null },
+  { key: 'targetMonth', column: 'target_month', transform: (v) => v ?? null },
+  { key: 'price', column: 'price', transform: (v) => v ?? null },
+  { key: 'purchased', column: 'purchased', transform: (v) => (v ? 1 : 0) },
+  { key: 'order', column: '"order"' },
+]
+
 export async function updateWishlistItem(
   id: number,
   input: UpdateWishlistItemInput,
 ): Promise<WishlistItem> {
   const db = await getDatabase()
 
-  const updateFields: string[] = []
-  const updateValues: unknown[] = []
+  const params = buildUpdateParams(input, WISHLIST_ITEM_UPDATE_MAPPING)
 
-  if (input.name !== undefined) {
-    updateFields.push('name = ?')
-    updateValues.push(input.name)
-  }
-
-  if (input.categoryId !== undefined) {
-    updateFields.push('category_id = ?')
-    updateValues.push(input.categoryId ?? null)
-  }
-
-  if (input.targetYear !== undefined) {
-    updateFields.push('target_year = ?')
-    updateValues.push(input.targetYear ?? null)
-  }
-
-  if (input.targetMonth !== undefined) {
-    updateFields.push('target_month = ?')
-    updateValues.push(input.targetMonth ?? null)
-  }
-
-  if (input.price !== undefined) {
-    updateFields.push('price = ?')
-    updateValues.push(input.price ?? null)
-  }
-
-  if (input.purchased !== undefined) {
-    updateFields.push('purchased = ?')
-    updateValues.push(input.purchased ? 1 : 0)
-  }
-
-  if (input.order !== undefined) {
-    updateFields.push('"order" = ?')
-    updateValues.push(input.order)
-  }
-
-  if (updateFields.length === 0) {
+  if (params === null) {
     try {
       const result = await db.select<DbWishlistItemWithCategory[]>(
         `SELECT 
@@ -231,13 +206,12 @@ export async function updateWishlistItem(
     }
   }
 
-  updateFields.push('updated_at = CURRENT_TIMESTAMP')
-  updateValues.push(id)
+  params.values.push(id)
 
   try {
     await db.execute(
-      `UPDATE wishlist_items SET ${updateFields.join(', ')} WHERE id = ?`,
-      updateValues,
+      `UPDATE wishlist_items SET ${params.fields.join(', ')} WHERE id = ?`,
+      params.values,
     )
 
     const result = await db.select<DbWishlistItemWithCategory[]>(

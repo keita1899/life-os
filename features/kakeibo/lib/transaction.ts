@@ -1,4 +1,5 @@
 import { getDatabase, handleDbError } from '@/lib/db'
+import { buildUpdateParams, type FieldMapping } from '@/lib/db/build-update-params'
 import { DB_COLUMNS } from '@/lib/db/constants'
 import type {
   Transaction,
@@ -157,46 +158,24 @@ export async function createTransaction(
   }
 }
 
+const TRANSACTION_UPDATE_MAPPING: FieldMapping<UpdateTransactionInput> = [
+  { key: 'date', column: 'date' },
+  { key: 'type', column: 'type' },
+  { key: 'name', column: 'name' },
+  { key: 'amount', column: 'amount' },
+  { key: 'categoryId', column: 'category_id', transform: (v) => v ?? null },
+  { key: 'isFixed', column: 'is_fixed', transform: (v) => (v ? 1 : 0) },
+]
+
 export async function updateTransaction(
   id: number,
   input: UpdateTransactionInput,
 ): Promise<Transaction> {
   const db = await getDatabase()
 
-  const updateFields: string[] = []
-  const updateValues: unknown[] = []
+  const params = buildUpdateParams(input, TRANSACTION_UPDATE_MAPPING)
 
-  if (input.date !== undefined) {
-    updateFields.push('date = ?')
-    updateValues.push(input.date)
-  }
-
-  if (input.type !== undefined) {
-    updateFields.push('type = ?')
-    updateValues.push(input.type)
-  }
-
-  if (input.name !== undefined) {
-    updateFields.push('name = ?')
-    updateValues.push(input.name)
-  }
-
-  if (input.amount !== undefined) {
-    updateFields.push('amount = ?')
-    updateValues.push(input.amount)
-  }
-
-  if (input.categoryId !== undefined) {
-    updateFields.push('category_id = ?')
-    updateValues.push(input.categoryId ?? null)
-  }
-
-  if (input.isFixed !== undefined) {
-    updateFields.push('is_fixed = ?')
-    updateValues.push(input.isFixed ? 1 : 0)
-  }
-
-  if (updateFields.length === 0) {
+  if (params === null) {
     try {
       const result = await db.select<DbTransaction[]>(
         `SELECT ${DB_COLUMNS.TRANSACTIONS.join(', ')} FROM transactions
@@ -212,13 +191,12 @@ export async function updateTransaction(
     }
   }
 
-  updateFields.push('updated_at = CURRENT_TIMESTAMP')
-  updateValues.push(id)
+  params.values.push(id)
 
   try {
     await db.execute(
-      `UPDATE transactions SET ${updateFields.join(', ')} WHERE id = ?`,
-      updateValues,
+      `UPDATE transactions SET ${params.fields.join(', ')} WHERE id = ?`,
+      params.values,
     )
 
     const result = await db.select<DbTransaction[]>(

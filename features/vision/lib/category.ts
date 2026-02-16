@@ -1,4 +1,5 @@
 import { getDatabase, handleDbError } from '@/lib/db'
+import { buildUpdateParams, type FieldMapping } from '@/lib/db/build-update-params'
 import { DB_COLUMNS } from '@/lib/db/constants'
 import type {
   VisionCategory,
@@ -92,21 +93,19 @@ export async function createVisionCategory(
   }
 }
 
+const VISION_CATEGORY_UPDATE_MAPPING: FieldMapping<UpdateVisionCategoryInput> = [
+  { key: 'name', column: 'name' },
+]
+
 export async function updateVisionCategory(
   id: number,
   input: UpdateVisionCategoryInput,
 ): Promise<VisionCategory> {
   const db = await getDatabase()
 
-  const updateFields: string[] = []
-  const updateValues: unknown[] = []
+  const params = buildUpdateParams(input, VISION_CATEGORY_UPDATE_MAPPING)
 
-  if (input.name !== undefined) {
-    updateFields.push('name = ?')
-    updateValues.push(input.name)
-  }
-
-  if (updateFields.length === 0) {
+  if (params === null) {
     const result = await db.select<DbVisionCategory[]>(
       `SELECT ${DB_COLUMNS.VISION_CATEGORIES.join(', ')} FROM vision_categories
        WHERE id = ?`,
@@ -118,13 +117,12 @@ export async function updateVisionCategory(
     return mapDbVisionCategoryToVisionCategory(result[0])
   }
 
-  updateFields.push('updated_at = CURRENT_TIMESTAMP')
-  updateValues.push(id)
+  params.values.push(id)
 
   try {
     await db.execute(
-      `UPDATE vision_categories SET ${updateFields.join(', ')} WHERE id = ?`,
-      updateValues,
+      `UPDATE vision_categories SET ${params.fields.join(', ')} WHERE id = ?`,
+      params.values,
     )
 
     const result = await db.select<DbVisionCategory[]>(

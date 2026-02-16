@@ -1,8 +1,5 @@
 import { DB_COLUMNS } from '@/lib/db/constants'
 import type { GoalsTableConfig } from './config'
-import { createYearlyGoalsApi } from './yearly'
-import { createMonthlyGoalsApi } from './monthly'
-import { createWeeklyGoalsApi } from './weekly'
 
 export const LIFE_GOALS_CONFIG: GoalsTableConfig = {
   yearly: { table: 'yearly_goals', columns: DB_COLUMNS.YEARLY_GOALS },

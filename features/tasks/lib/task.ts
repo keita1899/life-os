@@ -1,8 +1,37 @@
 import { getDatabase, handleDbError } from '@/lib/db'
+import { buildUpdateParams, type FieldMapping } from '@/lib/db/build-update-params'
 import { DB_COLUMNS } from '@/lib/db/constants'
 import type { Task, CreateTaskInput, UpdateTaskInput } from '../types/task'
 
 import type { RecurrenceRule } from '@/features/events'
+
+const TASK_UPDATE_MAPPING: FieldMapping<UpdateTaskInput> = [
+  { key: 'title', column: 'title' },
+  { key: 'executionDate', column: 'execution_date', transform: (v) => v || null },
+  { key: 'completed', column: 'completed', transform: (v) => (v ? 1 : 0) },
+  { key: 'order', column: '"order"' },
+  {
+    key: 'scheduledTime',
+    column: 'scheduled_time',
+    transform: (v) =>
+      typeof v === 'string' && v.trim() !== '' ? v.trim() : null,
+  },
+  { key: 'recurrenceRule', column: 'recurrence_rule', transform: (v) => v || null },
+  {
+    key: 'recurrenceDaysOfWeek',
+    column: 'recurrence_days_of_week',
+    transform: (v) =>
+      Array.isArray(v) && v.length > 0 ? v.join(',') : null,
+  },
+  { key: 'recurrenceDayOfMonth', column: 'recurrence_day_of_month' },
+  { key: 'recurrenceEndDate', column: 'recurrence_end_date', transform: (v) => v || null },
+  {
+    key: 'recurrenceExcludedDates',
+    column: 'recurrence_excluded_dates',
+    transform: (v) =>
+      Array.isArray(v) && v.length > 0 ? JSON.stringify(v) : null,
+  },
+]
 
 interface DbTask {
   id: number
@@ -133,72 +162,9 @@ export async function updateTask(
 ): Promise<Task> {
   const db = await getDatabase()
 
-  const updateFields: string[] = []
-  const updateValues: unknown[] = []
+  const params = buildUpdateParams(input, TASK_UPDATE_MAPPING)
 
-  if (input.title !== undefined) {
-    updateFields.push('title = ?')
-    updateValues.push(input.title)
-  }
-
-  if (input.executionDate !== undefined) {
-    updateFields.push('execution_date = ?')
-    updateValues.push(input.executionDate || null)
-  }
-
-  if (input.completed !== undefined) {
-    updateFields.push('completed = ?')
-    updateValues.push(input.completed ? 1 : 0)
-  }
-
-  if (input.order !== undefined) {
-    updateFields.push('"order" = ?')
-    updateValues.push(input.order)
-  }
-
-  if (input.scheduledTime !== undefined) {
-    updateFields.push('scheduled_time = ?')
-    updateValues.push(
-      input.scheduledTime && input.scheduledTime.trim() !== ''
-        ? input.scheduledTime.trim()
-        : null,
-    )
-  }
-
-  if (input.recurrenceRule !== undefined) {
-    updateFields.push('recurrence_rule = ?')
-    updateValues.push(input.recurrenceRule || null)
-  }
-
-  if (input.recurrenceDaysOfWeek !== undefined) {
-    updateFields.push('recurrence_days_of_week = ?')
-    updateValues.push(
-      input.recurrenceDaysOfWeek?.length
-        ? input.recurrenceDaysOfWeek.join(',')
-        : null,
-    )
-  }
-
-  if (input.recurrenceDayOfMonth !== undefined) {
-    updateFields.push('recurrence_day_of_month = ?')
-    updateValues.push(input.recurrenceDayOfMonth)
-  }
-
-  if (input.recurrenceEndDate !== undefined) {
-    updateFields.push('recurrence_end_date = ?')
-    updateValues.push(input.recurrenceEndDate || null)
-  }
-
-  if (input.recurrenceExcludedDates !== undefined) {
-    updateFields.push('recurrence_excluded_dates = ?')
-    updateValues.push(
-      input.recurrenceExcludedDates.length > 0
-        ? JSON.stringify(input.recurrenceExcludedDates)
-        : null,
-    )
-  }
-
-  if (updateFields.length === 0) {
+  if (params === null) {
     const result = await db.select<DbTask[]>(
       `SELECT ${DB_COLUMNS.TASKS.map((col) =>
         col === 'order' ? '"order"' : col,
@@ -211,13 +177,12 @@ export async function updateTask(
     return mapDbTaskToTask(result[0])
   }
 
-  updateFields.push('updated_at = CURRENT_TIMESTAMP')
-  updateValues.push(id)
+  params.values.push(id)
 
   try {
     await db.execute(
-      `UPDATE tasks SET ${updateFields.join(', ')} WHERE id = ?`,
-      updateValues,
+      `UPDATE tasks SET ${params.fields.join(', ')} WHERE id = ?`,
+      params.values,
     )
 
     const result = await db.select<DbTask[]>(
