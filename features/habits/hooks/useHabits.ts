@@ -6,7 +6,6 @@ import {
   deleteHabit,
 } from '../lib'
 import type { Habit, CreateHabitInput, UpdateHabitInput } from '../types/habit'
-import { fetcher } from '@/lib/swr'
 import { SWR_KEYS } from '@/lib/swr-keys'
 
 export function useHabits() {
@@ -14,7 +13,7 @@ export function useHabits() {
     data = [],
     error,
     isLoading,
-  } = useSWR<Habit[]>(SWR_KEYS.habits, () => fetcher(() => getAllHabits()))
+  } = useSWR<Habit[]>(SWR_KEYS.habits, () => getAllHabits())
   const { mutate } = useSWRConfig()
 
   const handleCreateHabit = async (input: CreateHabitInput) => {

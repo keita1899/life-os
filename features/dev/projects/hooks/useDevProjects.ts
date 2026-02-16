@@ -11,7 +11,6 @@ import type {
   CreateDevProjectInput,
   UpdateDevProjectInput,
 } from '../types/dev-project'
-import { fetcher } from '@/lib/swr'
 import { SWR_KEYS } from '@/lib/swr-keys'
 
 interface UseDevProjectsResult {
@@ -30,7 +29,7 @@ export function useDevProjects(): UseDevProjectsResult {
     error,
     isLoading,
   } = useSWR<DevProject[]>(SWR_KEYS.devProjects, () =>
-    fetcher(() => getAllDevProjects()),
+    getAllDevProjects(),
   )
 
   const handleCreateProject = async (

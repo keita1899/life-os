@@ -1,13 +1,12 @@
 import useSWR, { useSWRConfig } from 'swr'
 import { createEvent, getAllEvents, updateEvent, deleteEvent } from '../lib'
 import type { Event, CreateEventInput, UpdateEventInput } from '../types/event'
-import { fetcher } from '@/lib/swr'
 import { SWR_KEYS } from '@/lib/swr-keys'
 
 export function useEvents() {
   const { data = [], error, isLoading } = useSWR<Event[]>(
     SWR_KEYS.events,
-    () => fetcher(() => getAllEvents()),
+    () => getAllEvents(),
   )
   const { mutate } = useSWRConfig()
 

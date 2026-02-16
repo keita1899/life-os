@@ -11,7 +11,6 @@ import { SWR_KEYS } from '@/lib/swr-keys'
 import { Loading } from '@/components/ui/loading'
 import { ErrorMessage } from '@/components/ui/error-message'
 import { Badge } from '@/components/ui/badge'
-import { fetcher } from '@/lib/swr'
 import {
   deleteDevProject,
   getDevProjectById,
@@ -69,7 +68,7 @@ function DevProjectPageContent(): ReactElement | null {
 
   const { data, error, isLoading } = useSWR<DevProject | null>(
     shouldFetch ? SWR_KEYS.devProject(projectId) : null,
-    () => fetcher(() => getDevProjectById(projectId)),
+    () => getDevProjectById(projectId),
   )
 
   const projectDialog = useDialogState<DevProject>()

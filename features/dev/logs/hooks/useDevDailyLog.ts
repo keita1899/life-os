@@ -10,7 +10,6 @@ import type {
   CreateDevDailyLogInput,
   UpdateDevDailyLogInput,
 } from '../types/dev-daily-log'
-import { fetcher } from '@/lib/swr'
 import { SWR_KEYS } from '@/lib/swr-keys'
 
 export function useDevDailyLog(logDate: string) {
@@ -21,7 +20,7 @@ export function useDevDailyLog(logDate: string) {
     error,
     isLoading,
   } = useSWR<DevDailyLog | null>(key, () =>
-    fetcher(() => getDevDailyLogByDate(logDate)),
+    getDevDailyLogByDate(logDate),
   )
 
   const handleCreateDevDailyLog = async (input: CreateDevDailyLogInput) => {

@@ -12,7 +12,6 @@ import type {
   CreateBucketListItemInput,
   UpdateBucketListItemInput,
 } from '../types/bucket-list-item'
-import { fetcher } from '@/lib/swr'
 import { SWR_KEYS } from '@/lib/swr-keys'
 
 export function useBucketList() {
@@ -21,7 +20,7 @@ export function useBucketList() {
     error,
     isLoading,
   } = useSWR<BucketListItem[]>(SWR_KEYS.bucketList, () =>
-    fetcher(() => getAllBucketListItems()),
+    getAllBucketListItems(),
   )
 
   const handleCreateBucketListItem = async (input: CreateBucketListItemInput) => {

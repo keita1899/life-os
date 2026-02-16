@@ -11,7 +11,6 @@ import type {
   CreateVisionItemInput,
   UpdateVisionItemInput,
 } from '../types/vision-item'
-import { fetcher } from '@/lib/swr'
 import { SWR_KEYS } from '@/lib/swr-keys'
 
 export function useVision() {
@@ -20,7 +19,7 @@ export function useVision() {
     error,
     isLoading,
   } = useSWR<VisionItem[]>(SWR_KEYS.vision, () =>
-    fetcher(() => getAllVisionItems()),
+    getAllVisionItems(),
   )
 
   const handleCreateVisionItem = async (input: CreateVisionItemInput) => {

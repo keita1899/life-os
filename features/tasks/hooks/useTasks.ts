@@ -8,7 +8,6 @@ import {
   updateOverdueTasksToToday,
 } from '../lib'
 import type { Task, CreateTaskInput, UpdateTaskInput } from '../types/task'
-import { fetcher } from '@/lib/swr'
 import { SWR_KEYS } from '@/lib/swr-keys'
 
 export function useTasks() {
@@ -16,7 +15,7 @@ export function useTasks() {
     data = [],
     error,
     isLoading,
-  } = useSWR<Task[]>(SWR_KEYS.tasks, () => fetcher(() => getAllTasks()))
+  } = useSWR<Task[]>(SWR_KEYS.tasks, () => getAllTasks())
   const { mutate } = useSWRConfig()
 
   const handleCreateTask = async (input: CreateTaskInput) => {

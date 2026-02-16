@@ -11,7 +11,6 @@ import type {
   CreateTransactionCategoryInput,
   UpdateTransactionCategoryInput,
 } from '../types/transaction-category'
-import { fetcher } from '@/lib/swr'
 import { SWR_KEYS } from '@/lib/swr-keys'
 
 type TransactionCategoryType = 'income' | 'expense'
@@ -23,7 +22,7 @@ export function useTransactionCategories(type: TransactionCategoryType) {
     error,
     isLoading,
   } = useSWR<TransactionCategory[]>(key, () =>
-    fetcher(() => getAllTransactionCategories(type)),
+    getAllTransactionCategories(type),
   )
 
   const handleCreateTransactionCategory = async (

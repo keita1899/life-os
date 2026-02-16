@@ -13,7 +13,6 @@ import type {
   CreateDevTaskInput,
   UpdateDevTaskInput,
 } from '../types/dev-task'
-import { fetcher } from '@/lib/swr'
 import { SWR_KEYS } from '@/lib/swr-keys'
 
 type DevTaskProjectFilter = number | null
@@ -47,12 +46,10 @@ export function useDevTasks(input: {
     error,
     isLoading,
   } = useSWR<DevTask[]>(key, () =>
-    fetcher(() =>
-      getDevTasks({
-        projectId: projectId as DevTaskProjectFilter,
-        type,
-      }),
-    ),
+    getDevTasks({
+      projectId: projectId as DevTaskProjectFilter,
+      type,
+    }),
   )
 
   const refreshTasks = async (): Promise<DevTask[] | undefined> => {

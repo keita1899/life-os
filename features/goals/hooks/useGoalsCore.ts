@@ -1,6 +1,5 @@
 import useSWR from 'swr'
 import { mutate } from 'swr'
-import { fetcher } from '@/lib/swr'
 
 interface GoalCrudApi {
   fetchGoals: (year: number) => Promise<{
@@ -44,7 +43,7 @@ export function useGoalsCore({
     data = { yearlyGoals: [], monthlyGoals: [], weeklyGoals: [] },
     error,
     isLoading,
-  } = useSWR(key, () => fetcher(() => api.fetchGoals(selectedYear)))
+  } = useSWR(key, () => api.fetchGoals(selectedYear))
 
   const refreshYear = (yearToRefresh: number) =>
     Promise.all([

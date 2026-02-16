@@ -11,7 +11,6 @@ import type {
   CreateVisionCategoryInput,
   UpdateVisionCategoryInput,
 } from '../types/vision-category'
-import { fetcher } from '@/lib/swr'
 import { SWR_KEYS } from '@/lib/swr-keys'
 
 export function useVisionCategories() {
@@ -20,7 +19,7 @@ export function useVisionCategories() {
     error,
     isLoading,
   } = useSWR<VisionCategory[]>(SWR_KEYS.visionCategories, () =>
-    fetcher(() => getAllVisionCategories()),
+    getAllVisionCategories(),
   )
 
   const handleCreateVisionCategory = async (

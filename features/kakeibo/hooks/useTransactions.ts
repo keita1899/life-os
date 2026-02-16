@@ -13,7 +13,6 @@ import type {
   CreateTransactionInput,
   UpdateTransactionInput,
 } from '../types/transaction'
-import { fetcher } from '@/lib/swr'
 import { SWR_KEYS, isTransactionsRelatedKey } from '@/lib/swr-keys'
 
 export function useTransactions() {
@@ -22,7 +21,7 @@ export function useTransactions() {
     error,
     isLoading,
   } = useSWR<Transaction[]>(SWR_KEYS.transactions, () =>
-    fetcher(() => getAllTransactions()),
+    getAllTransactions(),
   )
 
   const handleCreateTransaction = async (input: CreateTransactionInput) => {
@@ -71,7 +70,7 @@ export function useTransactionsByMonth(year: number, month: number) {
     error,
     isLoading,
   } = useSWR<Transaction[]>(key, () =>
-    fetcher(() => getTransactionsByMonth(year, month)),
+    getTransactionsByMonth(year, month),
   )
 
   return {
@@ -92,7 +91,7 @@ export function useTransactionsByDateRange(startDate: string, endDate: string) {
     error,
     isLoading,
   } = useSWR<Transaction[]>(key, () =>
-    fetcher(() => getTransactionsByDateRange(startDate, endDate)),
+    getTransactionsByDateRange(startDate, endDate),
   )
 
   return {

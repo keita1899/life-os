@@ -12,7 +12,6 @@ import type {
   CreateWishlistItemInput,
   UpdateWishlistItemInput,
 } from '../types/wishlist-item'
-import { fetcher } from '@/lib/swr'
 import { SWR_KEYS } from '@/lib/swr-keys'
 
 export function useWishlist() {
@@ -21,7 +20,7 @@ export function useWishlist() {
     error,
     isLoading,
   } = useSWR<WishlistItem[]>(SWR_KEYS.wishlist, () =>
-    fetcher(() => getAllWishlistItems()),
+    getAllWishlistItems(),
   )
 
   const handleCreateWishlistItem = async (input: CreateWishlistItemInput) => {

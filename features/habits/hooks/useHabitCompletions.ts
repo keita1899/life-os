@@ -6,7 +6,6 @@ import {
   deleteCompletion,
 } from '../lib'
 import type { HabitCompletion } from '../types/habit-completion'
-import { fetcher } from '@/lib/swr'
 import { SWR_KEYS } from '@/lib/swr-keys'
 
 export function useHabitCompletions(
@@ -25,11 +24,9 @@ export function useHabitCompletions(
   } = useSWR<HabitCompletion[]>(
     key,
     () =>
-      fetcher(() =>
-        habitId !== null
-          ? getCompletionsByHabitAndMonth(habitId, year, month)
-          : Promise.resolve([]),
-      ),
+      habitId !== null
+        ? getCompletionsByHabitAndMonth(habitId, year, month)
+        : Promise.resolve([]),
   )
 
   return {
@@ -55,7 +52,7 @@ export function useHabitCompletionsByDate(date: string) {
     isLoading,
     mutate: mutateCache,
   } = useSWR<HabitCompletion[]>(key, () =>
-    fetcher(() => getCompletionsByDate(date)),
+    getCompletionsByDate(date),
   )
 
   const handleCreateCompletion = async (

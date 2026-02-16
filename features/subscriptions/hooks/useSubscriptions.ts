@@ -11,7 +11,6 @@ import type {
   CreateSubscriptionInput,
   UpdateSubscriptionInput,
 } from '../types/subscription'
-import { fetcher } from '@/lib/swr'
 import { SWR_KEYS } from '@/lib/swr-keys'
 
 export function useSubscriptions() {
@@ -20,7 +19,7 @@ export function useSubscriptions() {
     error,
     isLoading,
   } = useSWR<Subscription[]>(SWR_KEYS.subscriptions, () =>
-    fetcher(() => getAllSubscriptions()),
+    getAllSubscriptions(),
   )
 
   const handleCreateSubscription = async (input: CreateSubscriptionInput) => {

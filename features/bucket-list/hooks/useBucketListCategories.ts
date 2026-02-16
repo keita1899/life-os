@@ -11,7 +11,6 @@ import type {
   CreateBucketListCategoryInput,
   UpdateBucketListCategoryInput,
 } from '../types/bucket-list-category'
-import { fetcher } from '@/lib/swr'
 import { SWR_KEYS } from '@/lib/swr-keys'
 
 export function useBucketListCategories() {
@@ -20,7 +19,7 @@ export function useBucketListCategories() {
     error,
     isLoading,
   } = useSWR<BucketListCategory[]>(SWR_KEYS.bucketListCategories, () =>
-    fetcher(() => getAllBucketListCategories()),
+    getAllBucketListCategories(),
   )
 
   const handleCreateBucketListCategory = async (

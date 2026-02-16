@@ -1,7 +1,6 @@
 import useSWR from 'swr'
 import { getAllDevTasks } from '../lib'
 import type { DevTask } from '../types/dev-task'
-import { fetcher } from '@/lib/swr'
 import { SWR_KEYS } from '@/lib/swr-keys'
 
 export function useDevCalendarTasks() {
@@ -10,7 +9,7 @@ export function useDevCalendarTasks() {
     error,
     isLoading,
   } = useSWR<DevTask[]>(SWR_KEYS.devTasks, () =>
-    fetcher(() => getAllDevTasks()),
+    getAllDevTasks(),
   )
 
   return {
