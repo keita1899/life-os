@@ -10,10 +10,15 @@ export async function getDatabase(): Promise<Database> {
 
   if (!dbPromise) {
     dbPromise = (async () => {
-      const database = await Database.load('sqlite:life-os.db')
-      await runMigrations(database, allMigrations)
-      db = database
-      return database
+      try {
+        const database = await Database.load('sqlite:life-os.db')
+        await runMigrations(database, allMigrations)
+        db = database
+        return database
+      } catch (err) {
+        dbPromise = null
+        throw err
+      }
     })()
   }
 
