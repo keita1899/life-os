@@ -196,6 +196,7 @@ export default function KakeiboPage() {
       const created = await createTransaction(input)
       await refreshTransactions()
       await mutate(SWR_KEYS.transactionsByMonth(Number(selectedYear), Number(selectedMonth)))
+      await mutate(isTransactionsRelatedKey)
       return created
     }, '取引の作成に失敗しました')
     if (result !== undefined) {
