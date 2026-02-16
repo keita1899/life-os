@@ -30,10 +30,11 @@ import type {
   UpdateWeeklyGoalInput,
 } from '../types/weekly-goal'
 import { fetcher } from '@/lib/swr'
+import { SWR_KEYS } from '@/lib/swr-keys'
 import { getYearFromDate } from '../lib/base'
 
 export function useGoals(selectedYear: number) {
-  const goalsKey = ['goals', selectedYear]
+  const goalsKey = SWR_KEYS.goals(selectedYear)
 
   const {
     data = { yearlyGoals: [], monthlyGoals: [], weeklyGoals: [] },
@@ -51,7 +52,7 @@ export function useGoals(selectedYear: number) {
     await createYearlyGoal(input)
     const yearToRefresh = input.year ?? selectedYear
     await Promise.all([
-      mutate(['goals', yearToRefresh]),
+      mutate(SWR_KEYS.goals(yearToRefresh)),
       yearToRefresh === selectedYear ? Promise.resolve() : mutate(goalsKey),
     ])
   }
@@ -60,7 +61,7 @@ export function useGoals(selectedYear: number) {
     await createMonthlyGoal(input)
     const yearToRefresh = input.year ?? selectedYear
     await Promise.all([
-      mutate(['goals', yearToRefresh]),
+      mutate(SWR_KEYS.goals(yearToRefresh)),
       yearToRefresh === selectedYear ? Promise.resolve() : mutate(goalsKey),
     ])
   }
@@ -69,7 +70,7 @@ export function useGoals(selectedYear: number) {
     await createWeeklyGoal(input)
     const yearToRefresh = getYearFromDate(input.weekStartDate)
     await Promise.all([
-      mutate(['goals', yearToRefresh]),
+      mutate(SWR_KEYS.goals(yearToRefresh)),
       yearToRefresh === selectedYear ? Promise.resolve() : mutate(goalsKey),
     ])
   }
@@ -86,7 +87,7 @@ export function useGoals(selectedYear: number) {
     await updateMonthlyGoal(id, input)
     const yearToRefresh = input.year ?? selectedYear
     await Promise.all([
-      mutate(['goals', yearToRefresh]),
+      mutate(SWR_KEYS.goals(yearToRefresh)),
       yearToRefresh === selectedYear ? Promise.resolve() : mutate(goalsKey),
     ])
   }
@@ -104,7 +105,7 @@ export function useGoals(selectedYear: number) {
     const yearToRefresh =
       input.year ?? getYearFromDate(input.weekStartDate) ?? selectedYear
     await Promise.all([
-      mutate(['goals', yearToRefresh]),
+      mutate(SWR_KEYS.goals(yearToRefresh)),
       yearToRefresh === selectedYear ? Promise.resolve() : mutate(goalsKey),
     ])
   }

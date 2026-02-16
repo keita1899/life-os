@@ -12,15 +12,12 @@ import type {
   UpdateTransactionCategoryInput,
 } from '../types/transaction-category'
 import { fetcher } from '@/lib/swr'
+import { SWR_KEYS } from '@/lib/swr-keys'
 
 type TransactionCategoryType = 'income' | 'expense'
 
-function getTransactionCategoriesKey(type: TransactionCategoryType): string {
-  return `transaction-categories-${type}`
-}
-
 export function useTransactionCategories(type: TransactionCategoryType) {
-  const key = getTransactionCategoriesKey(type)
+  const key = SWR_KEYS.transactionCategories(type)
   const {
     data = [],
     error,
@@ -44,7 +41,7 @@ export function useTransactionCategories(type: TransactionCategoryType) {
     await updateTransactionCategory(type, id, input)
     await Promise.all([
       mutate(key),
-      mutate('transactions'),
+      mutate(SWR_KEYS.transactions),
     ])
   }
 
@@ -52,7 +49,7 @@ export function useTransactionCategories(type: TransactionCategoryType) {
     await deleteTransactionCategory(type, id)
     await Promise.all([
       mutate(key),
-      mutate('transactions'),
+      mutate(SWR_KEYS.transactions),
     ])
   }
 

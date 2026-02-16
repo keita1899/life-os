@@ -2,15 +2,14 @@ import useSWR from 'swr'
 import { getAllDevTasks } from '../lib'
 import type { DevTask } from '../types/dev-task'
 import { fetcher } from '@/lib/swr'
-
-const devCalendarTasksKey = 'dev-calendar-tasks'
+import { SWR_KEYS } from '@/lib/swr-keys'
 
 export function useDevCalendarTasks() {
   const {
     data = [],
     error,
     isLoading,
-  } = useSWR<DevTask[]>(devCalendarTasksKey, () =>
+  } = useSWR<DevTask[]>(SWR_KEYS.devTasks, () =>
     fetcher(() => getAllDevTasks()),
   )
 

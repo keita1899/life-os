@@ -1,5 +1,4 @@
-import useSWR from 'swr'
-import { mutate } from 'swr'
+import useSWR, { useSWRConfig } from 'swr'
 import {
   getCompletionsByHabitAndMonth,
   getCompletionsByDate,
@@ -8,6 +7,7 @@ import {
 } from '../lib'
 import type { HabitCompletion } from '../types/habit-completion'
 import { fetcher } from '@/lib/swr'
+import { SWR_KEYS } from '@/lib/swr-keys'
 
 export function useHabitCompletions(
   habitId: number | null,
@@ -15,7 +15,7 @@ export function useHabitCompletions(
   month: number,
 ) {
   const key =
-    habitId !== null ? ['habit-completions', habitId, year, month] : null
+    habitId !== null ? SWR_KEYS.habitCompletionsByMonth(habitId, year, month) : null
 
   const {
     data = [],
@@ -40,13 +40,14 @@ export function useHabitCompletions(
         ? error.message
         : 'Failed to fetch habit completions'
       : null,
-    refreshCompletions: () => (key ? mutate(key) : undefined),
+    refreshCompletions: () => (key ? mutateCache() : undefined),
     mutate: mutateCache,
   }
 }
 
 export function useHabitCompletionsByDate(date: string) {
-  const key = ['habit-completions-by-date', date]
+  const key = SWR_KEYS.habitCompletionsByDate(date)
+  const { mutate } = useSWRConfig()
 
   const {
     data = [],
@@ -61,20 +62,56 @@ export function useHabitCompletionsByDate(date: string) {
     habitId: number,
     completedDate: string,
   ) => {
-    await createCompletion(habitId, completedDate)
-    await mutate(key)
+    const optimisticCompletion: HabitCompletion = {
+      id: -1,
+      habitId,
+      completedDate,
+      createdAt: new Date().toISOString(),
+    }
+
+    await mutateCache(
+      async (current: HabitCompletion[] | undefined) => {
+        await createCompletion(habitId, completedDate)
+        return [...(current ?? []), optimisticCompletion]
+      },
+      {
+        optimisticData: (current: HabitCompletion[] | undefined) => [
+          ...(current ?? []),
+          optimisticCompletion,
+        ],
+        revalidate: false,
+        rollbackOnError: true,
+      },
+    )
+
     const [y, m] = completedDate.split('-').map(Number)
-    await mutate(['habit-completions', habitId, y, m])
+    await mutate(SWR_KEYS.habitCompletionsByMonth(habitId, y, m))
   }
 
   const handleDeleteCompletion = async (
     habitId: number,
     completedDate: string,
   ) => {
-    await deleteCompletion(habitId, completedDate)
-    await mutate(key)
+    await mutateCache(
+      async (current: HabitCompletion[] | undefined) => {
+        await deleteCompletion(habitId, completedDate)
+        return (current ?? []).filter(
+          (c) => !(c.habitId === habitId && c.completedDate === completedDate),
+        )
+      },
+      {
+        optimisticData: (current: HabitCompletion[] | undefined) =>
+          (current ?? []).filter(
+            (c) =>
+              !(c.habitId === habitId && c.completedDate === completedDate),
+          ),
+        revalidate: false,
+        rollbackOnError: true,
+      },
+    )
+
     const [y, m] = completedDate.split('-').map(Number)
-    await mutate(['habit-completions', habitId, y, m])
+    await mutate(SWR_KEYS.habitCompletionsByMonth(habitId, y, m))
   }
 
   return {
@@ -87,7 +124,7 @@ export function useHabitCompletionsByDate(date: string) {
       : null,
     createCompletion: handleCreateCompletion,
     deleteCompletion: handleDeleteCompletion,
-    refreshCompletions: () => mutate(key),
+    refreshCompletions: () => mutateCache(),
     mutate: mutateCache,
   }
 }

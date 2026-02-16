@@ -14,24 +14,21 @@ import type {
   UpdateTransactionInput,
 } from '../types/transaction'
 import { fetcher } from '@/lib/swr'
-
-const transactionsKey = 'transactions'
+import { SWR_KEYS, isTransactionsRelatedKey } from '@/lib/swr-keys'
 
 export function useTransactions() {
   const {
     data = [],
     error,
     isLoading,
-  } = useSWR<Transaction[]>(transactionsKey, () =>
+  } = useSWR<Transaction[]>(SWR_KEYS.transactions, () =>
     fetcher(() => getAllTransactions()),
   )
 
   const handleCreateTransaction = async (input: CreateTransactionInput) => {
     const result = await createTransaction(input)
-    await mutate(transactionsKey)
-    await mutate(
-      (key) => typeof key === 'string' && key.startsWith(`${transactionsKey}-`),
-    )
+    await mutate(SWR_KEYS.transactions)
+    await mutate(isTransactionsRelatedKey)
     return result
   }
 
@@ -40,19 +37,15 @@ export function useTransactions() {
     input: UpdateTransactionInput,
   ) => {
     const result = await updateTransaction(id, input)
-    await mutate(transactionsKey)
-    await mutate(
-      (key) => typeof key === 'string' && key.startsWith(`${transactionsKey}-`),
-    )
+    await mutate(SWR_KEYS.transactions)
+    await mutate(isTransactionsRelatedKey)
     return result
   }
 
   const handleDeleteTransaction = async (id: number) => {
     await deleteTransaction(id)
-    await mutate(transactionsKey)
-    await mutate(
-      (key) => typeof key === 'string' && key.startsWith(`${transactionsKey}-`),
-    )
+    await mutate(SWR_KEYS.transactions)
+    await mutate(isTransactionsRelatedKey)
     return true
   }
 
@@ -67,12 +60,12 @@ export function useTransactions() {
     createTransaction: handleCreateTransaction,
     updateTransaction: handleUpdateTransaction,
     deleteTransaction: handleDeleteTransaction,
-    refreshTransactions: () => mutate(transactionsKey),
+    refreshTransactions: () => mutate(SWR_KEYS.transactions),
   }
 }
 
 export function useTransactionsByMonth(year: number, month: number) {
-  const key = `${transactionsKey}-${year}-${month}`
+  const key = SWR_KEYS.transactionsByMonth(year, month)
   const {
     data = [],
     error,
@@ -93,7 +86,7 @@ export function useTransactionsByMonth(year: number, month: number) {
 }
 
 export function useTransactionsByDateRange(startDate: string, endDate: string) {
-  const key = `${transactionsKey}-range-${startDate}-${endDate}`
+  const key = SWR_KEYS.transactionsByDateRange(startDate, endDate)
   const {
     data = [],
     error,

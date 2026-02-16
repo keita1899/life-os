@@ -34,10 +34,11 @@ import type {
   UpdateDevWeeklyGoalInput,
 } from '../types/dev-weekly-goal'
 import { fetcher } from '@/lib/swr'
+import { SWR_KEYS } from '@/lib/swr-keys'
 import { getYearFromDate } from '@/features/goals'
 
 export function useDevGoals(selectedYear: number) {
-  const goalsKey = ['dev-goals', selectedYear]
+  const goalsKey = SWR_KEYS.devGoals(selectedYear)
 
   const {
     data = { yearlyGoals: [], monthlyGoals: [], weeklyGoals: [] },
@@ -55,7 +56,7 @@ export function useDevGoals(selectedYear: number) {
     await createDevYearlyGoal(input)
     const yearToRefresh = input.year ?? selectedYear
     await Promise.all([
-      mutate(['dev-goals', yearToRefresh]),
+      mutate(SWR_KEYS.devGoals(yearToRefresh)),
       yearToRefresh === selectedYear ? Promise.resolve() : mutate(goalsKey),
     ])
   }
@@ -64,7 +65,7 @@ export function useDevGoals(selectedYear: number) {
     await createDevMonthlyGoal(input)
     const yearToRefresh = input.year ?? selectedYear
     await Promise.all([
-      mutate(['dev-goals', yearToRefresh]),
+      mutate(SWR_KEYS.devGoals(yearToRefresh)),
       yearToRefresh === selectedYear ? Promise.resolve() : mutate(goalsKey),
     ])
   }
@@ -73,7 +74,7 @@ export function useDevGoals(selectedYear: number) {
     await createDevWeeklyGoal(input)
     const yearToRefresh = getYearFromDate(input.weekStartDate)
     await Promise.all([
-      mutate(['dev-goals', yearToRefresh]),
+      mutate(SWR_KEYS.devGoals(yearToRefresh)),
       yearToRefresh === selectedYear ? Promise.resolve() : mutate(goalsKey),
     ])
   }
@@ -90,7 +91,7 @@ export function useDevGoals(selectedYear: number) {
     await updateDevYearlyGoal(id, input)
     const yearToRefresh = input.year ?? selectedYear
     await Promise.all([
-      mutate(['dev-goals', yearToRefresh]),
+      mutate(SWR_KEYS.devGoals(yearToRefresh)),
       yearToRefresh === selectedYear ? Promise.resolve() : mutate(goalsKey),
     ])
   }
@@ -102,7 +103,7 @@ export function useDevGoals(selectedYear: number) {
     await updateDevMonthlyGoal(id, input)
     const yearToRefresh = input.year ?? selectedYear
     await Promise.all([
-      mutate(['dev-goals', yearToRefresh]),
+      mutate(SWR_KEYS.devGoals(yearToRefresh)),
       yearToRefresh === selectedYear ? Promise.resolve() : mutate(goalsKey),
     ])
   }
@@ -120,7 +121,7 @@ export function useDevGoals(selectedYear: number) {
     const yearToRefresh =
       input.year ?? getYearFromDate(input.weekStartDate) ?? selectedYear
     await Promise.all([
-      mutate(['dev-goals', yearToRefresh]),
+      mutate(SWR_KEYS.devGoals(yearToRefresh)),
       yearToRefresh === selectedYear ? Promise.resolve() : mutate(goalsKey),
     ])
   }

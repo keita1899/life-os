@@ -11,6 +11,7 @@ import {
   getTodayDevTasks,
 } from '@/features/dev/tasks'
 import { mutate } from 'swr'
+import { SWR_KEYS } from '@/lib/swr-keys'
 import { FocusView } from '@/features/focus'
 import {
   SortableDevTaskItem,
@@ -56,7 +57,7 @@ function DevFocusPageContent() {
       ? devTasksResult.updateTask
       : async (id: number, input: { completed?: boolean; actualTime?: number }) => {
           await updateDevTask(id, input)
-          await mutate('dev-calendar-tasks')
+          await mutate(SWR_KEYS.devTasks)
         }
 
   const todayTasks = useMemo(() => getTodayDevTasks(tasks), [tasks])

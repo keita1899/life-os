@@ -14,6 +14,7 @@ import {
   deleteDevTask,
 } from '@/features/dev/tasks'
 import { mutate } from 'swr'
+import { SWR_KEYS } from '@/lib/swr-keys'
 import { useUserSettings } from '@/features/settings'
 import { useDialogState } from '@/hooks/useDialogState'
 import { useAsyncOperation } from '@/hooks/useAsyncOperation'
@@ -181,7 +182,7 @@ function DevLogPageView({
             memo: input.memo,
           })
         }
-        await mutate('dev-calendar-tasks')
+        await mutate(SWR_KEYS.devTasks)
         return true
       },
       'タスクの作成に失敗しました',
@@ -220,7 +221,7 @@ function DevLogPageView({
             memo: input.memo,
           })
         }
-        await mutate('dev-calendar-tasks')
+        await mutate(SWR_KEYS.devTasks)
         return true
       },
       'タスクの更新に失敗しました',
@@ -237,7 +238,7 @@ function DevLogPageView({
     const result = await execute(
       async () => {
         await deleteDevTask(taskToDelete.id)
-        await mutate('dev-calendar-tasks')
+        await mutate(SWR_KEYS.devTasks)
         return true
       },
       'タスクの削除に失敗しました',
@@ -254,7 +255,7 @@ function DevLogPageView({
     await execute(
       async () => {
         await updateDevTask(task.id, { executionDate })
-        await mutate('dev-calendar-tasks')
+        await mutate(SWR_KEYS.devTasks)
       },
       'タスクの実行日の更新に失敗しました',
     )
@@ -266,7 +267,7 @@ function DevLogPageView({
         const devTask = allDevTasks.find((t) => t.id === task.id)
         if (!devTask) throw new Error('タスクが見つかりません')
         await updateDevTask(task.id, { completed: !task.completed })
-        await mutate('dev-calendar-tasks')
+        await mutate(SWR_KEYS.devTasks)
       },
       'タスクの完了状態の更新に失敗しました',
     )

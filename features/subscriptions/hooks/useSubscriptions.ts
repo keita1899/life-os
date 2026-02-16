@@ -12,21 +12,20 @@ import type {
   UpdateSubscriptionInput,
 } from '../types/subscription'
 import { fetcher } from '@/lib/swr'
-
-const subscriptionsKey = 'subscriptions'
+import { SWR_KEYS } from '@/lib/swr-keys'
 
 export function useSubscriptions() {
   const {
     data = [],
     error,
     isLoading,
-  } = useSWR<Subscription[]>(subscriptionsKey, () =>
+  } = useSWR<Subscription[]>(SWR_KEYS.subscriptions, () =>
     fetcher(() => getAllSubscriptions()),
   )
 
   const handleCreateSubscription = async (input: CreateSubscriptionInput) => {
     const result = await createSubscription(input)
-    await mutate(subscriptionsKey)
+    await mutate(SWR_KEYS.subscriptions)
     return result
   }
 
@@ -35,13 +34,13 @@ export function useSubscriptions() {
     input: UpdateSubscriptionInput,
   ) => {
     const result = await updateSubscription(id, input)
-    await mutate(subscriptionsKey)
+    await mutate(SWR_KEYS.subscriptions)
     return result
   }
 
   const handleDeleteSubscription = async (id: number): Promise<true> => {
     await deleteSubscription(id)
-    await mutate(subscriptionsKey)
+    await mutate(SWR_KEYS.subscriptions)
     return true
   }
 
@@ -50,7 +49,7 @@ export function useSubscriptions() {
     active: boolean,
   ) => {
     await updateSubscription(id, { active })
-    await mutate(subscriptionsKey)
+    await mutate(SWR_KEYS.subscriptions)
   }
 
   return {
@@ -65,6 +64,6 @@ export function useSubscriptions() {
     updateSubscription: handleUpdateSubscription,
     deleteSubscription: handleDeleteSubscription,
     toggleSubscriptionActive: handleToggleSubscriptionActive,
-    refreshSubscriptions: () => mutate(subscriptionsKey),
+    refreshSubscriptions: () => mutate(SWR_KEYS.subscriptions),
   }
 }

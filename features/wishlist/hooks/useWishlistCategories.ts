@@ -12,15 +12,14 @@ import type {
   UpdateWishlistCategoryInput,
 } from '../types/wishlist-category'
 import { fetcher } from '@/lib/swr'
-
-const wishlistCategoriesKey = 'wishlist-categories'
+import { SWR_KEYS } from '@/lib/swr-keys'
 
 export function useWishlistCategories() {
   const {
     data = [],
     error,
     isLoading,
-  } = useSWR<WishlistCategory[]>(wishlistCategoriesKey, () =>
+  } = useSWR<WishlistCategory[]>(SWR_KEYS.wishlistCategories, () =>
     fetcher(() => getAllWishlistCategories()),
   )
 
@@ -28,7 +27,7 @@ export function useWishlistCategories() {
     input: CreateWishlistCategoryInput,
   ): Promise<WishlistCategory> => {
     const newCategory = await createWishlistCategory(input)
-    await mutate(wishlistCategoriesKey)
+    await mutate(SWR_KEYS.wishlistCategories)
     return newCategory
   }
 
@@ -38,8 +37,8 @@ export function useWishlistCategories() {
   ): Promise<true> => {
     await updateWishlistCategory(id, input)
     await Promise.all([
-      mutate(wishlistCategoriesKey),
-      mutate('wishlist'),
+      mutate(SWR_KEYS.wishlistCategories),
+      mutate(SWR_KEYS.wishlist),
     ])
     return true
   }
@@ -47,8 +46,8 @@ export function useWishlistCategories() {
   const handleDeleteWishlistCategory = async (id: number): Promise<true> => {
     await deleteWishlistCategory(id)
     await Promise.all([
-      mutate(wishlistCategoriesKey),
-      mutate('wishlist'),
+      mutate(SWR_KEYS.wishlistCategories),
+      mutate(SWR_KEYS.wishlist),
     ])
     return true
   }
@@ -64,6 +63,6 @@ export function useWishlistCategories() {
     createWishlistCategory: handleCreateWishlistCategory,
     updateWishlistCategory: handleUpdateWishlistCategory,
     deleteWishlistCategory: handleDeleteWishlistCategory,
-    refreshCategories: () => mutate(wishlistCategoriesKey),
+    refreshCategories: () => mutate(SWR_KEYS.wishlistCategories),
   }
 }
