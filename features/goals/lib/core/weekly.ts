@@ -90,95 +90,115 @@ export function createWeeklyGoalsApi(config: GoalsTableConfig) {
 
     async getById(id: number): Promise<WeeklyGoalShape | null> {
       const db = await getDatabase()
-      const result = await db.select<DbRow[]>(
-        `SELECT ${cols} FROM ${table} WHERE id = ?`,
-        [id],
-      )
-      return result.length === 0 ? null : mapRow(result[0])
+      try {
+        const result = await db.select<DbRow[]>(
+          `SELECT ${cols} FROM ${table} WHERE id = ?`,
+          [id],
+        )
+        return result.length === 0 ? null : mapRow(result[0])
+      } catch (err) {
+        handleDbError(err, config.errorContext)
+      }
     },
 
     async getByYear(year: number): Promise<WeeklyGoalShape[]> {
       const db = await getDatabase()
-      const result = await db.select<DbRow[]>(
-        `SELECT ${cols} FROM ${table} WHERE year = ? ORDER BY week_start_date ASC, created_at DESC`,
-        [year],
-      )
-      return result.map(mapRow)
+      try {
+        const result = await db.select<DbRow[]>(
+          `SELECT ${cols} FROM ${table} WHERE year = ? ORDER BY week_start_date ASC, created_at DESC`,
+          [year],
+        )
+        return result.map(mapRow)
+      } catch (err) {
+        handleDbError(err, config.errorContext)
+      }
     },
 
     async getByWeekStart(weekStartDate: string): Promise<WeeklyGoalShape | null> {
       const db = await getDatabase()
-      const year = getYearFromDate(weekStartDate)
-      const result = await db.select<DbRow[]>(
-        `SELECT ${cols} FROM ${table} WHERE year = ? AND week_start_date = ? LIMIT 1`,
-        [year, weekStartDate],
-      )
-      return result.length === 0 ? null : mapRow(result[0])
+      try {
+        const year = getYearFromDate(weekStartDate)
+        const result = await db.select<DbRow[]>(
+          `SELECT ${cols} FROM ${table} WHERE year = ? AND week_start_date = ? LIMIT 1`,
+          [year, weekStartDate],
+        )
+        return result.length === 0 ? null : mapRow(result[0])
+      } catch (err) {
+        handleDbError(err, config.errorContext)
+      }
     },
 
     async toggleAchievement(id: number): Promise<WeeklyGoalShape> {
       const db = await getDatabase()
-      const current = await api.getById(id)
-      if (!current) throw new Error('Weekly goal not found')
+      try {
+        const current = await api.getById(id)
+        if (!current) throw new Error('Weekly goal not found')
 
-      await db.execute(
-        `UPDATE ${table} SET achieved = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?`,
-        [current.achieved ? 0 : 1, id],
-      )
+        await db.execute(
+          `UPDATE ${table} SET achieved = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?`,
+          [current.achieved ? 0 : 1, id],
+        )
 
-      const updated = await api.getById(id)
-      if (!updated) throw new Error('Weekly goal not found')
-      return updated
+        const updated = await api.getById(id)
+        if (!updated) throw new Error('Weekly goal not found')
+        return updated
+      } catch (err) {
+        handleDbError(err, config.errorContext)
+      }
     },
 
     async update(id: number, input: UpdateWeeklyGoalInputShape): Promise<WeeklyGoalShape> {
       const db = await getDatabase()
-      const current = await api.getById(id)
-      if (!current) throw new Error('Weekly goal not found')
+      try {
+        const current = await api.getById(id)
+        if (!current) throw new Error('Weekly goal not found')
 
-      const newWeekStartDate = input.weekStartDate ?? current.weekStartDate
-      const derivedYear = getYearFromDate(newWeekStartDate)
+        const newWeekStartDate = input.weekStartDate ?? current.weekStartDate
+        const derivedYear = getYearFromDate(newWeekStartDate)
 
-      if (input.year !== undefined && input.year !== derivedYear) {
-        throw new Error(
-          `指定された年(${input.year}年)は週開始日(${newWeekStartDate})の年(${derivedYear}年)と一致しません`,
+        if (input.year !== undefined && input.year !== derivedYear) {
+          throw new Error(
+            `指定された年(${input.year}年)は週開始日(${newWeekStartDate})の年(${derivedYear}年)と一致しません`,
+          )
+        }
+        const newYear = derivedYear
+
+        if (
+          newYear !== current.year ||
+          newWeekStartDate !== current.weekStartDate
+        ) {
+          await validateLimit(newYear, newWeekStartDate, id)
+        }
+
+        const updates: string[] = []
+        const values: unknown[] = []
+        if (input.title !== undefined) {
+          updates.push('title = ?')
+          values.push(input.title)
+        }
+        if (newYear !== current.year) {
+          updates.push('year = ?')
+          values.push(newYear)
+        }
+        if (input.weekStartDate !== undefined) {
+          updates.push('week_start_date = ?')
+          values.push(input.weekStartDate)
+        }
+        if (updates.length === 0) return current
+
+        updates.push('updated_at = CURRENT_TIMESTAMP')
+        values.push(id)
+        await db.execute(
+          `UPDATE ${table} SET ${updates.join(', ')} WHERE id = ?`,
+          values,
         )
-      }
-      const newYear = derivedYear
 
-      if (
-        newYear !== current.year ||
-        newWeekStartDate !== current.weekStartDate
-      ) {
-        await validateLimit(newYear, newWeekStartDate, id)
+        const updated = await api.getById(id)
+        if (!updated) throw new Error('Weekly goal not found')
+        return updated
+      } catch (err) {
+        handleDbError(err, config.errorContext)
       }
-
-      const updates: string[] = []
-      const values: unknown[] = []
-      if (input.title !== undefined) {
-        updates.push('title = ?')
-        values.push(input.title)
-      }
-      if (newYear !== current.year) {
-        updates.push('year = ?')
-        values.push(newYear)
-      }
-      if (input.weekStartDate !== undefined) {
-        updates.push('week_start_date = ?')
-        values.push(input.weekStartDate)
-      }
-      if (updates.length === 0) return current
-
-      updates.push('updated_at = CURRENT_TIMESTAMP')
-      values.push(id)
-      await db.execute(
-        `UPDATE ${table} SET ${updates.join(', ')} WHERE id = ?`,
-        values,
-      )
-
-      const updated = await api.getById(id)
-      if (!updated) throw new Error('Weekly goal not found')
-      return updated
     },
 
     async delete(id: number): Promise<void> {

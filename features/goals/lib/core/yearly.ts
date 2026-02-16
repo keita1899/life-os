@@ -65,7 +65,7 @@ export function createYearlyGoalsApi(config: GoalsTableConfig) {
     }
   }
 
-  return {
+  const api = {
     async create(input: CreateYearlyGoalInputShape): Promise<YearlyGoalShape> {
       const db = await getDatabase()
       const year = input.year ?? new Date().getFullYear()
@@ -119,7 +119,7 @@ export function createYearlyGoalsApi(config: GoalsTableConfig) {
 
     async toggleAchievement(id: number): Promise<YearlyGoalShape> {
       const db = await getDatabase()
-      const current = await this.getById(id)
+      const current = await api.getById(id)
       if (!current) throw new Error('Yearly goal not found')
 
       await db.execute(
@@ -127,14 +127,14 @@ export function createYearlyGoalsApi(config: GoalsTableConfig) {
         [current.achieved ? 0 : 1, id],
       )
 
-      const updated = await this.getById(id)
+      const updated = await api.getById(id)
       if (!updated) throw new Error('Yearly goal not found')
       return updated
     },
 
     async update(id: number, input: UpdateYearlyGoalInputShape): Promise<YearlyGoalShape> {
       const db = await getDatabase()
-      const current = await this.getById(id)
+      const current = await api.getById(id)
       if (!current) throw new Error('Yearly goal not found')
 
       const newYear = input.year ?? current.year
@@ -163,7 +163,7 @@ export function createYearlyGoalsApi(config: GoalsTableConfig) {
         values,
       )
 
-      const updated = await this.getById(id)
+      const updated = await api.getById(id)
       if (!updated) throw new Error('Yearly goal not found')
       return updated
     },
@@ -177,4 +177,5 @@ export function createYearlyGoalsApi(config: GoalsTableConfig) {
       }
     },
   }
+  return api
 }

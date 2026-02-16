@@ -25,7 +25,7 @@ import type { DevMonthlyGoal } from '../types/dev-monthly-goal'
 import type { DevWeeklyGoal } from '../types/dev-weekly-goal'
 
 export function useDevGoals(selectedYear: number) {
-  return useGoalsCore({
+  return useGoalsCore<DevYearlyGoal, DevMonthlyGoal, DevWeeklyGoal>({
     selectedYear,
     api: {
       fetchGoals: getDevYearlyAndMonthlyGoalsByYear,
@@ -46,24 +46,5 @@ export function useDevGoals(selectedYear: number) {
     goalsKey: SWR_KEYS.devGoals,
     errorMessage: 'Failed to fetch dev goals',
     includeUpdateYearly: true,
-  }) as {
-    yearlyGoals: DevYearlyGoal[]
-    monthlyGoals: DevMonthlyGoal[]
-    weeklyGoals: DevWeeklyGoal[]
-    isLoading: boolean
-    error: string | null
-    createYearlyGoal: (input: unknown) => Promise<void>
-    createMonthlyGoal: (input: unknown) => Promise<void>
-    createWeeklyGoal: (input: unknown) => Promise<void>
-    updateYearlyGoal: (id: number, input: unknown) => Promise<void>
-    updateMonthlyGoal: (id: number, input: unknown) => Promise<void>
-    updateWeeklyGoal: (id: number, input: unknown) => Promise<void>
-    deleteYearlyGoal: (id: number) => Promise<void>
-    deleteMonthlyGoal: (id: number) => Promise<void>
-    deleteWeeklyGoal: (id: number) => Promise<void>
-    toggleYearlyGoalAchievement: (id: number) => Promise<void>
-    toggleMonthlyGoalAchievement: (id: number) => Promise<void>
-    toggleWeeklyGoalAchievement: (id: number) => Promise<void>
-    refreshGoals: () => void
-  }
+  })
 }

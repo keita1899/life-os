@@ -60,7 +60,7 @@ export default function DevGoalsPage() {
   }
 
   const handleUpdateYearlyGoal = async (input: CreateDevYearlyGoalInput) => {
-    if (!editingYearlyGoal) return
+    if (!editingYearlyGoal || !updateYearlyGoal) return
     const result = await execute(
       async () => {
         await updateYearlyGoal(editingYearlyGoal.id, {

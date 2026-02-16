@@ -30,13 +30,34 @@ interface UseGoalsCoreOptions {
   includeUpdateYearly?: boolean
 }
 
-export function useGoalsCore({
+export interface UseGoalsCoreReturn<TYearly, TMonthly, TWeekly> {
+  yearlyGoals: TYearly[]
+  monthlyGoals: TMonthly[]
+  weeklyGoals: TWeekly[]
+  isLoading: boolean
+  error: string | null
+  createYearlyGoal: (input: object) => Promise<void>
+  createMonthlyGoal: (input: object) => Promise<void>
+  createWeeklyGoal: (input: object) => Promise<void>
+  updateMonthlyGoal: (id: number, input: object) => Promise<void>
+  updateWeeklyGoal: (id: number, input: object) => Promise<void>
+  deleteYearlyGoal: (id: number) => Promise<void>
+  deleteMonthlyGoal: (id: number) => Promise<void>
+  deleteWeeklyGoal: (id: number) => Promise<void>
+  toggleYearlyGoalAchievement: (id: number) => Promise<void>
+  toggleMonthlyGoalAchievement: (id: number) => Promise<void>
+  toggleWeeklyGoalAchievement: (id: number) => Promise<void>
+  refreshGoals: () => void
+  updateYearlyGoal?: (id: number, input: object) => Promise<void>
+}
+
+export function useGoalsCore<TYearly = unknown, TMonthly = unknown, TWeekly = unknown>({
   selectedYear,
   api,
   goalsKey,
   errorMessage,
   includeUpdateYearly = false,
-}: UseGoalsCoreOptions) {
+}: UseGoalsCoreOptions): UseGoalsCoreReturn<TYearly, TMonthly, TWeekly> {
   const key = goalsKey(selectedYear)
 
   const {
@@ -51,21 +72,27 @@ export function useGoalsCore({
       yearToRefresh !== selectedYear ? mutate(key) : Promise.resolve(),
     ])
 
-  const handleCreateYearlyGoal = async (input: { year?: number }) => {
-    await api.createYearlyGoal(input)
-    const yearToRefresh = input.year ?? selectedYear
+  const handleCreateYearlyGoal = async (input: object) => {
+    const r = input as Record<string, unknown>
+    await api.createYearlyGoal(r)
+    const yearToRefresh = typeof r.year === 'number' ? r.year : selectedYear
     await Promise.all([refreshYear(yearToRefresh), mutate(key)])
   }
 
-  const handleCreateMonthlyGoal = async (input: { year?: number }) => {
-    await api.createMonthlyGoal(input)
-    const yearToRefresh = input.year ?? selectedYear
+  const handleCreateMonthlyGoal = async (input: object) => {
+    const r = input as Record<string, unknown>
+    await api.createMonthlyGoal(r)
+    const yearToRefresh = typeof r.year === 'number' ? r.year : selectedYear
     await Promise.all([refreshYear(yearToRefresh), mutate(key)])
   }
 
-  const handleCreateWeeklyGoal = async (input: { weekStartDate: string }) => {
-    await api.createWeeklyGoal(input)
-    const yearToRefresh = api.getYearFromDate(input.weekStartDate)
+  const handleCreateWeeklyGoal = async (input: object) => {
+    const r = input as Record<string, unknown>
+    await api.createWeeklyGoal(r)
+    const date = r.weekStartDate
+    const yearToRefresh = api.getYearFromDate(
+      typeof date === 'string' || date == null ? date : undefined,
+    )
     await Promise.all([refreshYear(yearToRefresh), mutate(key)])
   }
 
@@ -74,22 +101,18 @@ export function useGoalsCore({
     await mutate(key)
   }
 
-  const handleUpdateYearlyGoal = async (
-    id: number,
-    input: { year?: number },
-  ) => {
+  const handleUpdateYearlyGoal = async (id: number, input: object) => {
     if (!api.updateYearlyGoal) return
-    await api.updateYearlyGoal(id, input)
-    const yearToRefresh = input.year ?? selectedYear
+    const r = input as Record<string, unknown>
+    await api.updateYearlyGoal(id, r)
+    const yearToRefresh = typeof r.year === 'number' ? r.year : selectedYear
     await Promise.all([refreshYear(yearToRefresh), mutate(key)])
   }
 
-  const handleUpdateMonthlyGoal = async (
-    id: number,
-    input: { year?: number },
-  ) => {
-    await api.updateMonthlyGoal(id, input)
-    const yearToRefresh = input.year ?? selectedYear
+  const handleUpdateMonthlyGoal = async (id: number, input: object) => {
+    const r = input as Record<string, unknown>
+    await api.updateMonthlyGoal(id, r)
+    const yearToRefresh = typeof r.year === 'number' ? r.year : selectedYear
     await Promise.all([refreshYear(yearToRefresh), mutate(key)])
   }
 
@@ -98,13 +121,18 @@ export function useGoalsCore({
     await mutate(key)
   }
 
-  const handleUpdateWeeklyGoal = async (
-    id: number,
-    input: { year?: number; weekStartDate?: string },
-  ) => {
-    await api.updateWeeklyGoal(id, input)
-    const yearToRefresh =
-      input.year ?? api.getYearFromDate(input.weekStartDate) ?? selectedYear
+  const handleUpdateWeeklyGoal = async (id: number, input: object) => {
+    const r = input as Record<string, unknown>
+    await api.updateWeeklyGoal(id, r)
+    const year =
+      typeof r.year === 'number'
+        ? r.year
+        : api.getYearFromDate(
+            typeof r.weekStartDate === 'string' || r.weekStartDate == null
+              ? r.weekStartDate
+              : undefined,
+          )
+    const yearToRefresh = year ?? selectedYear
     await Promise.all([refreshYear(yearToRefresh), mutate(key)])
   }
 
@@ -128,10 +156,10 @@ export function useGoalsCore({
     await mutate(key)
   }
 
-  const result: Record<string, unknown> = {
-    yearlyGoals: data.yearlyGoals,
-    monthlyGoals: data.monthlyGoals,
-    weeklyGoals: data.weeklyGoals,
+  const result: UseGoalsCoreReturn<TYearly, TMonthly, TWeekly> = {
+    yearlyGoals: data.yearlyGoals as TYearly[],
+    monthlyGoals: data.monthlyGoals as TMonthly[],
+    weeklyGoals: data.weeklyGoals as TWeekly[],
     isLoading,
     error: error
       ? error instanceof Error
