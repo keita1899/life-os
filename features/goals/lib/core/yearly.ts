@@ -101,71 +101,87 @@ export function createYearlyGoalsApi(config: GoalsTableConfig) {
 
     async getById(id: number): Promise<YearlyGoalShape | null> {
       const db = await getDatabase()
-      const result = await db.select<DbRow[]>(
-        `SELECT ${cols} FROM ${table} WHERE id = ?`,
-        [id],
-      )
-      return result.length === 0 ? null : mapRow(result[0])
+      try {
+        const result = await db.select<DbRow[]>(
+          `SELECT ${cols} FROM ${table} WHERE id = ?`,
+          [id],
+        )
+        return result.length === 0 ? null : mapRow(result[0])
+      } catch (err) {
+        handleDbError(err, config.errorContext)
+      }
     },
 
     async getByYear(year: number): Promise<YearlyGoalShape[]> {
       const db = await getDatabase()
-      const result = await db.select<DbRow[]>(
-        `SELECT ${cols} FROM ${table} WHERE year = ? ORDER BY created_at DESC`,
-        [year],
-      )
-      return result.map(mapRow)
+      try {
+        const result = await db.select<DbRow[]>(
+          `SELECT ${cols} FROM ${table} WHERE year = ? ORDER BY created_at DESC`,
+          [year],
+        )
+        return result.map(mapRow)
+      } catch (err) {
+        handleDbError(err, config.errorContext)
+      }
     },
 
     async toggleAchievement(id: number): Promise<YearlyGoalShape> {
       const db = await getDatabase()
-      const current = await api.getById(id)
-      if (!current) throw new Error('Yearly goal not found')
+      try {
+        const current = await api.getById(id)
+        if (!current) throw new Error('Yearly goal not found')
 
-      await db.execute(
-        `UPDATE ${table} SET achieved = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?`,
-        [current.achieved ? 0 : 1, id],
-      )
+        await db.execute(
+          `UPDATE ${table} SET achieved = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?`,
+          [current.achieved ? 0 : 1, id],
+        )
 
-      const updated = await api.getById(id)
-      if (!updated) throw new Error('Yearly goal not found')
-      return updated
+        const updated = await api.getById(id)
+        if (!updated) throw new Error('Yearly goal not found')
+        return updated
+      } catch (err) {
+        handleDbError(err, config.errorContext)
+      }
     },
 
     async update(id: number, input: UpdateYearlyGoalInputShape): Promise<YearlyGoalShape> {
       const db = await getDatabase()
-      const current = await api.getById(id)
-      if (!current) throw new Error('Yearly goal not found')
+      try {
+        const current = await api.getById(id)
+        if (!current) throw new Error('Yearly goal not found')
 
-      const newYear = input.year ?? current.year
-      if (newYear !== current.year) await validateLimit(newYear, id)
+        const newYear = input.year ?? current.year
+        if (newYear !== current.year) await validateLimit(newYear, id)
 
-      const updates: string[] = []
-      const values: unknown[] = []
-      if (input.title !== undefined) {
-        updates.push('title = ?')
-        values.push(input.title)
+        const updates: string[] = []
+        const values: unknown[] = []
+        if (input.title !== undefined) {
+          updates.push('title = ?')
+          values.push(input.title)
+        }
+        if (input.year !== undefined) {
+          updates.push('year = ?')
+          values.push(input.year)
+        }
+        if (input.checklist !== undefined) {
+          updates.push('checklist = ?')
+          values.push(input.checklist ? JSON.stringify(input.checklist) : null)
+        }
+        if (updates.length === 0) return current
+
+        updates.push('updated_at = CURRENT_TIMESTAMP')
+        values.push(id)
+        await db.execute(
+          `UPDATE ${table} SET ${updates.join(', ')} WHERE id = ?`,
+          values,
+        )
+
+        const updated = await api.getById(id)
+        if (!updated) throw new Error('Yearly goal not found')
+        return updated
+      } catch (err) {
+        handleDbError(err, config.errorContext)
       }
-      if (input.year !== undefined) {
-        updates.push('year = ?')
-        values.push(input.year)
-      }
-      if (input.checklist !== undefined) {
-        updates.push('checklist = ?')
-        values.push(input.checklist ? JSON.stringify(input.checklist) : null)
-      }
-      if (updates.length === 0) return current
-
-      updates.push('updated_at = CURRENT_TIMESTAMP')
-      values.push(id)
-      await db.execute(
-        `UPDATE ${table} SET ${updates.join(', ')} WHERE id = ?`,
-        values,
-      )
-
-      const updated = await api.getById(id)
-      if (!updated) throw new Error('Yearly goal not found')
-      return updated
     },
 
     async delete(id: number): Promise<void> {
