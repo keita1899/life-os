@@ -68,8 +68,8 @@ export function useHabitCompletionsByDate(date: string) {
 
     await mutateCache(
       async (current: HabitCompletion[] | undefined) => {
-        await createCompletion(habitId, completedDate)
-        return [...(current ?? []), optimisticCompletion]
+        const newCompletion = await createCompletion(habitId, completedDate)
+        return [...(current ?? []), newCompletion]
       },
       {
         optimisticData: (current: HabitCompletion[] | undefined) => [
