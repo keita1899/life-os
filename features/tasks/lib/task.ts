@@ -165,16 +165,20 @@ export async function updateTask(
   const params = buildUpdateParams(input, TASK_UPDATE_MAPPING)
 
   if (params === null) {
-    const result = await db.select<DbTask[]>(
-      `SELECT ${DB_COLUMNS.TASKS.map((col) =>
-        col === 'order' ? '"order"' : col,
-      ).join(', ')} FROM tasks WHERE id = ?`,
-      [id],
-    )
-    if (result.length === 0) {
-      throw new Error('Task not found')
+    try {
+      const result = await db.select<DbTask[]>(
+        `SELECT ${DB_COLUMNS.TASKS.map((col) =>
+          col === 'order' ? '"order"' : col,
+        ).join(', ')} FROM tasks WHERE id = ?`,
+        [id],
+      )
+      if (result.length === 0) {
+        throw new Error('Task not found')
+      }
+      return mapDbTaskToTask(result[0])
+    } catch (err) {
+      handleDbError(err, 'update task')
     }
-    return mapDbTaskToTask(result[0])
   }
 
   params.values.push(id)

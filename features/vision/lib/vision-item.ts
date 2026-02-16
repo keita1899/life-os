@@ -170,27 +170,31 @@ export async function updateVisionItem(
   const params = buildUpdateParams(input, VISION_ITEM_UPDATE_MAPPING)
 
   if (params === null) {
-    const result = await db.select<DbVisionItemWithCategory[]>(
-      `SELECT 
-        vi.id,
-        vi.title,
-        vi.category_id,
-        vi."order",
-        vi.created_at,
-        vi.updated_at,
-        vc.id as category_id_from_join,
-        vc.name as category_name,
-        vc.created_at as category_created_at,
-        vc.updated_at as category_updated_at
-      FROM vision_items vi
-      LEFT JOIN vision_categories vc ON vi.category_id = vc.id
-      WHERE vi.id = ?`,
-      [id],
-    )
-    if (result.length === 0) {
-      throw new Error('Vision item not found')
+    try {
+      const result = await db.select<DbVisionItemWithCategory[]>(
+        `SELECT 
+          vi.id,
+          vi.title,
+          vi.category_id,
+          vi."order",
+          vi.created_at,
+          vi.updated_at,
+          vc.id as category_id_from_join,
+          vc.name as category_name,
+          vc.created_at as category_created_at,
+          vc.updated_at as category_updated_at
+        FROM vision_items vi
+        LEFT JOIN vision_categories vc ON vi.category_id = vc.id
+        WHERE vi.id = ?`,
+        [id],
+      )
+      if (result.length === 0) {
+        throw new Error('Vision item not found')
+      }
+      return mapDbVisionItemToVisionItem(result[0])
+    } catch (err) {
+      handleDbError(err, 'update vision item')
     }
-    return mapDbVisionItemToVisionItem(result[0])
   }
 
   params.values.push(id)

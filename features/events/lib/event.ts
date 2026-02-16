@@ -173,14 +173,18 @@ export async function updateEvent(
   const params = buildUpdateParams(input, EVENT_UPDATE_MAPPING)
 
   if (params === null) {
-    const result = await db.select<DbEvent[]>(
-      `SELECT ${DB_COLUMNS.EVENTS.join(', ')} FROM events WHERE id = ?`,
-      [id],
-    )
-    if (result.length === 0) {
-      throw new Error('Event not found')
+    try {
+      const result = await db.select<DbEvent[]>(
+        `SELECT ${DB_COLUMNS.EVENTS.join(', ')} FROM events WHERE id = ?`,
+        [id],
+      )
+      if (result.length === 0) {
+        throw new Error('Event not found')
+      }
+      return mapDbEventToEvent(result[0])
+    } catch (err) {
+      handleDbError(err, 'update event')
     }
-    return mapDbEventToEvent(result[0])
   }
 
   params.values.push(id)

@@ -106,15 +106,19 @@ export async function updateVisionCategory(
   const params = buildUpdateParams(input, VISION_CATEGORY_UPDATE_MAPPING)
 
   if (params === null) {
-    const result = await db.select<DbVisionCategory[]>(
-      `SELECT ${DB_COLUMNS.VISION_CATEGORIES.join(', ')} FROM vision_categories
-       WHERE id = ?`,
-      [id],
-    )
-    if (result.length === 0) {
-      throw new Error('Vision category not found')
+    try {
+      const result = await db.select<DbVisionCategory[]>(
+        `SELECT ${DB_COLUMNS.VISION_CATEGORIES.join(', ')} FROM vision_categories
+         WHERE id = ?`,
+        [id],
+      )
+      if (result.length === 0) {
+        throw new Error('Vision category not found')
+      }
+      return mapDbVisionCategoryToVisionCategory(result[0])
+    } catch (err) {
+      handleDbError(err, 'update vision category')
     }
-    return mapDbVisionCategoryToVisionCategory(result[0])
   }
 
   params.values.push(id)

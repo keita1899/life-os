@@ -113,14 +113,18 @@ export async function updateHabit(
   const params = buildUpdateParams(input, HABIT_UPDATE_MAPPING)
 
   if (params === null) {
-    const result = await db.select<DbHabit[]>(
-      `SELECT ${habitColumns()} FROM habits WHERE id = ?`,
-      [id],
-    )
-    if (result.length === 0) {
-      throw new Error('Habit not found')
+    try {
+      const result = await db.select<DbHabit[]>(
+        `SELECT ${habitColumns()} FROM habits WHERE id = ?`,
+        [id],
+      )
+      if (result.length === 0) {
+        throw new Error('Habit not found')
+      }
+      return mapDbHabitToHabit(result[0])
+    } catch (err) {
+      handleDbError(err, 'update habit')
     }
-    return mapDbHabitToHabit(result[0])
   }
 
   params.values.push(id)
