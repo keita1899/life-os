@@ -282,29 +282,51 @@ function LogPageView({
       {isLoading ? (
         <Loading />
       ) : (
-        <div className="space-y-8">
-          <LogGoalsSection
-            yearlyGoals={yearlyGoals}
-            monthlyGoals={monthlyGoals}
-            weeklyGoals={weeklyGoals}
-            currentDate={goalsDate}
-          />
-          {datesToShow.map((logDate) => (
-            <div key={logDate.toISOString()} className="space-y-6">
-              <LogDayContent
-                logDate={logDate}
-                allTasks={allTasks}
-                allEvents={allEvents}
-                allHabits={allHabits}
-                execute={execute}
-                onToggleTask={handleToggleTaskCompletion}
-                onEditTask={taskDialog.handleEdit}
-                onDeleteTask={deleteTaskConfirm.handleDeleteClick}
-                onEditEvent={eventDialog.handleEdit}
-                onDeleteEvent={deleteEventConfirm.handleDeleteClick}
-              />
-            </div>
-          ))}
+        <div className="grid grid-cols-1 gap-8 lg:grid-cols-2 lg:gap-8">
+          <div className="space-y-8">
+            <LogGoalsSection
+              yearlyGoals={yearlyGoals}
+              monthlyGoals={monthlyGoals}
+              weeklyGoals={weeklyGoals}
+              currentDate={goalsDate}
+            />
+            {datesToShow.map((logDate) => (
+              <div key={`${logDate.toISOString()}-left`} className="space-y-6">
+                <LogDayContent
+                  logDate={logDate}
+                  allTasks={allTasks}
+                  allEvents={allEvents}
+                  allHabits={allHabits}
+                  execute={execute}
+                  onToggleTask={handleToggleTaskCompletion}
+                  onEditTask={taskDialog.handleEdit}
+                  onDeleteTask={deleteTaskConfirm.handleDeleteClick}
+                  onEditEvent={eventDialog.handleEdit}
+                  onDeleteEvent={deleteEventConfirm.handleDeleteClick}
+                  column="left"
+                />
+              </div>
+            ))}
+          </div>
+          <div className="space-y-8">
+            {datesToShow.map((logDate) => (
+              <div key={`${logDate.toISOString()}-right`} className="space-y-6">
+                <LogDayContent
+                  logDate={logDate}
+                  allTasks={allTasks}
+                  allEvents={allEvents}
+                  allHabits={allHabits}
+                  execute={execute}
+                  onToggleTask={handleToggleTaskCompletion}
+                  onEditTask={taskDialog.handleEdit}
+                  onDeleteTask={deleteTaskConfirm.handleDeleteClick}
+                  onEditEvent={eventDialog.handleEdit}
+                  onDeleteEvent={deleteEventConfirm.handleDeleteClick}
+                  column="right"
+                />
+              </div>
+            ))}
+          </div>
         </div>
       )}
 

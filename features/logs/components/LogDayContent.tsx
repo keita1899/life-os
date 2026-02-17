@@ -31,6 +31,7 @@ interface LogDayContentProps {
   onDeleteTask: (task: Task) => void
   onEditEvent: (event: Event) => void
   onDeleteEvent: (event: Event) => void
+  column?: 'left' | 'right'
 }
 
 export function LogDayContent({
@@ -44,6 +45,7 @@ export function LogDayContent({
   onDeleteTask,
   onEditEvent,
   onDeleteEvent,
+  column,
 }: LogDayContentProps) {
   const dateStr = format(logDate, 'yyyy-MM-dd')
 
@@ -114,17 +116,19 @@ export function LogDayContent({
     )
   }
 
-  return (
-    <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
-      <div className="space-y-6">
-        <LogDiarySection
-          dailyLog={dailyLog}
-          isLoading={isLoadingDailyLog}
-          onUpdate={handleUpdateDiary}
-        />
-      </div>
-      <div className="space-y-6">
-        <TimelineSection
+  const diaryBlock = (
+    <div className="space-y-6">
+      <LogDiarySection
+        dailyLog={dailyLog}
+        isLoading={isLoadingDailyLog}
+        onUpdate={handleUpdateDiary}
+      />
+    </div>
+  )
+
+  const timelineBlock = (
+    <div className="space-y-6">
+      <TimelineSection
         items={timelineItems}
         events={events}
         habits={habitsForDate}
@@ -136,8 +140,17 @@ export function LogDayContent({
         onToggleTask={onToggleTask}
         onEditTask={onEditTask}
         onDeleteTask={onDeleteTask}
-        />
-      </div>
+      />
+    </div>
+  )
+
+  if (column === 'left') return diaryBlock
+  if (column === 'right') return timelineBlock
+
+  return (
+    <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
+      {diaryBlock}
+      {timelineBlock}
     </div>
   )
 }

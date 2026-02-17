@@ -22,6 +22,7 @@ interface DevLogDayContentProps {
   onEditTask: (task: Task) => void
   onDeleteTask: (task: Task) => void
   onUpdateExecutionDate: (task: Task, executionDate: string | null) => Promise<void>
+  column?: 'left' | 'right'
 }
 
 function mapDevTaskToTask(devTask: DevTask): Task {
@@ -52,6 +53,7 @@ export function DevLogDayContent({
   onEditTask,
   onDeleteTask,
   onUpdateExecutionDate,
+  column,
 }: DevLogDayContentProps) {
   const dateStr = format(logDate, 'yyyy-MM-dd')
 
@@ -104,21 +106,32 @@ export function DevLogDayContent({
     )
   }
 
+  const reportBlock = (
+    <DevLogReportSection
+      devDailyLog={devDailyLog}
+      isLoading={isLoadingDailyLog}
+      onUpdate={handleUpdateReport}
+    />
+  )
+
+  const tasksBlock = (
+    <DevLogTasksSection
+      tasks={tasks}
+      getTargetLabel={getTaskTargetLabel}
+      onToggleCompletion={onToggleTask}
+      onEdit={onEditTask}
+      onDelete={onDeleteTask}
+      onUpdateExecutionDate={onUpdateExecutionDate}
+    />
+  )
+
+  if (column === 'left') return reportBlock
+  if (column === 'right') return tasksBlock
+
   return (
     <div className="grid grid-cols-1 gap-6 lg:grid-cols-2 items-start">
-      <DevLogReportSection
-        devDailyLog={devDailyLog}
-        isLoading={isLoadingDailyLog}
-        onUpdate={handleUpdateReport}
-      />
-      <DevLogTasksSection
-        tasks={tasks}
-        getTargetLabel={getTaskTargetLabel}
-        onToggleCompletion={onToggleTask}
-        onEdit={onEditTask}
-        onDelete={onDeleteTask}
-        onUpdateExecutionDate={onUpdateExecutionDate}
-      />
+      {reportBlock}
+      {tasksBlock}
     </div>
   )
 }
