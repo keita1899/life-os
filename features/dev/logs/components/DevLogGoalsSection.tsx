@@ -55,22 +55,22 @@ export function DevLogGoalsSection({
       {hasYearlyOrMonthly && (
         <div className="space-y-4">
           {yearlyGoals.length > 0 && (
-            <div className="flex items-center justify-between text-zinc-500">
+            <div className="flex items-center justify-between text-zinc-300">
               <div className="flex items-center gap-2">
                 <Flag className="w-3 h-3" />
                 <span className="text-xs font-mono">{year}年の目標</span>
               </div>
-              <span className="text-xs">{yearlyGoalTitles || 'なし'}</span>
+              <span className="text-xs text-zinc-200">{yearlyGoalTitles || 'なし'}</span>
             </div>
           )}
 
           {monthlyGoals.length > 0 && (
             <div className="space-y-1">
-              <div className="flex items-center gap-2 text-zinc-400">
+              <div className="flex items-center gap-2 text-zinc-300">
                 <Map className="w-3 h-3" />
                 <span className="text-xs font-mono">{monthName}の目標</span>
               </div>
-              <p className="text-sm text-zinc-400 leading-relaxed line-clamp-2">
+              <p className="text-sm text-zinc-200 leading-relaxed line-clamp-2">
                 {monthlyGoalTitles || 'なし'}
               </p>
             </div>
@@ -83,7 +83,7 @@ export function DevLogGoalsSection({
           {hasYearlyOrMonthly && <div className="h-px bg-zinc-800/50" />}
 
           <div className="relative">
-            <div className="flex items-center gap-2 mb-2 text-purple-500">
+            <div className="flex items-center gap-2 mb-2 text-zinc-300">
               <Zap className="w-4 h-4" />
               <span className="text-xs font-mono font-bold tracking-wider">
                 今週の目標
@@ -96,7 +96,7 @@ export function DevLogGoalsSection({
                   key={goal.id}
                   className="p-4 rounded-lg bg-purple-50 border border-purple-200 dark:bg-purple-950/50 dark:border-purple-800"
                 >
-                  <p className="text-lg font-bold text-purple-900 dark:text-purple-100">{goal.title}</p>
+                  <p className="text-lg font-bold text-purple-900 dark:text-zinc-200">{goal.title}</p>
                 </div>
               ))}
             </div>
