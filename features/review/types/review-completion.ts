@@ -10,6 +10,11 @@ export type ReviewType =
   | 'year_start'
   | 'year_end'
 
+export type ReviewWizardType = Extract<
+  ReviewType,
+  'morning' | 'evening' | 'week_start' | 'week_end'
+>
+
 export interface ReviewCompletion {
   id: number
   completedDate: string

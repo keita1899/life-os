@@ -1,8 +1,11 @@
 'use client'
 
 import { useEffect, useMemo } from 'react'
+import { format } from 'date-fns'
 import { useAppMode } from '@/hooks/useAppMode'
 import { useAsyncOperation } from '@/hooks/useAsyncOperation'
+import { useUserSettings } from '@/features/settings'
+import { getWeekStartDate, getWeekDays } from '@/features/calendar'
 import { useWizard } from '../hooks/useWizard'
 import { WizardShell } from './WizardShell'
 import { MorningGoalsStep } from './morning/MorningGoalsStep'
@@ -14,9 +17,14 @@ import { EveningDiaryStep } from './evening/EveningDiaryStep'
 import { EveningReportStep } from './evening/EveningReportStep'
 import { EveningHabitsStep } from './evening/EveningHabitsStep'
 import { EveningTomorrowStep } from './evening/EveningTomorrowStep'
-import type { ReviewMode } from '../types/review-completion'
-
-type ReviewWizardType = 'morning' | 'evening'
+import { WeekStartGoalsStep } from './week-start/WeekStartGoalsStep'
+import { WeekStartEventsStep } from './week-start/WeekStartEventsStep'
+import { WeekStartTasksStep } from './week-start/WeekStartTasksStep'
+import { WeekEndCompletedTasksStep } from './week-end/WeekEndCompletedTasksStep'
+import { WeekEndOverdueStep } from './week-end/WeekEndOverdueStep'
+import { WeekEndHabitsStep } from './week-end/WeekEndHabitsStep'
+import { WeekEndNextGoalsStep } from './week-end/WeekEndNextGoalsStep'
+import type { ReviewMode, ReviewWizardType } from '../types/review-completion'
 
 interface ReviewWizardProps {
   type: ReviewWizardType
@@ -26,6 +34,23 @@ interface ReviewWizardProps {
 export function ReviewWizard({ type, onComplete }: ReviewWizardProps) {
   const { mode } = useAppMode()
   const today = useMemo(() => new Date(), [])
+  const { userSettings } = useUserSettings()
+  const weekStartDay = userSettings?.weekStartDay ?? 1
+  const weekStartDate = useMemo(
+    () => getWeekStartDate(today, weekStartDay),
+    [today, weekStartDay],
+  )
+  const weekDays = useMemo(
+    () => getWeekDays(today, weekStartDay),
+    [today, weekStartDay],
+  )
+  const weekEndDate = weekDays[weekDays.length - 1]
+  const weekStartDateStr = format(weekStartDate, 'yyyy-MM-dd')
+  const weekEndDateStr = weekEndDate
+    ? format(weekEndDate, 'yyyy-MM-dd')
+    : weekStartDateStr
+  const todayStr = format(today, 'yyyy-MM-dd')
+
   const { execute, operationError, setOperationError } = useAsyncOperation()
 
   const reviewMode: ReviewMode = mode === 'development' ? 'development' : 'life'
@@ -35,9 +60,19 @@ export function ReviewWizard({ type, onComplete }: ReviewWizardProps) {
       ? reviewMode === 'life'
         ? 5
         : 3
-      : reviewMode === 'life'
-        ? 4
-        : 3
+      : type === 'evening'
+        ? reviewMode === 'life'
+          ? 4
+          : 3
+        : type === 'week_start'
+          ? reviewMode === 'life'
+            ? 3
+            : 2
+          : type === 'week_end'
+            ? reviewMode === 'life'
+              ? 4
+              : 3
+            : 0
 
   const wizard = useWizard({
     stepCount,
@@ -91,14 +126,115 @@ export function ReviewWizard({ type, onComplete }: ReviewWizardProps) {
     return steps[wizard.currentStep]
   }
 
-  const content =
-    type === 'morning' ? (
-      renderMorningStep()
-    ) : (
-      renderEveningStep()
-    )
+  const renderWeekStartStep = () => {
+    const lifeSteps = [
+      <WeekStartGoalsStep
+        key="goals"
+        weekStartDate={weekStartDate}
+        mode={reviewMode}
+      />,
+      <WeekStartEventsStep
+        key="events"
+        weekStartDate={weekStartDate}
+        weekStartDay={weekStartDay}
+      />,
+      <WeekStartTasksStep
+        key="tasks"
+        weekStartDateStr={weekStartDateStr}
+        weekEndDateStr={weekEndDateStr}
+        weekStartDate={weekStartDate}
+        mode={reviewMode}
+      />,
+    ]
+    const devSteps = [
+      <WeekStartGoalsStep
+        key="goals"
+        weekStartDate={weekStartDate}
+        mode={reviewMode}
+      />,
+      <WeekStartTasksStep
+        key="tasks"
+        weekStartDateStr={weekStartDateStr}
+        weekEndDateStr={weekEndDateStr}
+        weekStartDate={weekStartDate}
+        mode={reviewMode}
+      />,
+    ]
+    const steps = reviewMode === 'life' ? lifeSteps : devSteps
+    return steps[wizard.currentStep]
+  }
 
-  const title = type === 'morning' ? '朝の確認' : '夜の確認'
+  const renderWeekEndStep = () => {
+    const lifeSteps = [
+      <WeekEndCompletedTasksStep
+        key="completed"
+        weekStartDateStr={weekStartDateStr}
+        weekEndDateStr={weekEndDateStr}
+        mode={reviewMode}
+      />,
+      <WeekEndOverdueStep
+        key="overdue"
+        weekStartDateStr={weekStartDateStr}
+        beforeDateStr={todayStr}
+        mode={reviewMode}
+      />,
+      <WeekEndHabitsStep
+        key="habits"
+        weekStartDate={weekStartDate}
+        weekStartDateStr={weekStartDateStr}
+        weekEndDateStr={weekEndDateStr}
+        weekStartDay={weekStartDay}
+      />,
+      <WeekEndNextGoalsStep
+        key="next-goals"
+        weekStartDate={weekStartDate}
+        mode={reviewMode}
+      />,
+    ]
+    const devSteps = [
+      <WeekEndCompletedTasksStep
+        key="completed"
+        weekStartDateStr={weekStartDateStr}
+        weekEndDateStr={weekEndDateStr}
+        mode={reviewMode}
+      />,
+      <WeekEndOverdueStep
+        key="overdue"
+        weekStartDateStr={weekStartDateStr}
+        beforeDateStr={todayStr}
+        mode={reviewMode}
+      />,
+      <WeekEndNextGoalsStep
+        key="next-goals"
+        weekStartDate={weekStartDate}
+        mode={reviewMode}
+      />,
+    ]
+    const steps = reviewMode === 'life' ? lifeSteps : devSteps
+    return steps[wizard.currentStep]
+  }
+
+  const content =
+    type === 'morning'
+      ? renderMorningStep()
+      : type === 'evening'
+        ? renderEveningStep()
+        : type === 'week_start'
+          ? renderWeekStartStep()
+          : type === 'week_end'
+            ? renderWeekEndStep()
+            : null
+
+  const title =
+    type === 'morning'
+      ? '朝の確認'
+      : type === 'evening'
+        ? '夜の確認'
+        : type === 'week_start'
+          ? '週の始まりの確認'
+          : type === 'week_end'
+            ? '週の締めくくりの確認'
+            : ''
 
   const stepLabels = useMemo(() => {
     if (type === 'morning' && reviewMode === 'life') {
@@ -130,6 +266,34 @@ export function ReviewWizard({ type, onComplete }: ReviewWizardProps) {
         '今日の日報を確認しましょう。',
         '残っている今日のタスクを確認しましょう。',
         '明日の予定を確認しましょう。',
+      ]
+    }
+    if (type === 'week_start' && reviewMode === 'life') {
+      return [
+        '今週の目標を確認しましょう。',
+        '今週の予定を確認しましょう。',
+        '今週のタスクを確認しましょう。',
+      ]
+    }
+    if (type === 'week_start' && reviewMode === 'development') {
+      return [
+        '今週の目標を確認しましょう。',
+        '今週のタスクを確認しましょう。',
+      ]
+    }
+    if (type === 'week_end' && reviewMode === 'life') {
+      return [
+        '今週終わらせたタスクを確認しましょう。',
+        '残っている今週の期限切れタスクを確認しましょう。',
+        '今週の習慣の実行度合いを確認しましょう。',
+        '来週の目標を立てましょう。',
+      ]
+    }
+    if (type === 'week_end' && reviewMode === 'development') {
+      return [
+        '今週終わらせたタスクを確認しましょう。',
+        '残っている今週の期限切れタスクを確認しましょう。',
+        '来週の目標を立てましょう。',
       ]
     }
     return undefined

@@ -15,7 +15,7 @@ export function useReviewCompletion(
 ) {
   const key =
     completedDate !== null
-      ? SWR_KEYS.reviewCompletion(type, mode)
+      ? SWR_KEYS.reviewCompletion(completedDate, type, mode)
       : null
 
   const { data: isCompleted } = useSWR<boolean>(
@@ -28,7 +28,7 @@ export function useReviewCompletion(
 
   useEffect(() => {
     if (key) mutate(key)
-  }, [key, completedDate])
+  }, [key])
 
   const markReviewComplete = async () => {
     if (completedDate === null) return

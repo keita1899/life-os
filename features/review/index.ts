@@ -7,4 +7,9 @@ export {
   ReviewWizardProvider,
   useReviewWizardContext,
 } from './context/ReviewWizardContext'
-export type { ReviewCompletion, ReviewMode, ReviewType } from './types/review-completion'
+export type {
+  ReviewCompletion,
+  ReviewMode,
+  ReviewType,
+  ReviewWizardType,
+} from './types/review-completion'

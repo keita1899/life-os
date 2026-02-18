@@ -11,10 +11,9 @@ import {
 import { format } from 'date-fns'
 import { useAppMode } from '@/hooks/useAppMode'
 import { useUserSettings } from '@/features/settings'
+import { getWeekStartDate, getWeekDays } from '@/features/calendar'
 import { useReviewCompletion } from '../hooks/useReviewCompletion'
-import type { ReviewMode } from '../types/review-completion'
-
-type ReviewWizardType = 'morning' | 'evening'
+import type { ReviewMode, ReviewWizardType } from '../types/review-completion'
 
 function isTimePastOrEqual(current: string, target: string): boolean {
   return current >= target
@@ -35,6 +34,12 @@ interface ReviewWizardProviderProps {
   children: React.ReactNode
 }
 
+interface WizardConfig {
+  type: ReviewWizardType
+  shouldShow: boolean
+  markComplete: () => Promise<void>
+}
+
 export function ReviewWizardProvider({ children }: ReviewWizardProviderProps) {
   const { mode } = useAppMode()
   const { userSettings } = useUserSettings()
@@ -53,10 +58,23 @@ export function ReviewWizardProvider({ children }: ReviewWizardProviderProps) {
     }
   }, [])
 
+  const weekStartDay = userSettings?.weekStartDay ?? 1
+  const weekStartDate = useMemo(
+    () => getWeekStartDate(now, weekStartDay),
+    [now, weekStartDay],
+  )
+  const weekDays = useMemo(
+    () => getWeekDays(now, weekStartDay),
+    [now, weekStartDay],
+  )
+  const weekEndDate = weekDays[weekDays.length - 1]
+  const weekStartDateStr = format(weekStartDate, 'yyyy-MM-dd')
   const today = format(now, 'yyyy-MM-dd')
   const currentTime = format(now, 'HH:mm')
   const morningTime = userSettings?.morningReviewTime ?? null
   const eveningTime = userSettings?.eveningReviewTime ?? null
+  const weekStartReviewTime = userSettings?.weekStartReviewTime ?? null
+  const weekEndReviewTime = userSettings?.weekEndReviewTime ?? null
 
   const {
     isCompleted: morningCompleted,
@@ -66,30 +84,89 @@ export function ReviewWizardProvider({ children }: ReviewWizardProviderProps) {
     isCompleted: eveningCompleted,
     markReviewComplete: markEveningComplete,
   } = useReviewCompletion(today, 'evening', mode as ReviewMode)
+  const {
+    isCompleted: weekStartCompleted,
+    markReviewComplete: markWeekStartComplete,
+  } = useReviewCompletion(weekStartDateStr, 'week_start', mode as ReviewMode)
+  const {
+    isCompleted: weekEndCompleted,
+    markReviewComplete: markWeekEndComplete,
+  } = useReviewCompletion(weekStartDateStr, 'week_end', mode as ReviewMode)
 
-  const activeWizard = useMemo((): ReviewWizardType | null => {
-    if (morningTime && isTimePastOrEqual(currentTime, morningTime) && !morningCompleted) {
-      return 'morning'
-    }
-    if (eveningTime && isTimePastOrEqual(currentTime, eveningTime) && !eveningCompleted) {
-      return 'evening'
-    }
-    return null
+  const isTodayWeekStart = today === weekStartDateStr
+  const isTodayWeekEnd = weekEndDate
+    ? today === format(weekEndDate, 'yyyy-MM-dd')
+    : false
+  const weekStartTimeOk =
+    !weekStartReviewTime ||
+    isTimePastOrEqual(currentTime, weekStartReviewTime)
+  const weekEndTimeOk =
+    !weekEndReviewTime ||
+    isTimePastOrEqual(currentTime, weekEndReviewTime)
+
+  const wizardConfigs = useMemo((): WizardConfig[] => {
+    return [
+      {
+        type: 'week_start',
+        shouldShow:
+          isTodayWeekStart && weekStartTimeOk && !weekStartCompleted,
+        markComplete: markWeekStartComplete,
+      },
+      {
+        type: 'morning',
+        shouldShow:
+          !!(
+            morningTime &&
+            isTimePastOrEqual(currentTime, morningTime) &&
+            !morningCompleted
+          ),
+        markComplete: markMorningComplete,
+      },
+      {
+        type: 'week_end',
+        shouldShow:
+          isTodayWeekEnd && weekEndTimeOk && !weekEndCompleted,
+        markComplete: markWeekEndComplete,
+      },
+      {
+        type: 'evening',
+        shouldShow:
+          !!(
+            eveningTime &&
+            isTimePastOrEqual(currentTime, eveningTime) &&
+            !eveningCompleted
+          ),
+        markComplete: markEveningComplete,
+      },
+    ]
   }, [
+    isTodayWeekStart,
+    isTodayWeekEnd,
+    weekStartTimeOk,
+    weekEndTimeOk,
+    weekStartCompleted,
+    weekEndCompleted,
     morningTime,
     eveningTime,
     currentTime,
     morningCompleted,
     eveningCompleted,
+    markWeekStartComplete,
+    markMorningComplete,
+    markWeekEndComplete,
+    markEveningComplete,
   ])
 
+  const activeWizard = useMemo(
+    (): ReviewWizardType | null =>
+      wizardConfigs.find((c) => c.shouldShow)?.type ?? null,
+    [wizardConfigs],
+  )
+
   const handleComplete = useCallback(async () => {
-    if (activeWizard === 'morning') {
-      await markMorningComplete()
-    } else if (activeWizard === 'evening') {
-      await markEveningComplete()
-    }
-  }, [activeWizard, markMorningComplete, markEveningComplete])
+    const config = wizardConfigs.find((c) => c.shouldShow)
+    if (config) await config.markComplete()
+  }, [wizardConfigs])
 
   const value = useMemo<ReviewWizardContextValue>(
     () => ({ activeWizard, handleComplete }),
