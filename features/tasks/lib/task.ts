@@ -1,4 +1,5 @@
 import { getDatabase, handleDbError } from '@/lib/db'
+import { getTodayDateString } from '@/lib/date/formats'
 import { buildUpdateParams, type FieldMapping } from '@/lib/db/build-update-params'
 import { DB_COLUMNS } from '@/lib/db/constants'
 import type { Task, CreateTaskInput, UpdateTaskInput } from '../types/task'
@@ -237,7 +238,7 @@ export async function deleteCompletedTasks(): Promise<number> {
 
 export async function updateOverdueTasksToToday(): Promise<number> {
   const db = await getDatabase()
-  const today = new Date().toISOString().split('T')[0]
+  const today = getTodayDateString()
 
   try {
     const overdueTasks = await db.select<DbTask[]>(

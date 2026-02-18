@@ -1,4 +1,5 @@
 import { getDatabase, handleDbError } from '@/lib/db'
+import { getTodayDateString } from '@/lib/date/formats'
 import { DB_COLUMNS } from '@/lib/db/constants'
 import type {
   DevTask,
@@ -305,7 +306,7 @@ export async function updateOverdueDevTasksToToday(input: {
   type?: DbDevTask['type']
 }): Promise<number> {
   const db = await getDatabase()
-  const today = new Date().toISOString().split('T')[0]
+  const today = getTodayDateString()
 
   const whereProject = input.projectId === null ? 'project_id IS NULL' : 'project_id = ?'
   const whereType = input.type ? ' AND type = ?' : ''
@@ -335,7 +336,7 @@ export async function updateOverdueDevTasksToToday(input: {
 
 export async function updateAllOverdueDevTasksToToday(): Promise<number> {
   const db = await getDatabase()
-  const today = new Date().toISOString().split('T')[0]
+  const today = getTodayDateString()
 
   try {
     const result = await db.execute(

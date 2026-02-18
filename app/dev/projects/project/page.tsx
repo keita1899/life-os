@@ -384,28 +384,6 @@ function DevProjectPageContent(): ReactElement | null {
                             </span>
                           )}
                         </div>
-                        {group.key === 'overdue' && group.tasks.length > 0 && (
-                          <span
-                            role="button"
-                            tabIndex={0}
-                            className="inline-flex h-9 cursor-pointer items-center justify-center rounded-md border border-input bg-background px-3 text-sm font-medium hover:bg-accent hover:text-accent-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 mr-2 [&_svg]:size-4"
-                            onClick={(e) => {
-                              e.stopPropagation()
-                              e.preventDefault()
-                              handleUpdateOverdueTasksToToday()
-                            }}
-                            onKeyDown={(e) => {
-                              if (e.key === 'Enter' || e.key === ' ') {
-                                e.preventDefault()
-                                e.stopPropagation()
-                                handleUpdateOverdueTasksToToday()
-                              }
-                            }}
-                          >
-                            <Calendar className="mr-2 h-4 w-4" />
-                            今日に戻す
-                          </span>
-                        )}
                       </div>
                     ),
                     content: (
@@ -417,6 +395,21 @@ function DevProjectPageContent(): ReactElement | null {
                           onToggleCompletion={handleToggleCompletion}
                           onUpdateExecutionDate={handleUpdateExecutionDate}
                         />
+                        {group.key === 'overdue' && group.tasks.length > 0 && (
+                          <div className="flex justify-end">
+                            <Button
+                              type="button"
+                              variant="outline"
+                              size="sm"
+                              onClick={() =>
+                                void handleUpdateOverdueTasksToToday()
+                              }
+                            >
+                              <Calendar className="mr-2 h-4 w-4" />
+                              今日に戻す
+                            </Button>
+                          </div>
+                        )}
                         {group.key === 'completed' && group.tasks.length > 0 && (
                           <div className="flex justify-end">
                             <Button

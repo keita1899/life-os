@@ -233,21 +233,6 @@ export default function DevTasksPage() {
                       </span>
                     )}
                   </div>
-                  {group.key === 'overdue' && group.tasks.length > 0 && (
-                    <Button
-                      type="button"
-                      variant="outline"
-                      size="sm"
-                      className="mr-2"
-                      onClick={(e) => {
-                        e.stopPropagation()
-                        handleUpdateOverdueTasksToToday()
-                      }}
-                    >
-                      <Calendar className="mr-2 h-4 w-4" />
-                      今日に戻す
-                    </Button>
-                  )}
                 </div>
               ),
               content: (
@@ -259,6 +244,21 @@ export default function DevTasksPage() {
                     onToggleCompletion={handleToggleCompletion}
                     onUpdateExecutionDate={handleUpdateExecutionDate}
                   />
+                  {group.key === 'overdue' && group.tasks.length > 0 && (
+                    <div className="flex justify-end">
+                      <Button
+                        type="button"
+                        variant="outline"
+                        size="sm"
+                        onClick={() =>
+                          void handleUpdateOverdueTasksToToday()
+                        }
+                      >
+                        <Calendar className="mr-2 h-4 w-4" />
+                        今日に戻す
+                      </Button>
+                    </div>
+                  )}
                   {group.key === 'completed' && group.tasks.length > 0 && (
                     <div className="flex justify-end">
                       <Button
