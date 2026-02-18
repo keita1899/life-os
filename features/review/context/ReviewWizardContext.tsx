@@ -8,7 +8,7 @@ import {
   useMemo,
   useState,
 } from 'react'
-import { format } from 'date-fns'
+import { format, startOfMonth, endOfMonth } from 'date-fns'
 import { useAppMode } from '@/hooks/useAppMode'
 import { useUserSettings } from '@/features/settings'
 import { getWeekStartDate, getWeekDays } from '@/features/calendar'
@@ -78,20 +78,45 @@ export function ReviewWizardProvider({ children }: ReviewWizardProviderProps) {
 
   const {
     isCompleted: morningCompleted,
+    isLoading: morningLoading,
     markReviewComplete: markMorningComplete,
   } = useReviewCompletion(today, 'morning', mode as ReviewMode)
   const {
     isCompleted: eveningCompleted,
+    isLoading: eveningLoading,
     markReviewComplete: markEveningComplete,
   } = useReviewCompletion(today, 'evening', mode as ReviewMode)
   const {
     isCompleted: weekStartCompleted,
+    isLoading: weekStartLoading,
     markReviewComplete: markWeekStartComplete,
   } = useReviewCompletion(weekStartDateStr, 'week_start', mode as ReviewMode)
   const {
     isCompleted: weekEndCompleted,
+    isLoading: weekEndLoading,
     markReviewComplete: markWeekEndComplete,
   } = useReviewCompletion(weekStartDateStr, 'week_end', mode as ReviewMode)
+
+  const monthStartDateStr = format(startOfMonth(now), 'yyyy-MM-dd')
+  const monthEndDateStr = format(endOfMonth(now), 'yyyy-MM-dd')
+  const {
+    isCompleted: monthStartCompleted,
+    isLoading: monthStartLoading,
+    markReviewComplete: markMonthStartComplete,
+  } = useReviewCompletion(monthStartDateStr, 'month_start', mode as ReviewMode)
+  const {
+    isCompleted: monthEndCompleted,
+    isLoading: monthEndLoading,
+    markReviewComplete: markMonthEndComplete,
+  } = useReviewCompletion(monthEndDateStr, 'month_end', mode as ReviewMode)
+
+  const isAnyCompletionLoading =
+    morningLoading ||
+    eveningLoading ||
+    weekStartLoading ||
+    weekEndLoading ||
+    monthStartLoading ||
+    monthEndLoading
 
   const isTodayWeekStart = today === weekStartDateStr
   const isTodayWeekEnd = weekEndDate
@@ -104,8 +129,16 @@ export function ReviewWizardProvider({ children }: ReviewWizardProviderProps) {
     !weekEndReviewTime ||
     isTimePastOrEqual(currentTime, weekEndReviewTime)
 
+  const isTodayMonthStart = today === monthStartDateStr
+  const isTodayMonthEnd = today === monthEndDateStr
+
   const wizardConfigs = useMemo((): WizardConfig[] => {
     return [
+      {
+        type: 'month_start',
+        shouldShow: isTodayMonthStart && !monthStartCompleted,
+        markComplete: markMonthStartComplete,
+      },
       {
         type: 'week_start',
         shouldShow:
@@ -129,6 +162,11 @@ export function ReviewWizardProvider({ children }: ReviewWizardProviderProps) {
         markComplete: markWeekEndComplete,
       },
       {
+        type: 'month_end',
+        shouldShow: isTodayMonthEnd && !monthEndCompleted,
+        markComplete: markMonthEndComplete,
+      },
+      {
         type: 'evening',
         shouldShow:
           !!(
@@ -140,6 +178,12 @@ export function ReviewWizardProvider({ children }: ReviewWizardProviderProps) {
       },
     ]
   }, [
+    isTodayMonthStart,
+    isTodayMonthEnd,
+    monthStartCompleted,
+    monthEndCompleted,
+    markMonthStartComplete,
+    markMonthEndComplete,
     isTodayWeekStart,
     isTodayWeekEnd,
     weekStartTimeOk,
@@ -157,16 +201,16 @@ export function ReviewWizardProvider({ children }: ReviewWizardProviderProps) {
     markEveningComplete,
   ])
 
-  const activeWizard = useMemo(
-    (): ReviewWizardType | null =>
-      wizardConfigs.find((c) => c.shouldShow)?.type ?? null,
-    [wizardConfigs],
-  )
+  const activeWizard = useMemo((): ReviewWizardType | null => {
+    if (isAnyCompletionLoading) return null
+    return wizardConfigs.find((c) => c.shouldShow)?.type ?? null
+  }, [wizardConfigs, isAnyCompletionLoading])
 
   const handleComplete = useCallback(async () => {
-    const config = wizardConfigs.find((c) => c.shouldShow)
+    if (!activeWizard) return
+    const config = wizardConfigs.find((c) => c.type === activeWizard)
     if (config) await config.markComplete()
-  }, [wizardConfigs])
+  }, [activeWizard, wizardConfigs])
 
   const value = useMemo<ReviewWizardContextValue>(
     () => ({ activeWizard, handleComplete }),
