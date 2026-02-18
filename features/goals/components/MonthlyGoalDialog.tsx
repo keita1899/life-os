@@ -10,6 +10,7 @@ interface MonthlyGoalDialogProps {
   onSubmit: (input: CreateMonthlyGoalInput) => Promise<void>
   goal?: MonthlyGoal
   selectedYear?: number
+  selectedMonth?: number
 }
 
 export const MonthlyGoalDialog = ({
@@ -18,12 +19,13 @@ export const MonthlyGoalDialog = ({
   onSubmit,
   goal,
   selectedYear,
+  selectedMonth,
 }: MonthlyGoalDialogProps) => {
   return (
     <FormDialog<
       CreateMonthlyGoalInput,
       MonthlyGoal,
-      { selectedYear?: number }
+      { selectedYear?: number; selectedMonth?: number }
     >
       open={open}
       onOpenChange={onOpenChange}
@@ -34,7 +36,7 @@ export const MonthlyGoalDialog = ({
         edit: '月間目標を編集',
       }}
       formComponent={MonthlyGoalForm}
-      formProps={{ selectedYear }}
+      formProps={{ selectedYear, selectedMonth }}
       closeOnSubmit={true}
     />
   )

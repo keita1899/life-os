@@ -8,6 +8,7 @@ export { useDevGoals } from './hooks/useDevGoals'
 export {
   updateDevYearlyGoal,
   updateDevMonthlyGoal,
+  createDevMonthlyGoal,
   getDevWeeklyGoalByWeekStart,
 } from './lib'
 export type {

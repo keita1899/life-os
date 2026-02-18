@@ -14,6 +14,7 @@ export {
   calculateProgress,
   updateYearlyGoal,
   updateMonthlyGoal,
+  createMonthlyGoal,
   getWeeklyGoalByWeekStart,
 } from './lib'
 export type { YearlyGoal, CreateYearlyGoalInput, UpdateYearlyGoalInput } from './types/yearly-goal'
