@@ -7,6 +7,7 @@ export {
 export {
   getCompletionsByHabitAndMonth,
   getCompletionsByDate,
+  getCompletionsByHabitAndDateRange,
   createCompletion,
   deleteCompletion,
 } from './habit-completion'
