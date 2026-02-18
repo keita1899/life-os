@@ -12,7 +12,12 @@ export type ReviewType =
 
 export type ReviewWizardType = Extract<
   ReviewType,
-  'morning' | 'evening' | 'week_start' | 'week_end'
+  | 'morning'
+  | 'evening'
+  | 'week_start'
+  | 'week_end'
+  | 'month_start'
+  | 'month_end'
 >
 
 export interface ReviewCompletion {
