@@ -4,6 +4,11 @@ import { useCallback, useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { useHotkeys } from 'react-hotkeys-hook'
 import { useAppMode } from '@/hooks/useAppMode'
+import {
+  ReviewWizardProvider,
+  ReviewWizard,
+  useReviewWizardContext,
+} from '@/features/review'
 import { Header } from '@/components/layout/Header'
 import { Sidebar } from '@/components/layout/sidebar/Sidebar'
 import { cn } from '@/lib/utils'
@@ -84,19 +89,33 @@ export function LayoutClient({ children }: LayoutClientProps) {
   }, [handleOpenChange, isSidebarOpen])
 
   return (
-    <div className="flex min-h-screen">
-      <Sidebar open={isSidebarOpen} onOpenChange={handleOpenChange} />
-      <div className="flex flex-1 flex-col min-w-0">
-        <Header onMenuClick={handleMenuClick} />
-        <main
-          className={cn(
-            'flex-1',
-            mode === 'development' && 'bg-slate-950',
-          )}
-        >
-          {children}
-        </main>
+    <ReviewWizardProvider>
+      <div className="flex min-h-screen">
+        <Sidebar open={isSidebarOpen} onOpenChange={handleOpenChange} />
+        <div className="flex flex-1 flex-col min-w-0">
+          <Header onMenuClick={handleMenuClick} />
+          <main
+            className={cn(
+              'flex-1',
+              mode === 'development' && 'bg-slate-950',
+            )}
+          >
+            {children}
+          </main>
+        </div>
       </div>
-    </div>
+      <ReviewWizardGate />
+    </ReviewWizardProvider>
+  )
+}
+
+function ReviewWizardGate() {
+  const context = useReviewWizardContext()
+  if (!context?.activeWizard) return null
+  return (
+    <ReviewWizard
+      type={context.activeWizard}
+      onComplete={context.handleComplete}
+    />
   )
 }

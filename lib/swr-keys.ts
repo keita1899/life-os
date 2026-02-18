@@ -22,6 +22,8 @@ export const SWR_KEYS = {
   vision: 'vision',
   visionCategories: 'vision-categories',
   userSettings: 'user-settings',
+  reviewCompletion: (type: string, mode: string) =>
+    ['review-completion', type, mode] as const,
 
   // ── Kakeibo ──
   transactions: 'transactions',
