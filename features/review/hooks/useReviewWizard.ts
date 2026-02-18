@@ -1,37 +1,15 @@
 'use client'
 
-import {
-  createContext,
-  useCallback,
-  useContext,
-  useEffect,
-  useMemo,
-  useState,
-} from 'react'
+import { useCallback, useEffect, useMemo, useState } from 'react'
 import { format, startOfMonth, endOfMonth } from 'date-fns'
 import { useAppMode } from '@/hooks/useAppMode'
 import { useUserSettings } from '@/features/settings'
 import { getWeekStartDate, getWeekDays } from '@/features/calendar'
-import { useReviewCompletion } from '../hooks/useReviewCompletion'
+import { useReviewCompletion } from './useReviewCompletion'
 import type { ReviewMode, ReviewWizardType } from '../types/review-completion'
 
 function isTimePastOrEqual(current: string, target: string): boolean {
   return current >= target
-}
-
-interface ReviewWizardContextValue {
-  activeWizard: ReviewWizardType | null
-  handleComplete: () => Promise<void>
-}
-
-const ReviewWizardContext = createContext<ReviewWizardContextValue | null>(null)
-
-export function useReviewWizardContext(): ReviewWizardContextValue | null {
-  return useContext(ReviewWizardContext)
-}
-
-interface ReviewWizardProviderProps {
-  children: React.ReactNode
 }
 
 interface WizardConfig {
@@ -40,7 +18,12 @@ interface WizardConfig {
   markComplete: () => Promise<void>
 }
 
-export function ReviewWizardProvider({ children }: ReviewWizardProviderProps) {
+export interface UseReviewWizardResult {
+  activeWizard: ReviewWizardType | null
+  handleComplete: () => Promise<void>
+}
+
+export function useReviewWizard(): UseReviewWizardResult {
   const { mode } = useAppMode()
   const { userSettings } = useUserSettings()
   const [now, setNow] = useState(() => new Date())
@@ -212,14 +195,5 @@ export function ReviewWizardProvider({ children }: ReviewWizardProviderProps) {
     if (config) await config.markComplete()
   }, [activeWizard, wizardConfigs])
 
-  const value = useMemo<ReviewWizardContextValue>(
-    () => ({ activeWizard, handleComplete }),
-    [activeWizard, handleComplete],
-  )
-
-  return (
-    <ReviewWizardContext.Provider value={value}>
-      {children}
-    </ReviewWizardContext.Provider>
-  )
+  return { activeWizard, handleComplete }
 }

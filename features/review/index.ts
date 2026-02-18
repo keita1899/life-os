@@ -3,10 +3,7 @@ export { useReviewCompletion } from './hooks/useReviewCompletion'
 export { useWizard } from './hooks/useWizard'
 export { WizardShell } from './components/WizardShell'
 export { ReviewWizard } from './components/ReviewWizard'
-export {
-  ReviewWizardProvider,
-  useReviewWizardContext,
-} from './context/ReviewWizardContext'
+export { useReviewWizard } from './hooks/useReviewWizard'
 export type {
   ReviewCompletion,
   ReviewMode,
