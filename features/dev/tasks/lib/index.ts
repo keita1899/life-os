@@ -8,5 +8,10 @@ export {
   updateOverdueDevTasksToToday,
   updateAllOverdueDevTasksToToday,
 } from './task'
-export { getTodayDevTasks } from './utils'
+export {
+  getTodayDevTasks,
+  getDevTasksForWeek,
+  getDevTasksCompletedInWeek,
+  getOverdueDevTasksInWeek,
+} from './utils'
 

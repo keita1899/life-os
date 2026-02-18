@@ -35,3 +35,44 @@ export function getTasksForDate(tasks: Task[], date: Date): Task[] {
 
   return [...incompleteTasks, ...completedTasks]
 }
+
+export function getTasksForWeek(
+  tasks: Task[],
+  weekStartDateStr: string,
+  weekEndDateStr: string,
+): Task[] {
+  return tasks.filter(
+    (task) =>
+      task.executionDate !== null &&
+      task.executionDate >= weekStartDateStr &&
+      task.executionDate <= weekEndDateStr,
+  )
+}
+
+export function getTasksCompletedInWeek(
+  tasks: Task[],
+  weekStartDateStr: string,
+  weekEndDateStr: string,
+): Task[] {
+  return tasks.filter(
+    (task) =>
+      task.completed &&
+      task.executionDate !== null &&
+      task.executionDate >= weekStartDateStr &&
+      task.executionDate <= weekEndDateStr,
+  )
+}
+
+export function getOverdueTasksInWeek(
+  tasks: Task[],
+  weekStartDateStr: string,
+  beforeDateStr: string,
+): Task[] {
+  return tasks.filter(
+    (task) =>
+      !task.completed &&
+      task.executionDate !== null &&
+      task.executionDate >= weekStartDateStr &&
+      task.executionDate < beforeDateStr,
+  )
+}

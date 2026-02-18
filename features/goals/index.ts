@@ -9,7 +9,13 @@ export { MonthlyGoalsSection } from './components/MonthlyGoalsSection'
 export { WeeklyGoalForm } from './components/WeeklyGoalForm'
 export { MonthlyGoalCalendarForm } from './components/MonthlyGoalCalendarForm'
 export { useGoals } from './hooks/useGoals'
-export { getYearFromDate, calculateProgress, updateYearlyGoal, updateMonthlyGoal } from './lib'
+export {
+  getYearFromDate,
+  calculateProgress,
+  updateYearlyGoal,
+  updateMonthlyGoal,
+  getWeeklyGoalByWeekStart,
+} from './lib'
 export type { YearlyGoal, CreateYearlyGoalInput, UpdateYearlyGoalInput } from './types/yearly-goal'
 export type {
   MonthlyGoal,
