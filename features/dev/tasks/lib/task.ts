@@ -333,3 +333,22 @@ export async function updateOverdueDevTasksToToday(input: {
   }
 }
 
+export async function updateAllOverdueDevTasksToToday(): Promise<number> {
+  const db = await getDatabase()
+  const today = new Date().toISOString().split('T')[0]
+
+  try {
+    const result = await db.execute(
+      `UPDATE dev_tasks 
+       SET execution_date = ?, updated_at = CURRENT_TIMESTAMP 
+       WHERE completed = 0 
+       AND execution_date IS NOT NULL 
+       AND execution_date < ?`,
+      [today, today],
+    )
+    return result.rowsAffected
+  } catch (err) {
+    handleDbError(err, 'update all overdue dev tasks to today')
+  }
+}
+
