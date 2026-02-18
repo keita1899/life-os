@@ -78,6 +78,13 @@ const SCHEMA = {
     'created_at',
     'updated_at',
   ],
+  review_completions: [
+    'id',
+    'completed_date',
+    'type',
+    'mode',
+    'completed_at',
+  ],
   bucket_list_categories: [
     'id',
     'name',
