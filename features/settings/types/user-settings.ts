@@ -7,6 +7,8 @@ export interface UserSettings {
   weekStartDay: number
   morningReviewTime: string | null
   eveningReviewTime: string | null
+  weekStartReviewTime: string | null
+  weekEndReviewTime: string | null
   barcelonaIcalUrl: string | null
   initialBalance: number | null
   defaultHabitView: CalendarViewMode
@@ -20,6 +22,8 @@ export interface UpdateUserSettingsInput {
   weekStartDay?: number
   morningReviewTime?: string | null
   eveningReviewTime?: string | null
+  weekStartReviewTime?: string | null
+  weekEndReviewTime?: string | null
   barcelonaIcalUrl?: string | null
   initialBalance?: number | null
   defaultHabitView?: CalendarViewMode

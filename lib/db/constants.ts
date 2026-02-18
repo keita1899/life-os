@@ -72,6 +72,8 @@ const SCHEMA = {
     'week_start_day',
     'morning_review_time',
     'evening_review_time',
+    'week_start_review_time',
+    'week_end_review_time',
     'barcelona_ical_url',
     'initial_balance',
     'default_habit_view',
