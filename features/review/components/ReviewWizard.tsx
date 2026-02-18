@@ -1,7 +1,7 @@
 'use client'
 
 import { useEffect, useMemo } from 'react'
-import { format, startOfMonth, addMonths } from 'date-fns'
+import { format, startOfMonth, addMonths, startOfYear } from 'date-fns'
 import { useAppMode } from '@/hooks/useAppMode'
 import { useAsyncOperation } from '@/hooks/useAsyncOperation'
 import { useUserSettings } from '@/features/settings'
@@ -26,6 +26,8 @@ import { WeekEndHabitsStep } from './week-end/WeekEndHabitsStep'
 import { WeekEndNextGoalsStep } from './week-end/WeekEndNextGoalsStep'
 import { MonthStartGoalsStep } from './month-start/MonthStartGoalsStep'
 import { MonthEndGoalsStep } from './month-end/MonthEndGoalsStep'
+import { YearStartGoalsStep } from './year-start/YearStartGoalsStep'
+import { YearEndGoalsStep } from './year-end/YearEndGoalsStep'
 import type { ReviewMode, ReviewWizardType } from '../types/review-completion'
 
 interface ReviewWizardProps {
@@ -54,33 +56,39 @@ export function ReviewWizard({ type, onComplete }: ReviewWizardProps) {
   const todayStr = format(today, 'yyyy-MM-dd')
   const currentMonth = useMemo(() => startOfMonth(today), [today])
   const nextMonth = useMemo(() => addMonths(today, 1), [today])
+  const currentYear = useMemo(() => startOfYear(today), [today])
+  const nextYear = useMemo(() => startOfYear(addMonths(today, 12)), [today])
 
   const { execute, operationError, setOperationError } = useAsyncOperation()
 
   const reviewMode: ReviewMode = mode === 'development' ? 'development' : 'life'
 
   const stepCount =
-    type === 'month_start'
+    type === 'year_start'
       ? 1
-      : type === 'month_end'
+      : type === 'year_end'
         ? 1
-        : type === 'morning'
-          ? reviewMode === 'life'
-            ? 5
-            : 3
-          : type === 'evening'
-            ? reviewMode === 'life'
-              ? 4
-              : 3
-            : type === 'week_start'
+        : type === 'month_start'
+          ? 1
+          : type === 'month_end'
+            ? 1
+            : type === 'morning'
               ? reviewMode === 'life'
-                ? 3
-                : 2
-              : type === 'week_end'
+                ? 5
+                : 3
+              : type === 'evening'
                 ? reviewMode === 'life'
                   ? 4
                   : 3
-                : 0
+                : type === 'week_start'
+                  ? reviewMode === 'life'
+                    ? 3
+                    : 2
+                  : type === 'week_end'
+                    ? reviewMode === 'life'
+                      ? 4
+                      : 3
+                    : 0
 
   const wizard = useWizard({
     stepCount,
@@ -188,6 +196,22 @@ export function ReviewWizard({ type, onComplete }: ReviewWizardProps) {
     />
   )
 
+  const renderYearStartStep = () => (
+    <YearStartGoalsStep
+      key="goals"
+      currentYear={currentYear}
+      mode={reviewMode}
+    />
+  )
+
+  const renderYearEndStep = () => (
+    <YearEndGoalsStep
+      key="goals"
+      nextYear={nextYear}
+      mode={reviewMode}
+    />
+  )
+
   const renderWeekEndStep = () => {
     const lifeSteps = [
       <WeekEndCompletedTasksStep
@@ -239,36 +263,50 @@ export function ReviewWizard({ type, onComplete }: ReviewWizardProps) {
   }
 
   const content =
-    type === 'month_start'
-      ? renderMonthStartStep()
-      : type === 'month_end'
-        ? renderMonthEndStep()
-        : type === 'morning'
-          ? renderMorningStep()
-          : type === 'evening'
-            ? renderEveningStep()
-            : type === 'week_start'
-              ? renderWeekStartStep()
-              : type === 'week_end'
-                ? renderWeekEndStep()
-                : null
+    type === 'year_start'
+      ? renderYearStartStep()
+      : type === 'year_end'
+        ? renderYearEndStep()
+        : type === 'month_start'
+          ? renderMonthStartStep()
+          : type === 'month_end'
+            ? renderMonthEndStep()
+            : type === 'morning'
+              ? renderMorningStep()
+              : type === 'evening'
+                ? renderEveningStep()
+                : type === 'week_start'
+                  ? renderWeekStartStep()
+                  : type === 'week_end'
+                    ? renderWeekEndStep()
+                    : null
 
   const title =
-    type === 'month_start'
-      ? '月初の確認'
-      : type === 'month_end'
-        ? '月末の確認'
-        : type === 'morning'
-          ? '朝の確認'
-          : type === 'evening'
-            ? '夜の確認'
-            : type === 'week_start'
-              ? '週の始まりの確認'
-              : type === 'week_end'
-                ? '週の締めくくりの確認'
-                : ''
+    type === 'year_start'
+      ? '年始の確認'
+      : type === 'year_end'
+        ? '年末の確認'
+        : type === 'month_start'
+          ? '月初の確認'
+          : type === 'month_end'
+            ? '月末の確認'
+            : type === 'morning'
+              ? '朝の確認'
+              : type === 'evening'
+                ? '夜の確認'
+                : type === 'week_start'
+                  ? '週の始まりの確認'
+                  : type === 'week_end'
+                    ? '週の締めくくりの確認'
+                    : ''
 
   const stepLabels = useMemo(() => {
+    if (type === 'year_start') {
+      return ['今年の目標を確認しましょう。']
+    }
+    if (type === 'year_end') {
+      return ['来年の目標を確認しましょう。']
+    }
     if (type === 'month_start') {
       return ['今月の目標を確認しましょう。']
     }

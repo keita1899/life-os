@@ -1,7 +1,7 @@
 'use client'
 
 import { useCallback, useEffect, useMemo, useState } from 'react'
-import { format, startOfMonth, endOfMonth } from 'date-fns'
+import { format, startOfMonth, endOfMonth, startOfYear, endOfYear } from 'date-fns'
 import { useAppMode } from '@/hooks/useAppMode'
 import { useUserSettings } from '@/features/settings'
 import { getWeekStartDate, getWeekDays } from '@/features/calendar'
@@ -93,13 +93,28 @@ export function useReviewWizard(): UseReviewWizardResult {
     markReviewComplete: markMonthEndComplete,
   } = useReviewCompletion(monthEndDateStr, 'month_end', mode as ReviewMode)
 
+  const yearStartDateStr = format(startOfYear(now), 'yyyy-MM-dd')
+  const yearEndDateStr = format(endOfYear(now), 'yyyy-MM-dd')
+  const {
+    isCompleted: yearStartCompleted,
+    isLoading: yearStartLoading,
+    markReviewComplete: markYearStartComplete,
+  } = useReviewCompletion(yearStartDateStr, 'year_start', mode as ReviewMode)
+  const {
+    isCompleted: yearEndCompleted,
+    isLoading: yearEndLoading,
+    markReviewComplete: markYearEndComplete,
+  } = useReviewCompletion(yearEndDateStr, 'year_end', mode as ReviewMode)
+
   const isAnyCompletionLoading =
     morningLoading ||
     eveningLoading ||
     weekStartLoading ||
     weekEndLoading ||
     monthStartLoading ||
-    monthEndLoading
+    monthEndLoading ||
+    yearStartLoading ||
+    yearEndLoading
 
   const isTodayWeekStart = today === weekStartDateStr
   const isTodayWeekEnd = weekEndDate
@@ -114,9 +129,16 @@ export function useReviewWizard(): UseReviewWizardResult {
 
   const isTodayMonthStart = today === monthStartDateStr
   const isTodayMonthEnd = today === monthEndDateStr
+  const isTodayYearStart = today === yearStartDateStr
+  const isTodayYearEnd = today === yearEndDateStr
 
   const wizardConfigs = useMemo((): WizardConfig[] => {
     return [
+      {
+        type: 'year_start',
+        shouldShow: isTodayYearStart && !yearStartCompleted,
+        markComplete: markYearStartComplete,
+      },
       {
         type: 'month_start',
         shouldShow: isTodayMonthStart && !monthStartCompleted,
@@ -150,6 +172,11 @@ export function useReviewWizard(): UseReviewWizardResult {
         markComplete: markMonthEndComplete,
       },
       {
+        type: 'year_end',
+        shouldShow: isTodayYearEnd && !yearEndCompleted,
+        markComplete: markYearEndComplete,
+      },
+      {
         type: 'evening',
         shouldShow:
           !!(
@@ -161,6 +188,12 @@ export function useReviewWizard(): UseReviewWizardResult {
       },
     ]
   }, [
+    isTodayYearStart,
+    isTodayYearEnd,
+    yearStartCompleted,
+    yearEndCompleted,
+    markYearStartComplete,
+    markYearEndComplete,
     isTodayMonthStart,
     isTodayMonthEnd,
     monthStartCompleted,

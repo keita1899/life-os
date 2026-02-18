@@ -18,6 +18,8 @@ export type ReviewWizardType = Extract<
   | 'week_end'
   | 'month_start'
   | 'month_end'
+  | 'year_start'
+  | 'year_end'
 >
 
 export interface ReviewCompletion {
