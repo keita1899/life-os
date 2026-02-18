@@ -1,14 +1,18 @@
 'use client'
 
-import { Flag, Map, Zap } from 'lucide-react'
-import { getYear, getMonth } from 'date-fns'
+import { getYear, getMonth, startOfWeek, endOfWeek, format } from 'date-fns'
+import { Badge } from '@/components/ui/badge'
+import { EmptyState } from '@/components/ui/empty-state'
 import type { YearlyGoal, MonthlyGoal, WeeklyGoal } from '@/features/goals'
+
+const MONTH_NAMES = ['1月', '2月', '3月', '4月', '5月', '6月', '7月', '8月', '9月', '10月', '11月', '12月']
 
 interface LogGoalsSectionProps {
   yearlyGoals: YearlyGoal[]
   monthlyGoals: MonthlyGoal[]
   weeklyGoals: WeeklyGoal[]
   currentDate: Date
+  weekStartDay?: number
 }
 
 export function LogGoalsSection({
@@ -16,21 +20,8 @@ export function LogGoalsSection({
   monthlyGoals,
   weeklyGoals,
   currentDate,
+  weekStartDay = 1,
 }: LogGoalsSectionProps) {
-  const hasAnyGoals =
-    yearlyGoals.length > 0 ||
-    monthlyGoals.length > 0 ||
-    weeklyGoals.length > 0
-
-  if (!hasAnyGoals) {
-    return null
-  }
-
-  const year = getYear(currentDate)
-  const month = getMonth(currentDate)
-  const monthNames = ['1月', '2月', '3月', '4月', '5月', '6月', '7月', '8月', '9月', '10月', '11月', '12月']
-  const monthName = monthNames[month]
-
   const yearlyGoalTitles = yearlyGoals
     .filter((g) => !g.achieved)
     .map((g) => g.title)
@@ -43,61 +34,70 @@ export function LogGoalsSection({
 
   const weeklyGoalsFiltered = weeklyGoals.filter((g) => !g.achieved)
 
-  const hasYearlyOrMonthly = yearlyGoals.length > 0 || monthlyGoals.length > 0
-  const hasWeekly = weeklyGoals.length > 0
+  const hasYearly = yearlyGoalTitles.length > 0
+  const hasMonthly = monthlyGoalTitles.length > 0
+  const hasWeekly = weeklyGoalsFiltered.length > 0
+
+  if (!hasYearly && !hasMonthly && !hasWeekly) {
+    return <EmptyState message="目標がありません" />
+  }
+
+  const year = getYear(currentDate)
+  const monthName = MONTH_NAMES[getMonth(currentDate)]
+  const weekStartsOn = (weekStartDay === 0 ? 0 : 1) as 0 | 1
+  const weekStart = startOfWeek(currentDate, { weekStartsOn })
+  const weekEnd = endOfWeek(currentDate, { weekStartsOn })
+  const weekRangeLabel = `${format(weekStart, 'M/d')} ~ ${format(weekEnd, 'M/d')}`
 
   return (
-    <div className="p-6 border border-zinc-800 rounded-xl bg-zinc-950/50 flex flex-col gap-6">
-      {hasYearlyOrMonthly && (
-        <div className="space-y-4">
-          {yearlyGoals.length > 0 && (
-            <div className="flex items-center justify-between text-zinc-300">
-              <div className="flex items-center gap-2">
-                <Flag className="w-3 h-3" />
-                <span className="text-xs font-mono">{year}年の目標</span>
-              </div>
-              <span className="text-xs text-zinc-200">{yearlyGoalTitles || 'なし'}</span>
-            </div>
-          )}
+    <div className="flex flex-col gap-6 rounded-xl border border-zinc-800 bg-zinc-950/50 p-6">
+      {hasYearly && (
+        <section className="flex flex-col gap-3">
+          <div className="flex items-center gap-2">
+            <Badge variant="secondary" className="shrink-0">
+              年間
+            </Badge>
+            <h3 className="text-sm font-medium text-zinc-400">{year}年</h3>
+          </div>
+          <div className="text-sm text-zinc-200">{yearlyGoalTitles}</div>
+        </section>
+      )}
 
-          {monthlyGoals.length > 0 && (
-            <div className="space-y-1">
-              <div className="flex items-center gap-2 text-zinc-300">
-                <Map className="w-3 h-3" />
-                <span className="text-xs font-mono">{monthName}の目標</span>
-              </div>
-              <p className="text-sm text-zinc-200 leading-relaxed line-clamp-2">
-                {monthlyGoalTitles || 'なし'}
-              </p>
-            </div>
-          )}
-        </div>
+      {hasMonthly && (
+        <section className="flex flex-col gap-3">
+          <div className="flex items-center gap-2">
+            <Badge variant="secondary" className="shrink-0">
+              月間
+            </Badge>
+            <h3 className="text-sm font-medium text-zinc-400">{monthName}</h3>
+          </div>
+          <div className="text-sm leading-relaxed text-zinc-200">
+            {monthlyGoalTitles}
+          </div>
+        </section>
       )}
 
       {hasWeekly && (
-        <>
-          {hasYearlyOrMonthly && <div className="h-px bg-zinc-800/50" />}
-
-          <div className="relative">
-            <div className="flex items-center gap-2 mb-2 text-zinc-300">
-              <Zap className="w-4 h-4" />
-              <span className="text-xs font-mono font-bold tracking-wider">
-                今週の目標
-              </span>
-            </div>
-
-            <div className="space-y-2">
-              {weeklyGoalsFiltered.map((goal) => (
-                <div
-                  key={goal.id}
-                  className="p-4 rounded-lg bg-purple-50 border border-purple-200 dark:bg-purple-950/50 dark:border-purple-800"
-                >
-                  <p className="text-lg font-bold text-purple-900 dark:text-zinc-200">{goal.title}</p>
-                </div>
-              ))}
-            </div>
+        <section className="flex flex-col gap-3">
+          <div className="flex items-center gap-2">
+            <Badge variant="secondary" className="shrink-0">
+              週間
+            </Badge>
+            <h3 className="text-sm font-medium text-zinc-400">{weekRangeLabel}</h3>
           </div>
-        </>
+          <div className="space-y-2">
+            {weeklyGoalsFiltered.map((goal) => (
+              <div
+                key={goal.id}
+                className="rounded-lg border border-purple-200 bg-purple-50 p-4 dark:border-purple-800 dark:bg-purple-950/50"
+              >
+                <p className="text-lg font-bold text-purple-900 dark:text-zinc-200">
+                  {goal.title}
+                </p>
+              </div>
+            ))}
+          </div>
+        </section>
       )}
     </div>
   )
