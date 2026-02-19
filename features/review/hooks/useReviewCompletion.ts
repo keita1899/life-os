@@ -1,3 +1,4 @@
+import { useCallback } from 'react'
 import useSWR from 'swr'
 import { mutate } from 'swr'
 import {
@@ -7,17 +8,23 @@ import {
 import { SWR_KEYS } from '@/lib/swr-keys'
 import type { ReviewMode, ReviewType } from '../types/review-completion'
 
+export interface UseReviewCompletionResult {
+  isCompleted: boolean
+  isLoading: boolean
+  markReviewComplete: () => Promise<void>
+}
+
 export function useReviewCompletion(
   completedDate: string | null,
   type: ReviewType,
   mode: ReviewMode,
-) {
+): UseReviewCompletionResult {
   const key =
     completedDate !== null
       ? SWR_KEYS.reviewCompletion(completedDate, type, mode)
       : null
 
-  const { data: isCompleted } = useSWR<boolean>(
+  const { data: isCompleted, isLoading } = useSWR<boolean>(
     key,
     () =>
       completedDate !== null
@@ -25,15 +32,15 @@ export function useReviewCompletion(
         : Promise.resolve(false),
   )
 
-  const markReviewComplete = async () => {
+  const markReviewComplete = useCallback(async (): Promise<void> => {
     if (completedDate === null) return
     await markReviewCompleteApi(completedDate, type, mode)
     if (key) await mutate(key)
-  }
+  }, [completedDate, type, mode, key])
 
   return {
     isCompleted: isCompleted ?? false,
-    isLoading: key !== null && isCompleted === undefined,
+    isLoading: isLoading ?? false,
     markReviewComplete,
   }
 }

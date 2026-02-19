@@ -24,11 +24,9 @@ export function getMonthlyGoalsForDate(
 export function getWeeklyGoalsForDate(
   goals: WeeklyGoal[],
   date: Date,
-  weekStartDay: number = 1,
+  weekStartDay: 0 | 1 | 2 | 3 | 4 | 5 | 6 = 1,
 ): WeeklyGoal[] {
-  const weekStart = startOfWeek(date, {
-    weekStartsOn: weekStartDay as 0 | 1 | 2 | 3 | 4 | 5 | 6,
-  })
+  const weekStart = startOfWeek(date, { weekStartsOn: weekStartDay })
   weekStart.setHours(0, 0, 0, 0)
   const weekStartDate = formatDateISO(weekStart)
 

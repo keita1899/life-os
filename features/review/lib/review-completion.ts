@@ -17,8 +17,8 @@ export async function getReviewCompletion(
   type: ReviewType,
   mode: ReviewMode,
 ): Promise<boolean> {
-  const db = await getDatabase()
   try {
+    const db = await getDatabase()
     const result = await db.select<DbReviewCompletion[]>(
       `SELECT ${COLS} FROM review_completions WHERE completed_date = ? AND type = ? AND mode = ? LIMIT 1`,
       [completedDate, type, mode],
@@ -34,8 +34,8 @@ export async function markReviewComplete(
   type: ReviewType,
   mode: ReviewMode,
 ): Promise<void> {
-  const db = await getDatabase()
   try {
+    const db = await getDatabase()
     await db.execute(
       `INSERT OR IGNORE INTO review_completions (completed_date, type, mode) VALUES (?, ?, ?)`,
       [completedDate, type, mode],

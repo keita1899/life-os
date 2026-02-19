@@ -70,6 +70,7 @@ export function MonthEndGoalsStep({
             month: nextMonthNum,
           })
           await refreshGoals()
+          return true
         },
         '月間目標の作成に失敗しました',
       )
@@ -88,6 +89,7 @@ export function MonthEndGoalsStep({
             month: nextMonthNum,
           })
           await devRefreshGoals()
+          return true
         },
         '月間目標の作成に失敗しました',
       )
