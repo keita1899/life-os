@@ -92,7 +92,9 @@ export function ReviewWizard({ type, onComplete }: ReviewWizardProps) {
 
   const wizard = useWizard({
     stepCount,
-    onComplete: () => void onComplete(),
+    onComplete: () => {
+      onComplete().catch(() => setOperationError('レビューの完了に失敗しました'))
+    },
   })
 
   useEffect(() => {
@@ -193,6 +195,7 @@ export function ReviewWizard({ type, onComplete }: ReviewWizardProps) {
       key="goals"
       nextMonth={nextMonth}
       mode={reviewMode}
+      execute={execute}
     />
   )
 

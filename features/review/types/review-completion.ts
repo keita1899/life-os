@@ -25,7 +25,7 @@ export type ReviewWizardType = Extract<
 export interface ReviewCompletion {
   id: number
   completedDate: string
-  type: string
+  type: ReviewType
   mode: ReviewMode
   completedAt: string
 }

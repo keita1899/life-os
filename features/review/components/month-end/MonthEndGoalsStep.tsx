@@ -25,9 +25,17 @@ import type { CreateDevMonthlyGoalInput } from '@/features/dev/goals'
 interface MonthEndGoalsStepProps {
   nextMonth: Date
   mode: ReviewMode
+  execute: <T>(
+    fn: () => Promise<T>,
+    errorMessage: string,
+  ) => Promise<T | undefined>
 }
 
-export function MonthEndGoalsStep({ nextMonth, mode }: MonthEndGoalsStepProps) {
+export function MonthEndGoalsStep({
+  nextMonth,
+  mode,
+  execute,
+}: MonthEndGoalsStepProps) {
   const [isDialogOpen, setIsDialogOpen] = useState(false)
   const nextYear = nextMonth.getFullYear()
   const nextMonthNum = nextMonth.getMonth() + 1
@@ -54,28 +62,38 @@ export function MonthEndGoalsStep({ nextMonth, mode }: MonthEndGoalsStepProps) {
 
   const handleCreateLife = useCallback(
     async (input: CreateMonthlyGoalInput) => {
-      await createMonthlyGoal({
-        ...input,
-        year: input.year ?? nextYear,
-        month: nextMonthNum,
-      })
-      await refreshGoals()
-      setIsDialogOpen(false)
+      const result = await execute(
+        async () => {
+          await createMonthlyGoal({
+            ...input,
+            year: input.year ?? nextYear,
+            month: nextMonthNum,
+          })
+          await refreshGoals()
+        },
+        '月間目標の作成に失敗しました',
+      )
+      if (result !== undefined) setIsDialogOpen(false)
     },
-    [nextYear, nextMonthNum, refreshGoals],
+    [nextYear, nextMonthNum, refreshGoals, execute],
   )
 
   const handleCreateDev = useCallback(
     async (input: CreateDevMonthlyGoalInput) => {
-      await createDevMonthlyGoal({
-        ...input,
-        year: input.year ?? nextYear,
-        month: nextMonthNum,
-      })
-      await devRefreshGoals()
-      setIsDialogOpen(false)
+      const result = await execute(
+        async () => {
+          await createDevMonthlyGoal({
+            ...input,
+            year: input.year ?? nextYear,
+            month: nextMonthNum,
+          })
+          await devRefreshGoals()
+        },
+        '月間目標の作成に失敗しました',
+      )
+      if (result !== undefined) setIsDialogOpen(false)
     },
-    [nextYear, nextMonthNum, devRefreshGoals],
+    [nextYear, nextMonthNum, devRefreshGoals, execute],
   )
 
   if (mode === 'development') {

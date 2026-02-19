@@ -1,12 +1,12 @@
 'use client'
 
-import { useMemo } from 'react'
+import { useMemo, useCallback } from 'react'
 import { addDays, startOfDay, endOfDay } from 'date-fns'
 import { useEvents } from '@/features/events'
 import { expandRecurringEvents } from '@/features/events'
 import { useTasks } from '@/features/tasks'
 import { toTasksWithNextOccurrenceOnly, getTasksForDate } from '@/features/tasks'
-import { useDevCalendarTasks } from '@/features/dev/tasks'
+import { useDevCalendarTasks, type DevTask } from '@/features/dev/tasks'
 import { useDevProjects } from '@/features/dev/projects'
 import { getEventsForDateSorted } from '@/features/logs'
 import { getDevTasksForDate } from '@/features/dev/logs'
@@ -20,20 +20,11 @@ interface EveningTomorrowStepProps {
   mode: ReviewMode
 }
 
-function devTaskToTask(devTask: {
-  id: number
-  title: string
-  executionDate: string | null
-  completed: boolean
-  order: number
-  memo: string | null
-  createdAt: string
-  updatedAt: string
-}): Task {
+function devTaskToTask(devTask: DevTask): Task {
   return {
     id: devTask.id,
     title: devTask.title,
-    executionDate: devTask.executionDate ?? '',
+    executionDate: devTask.executionDate,
     completed: devTask.completed,
     order: devTask.order,
     scheduledTime: null,
@@ -74,6 +65,12 @@ export function EveningTomorrowStep({ today, mode }: EveningTomorrowStepProps) {
     return getTasksForDate(withNextOnly, tomorrow)
   }, [lifeTasks, tomorrow])
 
+  const devTaskById = useMemo(() => {
+    const map = new Map<number, DevTask>()
+    devTasks.forEach((t) => map.set(t.id, t))
+    return map
+  }, [devTasks])
+
   const devTasksTomorrow = useMemo(() => {
     const devForDate = getDevTasksForDate(devTasks, tomorrow)
     return devForDate.map(devTaskToTask)
@@ -81,23 +78,26 @@ export function EveningTomorrowStep({ today, mode }: EveningTomorrowStepProps) {
 
   const tasks = mode === 'life' ? lifeTasksTomorrow : devTasksTomorrow
 
-  const getTaskLabel = (task: Task) => {
-    if (mode !== 'development') return undefined
-    const devTask = devTasks.find((t) => t.id === task.id)
-    if (!devTask) return undefined
-    return devTask.projectId
-      ? projectNameById.get(devTask.projectId) ?? `プロジェクト#${devTask.projectId}`
-      : devTask.type === 'learning'
-        ? '学習'
-        : 'Inbox'
-  }
+  const computeTaskLabel = useCallback(
+    (task: Task): string | undefined => {
+      if (mode !== 'development') return undefined
+      const devTask = devTaskById.get(task.id)
+      if (!devTask) return undefined
+      return devTask.projectId
+        ? projectNameById.get(devTask.projectId) ?? `プロジェクト#${devTask.projectId}`
+        : devTask.type === 'learning'
+          ? '学習'
+          : 'Inbox'
+    },
+    [mode, devTaskById, projectNameById],
+  )
 
   if (mode === 'development') {
     return (
       <div className="space-y-5">
         <TaskList
           tasks={tasks}
-          getTaskLabel={getTaskLabel}
+          getTaskLabel={computeTaskLabel}
         />
       </div>
     )

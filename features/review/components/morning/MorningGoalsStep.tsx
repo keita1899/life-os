@@ -45,8 +45,8 @@ export function MorningGoalsStep({ today, mode }: MorningGoalsStepProps) {
     [monthlyGoals, today],
   )
   const lifeWeekly = useMemo(
-    () => getWeeklyGoalsForDate(weeklyGoals, today),
-    [weeklyGoals, today],
+    () => getWeeklyGoalsForDate(weeklyGoals, today, weekStartDay),
+    [weeklyGoals, today, weekStartDay],
   )
 
   const devYearly = useMemo(

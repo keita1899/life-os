@@ -1,4 +1,3 @@
-import { useEffect } from 'react'
 import useSWR from 'swr'
 import { mutate } from 'swr'
 import {
@@ -6,11 +5,11 @@ import {
   markReviewComplete as markReviewCompleteApi,
 } from '../lib/review-completion'
 import { SWR_KEYS } from '@/lib/swr-keys'
-import type { ReviewMode } from '../types/review-completion'
+import type { ReviewMode, ReviewType } from '../types/review-completion'
 
 export function useReviewCompletion(
   completedDate: string | null,
-  type: string,
+  type: ReviewType,
   mode: ReviewMode,
 ) {
   const key =
@@ -25,10 +24,6 @@ export function useReviewCompletion(
         ? getReviewCompletion(completedDate, type, mode)
         : Promise.resolve(false),
   )
-
-  useEffect(() => {
-    if (key) mutate(key)
-  }, [key])
 
   const markReviewComplete = async () => {
     if (completedDate === null) return
