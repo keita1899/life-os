@@ -43,12 +43,6 @@ export function HabitHeatmap({
   if (viewMode === 'week') {
     const weekDates = getWeekDays(focusDate, weekStartDay)
     const weekDateStrings = weekDates.map((d) => format(d, 'yyyy-MM-dd'))
-    const first = weekDates[0]
-    const last = weekDates[6]
-    const primaryYear = first.getFullYear()
-    const primaryMonth = first.getMonth() + 1
-    const secondaryYear = last.getFullYear()
-    const secondaryMonth = last.getMonth() + 1
 
     return (
       <div className="overflow-x-auto">
@@ -56,10 +50,6 @@ export function HabitHeatmap({
           habits={habits}
           weekDates={weekDates}
           weekDateStrings={weekDateStrings}
-          primaryYear={primaryYear}
-          primaryMonth={primaryMonth}
-          secondaryYear={secondaryYear}
-          secondaryMonth={secondaryMonth}
           completedHabitIdsToday={completedHabitIdsToday}
           onToggleToday={onToggleToday}
           onToggleDate={onToggleDate}

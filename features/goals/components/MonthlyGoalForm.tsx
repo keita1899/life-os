@@ -44,6 +44,7 @@ interface MonthlyGoalFormProps {
   initialData?: MonthlyGoal
   submitLabel?: string
   selectedYear?: number
+  selectedMonth?: number
 }
 
 export const MonthlyGoalForm = ({
@@ -52,6 +53,7 @@ export const MonthlyGoalForm = ({
   initialData,
   submitLabel = '作成',
   selectedYear,
+  selectedMonth,
 }: MonthlyGoalFormProps) => {
   const isEditMode = !!initialData
   const [checklist, setChecklist] = useState<ChecklistItem[]>(
@@ -69,7 +71,7 @@ export const MonthlyGoalForm = ({
       : {
           title: '',
           year: selectedYear ?? new Date().getFullYear(),
-          month: new Date().getMonth() + 1,
+          month: selectedMonth ?? new Date().getMonth() + 1,
         },
   })
 
@@ -84,11 +86,11 @@ export const MonthlyGoalForm = ({
       form.reset({
         title: '',
         year: selectedYear ?? new Date().getFullYear(),
-        month: new Date().getMonth() + 1,
+        month: selectedMonth ?? new Date().getMonth() + 1,
       })
       setChecklist([])
     }
-  }, [onSubmit, selectedYear, checklist, isEditMode, form])
+  }, [onSubmit, selectedYear, selectedMonth, checklist, isEditMode, form])
 
   useFormSubmitShortcut({
     form,

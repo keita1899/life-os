@@ -63,6 +63,26 @@ export async function getCompletionsByDate(
   }
 }
 
+export async function getCompletionsByHabitAndDateRange(
+  habitId: number,
+  startDateStr: string,
+  endDateStr: string,
+): Promise<HabitCompletion[]> {
+  const db = await getDatabase()
+
+  try {
+    const result = await db.select<DbHabitCompletion[]>(
+      `SELECT ${columns} FROM habit_completions
+       WHERE habit_id = ? AND completed_date >= ? AND completed_date <= ?
+       ORDER BY completed_date ASC`,
+      [habitId, startDateStr, endDateStr],
+    )
+    return result.map(mapDbToHabitCompletion)
+  } catch (err) {
+    handleDbError(err, 'get habit completions by habit and date range')
+  }
+}
+
 export async function createCompletion(
   habitId: number,
   completedDate: string,

@@ -12,6 +12,8 @@ interface DbUserSettings {
   week_start_day: number
   morning_review_time: string | null
   evening_review_time: string | null
+  week_start_review_time: string | null
+  week_end_review_time: string | null
   barcelona_ical_url: string | null
   initial_balance: number | null
   default_habit_view: string
@@ -41,6 +43,8 @@ function mapDbUserSettingsToUserSettings(
     weekStartDay: dbSettings.week_start_day,
     morningReviewTime: dbSettings.morning_review_time,
     eveningReviewTime: dbSettings.evening_review_time,
+    weekStartReviewTime: dbSettings.week_start_review_time ?? null,
+    weekEndReviewTime: dbSettings.week_end_review_time ?? null,
     barcelonaIcalUrl: dbSettings.barcelona_ical_url ?? null,
     initialBalance: dbSettings.initial_balance ?? null,
     defaultHabitView: validatedDefaultHabitView,
@@ -87,6 +91,8 @@ const USER_SETTINGS_UPDATE_MAPPING: FieldMapping<UpdateUserSettingsInput> = [
   { key: 'weekStartDay', column: 'week_start_day' },
   { key: 'morningReviewTime', column: 'morning_review_time', transform: (v) => v || null },
   { key: 'eveningReviewTime', column: 'evening_review_time', transform: (v) => v || null },
+  { key: 'weekStartReviewTime', column: 'week_start_review_time', transform: (v) => v || null },
+  { key: 'weekEndReviewTime', column: 'week_end_review_time', transform: (v) => v || null },
   { key: 'barcelonaIcalUrl', column: 'barcelona_ical_url', transform: (v) => v || null },
   { key: 'initialBalance', column: 'initial_balance', transform: (v) => v ?? null },
   { key: 'defaultHabitView', column: 'default_habit_view' },

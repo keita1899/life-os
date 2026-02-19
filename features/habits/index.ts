@@ -2,7 +2,11 @@ export { HabitDialog } from './components/HabitDialog'
 export { HabitForm } from './components/HabitForm'
 export { HabitHeatmap } from './components/HabitHeatmap'
 export { useHabits } from './hooks/useHabits'
-export { useHabitCompletions, useHabitCompletionsByDate } from './hooks/useHabitCompletions'
+export {
+  useHabitCompletions,
+  useHabitCompletionsByDate,
+  useHabitCompletionsByDateRange,
+} from './hooks/useHabitCompletions'
 export {
   useHabitHeatmapView,
   type HabitHeatmapViewMode,

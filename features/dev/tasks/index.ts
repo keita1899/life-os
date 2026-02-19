@@ -8,7 +8,11 @@ export {
   deleteDevTask,
   deleteCompletedDevTasks,
   updateOverdueDevTasksToToday,
+  updateAllOverdueDevTasksToToday,
   getTodayDevTasks,
+  getDevTasksForWeek,
+  getDevTasksCompletedInWeek,
+  getOverdueDevTasksInWeek,
 } from './lib'
 export type {
   DevTask,

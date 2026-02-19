@@ -33,6 +33,8 @@ const userSettingsFormSchema = z.object({
   weekStartDay: z.enum(['0', '1']),
   morningReviewTime: z.string().optional(),
   eveningReviewTime: z.string().optional(),
+  weekStartReviewTime: z.string().optional(),
+  weekEndReviewTime: z.string().optional(),
   barcelonaIcalUrl: z.string().url().optional().or(z.literal('')),
   defaultHabitView: z.enum(['month', 'week']),
 })
@@ -58,6 +60,8 @@ export const UserSettingsForm = ({
       weekStartDay: (String(weekStartDayValue) === '0' ? '0' : '1') as '0' | '1',
       morningReviewTime: initialData?.morningReviewTime || '',
       eveningReviewTime: initialData?.eveningReviewTime || '',
+      weekStartReviewTime: initialData?.weekStartReviewTime || '',
+      weekEndReviewTime: initialData?.weekEndReviewTime || '',
       barcelonaIcalUrl: initialData?.barcelonaIcalUrl || '',
       defaultHabitView: initialData?.defaultHabitView || 'month',
     }
@@ -75,6 +79,8 @@ export const UserSettingsForm = ({
       weekStartDay: Number(data.weekStartDay),
       morningReviewTime: data.morningReviewTime || null,
       eveningReviewTime: data.eveningReviewTime || null,
+      weekStartReviewTime: data.weekStartReviewTime || null,
+      weekEndReviewTime: data.weekEndReviewTime || null,
       barcelonaIcalUrl: data.barcelonaIcalUrl || null,
       defaultHabitView: data.defaultHabitView,
     })
@@ -217,6 +223,40 @@ export const UserSettingsForm = ({
               </FormControl>
               <FormDescription>
                 夜の振り返り・日記の確認時間を設定します（例: 21:00）
+              </FormDescription>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+
+        <FormField
+          control={form.control}
+          name="weekStartReviewTime"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>週初の確認時間</FormLabel>
+              <FormControl>
+                <Input type="time" {...field} value={field.value || ''} />
+              </FormControl>
+              <FormDescription>
+                週の始まりの確認ウィザードを表示する時間（未設定なら週開始日は終日対象）
+              </FormDescription>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+
+        <FormField
+          control={form.control}
+          name="weekEndReviewTime"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>週末の確認時間</FormLabel>
+              <FormControl>
+                <Input type="time" {...field} value={field.value || ''} />
+              </FormControl>
+              <FormDescription>
+                週の締めくくりの確認ウィザードを表示する時間（未設定なら週終了日は終日対象）
               </FormDescription>
               <FormMessage />
             </FormItem>

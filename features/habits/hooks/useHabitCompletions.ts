@@ -2,6 +2,7 @@ import useSWR, { useSWRConfig } from 'swr'
 import {
   getCompletionsByHabitAndMonth,
   getCompletionsByDate,
+  getCompletionsByHabitAndDateRange,
   createCompletion,
   deleteCompletion,
 } from '../lib'
@@ -123,5 +124,46 @@ export function useHabitCompletionsByDate(date: string) {
     deleteCompletion: handleDeleteCompletion,
     refreshCompletions: () => mutateCache(),
     mutate: mutateCache,
+  }
+}
+
+export function useHabitCompletionsByDateRange(
+  habitId: number | null,
+  startDateStr: string,
+  endDateStr: string,
+) {
+  const key =
+    habitId !== null
+      ? SWR_KEYS.habitCompletionsByDateRange(
+          habitId,
+          startDateStr,
+          endDateStr,
+        )
+      : null
+
+  const {
+    data = [],
+    isLoading,
+    error,
+  } = useSWR<HabitCompletion[]>(
+    key,
+    () =>
+      habitId !== null
+        ? getCompletionsByHabitAndDateRange(
+            habitId,
+            startDateStr,
+            endDateStr,
+          )
+        : Promise.resolve([]),
+  )
+
+  return {
+    completions: data,
+    isLoading,
+    error: error
+      ? error instanceof Error
+        ? error.message
+        : 'Failed to fetch habit completions'
+      : null,
   }
 }

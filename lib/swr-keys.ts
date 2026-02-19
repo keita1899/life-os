@@ -12,6 +12,11 @@ export const SWR_KEYS = {
     ['habit-completions-by-date', date] as const,
   habitCompletionsByMonth: (habitId: number, year: number, month: number) =>
     ['habit-completions', habitId, year, month] as const,
+  habitCompletionsByDateRange: (
+    habitId: number,
+    startDate: string,
+    endDate: string,
+  ) => ['habit-completions-range', habitId, startDate, endDate] as const,
   goals: (year: number) => ['goals', year] as const,
   dailyLog: (logDate: string) => ['daily-log', logDate] as const,
   bucketList: 'bucket-list',
@@ -22,6 +27,8 @@ export const SWR_KEYS = {
   vision: 'vision',
   visionCategories: 'vision-categories',
   userSettings: 'user-settings',
+  reviewCompletion: (completedDate: string, type: string, mode: string) =>
+    ['review-completion', completedDate, type, mode] as const,
 
   // ── Kakeibo ──
   transactions: 'transactions',

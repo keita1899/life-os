@@ -22,3 +22,44 @@ export function getTodayDevTasks(tasks: DevTask[]): DevTask[] {
     return category === 'today'
   })
 }
+
+export function getDevTasksForWeek(
+  tasks: DevTask[],
+  weekStartDateStr: string,
+  weekEndDateStr: string,
+): DevTask[] {
+  return tasks.filter(
+    (task) =>
+      task.executionDate !== null &&
+      task.executionDate >= weekStartDateStr &&
+      task.executionDate <= weekEndDateStr,
+  )
+}
+
+export function getDevTasksCompletedInWeek(
+  tasks: DevTask[],
+  weekStartDateStr: string,
+  weekEndDateStr: string,
+): DevTask[] {
+  return tasks.filter(
+    (task) =>
+      task.completed &&
+      task.executionDate !== null &&
+      task.executionDate >= weekStartDateStr &&
+      task.executionDate <= weekEndDateStr,
+  )
+}
+
+export function getOverdueDevTasksInWeek(
+  tasks: DevTask[],
+  weekStartDateStr: string,
+  beforeDateStr: string,
+): DevTask[] {
+  return tasks.filter(
+    (task) =>
+      !task.completed &&
+      task.executionDate !== null &&
+      task.executionDate >= weekStartDateStr &&
+      task.executionDate < beforeDateStr,
+  )
+}

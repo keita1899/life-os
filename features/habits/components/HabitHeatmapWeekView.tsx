@@ -2,20 +2,18 @@
 
 import { format } from 'date-fns'
 import { ja } from 'date-fns/locale/ja'
-import { useHabitCompletions } from '../hooks/useHabitCompletions'
+import { useSWRConfig } from 'swr'
+import { useHabitCompletionsByDateRange } from '../hooks/useHabitCompletions'
 import { isHabitDueOnDate, formatHabitScheduledTime } from '../lib'
 import type { Habit } from '../types/habit'
 import { cn } from '@/lib/utils'
 import { EditDeleteDropdownMenu } from '@/components/ui/edit-delete-dropdown-menu'
+import { SWR_KEYS } from '@/lib/swr-keys'
 
 export interface HabitHeatmapWeekViewProps {
   habits: Habit[]
   weekDates: Date[]
   weekDateStrings: string[]
-  primaryYear: number
-  primaryMonth: number
-  secondaryYear: number
-  secondaryMonth: number
   completedHabitIdsToday: Set<number>
   onToggleToday?: (habit: Habit) => void
   onToggleDate?: (habit: Habit, dateStr: string) => void
@@ -27,10 +25,6 @@ export function HabitHeatmapWeekView({
   habits,
   weekDates,
   weekDateStrings,
-  primaryYear,
-  primaryMonth,
-  secondaryYear,
-  secondaryMonth,
   completedHabitIdsToday,
   onToggleToday,
   onToggleDate,
@@ -82,10 +76,6 @@ export function HabitHeatmapWeekView({
           habit={habit}
           weekDates={weekDates}
           weekDateStrings={weekDateStrings}
-          primaryYear={primaryYear}
-          primaryMonth={primaryMonth}
-          secondaryYear={secondaryYear}
-          secondaryMonth={secondaryMonth}
           completedHabitIdsToday={completedHabitIdsToday}
           onToggleToday={onToggleToday}
           onToggleDate={onToggleDate}
@@ -101,10 +91,6 @@ interface HabitHeatmapWeekViewRowProps {
   habit: Habit
   weekDates: Date[]
   weekDateStrings: string[]
-  primaryYear: number
-  primaryMonth: number
-  secondaryYear: number
-  secondaryMonth: number
   completedHabitIdsToday: Set<number>
   onToggleToday?: (habit: Habit) => void
   onToggleDate?: (habit: Habit, dateStr: string) => void
@@ -117,26 +103,22 @@ function HabitHeatmapWeekViewRow(props: HabitHeatmapWeekViewRowProps) {
     habit,
     weekDates,
     weekDateStrings,
-    primaryYear,
-    primaryMonth,
-    secondaryYear,
-    secondaryMonth,
     completedHabitIdsToday,
     onToggleToday,
     onToggleDate,
     onEdit,
     onDelete,
   } = props
-  const { completions: primaryCompletions, isLoading: primaryLoading } =
-    useHabitCompletions(habit.id, primaryYear, primaryMonth)
-  const { completions: secondaryCompletions, isLoading: secondaryLoading } =
-    useHabitCompletions(habit.id, secondaryYear, secondaryMonth)
+  const { mutate } = useSWRConfig()
+  const weekStartStr = weekDateStrings[0] ?? ''
+  const weekEndStr = weekDateStrings[6] ?? ''
+  const { completions, isLoading } = useHabitCompletionsByDateRange(
+    habit.id,
+    weekStartStr,
+    weekEndStr,
+  )
 
-  const completedDateSet = new Set([
-    ...primaryCompletions.map((c) => c.completedDate),
-    ...secondaryCompletions.map((c) => c.completedDate),
-  ])
-  const isLoading = primaryLoading || secondaryLoading
+  const completedDateSet = new Set(completions.map((c) => c.completedDate))
   const todayStr = format(new Date(), 'yyyy-MM-dd')
 
   if (isLoading) {
@@ -198,12 +180,19 @@ function HabitHeatmapWeekViewRow(props: HabitHeatmapWeekViewRowProps) {
               canToggle ? (
                 <button
                   type="button"
-                  onClick={() => {
+                  onClick={async () => {
                     if (isToday && onToggleToday) {
-                      onToggleToday(habit)
+                      await onToggleToday(habit)
                     } else if (!isToday && onToggleDate) {
-                      onToggleDate(habit, dateStr)
+                      await onToggleDate(habit, dateStr)
                     }
+                    mutate(
+                      SWR_KEYS.habitCompletionsByDateRange(
+                        habit.id,
+                        weekStartStr,
+                        weekEndStr,
+                      ),
+                    )
                   }}
                   className={cn(
                     'block h-4 w-4 rounded-sm focus:outline-none',
