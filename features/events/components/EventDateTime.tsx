@@ -25,10 +25,12 @@ interface EventDateTimeProps {
 }
 
 export function EventDateTime({ event }: EventDateTimeProps) {
-  const { dateLabel, dateLabelStyle, timePart } = useMemo(() => {
+  const resolved = useMemo(() => {
     const startDate = parseISO(event.startDatetime)
     const startDateStr = format(startDate, 'yyyy-MM-dd')
     const label = getDateLabel(startDateStr)
+    if (label?.type === 'overdue') return null
+
     const style = label
       ? DATE_LABEL_STYLES[label.type] ?? DEFAULT_DATE_STYLE
       : DEFAULT_DATE_STYLE
@@ -74,6 +76,10 @@ export function EventDateTime({ event }: EventDateTimeProps) {
       timePart: startTime !== '00:00' ? startTime : null,
     }
   }, [event.startDatetime, event.endDatetime, event.allDay])
+
+  if (resolved === null) return null
+
+  const { dateLabel, dateLabelStyle, timePart } = resolved
 
   return (
     <div className="flex items-center gap-2">
