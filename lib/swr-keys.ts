@@ -47,6 +47,14 @@ export const SWR_KEYS = {
   devTasksByProject: (projectId: number | null, type: string) =>
     ['dev-tasks', projectId, type] as const,
   devDailyLog: (logDate: string) => ['dev-daily-log', logDate] as const,
+  devMemos: 'dev-memos',
+  devMemosWithKeyword: (keyword: string) =>
+    `dev-memos-keyword-${keyword}` as const,
+  devMemosWithOrder: (baseKey: string, orderBy: string) =>
+    `${baseKey}-${orderBy}` as const,
+  devMemosByProject: (projectId: number) =>
+    ['dev-memos-by-project', projectId] as const,
+  devMemo: (id: number) => `dev-memo-${id}` as const,
 } as const
 
 export function isTransactionsRelatedKey(key: unknown): boolean {
