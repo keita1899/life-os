@@ -93,6 +93,7 @@ export function EveningTomorrowStep({ today, mode }: EveningTomorrowStepProps) {
   )
 
   if (mode === 'development') {
+    if (tasks.length === 0) return null
     return (
       <div className="space-y-5">
         <TaskList
@@ -106,7 +107,7 @@ export function EveningTomorrowStep({ today, mode }: EveningTomorrowStepProps) {
   return (
     <div className="flex flex-col gap-6">
       <LogEventsSection events={lifeEvents} />
-      <TaskList tasks={tasks} />
+      {tasks.length > 0 && <TaskList tasks={tasks} />}
     </div>
   )
 }
