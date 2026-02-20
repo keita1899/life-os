@@ -44,7 +44,7 @@ export const YearlyGoalsSection = ({
 
   return (
     <div>
-      <div className="mb-6 flex items-center justify-between px-6">
+      <div className="mb-6 flex items-center justify-between">
         <h2 className="text-xl font-semibold text-stone-900 dark:text-stone-100">
           年間目標
         </h2>
@@ -59,7 +59,7 @@ export const YearlyGoalsSection = ({
         </Button>
       </div>
       {goals.length > 0 ? (
-        <div className="flex flex-col gap-6 px-6">
+        <div className="flex flex-col gap-6">
           {goals.map((goal) => {
             const progress = calculateProgress(goal.checklist)
             const completedCount = goal.checklist.filter(
@@ -142,7 +142,7 @@ export const YearlyGoalsSection = ({
           })}
         </div>
       ) : (
-        <div className="px-6">
+        <div>
           <EmptyState message="年間目標はありません" />
         </div>
       )}
