@@ -6,17 +6,22 @@ import { useAsyncOperation } from '@/hooks/useAsyncOperation'
 import { useEditState } from '@/hooks/useEditState'
 import { useWishlistCategories } from '../hooks/useWishlistCategories'
 import type { WishlistCategory } from '../types/wishlist-category'
-import { WishlistCategoryList } from './WishlistCategoryList'
+import {
+  WishlistCategoryList,
+  type WishlistCategoryCounts,
+} from './WishlistCategoryList'
 import { WishlistCategoryCreateForm } from './WishlistCategoryCreateForm'
 
 interface WishlistCategorySidebarProps {
   selectedCategoryId: string
   onSelectCategory: (categoryId: string) => void
+  counts?: WishlistCategoryCounts
 }
 
 export function WishlistCategorySidebar({
   selectedCategoryId,
   onSelectCategory,
+  counts,
 }: WishlistCategorySidebarProps) {
   const {
     categories,
@@ -81,6 +86,7 @@ export function WishlistCategorySidebar({
           onSelectCategory={onSelectCategory}
           onDelete={handleDeleteCategory}
           onUpdateCategory={handleUpdateCategory}
+          counts={counts}
         />
       </div>
 

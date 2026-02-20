@@ -25,9 +25,9 @@ export function useCalendarView({ initialDate }: UseCalendarViewOptions = {}) {
   const { userSettings, isLoading: isLoadingSettings } = useUserSettings()
   const [currentDate, setCurrentDate] = useState(initialDate || new Date())
 
-  const weekStartDay = userSettings?.weekStartDay ?? 0
+  const weekStartDay = userSettings?.weekStartDay ?? 1
   const defaultView = userSettings?.defaultCalendarView
-  const resolvedDefaultView: ViewMode = defaultView === 'week' ? 'week' : 'month'
+  const resolvedDefaultView: ViewMode = defaultView === 'month' ? 'month' : 'week'
   const viewFromUrl = searchParams.get('view')
   const viewMode: ViewMode =
     isValidViewMode(viewFromUrl ?? '') ? (viewFromUrl as ViewMode) : resolvedDefaultView

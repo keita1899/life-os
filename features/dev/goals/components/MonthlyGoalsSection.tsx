@@ -137,7 +137,7 @@ export const MonthlyGoalsSection = ({
 
   return (
     <div>
-      <div className="mb-6 flex items-center justify-between px-6">
+      <div className="mb-6 flex items-center justify-between">
         <h2 className="text-xl font-semibold text-stone-900 dark:text-stone-100">
           月間目標
         </h2>
@@ -145,7 +145,7 @@ export const MonthlyGoalsSection = ({
           月間目標を作成
         </Button>
       </div>
-      <div className="px-6">
+      <div>
         <GroupedAccordion
           items={[1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12].map((month) => {
             const monthGoals = monthlyGoalsByMonth[month] || []

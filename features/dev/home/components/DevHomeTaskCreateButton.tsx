@@ -1,13 +1,19 @@
 'use client'
 
 import { useMemo, useState } from 'react'
-import { CheckSquare } from 'lucide-react'
+import { CheckSquare, StickyNote } from 'lucide-react'
 import { ErrorMessage } from '@/components/ui/error-message'
 import { useDevProjects } from '@/features/dev/projects'
 import { useAsyncOperation } from '@/hooks/useAsyncOperation'
+import { useDialogState } from '@/hooks/useDialogState'
 import { createDevTask } from '@/features/dev/tasks'
 import { mutate } from 'swr'
 import { SWR_KEYS } from '@/lib/swr-keys'
+import {
+  useDevMemos,
+  MemoDialog,
+} from '@/features/dev/memos'
+import type { DevMemo, CreateDevMemoInput } from '@/features/dev/memos'
 import {
   Select,
   SelectContent,
@@ -43,9 +49,16 @@ function parseDevTaskTarget(value: string): DevTaskTarget | null {
 
 export function DevHomeTaskCreateButton() {
   const { projects } = useDevProjects()
+  const { createMemo } = useDevMemos()
+  const memoDialog = useDialogState<DevMemo>()
   const { operationError, setOperationError, execute } = useAsyncOperation()
   const [isTaskDialogOpen, setIsTaskDialogOpen] = useState(false)
   const [targetValue, setTargetValue] = useState<string>('inbox')
+
+  const handleCreateMemo = async (input: CreateDevMemoInput): Promise<void> => {
+    await createMemo(input)
+    memoDialog.handleDialogClose(false)
+  }
 
   const target = useMemo(() => parseDevTaskTarget(targetValue), [targetValue])
 
@@ -94,6 +107,12 @@ export function DevHomeTaskCreateButton() {
             icon: <CheckSquare className="h-5 w-5" />,
             onClick: () => setIsTaskDialogOpen(true),
           },
+          {
+            id: 'create-memo',
+            label: 'メモを作成',
+            icon: <StickyNote className="h-5 w-5" />,
+            onClick: memoDialog.handleCreateClick,
+          },
         ]}
       />
 
@@ -136,6 +155,12 @@ export function DevHomeTaskCreateButton() {
           </div>
         </DialogContent>
       </Dialog>
+
+      <MemoDialog
+        open={memoDialog.isDialogOpen}
+        onOpenChange={memoDialog.handleDialogClose}
+        onSubmit={handleCreateMemo}
+      />
     </>
   )
 }

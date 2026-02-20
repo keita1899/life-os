@@ -38,11 +38,12 @@ export function VisionCategoryList({
         <button
           onClick={() => onSelectCategory('all')}
           className={cn(
-            'w-full rounded-md py-2 px-2 text-left text-sm transition-colors hover:bg-stone-800',
+            'flex w-full items-center gap-2 rounded-md py-2 px-2 text-left text-sm transition-colors hover:bg-stone-800',
             selectedCategoryId === 'all' && 'bg-stone-800 font-medium',
           )}
         >
-          すべて
+          <span className="min-w-0 flex-1 truncate text-left">すべて</span>
+          <span className="h-8 w-8 shrink-0" aria-hidden />
         </button>
 
         {categories.map((category) => (

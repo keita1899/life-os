@@ -12,6 +12,7 @@ import {
   Wallet,
   Repeat,
   Settings,
+  StickyNote,
 } from 'lucide-react'
 
 export interface SidebarItemData {
@@ -171,5 +172,14 @@ export const DEV_TASK_ITEMS: SidebarItemData[] = [
       'group-hover:bg-green-100 group-hover:text-green-600 dark:group-hover:bg-green-900/30 dark:group-hover:text-green-400',
     activeIcon:
       'bg-green-100 text-green-600 dark:bg-green-900/30 dark:text-green-400',
+  },
+  {
+    href: '/dev/memos',
+    icon: StickyNote,
+    title: 'メモ',
+    hoverIcon:
+      'group-hover:bg-amber-100 group-hover:text-amber-600 dark:group-hover:bg-amber-900/30 dark:group-hover:text-amber-400',
+    activeIcon:
+      'bg-amber-100 text-amber-600 dark:bg-amber-900/30 dark:text-amber-400',
   },
 ]

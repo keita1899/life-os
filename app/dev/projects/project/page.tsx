@@ -31,7 +31,18 @@ import { useDeleteConfirm } from '@/hooks/useDeleteConfirm'
 import { useAsyncOperation } from '@/hooks/useAsyncOperation'
 import { FloatingActionButtons } from '@/components/floating/FloatingActionButtons'
 import { GroupedAccordion } from '@/components/ui/grouped-accordion'
-import { Pencil, Trash2, Calendar, Focus } from 'lucide-react'
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
+import { Pencil, Trash2, Calendar, Focus, CheckSquare, StickyNote } from 'lucide-react'
+import {
+  useDevMemosByProjectId,
+  MemoDialog,
+  MemoList,
+} from '@/features/dev/memos'
+import type {
+  DevMemo,
+  CreateDevMemoInput,
+  UpdateDevMemoInput,
+} from '@/features/dev/memos'
 
 const statusLabels: Record<ProjectStatus, string> = {
   draft: '下書き',
@@ -134,6 +145,18 @@ function DevProjectPageContent(): ReactElement | null {
   )
 
   const [openAccordionKeys, setOpenAccordionKeys] = useState<string[]>([])
+  const memoDialog = useDialogState<DevMemo>()
+  const memoDeleteConfirm = useDeleteConfirm<DevMemo>()
+
+  const {
+    memos,
+    isLoading: isMemosLoading,
+    createMemo,
+    updateMemo,
+    deleteMemo,
+  } = useDevMemosByProjectId(
+    Number.isFinite(projectId) ? projectId : null,
+  )
 
   const accordionValue = useMemo(() => {
     const keys = visibleGroups.map((g) => g.key)
@@ -260,6 +283,44 @@ function DevProjectPageContent(): ReactElement | null {
     )
   }
 
+  const handleCreateMemo = async (
+    input: CreateDevMemoInput,
+  ): Promise<void> => {
+    const result = await executeTaskOperation(
+      () => createMemo(input),
+      'メモの作成に失敗しました',
+    )
+    if (result !== undefined) {
+      memoDialog.handleDialogClose(false)
+    }
+  }
+
+  const handleUpdateMemo = async (
+    input: UpdateDevMemoInput,
+  ): Promise<void> => {
+    const memo = memoDialog.editingItem
+    if (!memo) return
+    const result = await executeTaskOperation(
+      () => updateMemo(memo.id, input),
+      'メモの更新に失敗しました',
+    )
+    if (result !== undefined) {
+      memoDialog.handleDialogClose(false)
+    }
+  }
+
+  const handleDeleteMemo = async (): Promise<void> => {
+    const memo = memoDeleteConfirm.deletingItem
+    if (!memo) return
+    const result = await executeTaskOperation(
+      () => deleteMemo(memo.id),
+      'メモの削除に失敗しました',
+    )
+    if (result !== undefined) {
+      memoDeleteConfirm.clearDeletingItem()
+    }
+  }
+
   return (
     <>
       <div className="container mx-auto max-w-4xl py-8 px-4">
@@ -329,7 +390,7 @@ function DevProjectPageContent(): ReactElement | null {
                       開始日
                     </dt>
                     <dd className="mt-1 text-sm">
-                      {formatDate(data.startDate) ?? '未設定'}
+                      {formatDate(data.startDate) ?? '未定'}
                     </dd>
                   </div>
                   <div>
@@ -337,7 +398,7 @@ function DevProjectPageContent(): ReactElement | null {
                       期限（終了日）
                     </dt>
                     <dd className="mt-1 text-sm">
-                      {formatDate(data.endDate) ?? '未設定'}
+                      {formatDate(data.endDate) ?? '未定'}
                     </dd>
                   </div>
                   <div>
@@ -354,82 +415,113 @@ function DevProjectPageContent(): ReactElement | null {
               </div>
             </section>
 
-            <section className="space-y-4">
-              <div className="flex items-center justify-between">
-                <h2 className="text-xl font-semibold">タスク</h2>
-                <CreateButton
-                  label="タスクを作成"
-                  onClick={taskDialog.handleCreateClick}
-                  disabled={!Number.isFinite(projectId)}
-                />
-              </div>
+            <Tabs defaultValue="tasks" className="space-y-4">
+              <TabsList className="grid w-full max-w-[240px] grid-cols-2">
+                <TabsTrigger value="tasks" className="flex items-center gap-2">
+                  <CheckSquare className="h-4 w-4" />
+                  タスク
+                </TabsTrigger>
+                <TabsTrigger value="memos" className="flex items-center gap-2">
+                  <StickyNote className="h-4 w-4" />
+                  メモ
+                </TabsTrigger>
+              </TabsList>
 
-              {isTasksLoading ? (
-                <Loading />
-              ) : (
-                <GroupedAccordion
-                  value={accordionValue}
-                  onValueChange={setOpenAccordionKeys}
-                  items={visibleGroups.map((group) => ({
-                    key: group.key,
-                    trigger: (
-                      <div className="flex w-full items-center justify-between">
-                        <div className="flex items-center gap-2">
-                          <h3 className="text-lg font-semibold text-stone-900 dark:text-stone-100">
-                            {group.title}
-                          </h3>
-                          {group.tasks.length > 0 && (
-                            <span className="text-sm text-muted-foreground">
-                              {group.tasks.length}
-                            </span>
+              <TabsContent value="tasks" className="space-y-4 mt-4">
+                <div className="flex items-center justify-end">
+                  <CreateButton
+                    label="タスクを作成"
+                    onClick={taskDialog.handleCreateClick}
+                    disabled={!Number.isFinite(projectId)}
+                  />
+                </div>
+                {isTasksLoading ? (
+                  <Loading />
+                ) : (
+                  <GroupedAccordion
+                    value={accordionValue}
+                    onValueChange={setOpenAccordionKeys}
+                    items={visibleGroups.map((group) => ({
+                      key: group.key,
+                      trigger: (
+                        <div className="flex w-full items-center justify-between">
+                          <div className="flex items-center gap-2">
+                            <h3 className="text-lg font-semibold text-stone-900 dark:text-stone-100">
+                              {group.title}
+                            </h3>
+                            {group.tasks.length > 0 && (
+                              <span className="text-sm text-muted-foreground">
+                                {group.tasks.length}
+                              </span>
+                            )}
+                          </div>
+                        </div>
+                      ),
+                      content: (
+                        <div className="space-y-4">
+                          <TaskList
+                            tasks={group.tasks}
+                            onEdit={taskDialog.handleEdit}
+                            onDelete={deleteConfirm.handleDeleteClick}
+                            onToggleCompletion={handleToggleCompletion}
+                            onUpdateExecutionDate={handleUpdateExecutionDate}
+                          />
+                          {group.key === 'overdue' && group.tasks.length > 0 && (
+                            <div className="flex justify-end">
+                              <Button
+                                type="button"
+                                variant="outline"
+                                size="sm"
+                                onClick={() =>
+                                  void handleUpdateOverdueTasksToToday()
+                                }
+                              >
+                                <Calendar className="mr-2 h-4 w-4" />
+                                今日に戻す
+                              </Button>
+                            </div>
+                          )}
+                          {group.key === 'completed' && group.tasks.length > 0 && (
+                            <div className="flex justify-end">
+                              <Button
+                                type="button"
+                                variant="outline"
+                                size="sm"
+                                className="text-destructive hover:text-destructive hover:bg-destructive/10"
+                                onClick={handleDeleteCompletedTasksClick}
+                              >
+                                <Trash2 className="mr-2 h-4 w-4" />
+                                完了済みを一括削除
+                              </Button>
+                            </div>
                           )}
                         </div>
-                      </div>
-                    ),
-                    content: (
-                      <div className="space-y-4">
-                        <TaskList
-                          tasks={group.tasks}
-                          onEdit={taskDialog.handleEdit}
-                          onDelete={deleteConfirm.handleDeleteClick}
-                          onToggleCompletion={handleToggleCompletion}
-                          onUpdateExecutionDate={handleUpdateExecutionDate}
-                        />
-                        {group.key === 'overdue' && group.tasks.length > 0 && (
-                          <div className="flex justify-end">
-                            <Button
-                              type="button"
-                              variant="outline"
-                              size="sm"
-                              onClick={() =>
-                                void handleUpdateOverdueTasksToToday()
-                              }
-                            >
-                              <Calendar className="mr-2 h-4 w-4" />
-                              今日に戻す
-                            </Button>
-                          </div>
-                        )}
-                        {group.key === 'completed' && group.tasks.length > 0 && (
-                          <div className="flex justify-end">
-                            <Button
-                              type="button"
-                              variant="outline"
-                              size="sm"
-                              className="text-destructive hover:text-destructive hover:bg-destructive/10"
-                              onClick={handleDeleteCompletedTasksClick}
-                            >
-                              <Trash2 className="mr-2 h-4 w-4" />
-                              完了済みを一括削除
-                            </Button>
-                          </div>
-                        )}
-                      </div>
-                    ),
-                  }))}
-                />
-              )}
-            </section>
+                      ),
+                    }))}
+                  />
+                )}
+              </TabsContent>
+
+              <TabsContent value="memos" className="space-y-4 mt-4">
+                <div className="flex items-center justify-end">
+                  <CreateButton
+                    label="メモを追加"
+                    onClick={memoDialog.handleCreateClick}
+                    disabled={!Number.isFinite(projectId)}
+                  />
+                </div>
+                {isMemosLoading ? (
+                  <Loading />
+                ) : (
+                  <MemoList
+                    memos={memos}
+                    projects={data ? [data] : []}
+                    onEdit={memoDialog.handleEdit}
+                    onDelete={memoDeleteConfirm.handleDeleteClick}
+                  />
+                )}
+              </TabsContent>
+            </Tabs>
           </div>
         )}
 
@@ -468,6 +560,25 @@ function DevProjectPageContent(): ReactElement | null {
           }件）をすべて削除しますか？この操作は取り消せません。`}
           onConfirm={handleDeleteCompletedTasks}
           onCancel={() => setIsDeletingCompletedDialogOpen(false)}
+        />
+
+        {Number.isFinite(projectId) && (
+          <MemoDialog
+            open={memoDialog.isDialogOpen}
+            onOpenChange={memoDialog.handleDialogClose}
+            onSubmit={
+              memoDialog.editingItem ? handleUpdateMemo : handleCreateMemo
+            }
+            memo={memoDialog.editingItem}
+            fixedProjectId={projectId}
+          />
+        )}
+
+        <DeleteConfirmDialog
+          open={!!memoDeleteConfirm.deletingItem}
+          message="このメモを削除しますか？この操作は取り消せません。"
+          onConfirm={handleDeleteMemo}
+          onCancel={memoDeleteConfirm.handleDeleteCancel}
         />
 
         {Number.isFinite(projectId) && (
