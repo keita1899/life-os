@@ -28,13 +28,13 @@ function mapDbUserSettingsToUserSettings(
     dbSettings.default_calendar_view === 'month' ||
     dbSettings.default_calendar_view === 'week'
       ? dbSettings.default_calendar_view
-      : 'month'
+      : 'week'
 
   const validatedDefaultHabitView: 'month' | 'week' =
     dbSettings.default_habit_view === 'month' ||
     dbSettings.default_habit_view === 'week'
       ? dbSettings.default_habit_view
-      : 'month'
+      : 'week'
 
   return {
     id: dbSettings.id,
@@ -63,9 +63,9 @@ export async function getUserSettings(): Promise<UserSettings> {
 
     if (result.length === 0) {
       await db.execute(
-        `INSERT INTO user_settings (default_calendar_view, week_start_day)
-         VALUES (?, ?)`,
-        ['month', 0],
+        `INSERT INTO user_settings (default_calendar_view, week_start_day, default_habit_view)
+         VALUES (?, ?, ?)`,
+        ['week', 1, 'week'],
       )
 
       const newResult = await db.select<DbUserSettings[]>(

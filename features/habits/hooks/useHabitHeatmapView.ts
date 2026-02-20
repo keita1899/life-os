@@ -23,7 +23,7 @@ export function useHabitHeatmapView({
     useState<HabitHeatmapViewMode | null>(null)
 
   const weekStartDay = userSettings?.weekStartDay ?? 1
-  const defaultHabitView = userSettings?.defaultHabitView ?? 'month'
+  const defaultHabitView = userSettings?.defaultHabitView ?? 'week'
   const viewMode: HabitHeatmapViewMode = viewModeOverride ?? defaultHabitView
   const setViewMode = (next: HabitHeatmapViewMode) => setViewModeOverride(next)
 
