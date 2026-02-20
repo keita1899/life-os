@@ -44,7 +44,9 @@ export function MemoList({
 
   const filteredMemos = useMemo(() => {
     if (!selectedTag) return memos
-    return memos.filter((m) => m.tags.includes(selectedTag))
+    return memos.filter((m) =>
+      m.tags.some((t) => t.trim() === selectedTag),
+    )
   }, [memos, selectedTag])
 
   if (memos.length === 0) {

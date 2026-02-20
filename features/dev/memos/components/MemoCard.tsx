@@ -32,7 +32,7 @@ export function MemoCard({
   onEdit,
   onDelete,
 }: MemoCardProps) {
-  const { copy, copied } = useCopyToClipboard({ resetDelayMs: 2000 })
+  const { copy, isCopied } = useCopyToClipboard({ resetDelayMs: 2000 })
 
   const handleCopy = (e: React.MouseEvent) => {
     e.preventDefault()
@@ -69,8 +69,12 @@ export function MemoCard({
           </div>
           {memo.tags.length > 0 && (
             <div className="mt-2 flex flex-wrap gap-1">
-              {memo.tags.map((tag) => (
-                <Badge key={tag} variant="secondary" className="text-xs">
+              {memo.tags.map((tag, index) => (
+                <Badge
+                  key={`${tag}-${index}`}
+                  variant="secondary"
+                  className="text-xs"
+                >
                   {tag}
                 </Badge>
               ))}
@@ -84,9 +88,9 @@ export function MemoCard({
             size="sm"
             className="h-8 w-8 p-0"
             onClick={handleCopy}
-            aria-label={copied ? 'コピーしました' : '本文をコピー'}
+            aria-label={isCopied ? 'コピーしました' : '本文をコピー'}
           >
-            {copied ? (
+            {isCopied ? (
               <Check className="h-4 w-4 text-green-600 dark:text-green-400" />
             ) : (
               <Copy className="h-4 w-4" />

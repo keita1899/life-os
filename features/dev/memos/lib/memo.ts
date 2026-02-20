@@ -53,19 +53,21 @@ export async function getDevMemos(
   options?: GetDevMemosOptions,
 ): Promise<DevMemo[]> {
   const db = await getDatabase()
-  const keyword = options?.keyword?.trim()
-  const hasKeyword = Boolean(keyword)
+  const rawKeyword = options?.keyword?.trim()
+  const hasKeyword = Boolean(rawKeyword)
   const projectId = options?.projectId
   const orderClause = ORDER_CLAUSE[options?.orderBy ?? 'newest']
 
-  const keywordPattern = hasKeyword ? `%${keyword}%` : ''
+  const keywordPattern = hasKeyword
+    ? `%${String(rawKeyword).replace(/\\/g, '\\\\').replace(/%/g, '\\%').replace(/_/g, '\\_')}%`
+    : ''
 
   try {
     if (projectId != null && hasKeyword) {
       const result = await db.select<DbDevMemo[]>(
         `SELECT id, content, project_id, tags, created_at, updated_at
          FROM dev_memos
-         WHERE project_id = ? AND content LIKE ?
+         WHERE project_id = ? AND content LIKE ? ESCAPE '\\'
          ${orderClause}`,
         [projectId, keywordPattern],
       )
@@ -85,7 +87,7 @@ export async function getDevMemos(
       const result = await db.select<DbDevMemo[]>(
         `SELECT id, content, project_id, tags, created_at, updated_at
          FROM dev_memos
-         WHERE content LIKE ?
+         WHERE content LIKE ? ESCAPE '\\'
          ${orderClause}`,
         [keywordPattern],
       )
@@ -137,25 +139,42 @@ export async function createDevMemo(
   const tagsJson = JSON.stringify(input.tags ?? [])
 
   try {
-    await db.execute(
+    const insertResult = await db.execute(
       `INSERT INTO dev_memos (content, project_id, tags)
        VALUES (?, ?, ?)`,
       [input.content, input.projectId ?? null, tagsJson],
     )
 
+    const lastId =
+      typeof insertResult?.lastInsertId === 'number'
+        ? insertResult.lastInsertId
+        : undefined
+    if (lastId === undefined) {
+      const fallback = await db.select<DbDevMemo[]>(
+        `SELECT id, content, project_id, tags, created_at, updated_at
+         FROM dev_memos
+         ORDER BY id DESC
+         LIMIT 1`,
+      )
+      if (fallback.length === 0) {
+        throw new Error(
+          'Failed to create dev memo: record not found after insert',
+        )
+      }
+      return mapDbMemoToMemo(fallback[0])
+    }
+
     const result = await db.select<DbDevMemo[]>(
       `SELECT id, content, project_id, tags, created_at, updated_at
        FROM dev_memos
-       ORDER BY id DESC
-       LIMIT 1`,
+       WHERE id = ?`,
+      [lastId],
     )
-
     if (result.length === 0) {
       throw new Error(
         'Failed to create dev memo: record not found after insert',
       )
     }
-
     return mapDbMemoToMemo(result[0])
   } catch (err) {
     if (

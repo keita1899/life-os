@@ -1,5 +1,6 @@
 'use client'
 
+import type { ReactElement } from 'react'
 import ReactMarkdown from 'react-markdown'
 import rehypeHighlight from 'rehype-highlight'
 import remarkGfm from 'remark-gfm'
@@ -12,7 +13,10 @@ interface MemoMarkdownProps {
   className?: string
 }
 
-export function MemoMarkdown({ content, className }: MemoMarkdownProps) {
+export function MemoMarkdown({
+  content,
+  className,
+}: MemoMarkdownProps): ReactElement {
   return (
     <div
       className={cn(

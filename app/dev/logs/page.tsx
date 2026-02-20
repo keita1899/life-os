@@ -110,12 +110,17 @@ function DevLogPageView({
   const [taskCreateTargetValue, setTaskCreateTargetValue] =
     useState<string>('inbox')
   const deleteConfirm = useDeleteConfirm<Task>()
+  const { operationError, setOperationError, execute } = useAsyncOperation()
 
   const handleCreateMemo = async (input: CreateDevMemoInput): Promise<void> => {
-    await createMemo(input)
-    memoDialog.handleDialogClose(false)
+    const result = await execute(
+      () => createMemo(input),
+      'メモの作成に失敗しました',
+    )
+    if (result !== undefined) {
+      memoDialog.handleDialogClose(false)
+    }
   }
-  const { operationError, setOperationError, execute } = useAsyncOperation()
   const { userSettings } = useUserSettings()
 
   const weekStartDay = userSettings?.weekStartDay ?? 1

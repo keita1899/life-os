@@ -5,9 +5,9 @@ export function useDevMemoTagSuggestions(): string[] {
   const { memos } = useDevMemos()
   return useMemo(() => {
     const set = new Set<string>()
-    for (const m of memos) {
-      for (const t of m.tags) {
-        set.add(t)
+    for (const memo of memos) {
+      for (const tag of memo.tags) {
+        set.add(tag)
       }
     }
     return Array.from(set).sort((a, b) => a.localeCompare(b))

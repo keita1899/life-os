@@ -37,9 +37,11 @@ export function useDevMemosByProjectId(
   )
 
   const invalidate = async (): Promise<DevMemo[] | undefined> => {
-    if (projectId === null) return undefined
-    await mutate(SWR_KEYS.devMemosByProject(projectId))
-    return mutate(SWR_KEYS.devMemos)
+    await mutate(SWR_KEYS.devMemos)
+    if (projectId !== null) {
+      await mutate(SWR_KEYS.devMemosByProject(projectId))
+    }
+    return undefined
   }
 
   const handleCreateMemo = async (

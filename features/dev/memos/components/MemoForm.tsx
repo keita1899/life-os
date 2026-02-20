@@ -43,7 +43,7 @@ export function MemoForm({
   fixedProjectId,
 }: MemoFormProps): ReactElement {
   const [tags, setTags] = useState<string[]>(initialData?.tags ?? [])
-  const [tagInputFocused, setTagInputFocused] = useState(false)
+  const [isTagInputFocused, setIsTagInputFocused] = useState(false)
   const allSuggestions = useDevMemoTagSuggestions()
 
   const form = useForm<MemoFormValues>({
@@ -59,6 +59,7 @@ export function MemoForm({
   useEffect(() => {
     if (initialData) {
       form.setValue('content', initialData.content)
+      form.setValue('tagInput', '')
       setTags(initialData.tags)
     } else {
       form.reset({
@@ -148,10 +149,16 @@ export function MemoForm({
                         {tags.map((tag) => (
                           <span
                             key={tag}
+                            role="button"
+                            tabIndex={0}
                             className="inline-flex items-center gap-1 bg-slate-700 text-slate-100 dark:bg-slate-600 dark:text-slate-200 px-2.5 py-1 rounded-full text-xs cursor-pointer hover:bg-slate-600 dark:hover:bg-slate-500"
                             onClick={() => handleRemoveTag(tag)}
-                            role="button"
-                            tabIndex={-1}
+                            onKeyDown={(e) => {
+                              if (e.key === 'Enter' || e.key === ' ') {
+                                e.preventDefault()
+                                handleRemoveTag(tag)
+                              }
+                            }}
                           >
                             {tag}
                             <span className="ml-0.5 opacity-70" aria-hidden>×</span>
@@ -162,8 +169,8 @@ export function MemoForm({
                     <Input
                       placeholder="Enter で追加"
                       {...field}
-                      onFocus={() => setTagInputFocused(true)}
-                      onBlur={() => setTagInputFocused(false)}
+                      onFocus={() => setIsTagInputFocused(true)}
+                      onBlur={() => setIsTagInputFocused(false)}
                       onKeyDown={(e) => {
                         if (e.key === 'Enter') {
                           e.preventDefault()
@@ -171,7 +178,7 @@ export function MemoForm({
                         }
                       }}
                     />
-                    {tagInputFocused && tagSuggestions.length > 0 && (
+                    {isTagInputFocused && tagSuggestions.length > 0 && (
                       <div className="absolute z-10 top-full left-0 right-0 mt-1 py-1 bg-popover border border-border rounded-md shadow-md max-h-40 overflow-y-auto">
                         {tagSuggestions.slice(0, 20).map((s) => (
                           <button

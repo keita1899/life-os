@@ -102,7 +102,9 @@ export default function DevMemosPage() {
           </div>
           <Select
             value={orderBy}
-            onValueChange={(v) => setOrderBy(v as DevMemosOrderBy)}
+            onValueChange={(v) => {
+              if (v === 'newest' || v === 'oldest') setOrderBy(v)
+            }}
           >
             <SelectTrigger className="w-[140px]">
               <SelectValue />

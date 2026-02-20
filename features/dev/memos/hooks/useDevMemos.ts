@@ -27,15 +27,21 @@ interface UseDevMemosResult {
 export function useDevMemos(options?: GetDevMemosOptions): UseDevMemosResult {
   const keyword = options?.keyword?.trim()
   const orderBy = options?.orderBy ?? 'newest'
-  const baseKey = keyword
-    ? SWR_KEYS.devMemosWithKeyword(keyword)
-    : SWR_KEYS.devMemos
+  const projectId = options?.projectId
+  const baseKey =
+    projectId != null
+      ? `dev-memos-project-${projectId}${keyword ? `-${keyword}` : ''}`
+      : keyword
+        ? SWR_KEYS.devMemosWithKeyword(keyword)
+        : SWR_KEYS.devMemos
   const swrKey =
     orderBy === 'oldest'
       ? SWR_KEYS.devMemosWithOrder(baseKey, 'oldest')
       : baseKey
   const otherSortKey =
-    orderBy === 'oldest' ? baseKey : SWR_KEYS.devMemosWithOrder(baseKey, 'oldest')
+    orderBy === 'oldest'
+      ? baseKey
+      : SWR_KEYS.devMemosWithOrder(baseKey, 'oldest')
   const {
     data = [],
     error,
@@ -44,6 +50,9 @@ export function useDevMemos(options?: GetDevMemosOptions): UseDevMemosResult {
 
   const mutateAllMemos = async (): Promise<void> => {
     await mutate(SWR_KEYS.devMemos)
+    if (projectId != null) {
+      await mutate(SWR_KEYS.devMemosByProject(projectId))
+    }
     await mutate(swrKey)
     await mutate(otherSortKey)
   }

@@ -38,7 +38,11 @@ import {
   MemoDialog,
   MemoList,
 } from '@/features/dev/memos'
-import type { DevMemo, CreateDevMemoInput } from '@/features/dev/memos'
+import type {
+  DevMemo,
+  CreateDevMemoInput,
+  UpdateDevMemoInput,
+} from '@/features/dev/memos'
 
 const statusLabels: Record<ProjectStatus, string> = {
   draft: '下書き',
@@ -282,24 +286,39 @@ function DevProjectPageContent(): ReactElement | null {
   const handleCreateMemo = async (
     input: CreateDevMemoInput,
   ): Promise<void> => {
-    await createMemo(input)
-    memoDialog.handleDialogClose(false)
+    const result = await executeTaskOperation(
+      () => createMemo(input),
+      'メモの作成に失敗しました',
+    )
+    if (result !== undefined) {
+      memoDialog.handleDialogClose(false)
+    }
   }
 
   const handleUpdateMemo = async (
-    input: CreateDevMemoInput,
+    input: UpdateDevMemoInput,
   ): Promise<void> => {
     const memo = memoDialog.editingItem
     if (!memo) return
-    await updateMemo(memo.id, input)
-    memoDialog.handleDialogClose(false)
+    const result = await executeTaskOperation(
+      () => updateMemo(memo.id, input),
+      'メモの更新に失敗しました',
+    )
+    if (result !== undefined) {
+      memoDialog.handleDialogClose(false)
+    }
   }
 
   const handleDeleteMemo = async (): Promise<void> => {
     const memo = memoDeleteConfirm.deletingItem
     if (!memo) return
-    await deleteMemo(memo.id)
-    memoDeleteConfirm.clearDeletingItem()
+    const result = await executeTaskOperation(
+      () => deleteMemo(memo.id),
+      'メモの削除に失敗しました',
+    )
+    if (result !== undefined) {
+      memoDeleteConfirm.clearDeletingItem()
+    }
   }
 
   return (
