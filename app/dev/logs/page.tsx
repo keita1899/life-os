@@ -4,7 +4,7 @@ import { Suspense, useCallback, useMemo, useState } from 'react'
 import { getYear } from 'date-fns'
 import { useRouter } from 'next/navigation'
 import { useFocusShortcut } from '@/features/focus'
-import { CheckSquare, Focus } from 'lucide-react'
+import { CheckSquare, Focus, StickyNote } from 'lucide-react'
 import { useDevGoals } from '@/features/dev/goals'
 import { useDevProjects } from '@/features/dev/projects'
 import {
@@ -47,6 +47,11 @@ import { DeleteConfirmDialog } from '@/components/ui/delete-confirm-dialog'
 import { FloatingActionButtons } from '@/components/floating/FloatingActionButtons'
 import type { Task, CreateTaskInput } from '@/features/tasks'
 import Link from 'next/link'
+import {
+  useDevMemos,
+  MemoDialog,
+} from '@/features/dev/memos'
+import type { DevMemo, CreateDevMemoInput } from '@/features/dev/memos'
 
 interface DevLogPageViewProps {
   currentDate: Date
@@ -100,9 +105,16 @@ function DevLogPageView({
   } = useDevCalendarTasks()
   const { projects } = useDevProjects()
   const taskDialog = useDialogState<Task>()
+  const memoDialog = useDialogState<DevMemo>()
+  const { createMemo } = useDevMemos()
   const [taskCreateTargetValue, setTaskCreateTargetValue] =
     useState<string>('inbox')
   const deleteConfirm = useDeleteConfirm<Task>()
+
+  const handleCreateMemo = async (input: CreateDevMemoInput): Promise<void> => {
+    await createMemo(input)
+    memoDialog.handleDialogClose(false)
+  }
   const { operationError, setOperationError, execute } = useAsyncOperation()
   const { userSettings } = useUserSettings()
 
@@ -389,6 +401,12 @@ function DevLogPageView({
           onCancel={deleteConfirm.handleDeleteCancel}
         />
 
+        <MemoDialog
+          open={memoDialog.isDialogOpen}
+          onOpenChange={memoDialog.handleDialogClose}
+          onSubmit={handleCreateMemo}
+        />
+
         <FloatingActionButtons
           actions={[
             {
@@ -402,6 +420,12 @@ function DevLogPageView({
               label: 'タスクを作成',
               icon: <CheckSquare className="h-5 w-5" />,
               onClick: handleOpenCreateTask,
+            },
+            {
+              id: 'create-memo',
+              label: 'メモを作成',
+              icon: <StickyNote className="h-5 w-5" />,
+              onClick: memoDialog.handleCreateClick,
             },
           ]}
         />
