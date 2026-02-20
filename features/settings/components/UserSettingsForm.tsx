@@ -53,17 +53,17 @@ export const UserSettingsForm = ({
   isSubmitting = false,
 }: UserSettingsFormProps) => {
   const formValues = useMemo<UserSettingsFormValues>(() => {
-    const weekStartDayValue = initialData?.weekStartDay ?? 0
+    const weekStartDayValue = initialData?.weekStartDay ?? 1
     return {
       birthday: initialData?.birthday ? formatDateForInput(initialData.birthday) : '',
-      defaultCalendarView: initialData?.defaultCalendarView || 'month',
+      defaultCalendarView: initialData?.defaultCalendarView || 'week',
       weekStartDay: (String(weekStartDayValue) === '0' ? '0' : '1') as '0' | '1',
       morningReviewTime: initialData?.morningReviewTime || '',
       eveningReviewTime: initialData?.eveningReviewTime || '',
       weekStartReviewTime: initialData?.weekStartReviewTime || '',
       weekEndReviewTime: initialData?.weekEndReviewTime || '',
       barcelonaIcalUrl: initialData?.barcelonaIcalUrl || '',
-      defaultHabitView: initialData?.defaultHabitView || 'month',
+      defaultHabitView: initialData?.defaultHabitView || 'week',
     }
   }, [initialData])
 
@@ -93,28 +93,37 @@ export const UserSettingsForm = ({
 
   return (
     <Form {...form}>
-      <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-6">
-        <FormField
-          control={form.control}
-          name="birthday"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>誕生日</FormLabel>
-              <FormControl>
-                <Input type="date" {...field} value={field.value || ''} />
-              </FormControl>
-              <FormDescription>
-                やりたいことリストで年齢を計算するために使用します
-              </FormDescription>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
+      <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-12">
+        <section className="space-y-4">
+          <h2 className="text-sm font-semibold uppercase tracking-wide text-muted-foreground">
+            基本
+          </h2>
+          <FormField
+            control={form.control}
+            name="birthday"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>誕生日</FormLabel>
+                <FormControl>
+                  <Input type="date" {...field} value={field.value || ''} />
+                </FormControl>
+                <FormDescription>
+                  やりたいことリストで年齢を計算するために使用します
+                </FormDescription>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+        </section>
 
-        <FormField
-          control={form.control}
-          name="defaultCalendarView"
-          render={({ field }) => (
+        <section className="space-y-4">
+          <h2 className="text-sm font-semibold uppercase tracking-wide text-muted-foreground">
+            表示
+          </h2>
+          <FormField
+            control={form.control}
+            name="defaultCalendarView"
+            render={({ field }) => (
             <FormItem>
               <FormLabel>カレンダーのデフォルト表示</FormLabel>
               <Select
@@ -138,11 +147,10 @@ export const UserSettingsForm = ({
             </FormItem>
           )}
         />
-
-        <FormField
-          control={form.control}
-          name="defaultHabitView"
-          render={({ field }) => (
+          <FormField
+            control={form.control}
+            name="defaultHabitView"
+            render={({ field }) => (
             <FormItem>
               <FormLabel>習慣のデフォルト表示</FormLabel>
               <Select
@@ -166,11 +174,10 @@ export const UserSettingsForm = ({
             </FormItem>
           )}
         />
-
-        <FormField
-          control={form.control}
-          name="weekStartDay"
-          render={({ field }) => (
+          <FormField
+            control={form.control}
+            name="weekStartDay"
+            render={({ field }) => (
             <FormItem>
               <FormLabel>週の開始日</FormLabel>
               <Select
@@ -194,11 +201,16 @@ export const UserSettingsForm = ({
             </FormItem>
           )}
         />
+        </section>
 
-        <FormField
-          control={form.control}
-          name="morningReviewTime"
-          render={({ field }) => (
+        <section className="space-y-4">
+          <h2 className="text-sm font-semibold uppercase tracking-wide text-muted-foreground">
+            レビュー・確認
+          </h2>
+          <FormField
+            control={form.control}
+            name="morningReviewTime"
+            render={({ field }) => (
             <FormItem>
               <FormLabel>朝の確認時間</FormLabel>
               <FormControl>
@@ -262,11 +274,16 @@ export const UserSettingsForm = ({
             </FormItem>
           )}
         />
+        </section>
 
-        <FormField
-          control={form.control}
-          name="barcelonaIcalUrl"
-          render={({ field }) => (
+        <section className="space-y-4">
+          <h2 className="text-sm font-semibold uppercase tracking-wide text-muted-foreground">
+            外部連携
+          </h2>
+          <FormField
+            control={form.control}
+            name="barcelonaIcalUrl"
+            render={({ field }) => (
             <FormItem>
               <FormLabel>FCバルセロナ iCal URL</FormLabel>
               <FormControl>
@@ -284,8 +301,9 @@ export const UserSettingsForm = ({
             </FormItem>
           )}
         />
+        </section>
 
-        <div className="flex justify-end">
+        <div className="flex justify-end pt-2">
           <Button type="submit" disabled={isSubmitting || form.formState.isSubmitting}>
             {isSubmitting || form.formState.isSubmitting ? '保存中...' : formatSubmitLabelWithShortcut('保存')}
           </Button>
