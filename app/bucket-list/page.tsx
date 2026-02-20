@@ -71,6 +71,19 @@ export default function BucketListPage() {
   >(undefined)
   const { operationError, setOperationError, execute } = useAsyncOperation()
 
+  const categoryCounts = useMemo(() => {
+    const byCategoryId: Record<number, number> = {}
+    categories.forEach((cat) => {
+      byCategoryId[cat.id] = items.filter((i) => i.categoryId === cat.id).length
+    })
+    return {
+      all: items.length,
+      none: items.filter((i) => i.categoryId === null).length,
+      achieved: items.filter((i) => i.completed).length,
+      byCategoryId,
+    }
+  }, [items, categories])
+
   const availableYears = useMemo(() => {
     const years = new Set<number>()
     items.forEach((item) => {
@@ -281,6 +294,7 @@ export default function BucketListPage() {
           <BucketListCategorySidebar
             selectedCategoryId={selectedCategoryId}
             onSelectCategory={setSelectedCategoryId}
+            counts={categoryCounts}
           />
         </div>
         <div className="min-h-0 flex-1 overflow-y-auto">

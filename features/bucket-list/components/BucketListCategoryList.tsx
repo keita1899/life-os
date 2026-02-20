@@ -1,12 +1,18 @@
 'use client'
 
-import { Button } from '@/components/ui/button'
-import { Trash2, Pencil } from 'lucide-react'
 import { DeleteConfirmDialog } from '@/components/ui/delete-confirm-dialog'
+import { EditDeleteDropdownMenu } from '@/components/ui/edit-delete-dropdown-menu'
 import { useDeleteConfirm } from '@/hooks/useDeleteConfirm'
 import { cn } from '@/lib/utils'
 import type { BucketListCategory } from '../types/bucket-list-category'
 import { BucketListCategoryEditForm } from './BucketListCategoryEditForm'
+
+export interface BucketListCategoryCounts {
+  all: number
+  none: number
+  achieved: number
+  byCategoryId: Record<number, number>
+}
 
 interface BucketListCategoryListProps {
   categories: BucketListCategory[]
@@ -15,6 +21,7 @@ interface BucketListCategoryListProps {
   onSelectCategory: (categoryId: string) => void
   onDelete: (category: BucketListCategory) => void
   onUpdateCategory: (id: number, name: string) => Promise<void>
+  counts?: BucketListCategoryCounts
 }
 
 export function BucketListCategoryList({
@@ -24,6 +31,7 @@ export function BucketListCategoryList({
   onSelectCategory,
   onDelete,
   onUpdateCategory,
+  counts,
 }: BucketListCategoryListProps) {
   const deleteConfirm = useDeleteConfirm<BucketListCategory>()
 
@@ -44,7 +52,17 @@ export function BucketListCategoryList({
               selectedCategoryId === 'all' && 'bg-stone-800 font-medium',
             )}
           >
-            すべて
+            <span className="flex items-center gap-2 w-full">
+              <span className="min-w-0 flex-1 flex items-center justify-between gap-2">
+                <span>すべて</span>
+                {counts && (
+                  <span className="text-muted-foreground tabular-nums shrink-0">
+                    {counts.all}
+                  </span>
+                )}
+              </span>
+              <span className="h-8 w-8 shrink-0" aria-hidden />
+            </span>
           </button>
           <button
             onClick={() => onSelectCategory('none')}
@@ -53,7 +71,17 @@ export function BucketListCategoryList({
               selectedCategoryId === 'none' && 'bg-stone-800 font-medium',
             )}
           >
-            未分類
+            <span className="flex items-center gap-2 w-full">
+              <span className="min-w-0 flex-1 flex items-center justify-between gap-2">
+                <span>未分類</span>
+                {counts && (
+                  <span className="text-muted-foreground tabular-nums shrink-0">
+                    {counts.none}
+                  </span>
+                )}
+              </span>
+              <span className="h-8 w-8 shrink-0" aria-hidden />
+            </span>
           </button>
         </div>
 
@@ -92,37 +120,22 @@ export function BucketListCategoryList({
                 />
               ) : (
                 <>
-                  <div className="min-w-0 flex-1 truncate text-left">
-                    {category.name}
+                  <div className="min-w-0 flex-1 truncate text-left flex items-center justify-between gap-2">
+                    <span>{category.name}</span>
+                    {counts && (
+                      <span className="shrink-0 text-muted-foreground tabular-nums">
+                        {counts.byCategoryId[category.id] ?? 0}
+                      </span>
+                    )}
                   </div>
                   <div
-                    className="flex shrink-0 items-center gap-0.5 opacity-0 transition-opacity group-hover:opacity-100"
+                    className="flex shrink-0 items-center opacity-0 transition-opacity group-hover:opacity-100"
                     onClick={(e) => e.stopPropagation()}
                   >
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      onClick={(e) => {
-                        e.stopPropagation()
-                        editState.startEdit(category.id)
-                      }}
-                      className="h-7 w-7"
-                      aria-label="編集"
-                    >
-                      <Pencil className="h-4 w-4" />
-                    </Button>
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      onClick={(e) => {
-                        e.stopPropagation()
-                        deleteConfirm.handleDeleteClick(category)
-                      }}
-                      className="h-7 w-7"
-                      aria-label="削除"
-                    >
-                      <Trash2 className="h-4 w-4" />
-                    </Button>
+                    <EditDeleteDropdownMenu
+                      onEdit={() => editState.startEdit(category.id)}
+                      onDelete={() => deleteConfirm.handleDeleteClick(category)}
+                    />
                   </div>
                 </>
               )}
@@ -138,7 +151,17 @@ export function BucketListCategoryList({
               selectedCategoryId === 'achieved' && 'bg-stone-800 font-medium',
             )}
           >
-            達成リスト
+            <span className="flex items-center gap-2 w-full">
+              <span className="min-w-0 flex-1 flex items-center justify-between gap-2">
+                <span>達成リスト</span>
+                {counts && (
+                  <span className="text-muted-foreground tabular-nums shrink-0">
+                    {counts.achieved}
+                  </span>
+                )}
+              </span>
+              <span className="h-8 w-8 shrink-0" aria-hidden />
+            </span>
           </button>
         </div>
       </div>

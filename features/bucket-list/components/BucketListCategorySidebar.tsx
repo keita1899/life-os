@@ -6,17 +6,22 @@ import { useBucketListCategories } from '../hooks/useBucketListCategories'
 import { useAsyncOperation } from '@/hooks/useAsyncOperation'
 import { useEditState } from '@/hooks/useEditState'
 import type { BucketListCategory } from '../types/bucket-list-category'
-import { BucketListCategoryList } from './BucketListCategoryList'
+import {
+  BucketListCategoryList,
+  type BucketListCategoryCounts,
+} from './BucketListCategoryList'
 import { BucketListCategoryCreateForm } from './BucketListCategoryCreateForm'
 
 interface BucketListCategorySidebarProps {
   selectedCategoryId: string
   onSelectCategory: (categoryId: string) => void
+  counts?: BucketListCategoryCounts
 }
 
 export function BucketListCategorySidebar({
   selectedCategoryId,
   onSelectCategory,
+  counts,
 }: BucketListCategorySidebarProps) {
   const {
     categories,
@@ -82,6 +87,7 @@ export function BucketListCategorySidebar({
           onSelectCategory={onSelectCategory}
           onDelete={handleDeleteCategory}
           onUpdateCategory={handleUpdateCategory}
+          counts={counts}
         />
       </div>
 
