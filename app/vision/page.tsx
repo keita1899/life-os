@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useMemo } from 'react'
+import { useState, useMemo, useRef, useEffect } from 'react'
 import {
   VisionCategorySidebar,
   VisionList,
@@ -81,14 +81,15 @@ export default function VisionPage() {
   }, [groupedItemsByCategory])
 
   const [openAccordionKeys, setOpenAccordionKeys] = useState<string[]>([])
-
-  const accordionValue = useMemo(() => {
-    if (openAccordionKeys.length === 0) return accordionKeys
-    const newKeys = accordionKeys.filter((k) => !openAccordionKeys.includes(k))
-    if (newKeys.length > 0)
-      return [...new Set([...openAccordionKeys, ...newKeys])]
-    return openAccordionKeys
-  }, [accordionKeys, openAccordionKeys])
+  const seenAccordionKeysRef = useRef<string[]>([])
+  useEffect(() => {
+    if (accordionKeys.length === 0) return
+    const added = accordionKeys.filter((k) => !seenAccordionKeysRef.current.includes(k))
+    if (added.length > 0) {
+      seenAccordionKeysRef.current = accordionKeys
+      setOpenAccordionKeys((prev) => [...new Set([...prev, ...added])])
+    }
+  }, [accordionKeys])
 
   const handleCreateItem = async (title: string) => {
     await execute(
@@ -142,7 +143,7 @@ export default function VisionPage() {
                 ({ categoryId }) => categoryId !== null,
               ).length > 0 ? (
                 <GroupedAccordion
-                  value={accordionValue}
+                  value={openAccordionKeys}
                   onValueChange={setOpenAccordionKeys}
                   items={groupedItemsByCategory
                     .filter(({ categoryId }) => categoryId !== null)

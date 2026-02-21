@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useMemo } from 'react'
+import { useState, useMemo, useRef, useEffect } from 'react'
 import { Trash2 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { CreateButton } from '@/components/ui/create-button'
@@ -119,14 +119,15 @@ export default function WishlistPage() {
   )
 
   const [openAccordionKeys, setOpenAccordionKeys] = useState<string[]>([])
-
-  const accordionValue = useMemo(() => {
-    if (openAccordionKeys.length === 0) return accordionKeys
-    const newKeys = accordionKeys.filter((k) => !openAccordionKeys.includes(k))
-    if (newKeys.length > 0)
-      return [...new Set([...openAccordionKeys, ...newKeys])]
-    return openAccordionKeys
-  }, [accordionKeys, openAccordionKeys])
+  const seenAccordionKeysRef = useRef<string[]>([])
+  useEffect(() => {
+    if (accordionKeys.length === 0) return
+    const added = accordionKeys.filter((k) => !seenAccordionKeysRef.current.includes(k))
+    if (added.length > 0) {
+      seenAccordionKeysRef.current = accordionKeys
+      setOpenAccordionKeys((prev) => [...new Set([...prev, ...added])])
+    }
+  }, [accordionKeys])
 
   const totalPrice = useMemo(() => {
     return calculateTotalPrice(unpurchasedItems)
@@ -270,7 +271,7 @@ export default function WishlistPage() {
                   </Select>
                 </div>
                 <GroupedAccordion
-                  value={accordionValue}
+                  value={openAccordionKeys}
                   onValueChange={setOpenAccordionKeys}
                   items={[
                     {

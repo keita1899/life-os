@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useMemo, useEffect } from 'react'
+import { useState, useMemo, useEffect, useRef } from 'react'
 import { useRouter } from 'next/navigation'
 import { useFocusShortcut } from '@/features/focus'
 import { Trash2, Calendar, Focus } from 'lucide-react'
@@ -91,15 +91,16 @@ export default function TasksPage() {
   )
 
   const [openAccordionKeys, setOpenAccordionKeys] = useState<string[]>([])
-
-  const accordionValue = useMemo(() => {
-    const keys = visibleGroups.map((g) => g.key)
-    if (openAccordionKeys.length === 0) return keys
-    const newKeys = keys.filter((k) => !openAccordionKeys.includes(k))
-    if (newKeys.length > 0)
-      return [...new Set([...openAccordionKeys, ...newKeys])]
-    return openAccordionKeys
-  }, [visibleGroups, openAccordionKeys])
+  const groupKeys = useMemo(() => visibleGroups.map((g) => g.key), [visibleGroups])
+  const seenAccordionKeysRef = useRef<string[]>([])
+  useEffect(() => {
+    if (groupKeys.length === 0) return
+    const added = groupKeys.filter((k) => !seenAccordionKeysRef.current.includes(k))
+    if (added.length > 0) {
+      seenAccordionKeysRef.current = groupKeys
+      setOpenAccordionKeys((prev) => [...new Set([...prev, ...added])])
+    }
+  }, [groupKeys])
 
   const handleCreateTask = async (input: CreateTaskInput) => {
     const result = await execute(
@@ -260,7 +261,7 @@ export default function TasksPage() {
         <Loading />
       ) : (
         <GroupedAccordion
-          value={accordionValue}
+          value={openAccordionKeys}
           onValueChange={setOpenAccordionKeys}
           items={visibleGroups.map((group) => ({
             key: group.key,
