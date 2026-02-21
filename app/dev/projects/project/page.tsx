@@ -4,7 +4,8 @@ import type { ReactElement } from 'react'
 import Link from 'next/link'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { useFocusShortcut } from '@/features/focus'
-import { useMemo, Suspense, useRef, useEffect } from 'react'
+import { useMemo, Suspense } from 'react'
+import dynamic from 'next/dynamic'
 import useSWR from 'swr'
 import { mutate } from 'swr'
 import { SWR_KEYS } from '@/lib/swr-keys'
@@ -30,6 +31,7 @@ import { useDialogState } from '@/hooks/useDialogState'
 import { useDeleteConfirm } from '@/hooks/useDeleteConfirm'
 import { useAsyncOperation } from '@/hooks/useAsyncOperation'
 import { FloatingActionButtons } from '@/components/floating/FloatingActionButtons'
+import { useAutoExpandAccordion } from '@/hooks/useAutoExpandAccordion'
 import { GroupedAccordion } from '@/components/ui/grouped-accordion'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import {
@@ -53,9 +55,16 @@ import type {
 } from '@/features/dev/memos'
 import {
   useProjectRequirements,
-  RequirementsEditor,
   DEFAULT_REQUIREMENTS_TEMPLATE,
 } from '@/features/dev/requirements'
+
+const RequirementsEditor = dynamic(
+  () =>
+    import('@/features/dev/requirements').then((m) => ({
+      default: m.RequirementsEditor,
+    })),
+  { loading: () => <Loading /> },
+)
 
 const statusLabels: Record<ProjectStatus, string> = {
   draft: '下書き',
@@ -157,20 +166,12 @@ function DevProjectPageContent(): ReactElement | null {
     [groupedTasks],
   )
 
-  const [openAccordionKeys, setOpenAccordionKeys] = useState<string[]>([])
-  const seenAccordionKeysRef = useRef<string[]>([])
   const groupKeys = useMemo(
     () => visibleGroups.map((g) => g.key),
     [visibleGroups],
   )
-  useEffect(() => {
-    if (groupKeys.length === 0) return
-    const added = groupKeys.filter((k) => !seenAccordionKeysRef.current.includes(k))
-    if (added.length > 0) {
-      seenAccordionKeysRef.current = groupKeys
-      setOpenAccordionKeys((prev) => [...new Set([...prev, ...added])])
-    }
-  }, [groupKeys])
+  const { openKeys: openAccordionKeys, setOpenKeys: setOpenAccordionKeys } =
+    useAutoExpandAccordion(groupKeys)
 
   const memoDialog = useDialogState<DevMemo>()
   const memoDeleteConfirm = useDeleteConfirm<DevMemo>()
@@ -187,7 +188,7 @@ function DevProjectPageContent(): ReactElement | null {
   const {
     requirements,
     isLoading: isRequirementsLoading,
-    saveRequirements,
+    upsertRequirements,
   } = useProjectRequirements(
     Number.isFinite(projectId) ? projectId : null,
   )
@@ -348,7 +349,7 @@ function DevProjectPageContent(): ReactElement | null {
 
   const handleSaveRequirements = async (content: string): Promise<void> => {
     await executeTaskOperation(
-      () => saveRequirements(content),
+      () => upsertRequirements(content),
       '要件定義の保存に失敗しました',
     )
   }
