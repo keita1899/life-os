@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useMemo, useRef, useEffect } from 'react'
+import { useState, useMemo } from 'react'
 import { Trash2 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { CreateButton } from '@/components/ui/create-button'
@@ -8,6 +8,7 @@ import { useCreateShortcut } from '@/hooks/useCreateShortcut'
 import { useDialogState } from '@/hooks/useDialogState'
 import { useDeleteConfirm } from '@/hooks/useDeleteConfirm'
 import { useAsyncOperation } from '@/hooks/useAsyncOperation'
+import { useAutoExpandAccordion } from '@/hooks/useAutoExpandAccordion'
 import { GroupedAccordion } from '@/components/ui/grouped-accordion'
 import {
   BucketListList,
@@ -159,16 +160,8 @@ export default function BucketListPage() {
     return values
   }, [incompleteByMonth, completedItems.length])
 
-  const [openAccordionKeys, setOpenAccordionKeys] = useState<string[]>([])
-  const seenAccordionKeysRef = useRef<string[]>([])
-  useEffect(() => {
-    if (accordionKeys.length === 0) return
-    const added = accordionKeys.filter((k) => !seenAccordionKeysRef.current.includes(k))
-    if (added.length > 0) {
-      seenAccordionKeysRef.current = accordionKeys
-      setOpenAccordionKeys((prev) => [...new Set([...prev, ...added])])
-    }
-  }, [accordionKeys])
+  const { openKeys: openAccordionKeys, setOpenKeys: setOpenAccordionKeys } =
+    useAutoExpandAccordion(accordionKeys)
 
   const handleCreateItem = async (input: CreateBucketListItemInput) => {
     const result = await execute(

@@ -1,11 +1,12 @@
 'use client'
 
-import { useState, useMemo, useRef, useEffect } from 'react'
+import { useState, useMemo } from 'react'
 import { CreateButton } from '@/components/ui/create-button'
 import { useCreateShortcut } from '@/hooks/useCreateShortcut'
 import { useDialogState } from '@/hooks/useDialogState'
 import { useDeleteConfirm } from '@/hooks/useDeleteConfirm'
 import { useAsyncOperation } from '@/hooks/useAsyncOperation'
+import { useAutoExpandAccordion } from '@/hooks/useAutoExpandAccordion'
 import { GroupedAccordion } from '@/components/ui/grouped-accordion'
 import {
   SubscriptionList,
@@ -64,20 +65,12 @@ export default function SubscriptionsPage() {
     ]
   }, [subscriptions])
 
-  const [openAccordionKeys, setOpenAccordionKeys] = useState<string[]>([])
   const groupKeys = useMemo(
     () => groupedSubscriptions.map((g) => g.key),
     [groupedSubscriptions],
   )
-  const seenAccordionKeysRef = useRef<string[]>([])
-  useEffect(() => {
-    if (groupKeys.length === 0) return
-    const added = groupKeys.filter((k) => !seenAccordionKeysRef.current.includes(k))
-    if (added.length > 0) {
-      seenAccordionKeysRef.current = groupKeys
-      setOpenAccordionKeys((prev) => [...new Set([...prev, ...added])])
-    }
-  }, [groupKeys])
+  const { openKeys: openAccordionKeys, setOpenKeys: setOpenAccordionKeys } =
+    useAutoExpandAccordion(groupKeys)
 
   const monthlyTotal = useMemo(() => {
     return calculateMonthlyTotal(subscriptions)

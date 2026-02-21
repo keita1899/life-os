@@ -1,12 +1,13 @@
 'use client'
 
-import { useState, useMemo, useRef, useEffect } from 'react'
+import { useState, useMemo } from 'react'
 import { startOfDay, subYears, addMonths } from 'date-fns'
 import { CreateButton } from '@/components/ui/create-button'
 import { useCreateShortcut } from '@/hooks/useCreateShortcut'
 import { useDialogState } from '@/hooks/useDialogState'
 import { useDeleteConfirm } from '@/hooks/useDeleteConfirm'
 import { useAsyncOperation } from '@/hooks/useAsyncOperation'
+import { useAutoExpandAccordion } from '@/hooks/useAutoExpandAccordion'
 import { GroupedAccordion } from '@/components/ui/grouped-accordion'
 import {
   EventList,
@@ -55,17 +56,9 @@ export default function EventsPage() {
     [groupedEvents],
   )
 
-  const [openAccordionKeys, setOpenAccordionKeys] = useState<string[]>([])
   const groupKeys = useMemo(() => visibleGroups.map((g) => g.key), [visibleGroups])
-  const seenAccordionKeysRef = useRef<string[]>([])
-  useEffect(() => {
-    if (groupKeys.length === 0) return
-    const added = groupKeys.filter((k) => !seenAccordionKeysRef.current.includes(k))
-    if (added.length > 0) {
-      seenAccordionKeysRef.current = groupKeys
-      setOpenAccordionKeys((prev) => [...new Set([...prev, ...added])])
-    }
-  }, [groupKeys])
+  const { openKeys: openAccordionKeys, setOpenKeys: setOpenAccordionKeys } =
+    useAutoExpandAccordion(groupKeys)
 
   const handleCreateEvent = async (input: CreateEventInput) => {
     const result = await execute(

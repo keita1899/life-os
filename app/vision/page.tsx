@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useMemo, useRef, useEffect } from 'react'
+import { useState, useMemo } from 'react'
 import {
   VisionCategorySidebar,
   VisionList,
@@ -8,6 +8,7 @@ import {
   useVisionCategories,
   type VisionItem,
 } from '@/features/vision'
+import { useAutoExpandAccordion } from '@/hooks/useAutoExpandAccordion'
 import { GroupedAccordion } from '@/components/ui/grouped-accordion'
 import { Loading } from '@/components/ui/loading'
 import { ErrorMessage } from '@/components/ui/error-message'
@@ -80,16 +81,8 @@ export default function VisionPage() {
       .map(({ categoryId }) => categoryId!.toString())
   }, [groupedItemsByCategory])
 
-  const [openAccordionKeys, setOpenAccordionKeys] = useState<string[]>([])
-  const seenAccordionKeysRef = useRef<string[]>([])
-  useEffect(() => {
-    if (accordionKeys.length === 0) return
-    const added = accordionKeys.filter((k) => !seenAccordionKeysRef.current.includes(k))
-    if (added.length > 0) {
-      seenAccordionKeysRef.current = accordionKeys
-      setOpenAccordionKeys((prev) => [...new Set([...prev, ...added])])
-    }
-  }, [accordionKeys])
+  const { openKeys: openAccordionKeys, setOpenKeys: setOpenAccordionKeys } =
+    useAutoExpandAccordion(accordionKeys)
 
   const handleCreateItem = async (title: string) => {
     await execute(

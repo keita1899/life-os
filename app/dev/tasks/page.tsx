@@ -1,6 +1,6 @@
 'use client'
 
-import { useMemo, useState, useRef, useEffect } from 'react'
+import { useMemo, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { useFocusShortcut } from '@/features/focus'
 import { Trash2, Calendar, Focus } from 'lucide-react'
@@ -10,6 +10,7 @@ import { useCreateShortcut } from '@/hooks/useCreateShortcut'
 import { useDialogState } from '@/hooks/useDialogState'
 import { useDeleteConfirm } from '@/hooks/useDeleteConfirm'
 import { useAsyncOperation } from '@/hooks/useAsyncOperation'
+import { useAutoExpandAccordion } from '@/hooks/useAutoExpandAccordion'
 import { GroupedAccordion } from '@/components/ui/grouped-accordion'
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { TaskList, TaskDialog, groupTasks } from '@/features/tasks'
@@ -82,17 +83,9 @@ export default function DevTasksPage() {
     [groupedTasks],
   )
 
-  const [openAccordionKeys, setOpenAccordionKeys] = useState<string[]>([])
   const groupKeys = useMemo(() => visibleGroups.map((g) => g.key), [visibleGroups])
-  const seenAccordionKeysRef = useRef<string[]>([])
-  useEffect(() => {
-    if (groupKeys.length === 0) return
-    const added = groupKeys.filter((k) => !seenAccordionKeysRef.current.includes(k))
-    if (added.length > 0) {
-      seenAccordionKeysRef.current = groupKeys
-      setOpenAccordionKeys((prev) => [...new Set([...prev, ...added])])
-    }
-  }, [groupKeys])
+  const { openKeys: openAccordionKeys, setOpenKeys: setOpenAccordionKeys } =
+    useAutoExpandAccordion(groupKeys)
 
   useCreateShortcut({
     onCreate: handleCreateClick,
