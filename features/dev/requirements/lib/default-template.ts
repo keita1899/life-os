@@ -1,5 +1,4 @@
-export const DEFAULT_REQUIREMENTS_TEMPLATE = `
-## 概要
+export const DEFAULT_REQUIREMENTS_TEMPLATE = `## 概要
 
 ## 目的
 
