@@ -1,10 +1,11 @@
 'use client'
 
 import type { ReactElement } from 'react'
-import { useState, useEffect, useCallback } from 'react'
+import { useState, useEffect, useCallback, useRef } from 'react'
 import { Button } from '@/components/ui/button'
 import { AutoResizeTextarea } from '@/components/ui/textarea-autosize'
 import { RequirementsMarkdown } from './RequirementsMarkdown'
+import { cn } from '@/lib/utils'
 import { FileText, Eye, SplitSquareVertical, Save } from 'lucide-react'
 
 export type RequirementsViewMode = 'form' | 'preview' | 'split'
@@ -21,15 +22,20 @@ export function RequirementsEditor({
   const [content, setContent] = useState(initialContent)
   const [viewMode, setViewMode] = useState<RequirementsViewMode>('split')
   const [isSaving, setIsSaving] = useState(false)
+  const lastSavedContentRef = useRef(initialContent)
 
   useEffect(() => {
-    setContent(initialContent)
-  }, [initialContent])
+    if (content === lastSavedContentRef.current) {
+      setContent(initialContent)
+      lastSavedContentRef.current = initialContent
+    }
+  }, [initialContent, content])
 
   const handleSave = useCallback(async () => {
     setIsSaving(true)
     try {
       await onSave(content)
+      lastSavedContentRef.current = content
     } finally {
       setIsSaving(false)
     }
@@ -43,11 +49,12 @@ export function RequirementsEditor({
             type="button"
             onClick={() => setViewMode('form')}
             title="編集"
-            className={`rounded p-2 transition-colors ${
+            className={cn(
+              'rounded p-2 transition-colors',
               viewMode === 'form'
                 ? 'bg-primary text-primary-foreground'
-                : 'hover:bg-muted'
-            }`}
+                : 'hover:bg-muted',
+            )}
           >
             <FileText className="h-4 w-4" />
           </button>
@@ -55,11 +62,12 @@ export function RequirementsEditor({
             type="button"
             onClick={() => setViewMode('preview')}
             title="プレビュー"
-            className={`rounded p-2 transition-colors ${
+            className={cn(
+              'rounded p-2 transition-colors',
               viewMode === 'preview'
                 ? 'bg-primary text-primary-foreground'
-                : 'hover:bg-muted'
-            }`}
+                : 'hover:bg-muted',
+            )}
           >
             <Eye className="h-4 w-4" />
           </button>
@@ -67,11 +75,12 @@ export function RequirementsEditor({
             type="button"
             onClick={() => setViewMode('split')}
             title="両方"
-            className={`rounded p-2 transition-colors ${
+            className={cn(
+              'rounded p-2 transition-colors',
               viewMode === 'split'
                 ? 'bg-primary text-primary-foreground'
-                : 'hover:bg-muted'
-            }`}
+                : 'hover:bg-muted',
+            )}
           >
             <SplitSquareVertical className="h-4 w-4" />
           </button>
