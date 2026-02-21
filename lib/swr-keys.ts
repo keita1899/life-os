@@ -55,6 +55,8 @@ export const SWR_KEYS = {
   devMemosByProject: (projectId: number) =>
     ['dev-memos-by-project', projectId] as const,
   devMemo: (id: number) => `dev-memo-${id}` as const,
+  devProjectRequirements: (projectId: number) =>
+    `dev-project-requirements-${projectId}` as const,
 } as const
 
 export function isTransactionsRelatedKey(key: unknown): boolean {
