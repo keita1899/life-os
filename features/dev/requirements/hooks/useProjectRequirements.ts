@@ -1,5 +1,5 @@
+import { useCallback } from 'react'
 import useSWR from 'swr'
-import { mutate } from 'swr'
 import {
   getProjectRequirements,
   upsertProjectRequirements,
@@ -11,8 +11,8 @@ interface UseProjectRequirementsResult {
   requirements: ProjectRequirements | null
   isLoading: boolean
   error: string | null
-  saveRequirements: (content: string) => Promise<void>
-  refreshRequirements: () => Promise<ProjectRequirements | null>
+  upsertRequirements: (content: string) => Promise<void>
+  refreshRequirements: () => Promise<ProjectRequirements | null | undefined>
 }
 
 export function useProjectRequirements(
@@ -33,17 +33,21 @@ export function useProjectRequirements(
         : Promise.resolve(null),
   )
 
-  const saveRequirements = async (content: string): Promise<void> => {
-    if (projectId === null) return
-    await upsertProjectRequirements(projectId, content)
-    await mutateKey()
-    await mutate(SWR_KEYS.devProjectRequirements(projectId))
-  }
+  const upsertRequirements = useCallback(
+    async (content: string): Promise<void> => {
+      if (projectId === null) return
+      await upsertProjectRequirements(projectId, content)
+      await mutateKey()
+    },
+    [projectId, mutateKey],
+  )
 
-  const refreshRequirements = async (): Promise<ProjectRequirements | null> => {
-    if (key === null) return null
+  const refreshRequirements = useCallback(async (): Promise<
+    ProjectRequirements | null | undefined
+  > => {
+    if (key === null) return undefined
     return mutateKey()
-  }
+  }, [key, mutateKey])
 
   return {
     requirements: data,
@@ -53,7 +57,7 @@ export function useProjectRequirements(
         ? error.message
         : 'Failed to fetch project requirements'
       : null,
-    saveRequirements,
+    upsertRequirements,
     refreshRequirements,
   }
 }
