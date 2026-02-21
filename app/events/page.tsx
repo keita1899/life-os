@@ -7,6 +7,7 @@ import { useCreateShortcut } from '@/hooks/useCreateShortcut'
 import { useDialogState } from '@/hooks/useDialogState'
 import { useDeleteConfirm } from '@/hooks/useDeleteConfirm'
 import { useAsyncOperation } from '@/hooks/useAsyncOperation'
+import { useAutoExpandAccordion } from '@/hooks/useAutoExpandAccordion'
 import { GroupedAccordion } from '@/components/ui/grouped-accordion'
 import {
   EventList,
@@ -55,16 +56,9 @@ export default function EventsPage() {
     [groupedEvents],
   )
 
-  const [openAccordionKeys, setOpenAccordionKeys] = useState<string[]>([])
-
-  const accordionValue = useMemo(() => {
-    const keys = visibleGroups.map((g) => g.key)
-    if (openAccordionKeys.length === 0) return keys
-    const newKeys = keys.filter((k) => !openAccordionKeys.includes(k))
-    if (newKeys.length > 0)
-      return [...new Set([...openAccordionKeys, ...newKeys])]
-    return openAccordionKeys
-  }, [visibleGroups, openAccordionKeys])
+  const groupKeys = useMemo(() => visibleGroups.map((g) => g.key), [visibleGroups])
+  const { openKeys: openAccordionKeys, setOpenKeys: setOpenAccordionKeys } =
+    useAutoExpandAccordion(groupKeys)
 
   const handleCreateEvent = async (input: CreateEventInput) => {
     const result = await execute(
@@ -149,7 +143,7 @@ export default function EventsPage() {
         <Loading />
       ) : (
         <GroupedAccordion
-          value={accordionValue}
+          value={openAccordionKeys}
           onValueChange={setOpenAccordionKeys}
           items={visibleGroups.map((group) => ({
             key: group.key,

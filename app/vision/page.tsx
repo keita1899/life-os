@@ -8,6 +8,7 @@ import {
   useVisionCategories,
   type VisionItem,
 } from '@/features/vision'
+import { useAutoExpandAccordion } from '@/hooks/useAutoExpandAccordion'
 import { GroupedAccordion } from '@/components/ui/grouped-accordion'
 import { Loading } from '@/components/ui/loading'
 import { ErrorMessage } from '@/components/ui/error-message'
@@ -80,15 +81,8 @@ export default function VisionPage() {
       .map(({ categoryId }) => categoryId!.toString())
   }, [groupedItemsByCategory])
 
-  const [openAccordionKeys, setOpenAccordionKeys] = useState<string[]>([])
-
-  const accordionValue = useMemo(() => {
-    if (openAccordionKeys.length === 0) return accordionKeys
-    const newKeys = accordionKeys.filter((k) => !openAccordionKeys.includes(k))
-    if (newKeys.length > 0)
-      return [...new Set([...openAccordionKeys, ...newKeys])]
-    return openAccordionKeys
-  }, [accordionKeys, openAccordionKeys])
+  const { openKeys: openAccordionKeys, setOpenKeys: setOpenAccordionKeys } =
+    useAutoExpandAccordion(accordionKeys)
 
   const handleCreateItem = async (title: string) => {
     await execute(
@@ -142,7 +136,7 @@ export default function VisionPage() {
                 ({ categoryId }) => categoryId !== null,
               ).length > 0 ? (
                 <GroupedAccordion
-                  value={accordionValue}
+                  value={openAccordionKeys}
                   onValueChange={setOpenAccordionKeys}
                   items={groupedItemsByCategory
                     .filter(({ categoryId }) => categoryId !== null)

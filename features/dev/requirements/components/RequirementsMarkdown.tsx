@@ -9,17 +9,17 @@ import {
   REHYPE_PLUGINS,
 } from '@/lib/markdown-shared'
 
-import 'highlight.js/styles/github-dark.min.css'
+import 'highlight.js/styles/github.min.css'
 
-interface MemoMarkdownProps {
+interface RequirementsMarkdownProps {
   content: string
   className?: string
 }
 
-export function MemoMarkdown({
+export function RequirementsMarkdown({
   content,
   className,
-}: MemoMarkdownProps): ReactElement {
+}: RequirementsMarkdownProps): ReactElement {
   return (
     <div className={cn(MARKDOWN_CONTAINER_CLASSES, className)}>
       <ReactMarkdown remarkPlugins={REMARK_PLUGINS} rehypePlugins={REHYPE_PLUGINS}>

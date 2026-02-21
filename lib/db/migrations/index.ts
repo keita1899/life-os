@@ -5,6 +5,7 @@ import { migration003 } from './003_tasks_memo'
 import { migration004 } from './004_review_completions'
 import { migration005 } from './005_week_review_times'
 import { migration006 } from './006_dev_memos'
+import { migration007 } from './007_dev_project_requirements'
 
 export const allMigrations: Migration[] = [
   migration001,
@@ -13,4 +14,5 @@ export const allMigrations: Migration[] = [
   migration004,
   migration005,
   migration006,
+  migration007,
 ]

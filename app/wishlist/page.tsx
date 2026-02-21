@@ -8,6 +8,7 @@ import { useCreateShortcut } from '@/hooks/useCreateShortcut'
 import { useDialogState } from '@/hooks/useDialogState'
 import { useDeleteConfirm } from '@/hooks/useDeleteConfirm'
 import { useAsyncOperation } from '@/hooks/useAsyncOperation'
+import { useAutoExpandAccordion } from '@/hooks/useAutoExpandAccordion'
 import { GroupedAccordion } from '@/components/ui/grouped-accordion'
 import {
   WishlistList,
@@ -118,15 +119,8 @@ export default function WishlistPage() {
     [purchasedItems.length],
   )
 
-  const [openAccordionKeys, setOpenAccordionKeys] = useState<string[]>([])
-
-  const accordionValue = useMemo(() => {
-    if (openAccordionKeys.length === 0) return accordionKeys
-    const newKeys = accordionKeys.filter((k) => !openAccordionKeys.includes(k))
-    if (newKeys.length > 0)
-      return [...new Set([...openAccordionKeys, ...newKeys])]
-    return openAccordionKeys
-  }, [accordionKeys, openAccordionKeys])
+  const { openKeys: openAccordionKeys, setOpenKeys: setOpenAccordionKeys } =
+    useAutoExpandAccordion(accordionKeys)
 
   const totalPrice = useMemo(() => {
     return calculateTotalPrice(unpurchasedItems)
@@ -270,7 +264,7 @@ export default function WishlistPage() {
                   </Select>
                 </div>
                 <GroupedAccordion
-                  value={accordionValue}
+                  value={openAccordionKeys}
                   onValueChange={setOpenAccordionKeys}
                   items={[
                     {

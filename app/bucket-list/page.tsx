@@ -8,6 +8,7 @@ import { useCreateShortcut } from '@/hooks/useCreateShortcut'
 import { useDialogState } from '@/hooks/useDialogState'
 import { useDeleteConfirm } from '@/hooks/useDeleteConfirm'
 import { useAsyncOperation } from '@/hooks/useAsyncOperation'
+import { useAutoExpandAccordion } from '@/hooks/useAutoExpandAccordion'
 import { GroupedAccordion } from '@/components/ui/grouped-accordion'
 import {
   BucketListList,
@@ -159,15 +160,8 @@ export default function BucketListPage() {
     return values
   }, [incompleteByMonth, completedItems.length])
 
-  const [openAccordionKeys, setOpenAccordionKeys] = useState<string[]>([])
-
-  const accordionValue = useMemo(() => {
-    if (openAccordionKeys.length === 0) return accordionKeys
-    const newKeys = accordionKeys.filter((k) => !openAccordionKeys.includes(k))
-    if (newKeys.length > 0)
-      return [...new Set([...openAccordionKeys, ...newKeys])]
-    return openAccordionKeys
-  }, [accordionKeys, openAccordionKeys])
+  const { openKeys: openAccordionKeys, setOpenKeys: setOpenAccordionKeys } =
+    useAutoExpandAccordion(accordionKeys)
 
   const handleCreateItem = async (input: CreateBucketListItemInput) => {
     const result = await execute(
@@ -358,7 +352,7 @@ export default function BucketListPage() {
                   <EmptyState message="やりたいことがありません" />
                 ) : (
                 <GroupedAccordion
-                  value={accordionValue}
+                  value={openAccordionKeys}
                   onValueChange={setOpenAccordionKeys}
                   items={[
                     ...Array.from({ length: 12 }, (_, i) => i + 1)
