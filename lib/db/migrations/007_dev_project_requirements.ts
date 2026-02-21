@@ -14,8 +14,5 @@ export const migration007: Migration = {
         FOREIGN KEY (project_id) REFERENCES dev_projects(id) ON DELETE CASCADE
       )
     `)
-    await db.execute(
-      'CREATE INDEX IF NOT EXISTS idx_dev_project_requirements_project_id ON dev_project_requirements(project_id)',
-    )
   },
 }

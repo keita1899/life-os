@@ -1,6 +1,13 @@
 import { getDatabase, handleDbError } from '@/lib/db'
 import type { ProjectRequirements } from '../types/project-requirements'
 
+export class RequirementsError extends Error {
+  constructor(message: string) {
+    super(message)
+    this.name = 'RequirementsError'
+  }
+}
+
 interface DbProjectRequirements {
   id: number
   project_id: number
@@ -41,75 +48,28 @@ export async function upsertProjectRequirements(
 ): Promise<ProjectRequirements> {
   const db = await getDatabase()
   try {
-    const existing = await db.select<DbProjectRequirements[]>(
+    await db.execute(
+      `INSERT INTO dev_project_requirements (project_id, content, updated_at)
+       VALUES (?, ?, CURRENT_TIMESTAMP)
+       ON CONFLICT (project_id) DO UPDATE SET
+         content = excluded.content,
+         updated_at = CURRENT_TIMESTAMP`,
+      [projectId, content],
+    )
+    const result = await db.select<DbProjectRequirements[]>(
       `SELECT id, project_id, content, updated_at
        FROM dev_project_requirements
        WHERE project_id = ?`,
       [projectId],
     )
-    if (existing.length > 0) {
-      await db.execute(
-        `UPDATE dev_project_requirements
-         SET content = ?, updated_at = CURRENT_TIMESTAMP
-         WHERE project_id = ?`,
-        [content, projectId],
-      )
-      const updated = await db.select<DbProjectRequirements[]>(
-        `SELECT id, project_id, content, updated_at
-         FROM dev_project_requirements
-         WHERE project_id = ?`,
-        [projectId],
-      )
-      if (updated.length === 0) {
-        throw new Error(
-          'Failed to update project requirements: record not found',
-        )
-      }
-      return mapDbToRequirements(updated[0])
-    }
-    const insertResult = await db.execute(
-      `INSERT INTO dev_project_requirements (project_id, content)
-       VALUES (?, ?)`,
-      [projectId, content],
-    )
-    const lastId =
-      typeof insertResult?.lastInsertId === 'number'
-        ? insertResult.lastInsertId
-        : undefined
-    if (lastId === undefined) {
-      const fallback = await db.select<DbProjectRequirements[]>(
-        `SELECT id, project_id, content, updated_at
-         FROM dev_project_requirements
-         WHERE project_id = ?
-         ORDER BY id DESC LIMIT 1`,
-        [projectId],
-      )
-      if (fallback.length === 0) {
-        throw new Error(
-          'Failed to create project requirements: record not found after insert',
-        )
-      }
-      return mapDbToRequirements(fallback[0])
-    }
-    const created = await db.select<DbProjectRequirements[]>(
-      `SELECT id, project_id, content, updated_at
-       FROM dev_project_requirements
-       WHERE id = ?`,
-      [lastId],
-    )
-    if (created.length === 0) {
-      throw new Error(
-        'Failed to create project requirements: record not found after insert',
+    if (result.length === 0) {
+      throw new RequirementsError(
+        'Upsert succeeded but project requirements row not found',
       )
     }
-    return mapDbToRequirements(created[0])
+    return mapDbToRequirements(result[0])
   } catch (err) {
-    if (
-      err instanceof Error &&
-      err.message.startsWith('Failed to ')
-    ) {
-      throw err
-    }
+    if (err instanceof RequirementsError) throw err
     handleDbError(err, 'upsert project requirements')
   }
 }
