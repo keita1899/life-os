@@ -4,7 +4,7 @@ import type { ReactElement } from 'react'
 import Link from 'next/link'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { useFocusShortcut } from '@/features/focus'
-import { useMemo, Suspense } from 'react'
+import { useMemo, Suspense, useRef, useEffect } from 'react'
 import useSWR from 'swr'
 import { mutate } from 'swr'
 import { SWR_KEYS } from '@/lib/swr-keys'
@@ -32,7 +32,15 @@ import { useAsyncOperation } from '@/hooks/useAsyncOperation'
 import { FloatingActionButtons } from '@/components/floating/FloatingActionButtons'
 import { GroupedAccordion } from '@/components/ui/grouped-accordion'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
-import { Pencil, Trash2, Calendar, Focus, CheckSquare, StickyNote } from 'lucide-react'
+import {
+  Pencil,
+  Trash2,
+  Calendar,
+  Focus,
+  CheckSquare,
+  StickyNote,
+  FileText,
+} from 'lucide-react'
 import {
   useDevMemosByProjectId,
   MemoDialog,
@@ -43,6 +51,11 @@ import type {
   CreateDevMemoInput,
   UpdateDevMemoInput,
 } from '@/features/dev/memos'
+import {
+  useProjectRequirements,
+  RequirementsEditor,
+  DEFAULT_REQUIREMENTS_TEMPLATE,
+} from '@/features/dev/requirements'
 
 const statusLabels: Record<ProjectStatus, string> = {
   draft: '下書き',
@@ -145,6 +158,20 @@ function DevProjectPageContent(): ReactElement | null {
   )
 
   const [openAccordionKeys, setOpenAccordionKeys] = useState<string[]>([])
+  const seenAccordionKeysRef = useRef<string[]>([])
+  const groupKeys = useMemo(
+    () => visibleGroups.map((g) => g.key),
+    [visibleGroups],
+  )
+  useEffect(() => {
+    if (groupKeys.length === 0) return
+    const added = groupKeys.filter((k) => !seenAccordionKeysRef.current.includes(k))
+    if (added.length > 0) {
+      seenAccordionKeysRef.current = groupKeys
+      setOpenAccordionKeys((prev) => [...new Set([...prev, ...added])])
+    }
+  }, [groupKeys])
+
   const memoDialog = useDialogState<DevMemo>()
   const memoDeleteConfirm = useDeleteConfirm<DevMemo>()
 
@@ -157,15 +184,13 @@ function DevProjectPageContent(): ReactElement | null {
   } = useDevMemosByProjectId(
     Number.isFinite(projectId) ? projectId : null,
   )
-
-  const accordionValue = useMemo(() => {
-    const keys = visibleGroups.map((g) => g.key)
-    if (openAccordionKeys.length === 0) return keys
-    const newKeys = keys.filter((k) => !openAccordionKeys.includes(k))
-    if (newKeys.length > 0)
-      return [...new Set([...openAccordionKeys, ...newKeys])]
-    return openAccordionKeys
-  }, [visibleGroups, openAccordionKeys])
+  const {
+    requirements,
+    isLoading: isRequirementsLoading,
+    saveRequirements,
+  } = useProjectRequirements(
+    Number.isFinite(projectId) ? projectId : null,
+  )
 
   const handleUpdate = async (input: {
     name: string
@@ -321,6 +346,13 @@ function DevProjectPageContent(): ReactElement | null {
     }
   }
 
+  const handleSaveRequirements = async (content: string): Promise<void> => {
+    await executeTaskOperation(
+      () => saveRequirements(content),
+      '要件定義の保存に失敗しました',
+    )
+  }
+
   return (
     <>
       <div className="container mx-auto max-w-4xl py-8 px-4">
@@ -415,8 +447,8 @@ function DevProjectPageContent(): ReactElement | null {
               </div>
             </section>
 
-            <Tabs defaultValue="tasks" className="space-y-4">
-              <TabsList className="grid w-full max-w-[240px] grid-cols-2">
+            <Tabs defaultValue="tasks" className="space-y-8">
+              <TabsList className="grid w-full max-w-[360px] grid-cols-3">
                 <TabsTrigger value="tasks" className="flex items-center gap-2">
                   <CheckSquare className="h-4 w-4" />
                   タスク
@@ -425,9 +457,16 @@ function DevProjectPageContent(): ReactElement | null {
                   <StickyNote className="h-4 w-4" />
                   メモ
                 </TabsTrigger>
+                <TabsTrigger
+                  value="requirements"
+                  className="flex items-center gap-2"
+                >
+                  <FileText className="h-4 w-4" />
+                  要件定義
+                </TabsTrigger>
               </TabsList>
 
-              <TabsContent value="tasks" className="space-y-4 mt-4">
+              <TabsContent value="tasks" className="mt-6 space-y-4">
                 <div className="flex items-center justify-end">
                   <CreateButton
                     label="タスクを作成"
@@ -439,7 +478,7 @@ function DevProjectPageContent(): ReactElement | null {
                   <Loading />
                 ) : (
                   <GroupedAccordion
-                    value={accordionValue}
+                    value={openAccordionKeys}
                     onValueChange={setOpenAccordionKeys}
                     items={visibleGroups.map((group) => ({
                       key: group.key,
@@ -502,7 +541,7 @@ function DevProjectPageContent(): ReactElement | null {
                 )}
               </TabsContent>
 
-              <TabsContent value="memos" className="space-y-4 mt-4">
+              <TabsContent value="memos" className="mt-6 space-y-4">
                 <div className="flex items-center justify-end">
                   <CreateButton
                     label="メモを追加"
@@ -518,6 +557,19 @@ function DevProjectPageContent(): ReactElement | null {
                     projects={data ? [data] : []}
                     onEdit={memoDialog.handleEdit}
                     onDelete={memoDeleteConfirm.handleDeleteClick}
+                  />
+                )}
+              </TabsContent>
+
+              <TabsContent value="requirements" className="mt-6 space-y-4">
+                {isRequirementsLoading ? (
+                  <Loading />
+                ) : (
+                  <RequirementsEditor
+                    initialContent={
+                      requirements?.content ?? DEFAULT_REQUIREMENTS_TEMPLATE
+                    }
+                    onSave={handleSaveRequirements}
                   />
                 )}
               </TabsContent>
