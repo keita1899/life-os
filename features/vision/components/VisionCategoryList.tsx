@@ -2,6 +2,7 @@
 
 import { DeleteConfirmDialog } from '@/components/ui/delete-confirm-dialog'
 import { EditDeleteDropdownMenu } from '@/components/ui/edit-delete-dropdown-menu'
+import { InlineCategoryCreateItem } from '@/components/ui/inline-category-create-item'
 import { useDeleteConfirm } from '@/hooks/useDeleteConfirm'
 import { cn } from '@/lib/utils'
 import type { VisionCategory } from '../types/vision-category'
@@ -14,6 +15,7 @@ interface VisionCategoryListProps {
   onSelectCategory: (categoryId: number | 'all' | null) => void
   onDelete: (category: VisionCategory) => void
   onUpdateCategory: (id: number, name: string) => Promise<void>
+  onCreateCategory: (name: string) => Promise<void>
 }
 
 export function VisionCategoryList({
@@ -23,6 +25,7 @@ export function VisionCategoryList({
   onSelectCategory,
   onDelete,
   onUpdateCategory,
+  onCreateCategory,
 }: VisionCategoryListProps) {
   const deleteConfirm = useDeleteConfirm<VisionCategory>()
 
@@ -93,6 +96,7 @@ export function VisionCategoryList({
             )}
           </div>
         ))}
+        <InlineCategoryCreateItem onSubmit={onCreateCategory} />
       </div>
 
       <DeleteConfirmDialog

@@ -10,6 +10,8 @@ interface BucketListDialogProps {
   onSubmit: (input: CreateBucketListItemInput) => Promise<void>
   item?: BucketListItem
   defaultCategoryId?: string
+  defaultTargetYear?: string
+  defaultTargetMonth?: string
 }
 
 export const BucketListDialog = ({
@@ -18,6 +20,8 @@ export const BucketListDialog = ({
   onSubmit,
   item,
   defaultCategoryId,
+  defaultTargetYear,
+  defaultTargetMonth,
 }: BucketListDialogProps) => {
   return (
     <FormDialog
@@ -31,8 +35,12 @@ export const BucketListDialog = ({
       }}
       formComponent={BucketListItemForm}
       formProps={
-        item == null && defaultCategoryId != null
-          ? { defaultCategoryId }
+        item == null
+          ? {
+              ...(defaultCategoryId != null ? { defaultCategoryId } : {}),
+              ...(defaultTargetYear !== undefined ? { defaultTargetYear } : {}),
+              ...(defaultTargetMonth !== undefined ? { defaultTargetMonth } : {}),
+            }
           : undefined
       }
     />

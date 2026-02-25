@@ -3,7 +3,6 @@
 import { useState } from 'react'
 import { CreateButton } from '@/components/ui/create-button'
 import { useCreateShortcut } from '@/hooks/useCreateShortcut'
-import { useDialogState } from '@/hooks/useDialogState'
 import {
   Select,
   SelectContent,
@@ -12,10 +11,11 @@ import {
   SelectValue,
 } from '@/components/ui/select'
 import {
-  ProjectDialog,
+  ProjectCreationWizard,
   ProjectList,
   useDevProjects,
 } from '@/features/dev/projects'
+import { upsertProjectRequirements } from '@/features/dev/requirements'
 import { Loading } from '@/components/ui/loading'
 import type { CreateDevProjectInput } from '@/features/dev/projects'
 
@@ -26,11 +26,7 @@ export default function DevProjectsPage() {
     error,
     createProject,
   } = useDevProjects()
-  const {
-    isDialogOpen,
-    handleDialogClose,
-    handleCreateClick,
-  } = useDialogState<never>()
+  const [wizardOpen, setWizardOpen] = useState(false)
   const [statusFilter, setStatusFilter] = useState<
     'all' | 'unreleased' | 'released'
   >('all')
@@ -42,15 +38,17 @@ export default function DevProjectsPage() {
   }
 
   useCreateShortcut({
-    onCreate: handleCreateClick,
-    enabled: !isDialogOpen,
+    onCreate: () => setWizardOpen(true),
+    enabled: !wizardOpen,
   })
 
   const handleCreateProject = async (
     input: CreateDevProjectInput,
+    requirementsContent: string,
   ): Promise<void> => {
-    await createProject(input)
-    handleDialogClose(false)
+    const project = await createProject(input)
+    await upsertProjectRequirements(project.id, requirementsContent)
+    setWizardOpen(false)
   }
 
   return (
@@ -71,7 +69,7 @@ export default function DevProjectsPage() {
             </Select>
             <CreateButton
               label="プロジェクトを作成"
-              onClick={handleCreateClick}
+              onClick={() => setWizardOpen(true)}
               title="⌘N で作成"
             />
           </div>
@@ -88,9 +86,9 @@ export default function DevProjectsPage() {
           />
         )}
 
-        <ProjectDialog
-          open={isDialogOpen}
-          onOpenChange={handleDialogClose}
+        <ProjectCreationWizard
+          open={wizardOpen}
+          onClose={() => setWizardOpen(false)}
           onSubmit={handleCreateProject}
         />
       </div>

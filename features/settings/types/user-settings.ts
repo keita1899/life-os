@@ -12,6 +12,10 @@ export interface UserSettings {
   barcelonaIcalUrl: string | null
   initialBalance: number | null
   defaultHabitView: CalendarViewMode
+  notifyEvents: boolean
+  notifyTasks: boolean
+  notifyHabits: boolean
+  notifyMinutesBefore: number
   createdAt: string
   updatedAt: string
 }
@@ -27,4 +31,8 @@ export interface UpdateUserSettingsInput {
   barcelonaIcalUrl?: string | null
   initialBalance?: number | null
   defaultHabitView?: CalendarViewMode
+  notifyEvents?: boolean
+  notifyTasks?: boolean
+  notifyHabits?: boolean
+  notifyMinutesBefore?: number
 }

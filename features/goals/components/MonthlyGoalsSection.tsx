@@ -4,6 +4,7 @@ import { useState, useMemo } from 'react'
 import { CheckCircle2, Circle, ChevronDown, ChevronUp } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { EditDeleteDropdownMenu } from '@/components/ui/edit-delete-dropdown-menu'
+import { InlineCreateButton } from '@/components/ui/inline-create-button'
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card'
 import { EmptyState } from '@/components/ui/empty-state'
 import { Progress } from '@/components/ui/progress'
@@ -14,7 +15,7 @@ import type { MonthlyGoal } from '../types/monthly-goal'
 interface MonthlyGoalsSectionProps {
   goals: MonthlyGoal[]
   selectedYear: number
-  onCreateClick: () => void
+  onCreateClick: (defaultMonth?: number) => void
   onEditClick: (goal: MonthlyGoal) => void
   onDeleteClick: (e: React.MouseEvent, goal: MonthlyGoal) => void
   onToggleChecklistItem?: (
@@ -146,7 +147,7 @@ export const MonthlyGoalsSection = ({
         <h2 className="text-xl font-semibold text-stone-900 dark:text-stone-100">
           月間目標
         </h2>
-        <Button variant="outline" onClick={onCreateClick} size="sm">
+        <Button variant="outline" onClick={() => onCreateClick()} size="sm">
           月間目標を作成
         </Button>
       </div>
@@ -157,7 +158,10 @@ export const MonthlyGoalsSection = ({
             今月の目標
           </h3>
           {thisMonthGoals.length === 0 ? (
-            <EmptyState message="今月の目標はありません" />
+            <InlineCreateButton
+              label="今月の目標を作成"
+              onClick={() => onCreateClick(currentMonth)}
+            />
           ) : (
             <div className="grid gap-4 grid-cols-1">
               {thisMonthGoals.map((goal) => (
@@ -191,7 +195,10 @@ export const MonthlyGoalsSection = ({
               trigger: `${month}月`,
               content:
                 monthGoals.length === 0 ? (
-                  <EmptyState message="この月の目標はありません" />
+                  <InlineCreateButton
+                    label={`${month}月の目標を作成`}
+                    onClick={() => onCreateClick(month)}
+                  />
                 ) : (
                   <div className="grid gap-4 grid-cols-1">
                     {monthGoals.map((goal) => (

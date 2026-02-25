@@ -1,11 +1,11 @@
 'use client'
 
 import { useMemo } from 'react'
-import { format, addDays } from 'date-fns'
-import useSWR from 'swr'
-import { getWeeklyGoalByWeekStart } from '@/features/goals'
-import { getDevWeeklyGoalByWeekStart } from '@/features/dev/goals'
-import { EmptyState } from '@/components/ui/empty-state'
+import { addDays } from 'date-fns'
+import { useGoals, WeeklyGoalForm } from '@/features/goals'
+import { useDevGoals, WeeklyGoalForm as DevWeeklyGoalForm } from '@/features/dev/goals'
+import { getWeekStartDate } from '@/features/calendar'
+import { useUserSettings } from '@/features/settings'
 import type { ReviewMode } from '../../types/review-completion'
 
 interface WeekEndNextGoalsStepProps {
@@ -13,44 +13,42 @@ interface WeekEndNextGoalsStepProps {
   mode: ReviewMode
 }
 
-function getNextWeekStartDateStr(weekStartDate: Date): string {
-  const next = addDays(weekStartDate, 7)
-  return format(next, 'yyyy-MM-dd')
-}
-
 export function WeekEndNextGoalsStep({
   weekStartDate,
   mode,
 }: WeekEndNextGoalsStepProps) {
-  const nextWeekStartStr = useMemo(
-    () => getNextWeekStartDateStr(weekStartDate),
+  const { userSettings } = useUserSettings()
+  const weekStartDay = userSettings?.weekStartDay ?? 1
+
+  const nextWeekStartDate = useMemo(
+    () => addDays(weekStartDate, 7),
     [weekStartDate],
   )
 
-  const fetcher =
-    mode === 'life'
-      ? () => getWeeklyGoalByWeekStart(nextWeekStartStr)
-      : () => getDevWeeklyGoalByWeekStart(nextWeekStartStr)
+  const nextWeekYear = nextWeekStartDate.getFullYear()
 
-  const key = ['weekly-goal-next', mode, nextWeekStartStr]
-  const { data: goal, isLoading } = useSWR(key, fetcher)
+  const { weeklyGoals } = useGoals(nextWeekYear)
+  const { weeklyGoals: devWeeklyGoals } = useDevGoals(nextWeekYear)
 
-  if (isLoading) return null
-
-  if (!goal) {
+  if (mode === 'development') {
     return (
       <div className="space-y-5">
-        <EmptyState message="来週の目標を立てましょう" />
+        <DevWeeklyGoalForm
+          currentDate={nextWeekStartDate}
+          weeklyGoals={devWeeklyGoals}
+          weekStartDay={weekStartDay}
+        />
       </div>
     )
   }
 
   return (
     <div className="space-y-5">
-      <p className="text-sm text-muted-foreground">来週の目標です</p>
-      <div className="rounded-xl border border-zinc-800 bg-zinc-950/50 p-6">
-        <p className="text-lg font-bold text-zinc-200">{goal.title}</p>
-      </div>
+      <WeeklyGoalForm
+        currentDate={nextWeekStartDate}
+        weeklyGoals={weeklyGoals}
+        weekStartDay={weekStartDay}
+      />
     </div>
   )
 }

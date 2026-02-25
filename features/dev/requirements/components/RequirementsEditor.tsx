@@ -3,7 +3,7 @@
 import type { ReactElement } from 'react'
 import { useState, useEffect, useCallback, useRef } from 'react'
 import { Button } from '@/components/ui/button'
-import { AutoResizeTextarea } from '@/components/ui/textarea-autosize'
+import { MarkdownTextarea } from '@/components/ui/markdown-textarea'
 import { RequirementsMarkdown } from './RequirementsMarkdown'
 import { cn } from '@/lib/utils'
 import { FileText, Eye, SplitSquareVertical, Save } from 'lucide-react'
@@ -105,7 +105,7 @@ export function RequirementsEditor({
       >
         {(viewMode === 'form' || viewMode === 'split') && (
           <div className="min-h-[320px]">
-            <AutoResizeTextarea
+            <MarkdownTextarea
               value={content}
               onChange={(e) => setContent(e.target.value)}
               placeholder="マークダウンで記述"

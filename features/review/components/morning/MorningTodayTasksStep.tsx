@@ -1,12 +1,14 @@
 'use client'
 
 import { useMemo } from 'react'
-import { useTasks } from '@/features/tasks'
-import { useDevCalendarTasks } from '@/features/dev/tasks'
+import { useDevCalendarTasks, type DevTask } from '@/features/dev/tasks'
 import { useDevProjects } from '@/features/dev/projects'
-import { getTasksForDate, toTasksWithNextOccurrenceOnly } from '@/features/tasks'
+import { useTasks, getTasksForDate, toTasksWithNextOccurrenceOnly, TaskList } from '@/features/tasks'
 import { getDevTasksForDate } from '@/features/dev/logs'
-import { TaskList } from '@/features/tasks'
+import { EmptyState } from '@/components/ui/empty-state'
+import { useReviewTaskCrud } from '../../hooks/useReviewTaskCrud'
+import { ReviewTaskDialogs } from '../ReviewTaskDialogs'
+import { devTaskToTask } from '../../lib/devTaskToTask'
 import type { Task } from '@/features/tasks'
 import type { ReviewMode } from '../../types/review-completion'
 
@@ -15,38 +17,12 @@ interface MorningTodayTasksStepProps {
   mode: ReviewMode
 }
 
-function devTaskToTask(devTask: {
-  id: number
-  title: string
-  executionDate: string | null
-  completed: boolean
-  order: number
-  memo: string | null
-  createdAt: string
-  updatedAt: string
-}): Task {
-  return {
-    id: devTask.id,
-    title: devTask.title,
-    executionDate: devTask.executionDate ?? '',
-    completed: devTask.completed,
-    order: devTask.order,
-    scheduledTime: null,
-    recurrenceRule: null,
-    recurrenceDaysOfWeek: null,
-    recurrenceDayOfMonth: null,
-    recurrenceEndDate: null,
-    recurrenceExcludedDates: [],
-    memo: devTask.memo,
-    createdAt: devTask.createdAt,
-    updatedAt: devTask.updatedAt,
-  }
-}
-
 export function MorningTodayTasksStep({ today, mode }: MorningTodayTasksStepProps) {
   const { tasks: lifeTasks } = useTasks()
   const { tasks: devTasks } = useDevCalendarTasks()
   const { projects } = useDevProjects()
+
+  const crud = useReviewTaskCrud(mode)
 
   const projectNameById = useMemo(() => {
     const map = new Map<number, string>()
@@ -77,11 +53,31 @@ export function MorningTodayTasksStep({ today, mode }: MorningTodayTasksStepProp
         : 'Inbox'
   }
 
+  if (tasks.length === 0) {
+    return (
+      <div className="space-y-5">
+        <EmptyState message="今日のタスクはありません" />
+      </div>
+    )
+  }
+
   return (
     <div className="space-y-5">
       <TaskList
         tasks={tasks}
         getTaskLabel={mode === 'development' ? getTaskLabel : undefined}
+        onToggleCompletion={crud.handleToggleCompletion}
+        onEdit={crud.handleEdit}
+        onDelete={crud.handleDelete}
+        onUpdateExecutionDate={crud.handleUpdateExecutionDate}
+      />
+      <ReviewTaskDialogs
+        editingTask={crud.editingTask}
+        deletingTask={crud.deletingTask}
+        onEditClose={() => crud.setEditingTask(null)}
+        onEditSubmit={crud.handleEditSubmit}
+        onRecurringDeleteConfirm={crud.handleRecurringDeleteConfirm}
+        onDeleteCancel={() => crud.setDeletingTask(null)}
       />
     </div>
   )

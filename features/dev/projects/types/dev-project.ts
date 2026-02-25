@@ -6,6 +6,8 @@ export interface DevProject {
   startDate: string | null
   endDate: string | null
   status: ProjectStatus
+  productionUrl: string | null
+  githubUrl: string | null
   createdAt: string
   updatedAt: string
 }
@@ -15,6 +17,8 @@ export interface CreateDevProjectInput {
   startDate?: string | null
   endDate?: string | null
   status?: ProjectStatus
+  productionUrl?: string | null
+  githubUrl?: string | null
 }
 
 export interface UpdateDevProjectInput {
@@ -22,4 +26,6 @@ export interface UpdateDevProjectInput {
   startDate?: string | null
   endDate?: string | null
   status?: ProjectStatus
+  productionUrl?: string | null
+  githubUrl?: string | null
 }

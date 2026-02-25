@@ -5,6 +5,8 @@ import { useRouter } from 'next/navigation'
 import { useHotkeys } from 'react-hotkeys-hook'
 import { useAppMode } from '@/hooks/useAppMode'
 import { ReviewWizard, useReviewWizard } from '@/features/review'
+import { useNotificationScheduler } from '@/features/notifications'
+import { ProjectSwitcher } from '@/features/dev/projects'
 import { Header } from '@/components/layout/Header'
 import { Sidebar } from '@/components/layout/sidebar/Sidebar'
 import { cn } from '@/lib/utils'
@@ -31,6 +33,7 @@ export function LayoutClient({ children }: LayoutClientProps) {
   const router = useRouter()
   const { mode } = useAppMode()
   const [isSidebarOpen, setIsSidebarOpen] = useState(false)
+  useNotificationScheduler()
 
   useEffect(() => {
     setIsSidebarOpen(getSidebarStateFromStorage())
@@ -103,8 +106,9 @@ export function LayoutClient({ children }: LayoutClientProps) {
         </div>
       </div>
       {activeWizard && (
-        <ReviewWizard type={activeWizard} onComplete={handleComplete} />
+        <ReviewWizard key={activeWizard} type={activeWizard} onComplete={handleComplete} />
       )}
+      {mode === 'development' && <ProjectSwitcher />}
     </>
   )
 }

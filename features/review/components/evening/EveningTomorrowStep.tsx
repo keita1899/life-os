@@ -1,17 +1,16 @@
 'use client'
 
-import { useMemo, useCallback } from 'react'
-import { addDays, startOfDay, endOfDay } from 'date-fns'
-import { useEvents } from '@/features/events'
-import { expandRecurringEvents } from '@/features/events'
-import { useTasks } from '@/features/tasks'
+import { useMemo } from 'react'
+import { addDays } from 'date-fns'
+import { useTasks, TaskList } from '@/features/tasks'
 import { toTasksWithNextOccurrenceOnly, getTasksForDate } from '@/features/tasks'
-import { useDevCalendarTasks, type DevTask } from '@/features/dev/tasks'
+import { useDevCalendarTasks } from '@/features/dev/tasks'
 import { useDevProjects } from '@/features/dev/projects'
-import { getEventsForDateSorted } from '@/features/logs'
 import { getDevTasksForDate } from '@/features/dev/logs'
-import { LogEventsSection } from '@/features/logs'
-import { TaskList } from '@/features/tasks'
+import { EmptyState } from '@/components/ui/empty-state'
+import { useReviewTaskCrud } from '../../hooks/useReviewTaskCrud'
+import { ReviewTaskDialogs } from '../ReviewTaskDialogs'
+import { devTaskToTask } from '../../lib/devTaskToTask'
 import type { Task } from '@/features/tasks'
 import type { ReviewMode } from '../../types/review-completion'
 
@@ -20,32 +19,14 @@ interface EveningTomorrowStepProps {
   mode: ReviewMode
 }
 
-function devTaskToTask(devTask: DevTask): Task {
-  return {
-    id: devTask.id,
-    title: devTask.title,
-    executionDate: devTask.executionDate,
-    completed: devTask.completed,
-    order: devTask.order,
-    scheduledTime: null,
-    recurrenceRule: null,
-    recurrenceDaysOfWeek: null,
-    recurrenceDayOfMonth: null,
-    recurrenceEndDate: null,
-    recurrenceExcludedDates: [],
-    memo: devTask.memo,
-    createdAt: devTask.createdAt,
-    updatedAt: devTask.updatedAt,
-  }
-}
-
 export function EveningTomorrowStep({ today, mode }: EveningTomorrowStepProps) {
   const tomorrow = useMemo(() => addDays(today, 1), [today])
 
-  const { events: allEvents } = useEvents()
   const { tasks: lifeTasks } = useTasks()
   const { tasks: devTasks } = useDevCalendarTasks()
   const { projects } = useDevProjects()
+
+  const crud = useReviewTaskCrud(mode)
 
   const projectNameById = useMemo(() => {
     const map = new Map<number, string>()
@@ -53,23 +34,10 @@ export function EveningTomorrowStep({ today, mode }: EveningTomorrowStepProps) {
     return map
   }, [projects])
 
-  const lifeEvents = useMemo(() => {
-    const rangeStart = startOfDay(tomorrow)
-    const rangeEnd = endOfDay(tomorrow)
-    const expanded = expandRecurringEvents(allEvents, rangeStart, rangeEnd)
-    return getEventsForDateSorted(expanded, tomorrow)
-  }, [allEvents, tomorrow])
-
   const lifeTasksTomorrow = useMemo(() => {
     const withNextOnly = toTasksWithNextOccurrenceOnly(lifeTasks, tomorrow)
     return getTasksForDate(withNextOnly, tomorrow)
   }, [lifeTasks, tomorrow])
-
-  const devTaskById = useMemo(() => {
-    const map = new Map<number, DevTask>()
-    devTasks.forEach((t) => map.set(t.id, t))
-    return map
-  }, [devTasks])
 
   const devTasksTomorrow = useMemo(() => {
     const devForDate = getDevTasksForDate(devTasks, tomorrow)
@@ -78,36 +46,43 @@ export function EveningTomorrowStep({ today, mode }: EveningTomorrowStepProps) {
 
   const tasks = mode === 'life' ? lifeTasksTomorrow : devTasksTomorrow
 
-  const computeTaskLabel = useCallback(
-    (task: Task): string | undefined => {
-      if (mode !== 'development') return undefined
-      const devTask = devTaskById.get(task.id)
-      if (!devTask) return undefined
-      return devTask.projectId
-        ? projectNameById.get(devTask.projectId) ?? `プロジェクト#${devTask.projectId}`
-        : devTask.type === 'learning'
-          ? '学習'
-          : 'Inbox'
-    },
-    [mode, devTaskById, projectNameById],
-  )
+  const getTaskLabel = (task: Task) => {
+    if (mode !== 'development') return undefined
+    const devTask = devTasks.find((t) => t.id === task.id)
+    if (!devTask) return undefined
+    return devTask.projectId
+      ? projectNameById.get(devTask.projectId) ?? `プロジェクト#${devTask.projectId}`
+      : devTask.type === 'learning'
+        ? '学習'
+        : 'Inbox'
+  }
 
-  if (mode === 'development') {
-    if (tasks.length === 0) return null
+  if (tasks.length === 0) {
     return (
       <div className="space-y-5">
-        <TaskList
-          tasks={tasks}
-          getTaskLabel={computeTaskLabel}
-        />
+        <EmptyState message="明日のタスクはありません" />
       </div>
     )
   }
 
   return (
-    <div className="flex flex-col gap-6">
-      <LogEventsSection events={lifeEvents} />
-      {tasks.length > 0 && <TaskList tasks={tasks} />}
+    <div className="space-y-5">
+      <TaskList
+        tasks={tasks}
+        getTaskLabel={mode === 'development' ? getTaskLabel : undefined}
+        onToggleCompletion={crud.handleToggleCompletion}
+        onEdit={crud.handleEdit}
+        onDelete={crud.handleDelete}
+        onUpdateExecutionDate={crud.handleUpdateExecutionDate}
+      />
+      <ReviewTaskDialogs
+        editingTask={crud.editingTask}
+        deletingTask={crud.deletingTask}
+        onEditClose={() => crud.setEditingTask(null)}
+        onEditSubmit={crud.handleEditSubmit}
+        onRecurringDeleteConfirm={crud.handleRecurringDeleteConfirm}
+        onDeleteCancel={() => crud.setDeletingTask(null)}
+      />
     </div>
   )
 }

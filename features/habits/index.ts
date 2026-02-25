@@ -13,9 +13,10 @@ export {
 } from './hooks/useHabitHeatmapView'
 export {
   getCompletionsByDate,
+  getAllHabits,
   isHabitDueOnDate,
   formatHabitFrequency,
   formatHabitScheduledTime,
 } from './lib'
-export type { Habit, CreateHabitInput, UpdateHabitInput } from './types/habit'
+export type { Habit, CreateHabitInput, UpdateHabitInput, HabitFrequencyType } from './types/habit'
 export type { HabitCompletion } from './types/habit-completion'

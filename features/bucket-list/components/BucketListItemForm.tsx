@@ -41,6 +41,8 @@ interface BucketListItemFormProps {
   onCancel?: () => void
   initialData?: BucketListItem
   defaultCategoryId?: string
+  defaultTargetYear?: string
+  defaultTargetMonth?: string
   submitLabel?: string
 }
 
@@ -49,6 +51,8 @@ export const BucketListItemForm = ({
   onCancel,
   initialData,
   defaultCategoryId = '',
+  defaultTargetYear,
+  defaultTargetMonth,
   submitLabel = '作成',
 }: BucketListItemFormProps) => {
   const { categories, createBucketListCategory } = useBucketListCategories()
@@ -70,8 +74,8 @@ export const BucketListItemForm = ({
       : {
           title: '',
           categoryId: defaultCategoryId,
-          targetYear: String(currentYear),
-          targetMonth: '',
+          targetYear: defaultTargetYear !== undefined ? defaultTargetYear : String(currentYear),
+          targetMonth: defaultTargetMonth ?? '',
         },
   })
 

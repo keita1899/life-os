@@ -3,6 +3,7 @@
 import { useState, useMemo } from 'react'
 import { Trash2 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
+import { InlineCreateButton } from '@/components/ui/inline-create-button'
 import { CreateButton } from '@/components/ui/create-button'
 import { useCreateShortcut } from '@/hooks/useCreateShortcut'
 import { useDialogState } from '@/hooks/useDialogState'
@@ -71,6 +72,10 @@ export default function BucketListPage() {
     BucketListItem | undefined
   >(undefined)
   const { operationError, setOperationError, execute } = useAsyncOperation()
+  const [createDefaults, setCreateDefaults] = useState<{
+    targetYear?: string
+    targetMonth?: string
+  }>({})
 
   const categoryCounts = useMemo(() => {
     const byCategoryId: Record<number, number> = {}
@@ -170,7 +175,13 @@ export default function BucketListPage() {
     )
     if (result !== undefined) {
       handleDialogClose(false)
+      setCreateDefaults({})
     }
+  }
+
+  const handleInlineCreate = (targetYear?: string, targetMonth?: string) => {
+    setCreateDefaults({ targetYear, targetMonth })
+    handleCreateClick()
   }
 
   const handleUpdateItem = async (input: CreateBucketListItemInput) => {
@@ -381,14 +392,25 @@ export default function BucketListPage() {
                             </span>
                           ),
                           content: (
-                            <BucketListList
-                              items={monthItems}
-                              onEdit={handleEditItem}
-                              onDelete={deleteConfirm.handleDeleteClick}
-                              onToggleCompletion={handleToggleCompletion}
-                              onConvertToEvent={handleConvertToEvent}
-                              onConvertToTask={handleConvertToTask}
-                            />
+                            <div className="space-y-4">
+                              <BucketListList
+                                items={monthItems}
+                                onEdit={handleEditItem}
+                                onDelete={deleteConfirm.handleDeleteClick}
+                                onToggleCompletion={handleToggleCompletion}
+                                onConvertToEvent={handleConvertToEvent}
+                                onConvertToTask={handleConvertToTask}
+                              />
+                              <InlineCreateButton
+                                label="やりたいことを追加"
+                                onClick={() => handleInlineCreate(
+                                  selectedYear !== 'all' && selectedYear !== 'none'
+                                    ? selectedYear
+                                    : undefined,
+                                  String(month),
+                                )}
+                              />
+                            </div>
                           ),
                         }
                       }),
@@ -410,14 +432,20 @@ export default function BucketListPage() {
                               </span>
                             ),
                             content: (
-                              <BucketListList
-                                items={incompleteByMonth.unset}
-                                onEdit={handleEditItem}
-                                onDelete={deleteConfirm.handleDeleteClick}
-                                onToggleCompletion={handleToggleCompletion}
-                                onConvertToEvent={handleConvertToEvent}
-                                onConvertToTask={handleConvertToTask}
-                              />
+                              <div className="space-y-4">
+                                <BucketListList
+                                  items={incompleteByMonth.unset}
+                                  onEdit={handleEditItem}
+                                  onDelete={deleteConfirm.handleDeleteClick}
+                                  onToggleCompletion={handleToggleCompletion}
+                                  onConvertToEvent={handleConvertToEvent}
+                                  onConvertToTask={handleConvertToTask}
+                                />
+                                <InlineCreateButton
+                                  label="やりたいことを追加"
+                                  onClick={() => handleInlineCreate('', undefined)}
+                                />
+                              </div>
                             ),
                           },
                         ]
@@ -474,7 +502,10 @@ export default function BucketListPage() {
 
             <BucketListDialog
               open={isDialogOpen}
-              onOpenChange={handleDialogClose}
+              onOpenChange={(open) => {
+                handleDialogClose(open)
+                if (!open) setCreateDefaults({})
+              }}
               onSubmit={editingItem ? handleUpdateItem : handleCreateItem}
               item={editingItem}
               defaultCategoryId={
@@ -485,6 +516,8 @@ export default function BucketListPage() {
                   ? selectedCategoryId
                   : undefined
               }
+              defaultTargetYear={createDefaults.targetYear}
+              defaultTargetMonth={createDefaults.targetMonth}
             />
 
             <DeleteConfirmDialog

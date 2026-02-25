@@ -96,11 +96,11 @@ export function groupTasks(tasks: Task[]): TaskGroup[] {
     }))
 
   const result: TaskGroup[] = [
+    overdueGroup,
     todayGroup,
     tomorrowGroup,
-    noneGroup,
-    overdueGroup,
     ...sortedDateGroups,
+    noneGroup,
     {
       key: GROUP_KEYS.COMPLETED,
       title: '完了済み',

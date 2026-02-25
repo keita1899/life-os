@@ -2,6 +2,7 @@
 
 import { DeleteConfirmDialog } from '@/components/ui/delete-confirm-dialog'
 import { EditDeleteDropdownMenu } from '@/components/ui/edit-delete-dropdown-menu'
+import { InlineCategoryCreateItem } from '@/components/ui/inline-category-create-item'
 import { useDeleteConfirm } from '@/hooks/useDeleteConfirm'
 import { cn } from '@/lib/utils'
 import type { WishlistCategory } from '../types/wishlist-category'
@@ -20,6 +21,7 @@ interface WishlistCategoryListProps {
   onSelectCategory: (categoryId: string) => void
   onDelete: (category: WishlistCategory) => void
   onUpdateCategory: (id: number, name: string) => Promise<void>
+  onCreateCategory: (name: string) => Promise<void>
   counts?: WishlistCategoryCounts
 }
 
@@ -30,6 +32,7 @@ export function WishlistCategoryList({
   onSelectCategory,
   onDelete,
   onUpdateCategory,
+  onCreateCategory,
   counts,
 }: WishlistCategoryListProps) {
   const deleteConfirm = useDeleteConfirm<WishlistCategory>()
@@ -140,6 +143,7 @@ export function WishlistCategoryList({
               )}
             </div>
           ))}
+          <InlineCategoryCreateItem onSubmit={onCreateCategory} />
         </div>
       </div>
 

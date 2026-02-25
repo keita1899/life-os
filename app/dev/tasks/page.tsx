@@ -6,6 +6,7 @@ import { useFocusShortcut } from '@/features/focus'
 import { Trash2, Calendar, Focus } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { CreateButton } from '@/components/ui/create-button'
+import { InlineCreateButton } from '@/components/ui/inline-create-button'
 import { useCreateShortcut } from '@/hooks/useCreateShortcut'
 import { useDialogState } from '@/hooks/useDialogState'
 import { useDeleteConfirm } from '@/hooks/useDeleteConfirm'
@@ -19,6 +20,7 @@ import { Loading } from '@/components/ui/loading'
 import { ErrorMessage } from '@/components/ui/error-message'
 import { FloatingActionButtons } from '@/components/floating/FloatingActionButtons'
 import { useDevTasks } from '@/features/dev/tasks'
+import { getTodayDateString, getTomorrowDateString } from '@/lib/date/formats'
 import type { Task, CreateTaskInput } from '@/features/tasks'
 
 export default function DevTasksPage() {
@@ -53,6 +55,7 @@ export default function DevTasksPage() {
   const [isDeletingCompletedDialogOpen, setIsDeletingCompletedDialogOpen] =
     useState(false)
   const { operationError, setOperationError, execute } = useAsyncOperation()
+  const [defaultDate, setDefaultDate] = useState<string | null | undefined>(undefined)
 
   const convertedTasks: Task[] = useMemo(() => {
     return tasks.map((t) => ({
@@ -112,7 +115,22 @@ export default function DevTasksPage() {
     )
     if (result !== undefined) {
       handleDialogClose(false)
+      setDefaultDate(undefined)
     }
+  }
+
+  const handleInlineCreate = (date: string | null) => {
+    setDefaultDate(date)
+    handleCreateClick()
+  }
+
+  const getGroupDate = (key: string): string | null => {
+    const todayStr = getTodayDateString()
+    if (key === 'today' || key === 'overdue') return todayStr
+    if (key === 'tomorrow') return getTomorrowDateString()
+    if (key === 'none') return null
+    if (key === 'completed') return todayStr
+    return key
   }
 
   const handleUpdateTask = async (input: CreateTaskInput): Promise<void> => {
@@ -267,6 +285,12 @@ export default function DevTasksPage() {
                       </Button>
                     </div>
                   )}
+                  {group.key !== 'completed' && group.key !== 'overdue' && (
+                    <InlineCreateButton
+                      label="タスクを追加"
+                      onClick={() => handleInlineCreate(getGroupDate(group.key))}
+                    />
+                  )}
                 </div>
               ),
             }))}
@@ -275,9 +299,13 @@ export default function DevTasksPage() {
 
         <TaskDialog
           open={isDialogOpen}
-          onOpenChange={handleDialogClose}
+          onOpenChange={(open) => {
+            handleDialogClose(open)
+            if (!open) setDefaultDate(undefined)
+          }}
           onSubmit={editingTask ? handleUpdateTask : handleCreateTask}
           task={editingTask}
+          defaultExecutionDate={defaultDate !== undefined ? (defaultDate ?? undefined) : undefined}
         />
 
         <DeleteConfirmDialog

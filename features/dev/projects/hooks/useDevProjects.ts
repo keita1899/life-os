@@ -17,7 +17,7 @@ interface UseDevProjectsResult {
   projects: DevProject[]
   isLoading: boolean
   error: string | null
-  createProject: (input: CreateDevProjectInput) => Promise<void>
+  createProject: (input: CreateDevProjectInput) => Promise<DevProject>
   updateProject: (id: number, input: UpdateDevProjectInput) => Promise<void>
   deleteProject: (id: number) => Promise<void>
   refreshProjects: () => Promise<DevProject[] | undefined>
@@ -34,9 +34,10 @@ export function useDevProjects(): UseDevProjectsResult {
 
   const handleCreateProject = async (
     input: CreateDevProjectInput,
-  ): Promise<void> => {
-    await createDevProject(input)
+  ): Promise<DevProject> => {
+    const project = await createDevProject(input)
     await mutate(SWR_KEYS.devProjects)
+    return project
   }
 
   const handleUpdateProject = async (

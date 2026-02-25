@@ -26,7 +26,15 @@ export function EveningHabitsStep({ today, execute }: EveningHabitsStepProps) {
   } = useHabitCompletionsByDate(dateStr)
 
   const habitsForToday = useMemo(
-    () => allHabits.filter((h) => isHabitDueOnDate(h, today)),
+    () =>
+      allHabits
+        .filter((h) => isHabitDueOnDate(h, today))
+        .sort((a, b) => {
+          if (!a.scheduledTime && !b.scheduledTime) return 0
+          if (!a.scheduledTime) return 1
+          if (!b.scheduledTime) return -1
+          return a.scheduledTime.localeCompare(b.scheduledTime)
+        }),
     [allHabits, today],
   )
 

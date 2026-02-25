@@ -33,6 +33,8 @@ const projectFormSchema = z.object({
   startDate: z.string().optional(),
   endDate: z.string().optional(),
   status: z.enum(['draft', 'in_progress', 'released']).optional(),
+  productionUrl: z.string().optional(),
+  githubUrl: z.string().optional(),
 })
 
 type ProjectFormValues = z.infer<typeof projectFormSchema>
@@ -57,6 +59,8 @@ export function ProjectForm({
       startDate: '',
       endDate: '',
       status: 'draft',
+      productionUrl: '',
+      githubUrl: '',
     },
   })
 
@@ -68,12 +72,16 @@ export function ProjectForm({
       form.setValue('startDate', initialData.startDate || '')
       form.setValue('endDate', initialData.endDate || '')
       form.setValue('status', initialData.status ?? 'draft')
+      form.setValue('productionUrl', initialData.productionUrl || '')
+      form.setValue('githubUrl', initialData.githubUrl || '')
     } else {
       form.reset({
         name: '',
         startDate: '',
         endDate: '',
         status: 'draft',
+        productionUrl: '',
+        githubUrl: '',
       })
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -91,6 +99,8 @@ export function ProjectForm({
       startDate: data.startDate || null,
       endDate: data.endDate || null,
       status: data.status || 'draft',
+      productionUrl: data.productionUrl || null,
+      githubUrl: data.githubUrl || null,
     })
   }, [onSubmit, form])
 
@@ -167,6 +177,43 @@ export function ProjectForm({
                     <SelectItem value="released">リリース済み</SelectItem>
                   </SelectContent>
                 </Select>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+          <FormField
+            control={form.control}
+            name="productionUrl"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>本番 URL</FormLabel>
+                <FormControl>
+                  <Input
+                    type="url"
+                    placeholder="https://example.com"
+                    {...field}
+                    value={field.value || ''}
+                  />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+
+          <FormField
+            control={form.control}
+            name="githubUrl"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>GitHub URL</FormLabel>
+                <FormControl>
+                  <Input
+                    type="url"
+                    placeholder="https://github.com/user/repo"
+                    {...field}
+                    value={field.value || ''}
+                  />
+                </FormControl>
                 <FormMessage />
               </FormItem>
             )}

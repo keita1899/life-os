@@ -10,6 +10,7 @@ export {
   groupEvents,
   getEventFormValues,
   createEvent,
+  getAllEvents,
   deleteBarcelonaMatches,
   getEventsForDate,
   formatEventTime,

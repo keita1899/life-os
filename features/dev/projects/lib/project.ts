@@ -1,4 +1,5 @@
 import { getDatabase, handleDbError } from '@/lib/db'
+import { createDevTask } from '@/features/dev/tasks'
 import type {
   DevProject,
   CreateDevProjectInput,
@@ -6,12 +7,22 @@ import type {
   ProjectStatus,
 } from '../types/dev-project'
 
+const DEFAULT_PROJECT_TASKS = [
+  '要件定義を書く',
+  '技術選定',
+  '環境構築',
+  'README を書く',
+  'デプロイ',
+]
+
 interface DbDevProject {
   id: number
   name: string
   start_date: string | null
   end_date: string | null
   status: string
+  production_url: string | null
+  github_url: string | null
   created_at: string
   updated_at: string
 }
@@ -23,6 +34,8 @@ function mapDbProjectToProject(dbProject: DbDevProject): DevProject {
     startDate: dbProject.start_date,
     endDate: dbProject.end_date,
     status: dbProject.status as ProjectStatus,
+    productionUrl: dbProject.production_url,
+    githubUrl: dbProject.github_url,
     createdAt: dbProject.created_at,
     updatedAt: dbProject.updated_at,
   }
@@ -49,12 +62,14 @@ export async function getAllDevProjects(): Promise<DevProject[]> {
 
   try {
     const result = await db.select<DbDevProject[]>(
-      `SELECT 
+      `SELECT
         id,
         name,
         start_date,
         end_date,
         status,
+        production_url,
+        github_url,
         created_at,
         updated_at
       FROM dev_projects
@@ -72,12 +87,14 @@ export async function getDevProjectById(id: number): Promise<DevProject | null> 
 
   try {
     const result = await db.select<DbDevProject[]>(
-      `SELECT 
+      `SELECT
         id,
         name,
         start_date,
         end_date,
         status,
+        production_url,
+        github_url,
         created_at,
         updated_at
       FROM dev_projects
@@ -113,35 +130,50 @@ export async function createDevProject(
   }
 
   try {
-    await db.execute(
-      `INSERT INTO dev_projects (name, start_date, end_date, status)
-       VALUES (?, ?, ?, ?)`,
-      [input.name, input.startDate || null, input.endDate || null, status],
-    )
+    await db.execute('BEGIN TRANSACTION')
 
-    const result = await db.select<DbDevProject[]>(
-      `SELECT 
-        id,
-        name,
-        start_date,
-        end_date,
-        status,
-        created_at,
-        updated_at
-      FROM dev_projects
-      WHERE name = ? AND status = ?
-      ORDER BY created_at DESC, id DESC
-      LIMIT 1`,
-      [input.name, status],
-    )
-
-    if (result.length === 0) {
-      throw new Error(
-        'Failed to create dev project: record not found after insert',
+    try {
+      await db.execute(
+        `INSERT INTO dev_projects (name, start_date, end_date, status, production_url, github_url)
+         VALUES (?, ?, ?, ?, ?, ?)`,
+        [input.name, input.startDate || null, input.endDate || null, status, input.productionUrl || null, input.githubUrl || null],
       )
-    }
 
-    return mapDbProjectToProject(result[0])
+      const idResult = await db.select<{ id: number }[]>(
+        'SELECT last_insert_rowid() as id',
+      )
+      const insertedId = idResult[0]?.id
+      if (!insertedId) {
+        throw new Error('Failed to create dev project: could not retrieve inserted id')
+      }
+
+      for (const title of DEFAULT_PROJECT_TASKS) {
+        await createDevTask({
+          title,
+          projectId: insertedId,
+          type: 'inbox',
+        })
+      }
+
+      await db.execute('COMMIT')
+
+      const result = await db.select<DbDevProject[]>(
+        `SELECT
+          id, name, start_date, end_date, status,
+          production_url, github_url, created_at, updated_at
+        FROM dev_projects WHERE id = ?`,
+        [insertedId],
+      )
+
+      if (result.length === 0) {
+        throw new Error('Failed to create dev project: record not found after insert')
+      }
+
+      return mapDbProjectToProject(result[0])
+    } catch (innerErr) {
+      await db.execute('ROLLBACK').catch(() => {})
+      throw innerErr
+    }
   } catch (err) {
     if (
       err instanceof Error &&
@@ -200,6 +232,16 @@ export async function updateDevProject(
   if (input.status !== undefined) {
     updates.push('status = ?')
     values.push(input.status)
+  }
+
+  if (input.productionUrl !== undefined) {
+    updates.push('production_url = ?')
+    values.push(input.productionUrl || null)
+  }
+
+  if (input.githubUrl !== undefined) {
+    updates.push('github_url = ?')
+    values.push(input.githubUrl || null)
   }
 
   if (updates.length === 0) {

@@ -6,7 +6,7 @@ import { useAppMode } from '@/hooks/useAppMode'
 import { useAsyncOperation } from '@/hooks/useAsyncOperation'
 import { useUserSettings } from '@/features/settings'
 import { getWeekStartDate, getWeekDays } from '@/features/calendar'
-import { useWizard } from '../hooks/useWizard'
+import { useWizard } from '@/hooks/useWizard'
 import { WizardShell } from './WizardShell'
 import { MorningGoalsStep } from './morning/MorningGoalsStep'
 import { MorningEventsStep } from './morning/MorningEventsStep'
@@ -16,6 +16,7 @@ import { MorningHabitsStep } from './morning/MorningHabitsStep'
 import { EveningDiaryStep } from './evening/EveningDiaryStep'
 import { EveningReportStep } from './evening/EveningReportStep'
 import { EveningHabitsStep } from './evening/EveningHabitsStep'
+import { EveningTomorrowEventsStep } from './evening/EveningTomorrowEventsStep'
 import { EveningTomorrowStep } from './evening/EveningTomorrowStep'
 import { WeekStartGoalsStep } from './week-start/WeekStartGoalsStep'
 import { WeekStartEventsStep } from './week-start/WeekStartEventsStep'
@@ -78,7 +79,7 @@ export function ReviewWizard({ type, onComplete }: ReviewWizardProps) {
                 : 3
               : type === 'evening'
                 ? reviewMode === 'life'
-                  ? 4
+                  ? 5
                   : 3
                 : type === 'week_start'
                   ? reviewMode === 'life'
@@ -133,7 +134,8 @@ export function ReviewWizard({ type, onComplete }: ReviewWizardProps) {
       <EveningDiaryStep key="diary" today={today} execute={execute} />,
       <MorningTodayTasksStep key="today" today={today} mode={reviewMode} />,
       <EveningHabitsStep key="habits" today={today} execute={execute} />,
-      <EveningTomorrowStep key="tomorrow" today={today} mode={reviewMode} />,
+      <EveningTomorrowEventsStep key="tomorrow-events" today={today} />,
+      <EveningTomorrowStep key="tomorrow-tasks" today={today} mode={reviewMode} />,
     ]
     const devSteps = [
       <EveningReportStep key="report" today={today} execute={execute} />,
@@ -160,7 +162,6 @@ export function ReviewWizard({ type, onComplete }: ReviewWizardProps) {
         key="tasks"
         weekStartDateStr={weekStartDateStr}
         weekEndDateStr={weekEndDateStr}
-        weekStartDate={weekStartDate}
         mode={reviewMode}
       />,
     ]
@@ -174,7 +175,6 @@ export function ReviewWizard({ type, onComplete }: ReviewWizardProps) {
         key="tasks"
         weekStartDateStr={weekStartDateStr}
         weekEndDateStr={weekEndDateStr}
-        weekStartDate={weekStartDate}
         mode={reviewMode}
       />,
     ]
@@ -340,13 +340,14 @@ export function ReviewWizard({ type, onComplete }: ReviewWizardProps) {
         '残っている今日のタスクを確認しましょう。',
         '今日の習慣をチェックしましょう。',
         '明日の予定を確認しましょう。',
+        '明日のタスクを確認しましょう。',
       ]
     }
     if (type === 'evening' && reviewMode === 'development') {
       return [
         '今日の日報を確認しましょう。',
         '残っている今日のタスクを確認しましょう。',
-        '明日の予定を確認しましょう。',
+        '明日のタスクを確認しましょう。',
       ]
     }
     if (type === 'week_start' && reviewMode === 'life') {
@@ -380,6 +381,13 @@ export function ReviewWizard({ type, onComplete }: ReviewWizardProps) {
     return undefined
   }, [type, reviewMode])
 
+  const wizardVariant =
+    type === 'morning'
+      ? ('morning' as const)
+      : type === 'evening'
+        ? ('evening' as const)
+        : undefined
+
   return (
     <WizardShell
       title={title}
@@ -392,6 +400,7 @@ export function ReviewWizard({ type, onComplete }: ReviewWizardProps) {
       onComplete={wizard.complete}
       onPrev={wizard.goPrev}
       operationError={operationError}
+      variant={wizardVariant}
     >
       {content}
     </WizardShell>

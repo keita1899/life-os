@@ -14,7 +14,7 @@ import {
   FormLabel,
   FormMessage,
 } from '@/components/ui/form'
-import { AutoResizeTextarea } from '@/components/ui/textarea-autosize'
+import { MarkdownTextarea } from '@/components/ui/markdown-textarea'
 import { Input } from '@/components/ui/input'
 import { Button } from '@/components/ui/button'
 import type { DevMemo, CreateDevMemoInput } from '../types/dev-memo'
@@ -125,7 +125,7 @@ export function MemoForm({
               <FormItem>
                 <FormLabel>本文 *</FormLabel>
                 <FormControl>
-                  <AutoResizeTextarea
+                  <MarkdownTextarea
                     placeholder="Markdown で記述できます"
                     minRows={4}
                     {...field}

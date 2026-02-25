@@ -39,6 +39,7 @@ const GoalsPage = () => {
   } = useGoals(selectedYear)
   const yearlyDialog = useDialogState<YearlyGoal>()
   const monthlyDialog = useDialogState<MonthlyGoal>()
+  const [defaultMonth, setDefaultMonth] = useState<number | undefined>(undefined)
   const { operationError, setOperationError, execute } = useAsyncOperation()
   const deleteConfirm = useDeleteConfirm<YearlyGoal | MonthlyGoal>()
 
@@ -215,7 +216,10 @@ const GoalsPage = () => {
           <MonthlyGoalsSection
             goals={allMonthlyGoals}
             selectedYear={selectedYear}
-            onCreateClick={monthlyDialog.handleCreateClick}
+            onCreateClick={(month) => {
+              setDefaultMonth(month)
+              monthlyDialog.handleCreateClick()
+            }}
             onEditClick={handleEditClick}
             onDeleteClick={handleDeleteClick}
             onToggleChecklistItem={handleToggleMonthlyGoalChecklistItem}
@@ -235,12 +239,16 @@ const GoalsPage = () => {
 
       <MonthlyGoalDialog
         open={monthlyDialog.isDialogOpen}
-        onOpenChange={monthlyDialog.handleDialogClose}
+        onOpenChange={(open) => {
+          monthlyDialog.handleDialogClose(open)
+          if (!open) setDefaultMonth(undefined)
+        }}
         onSubmit={
           monthlyDialog.editingItem ? handleUpdateMonthlyGoal : handleCreateMonthlyGoal
         }
         goal={monthlyDialog.editingItem}
         selectedYear={selectedYear}
+        selectedMonth={defaultMonth}
       />
 
       <DeleteConfirmDialog
