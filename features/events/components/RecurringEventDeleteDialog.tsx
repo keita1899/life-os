@@ -51,27 +51,33 @@ export const RecurringEventDeleteDialog = ({
             「{eventTitle}」を削除しますか？
           </DialogDescription>
         </DialogHeader>
-        <div className="py-4 space-y-3">
-          <div className="text-sm font-medium">削除方法を選択</div>
-          <div className="flex flex-col gap-2">
-            <Button
-              type="button"
-              variant={deleteMode === 'single' ? 'default' : 'outline'}
-              className="w-full justify-start"
-              onClick={() => setDeleteMode('single')}
-            >
-              この1回だけ削除
-            </Button>
-            <Button
-              type="button"
-              variant={deleteMode === 'all' ? 'default' : 'outline'}
-              className="w-full justify-start"
-              onClick={() => setDeleteMode('all')}
-            >
-              すべての繰り返しを削除
-            </Button>
+        <fieldset className="py-4 space-y-3">
+          <legend className="text-sm font-medium">削除方法を選択</legend>
+          <div className="flex flex-col gap-3">
+            <label className="flex cursor-pointer items-center gap-3 rounded-md border border-input px-3 py-2 has-[:checked]:border-primary has-[:checked]:bg-primary/5">
+              <input
+                type="radio"
+                name="deleteMode"
+                value="single"
+                checked={deleteMode === 'single'}
+                onChange={() => setDeleteMode('single')}
+                className="h-4 w-4 border-input text-primary focus:ring-2 focus:ring-ring focus:ring-offset-2"
+              />
+              <span className="text-sm">この1回だけ削除</span>
+            </label>
+            <label className="flex cursor-pointer items-center gap-3 rounded-md border border-input px-3 py-2 has-[:checked]:border-primary has-[:checked]:bg-primary/5">
+              <input
+                type="radio"
+                name="deleteMode"
+                value="all"
+                checked={deleteMode === 'all'}
+                onChange={() => setDeleteMode('all')}
+                className="h-4 w-4 border-input text-primary focus:ring-2 focus:ring-ring focus:ring-offset-2"
+              />
+              <span className="text-sm">すべての繰り返しを削除</span>
+            </label>
           </div>
-        </div>
+        </fieldset>
         <DialogFooter>
           <Button
             variant="outline"
