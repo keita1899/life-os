@@ -3,6 +3,7 @@
 import { useState, useMemo } from 'react'
 import { Trash2 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
+import { InlineCreateButton } from '@/components/ui/inline-create-button'
 import { CreateButton } from '@/components/ui/create-button'
 import { useCreateShortcut } from '@/hooks/useCreateShortcut'
 import { useDialogState } from '@/hooks/useDialogState'
@@ -220,7 +221,7 @@ export default function WishlistPage() {
         <div className="min-h-0 flex-1 overflow-y-auto">
           <div className="mx-auto max-w-3xl p-8">
             <div className="mb-6 flex items-center justify-between">
-              <h1 className="text-3xl font-bold">欲しいものリスト</h1>
+              <h1 className="text-3xl font-bold">{selectedCategoryName}</h1>
               <CreateButton label="欲しいものを作成" onClick={handleCreateClick} />
             </div>
 
@@ -244,10 +245,7 @@ export default function WishlistPage() {
               <Loading />
             ) : (
               <>
-                <div className="mb-4 flex items-center justify-between gap-4">
-                  <h2 className="text-lg font-semibold text-stone-900 dark:text-stone-100">
-                    {selectedCategoryName}
-                  </h2>
+                <div className="mb-4 flex justify-end">
                   <Select value={selectedYear} onValueChange={setSelectedYear}>
                     <SelectTrigger className="w-[200px]">
                       <SelectValue placeholder="年を選択" />
@@ -288,6 +286,10 @@ export default function WishlistPage() {
                             onEdit={handleEditItem}
                             onDelete={deleteConfirm.handleDeleteClick}
                             onToggleCompletion={handleTogglePurchased}
+                          />
+                          <InlineCreateButton
+                            label="欲しいものを追加"
+                            onClick={handleCreateClick}
                           />
                         </div>
                       ),

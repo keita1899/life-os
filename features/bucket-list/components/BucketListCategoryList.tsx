@@ -2,6 +2,7 @@
 
 import { DeleteConfirmDialog } from '@/components/ui/delete-confirm-dialog'
 import { EditDeleteDropdownMenu } from '@/components/ui/edit-delete-dropdown-menu'
+import { InlineCategoryCreateItem } from '@/components/ui/inline-category-create-item'
 import { useDeleteConfirm } from '@/hooks/useDeleteConfirm'
 import { cn } from '@/lib/utils'
 import type { BucketListCategory } from '../types/bucket-list-category'
@@ -21,6 +22,7 @@ interface BucketListCategoryListProps {
   onSelectCategory: (categoryId: string) => void
   onDelete: (category: BucketListCategory) => void
   onUpdateCategory: (id: number, name: string) => Promise<void>
+  onCreateCategory: (name: string) => Promise<void>
   counts?: BucketListCategoryCounts
 }
 
@@ -31,6 +33,7 @@ export function BucketListCategoryList({
   onSelectCategory,
   onDelete,
   onUpdateCategory,
+  onCreateCategory,
   counts,
 }: BucketListCategoryListProps) {
   const deleteConfirm = useDeleteConfirm<BucketListCategory>()
@@ -141,6 +144,7 @@ export function BucketListCategoryList({
               )}
             </div>
           ))}
+          <InlineCategoryCreateItem onSubmit={onCreateCategory} />
         </div>
 
         <div className="space-y-0.5 border-t border-stone-200 pt-4 dark:border-stone-800">

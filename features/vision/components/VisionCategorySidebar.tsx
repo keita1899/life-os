@@ -7,7 +7,7 @@ import { useEditState } from '@/hooks/useEditState'
 import { useVisionCategories } from '../hooks/useVisionCategories'
 import type { VisionCategory } from '../types/vision-category'
 import { VisionCategoryList } from './VisionCategoryList'
-import { VisionCategoryCreateForm } from './VisionCategoryCreateForm'
+import { InlineCategoryCreateItem } from '@/components/ui/inline-category-create-item'
 
 interface VisionCategorySidebarProps {
   selectedCategoryId: number | 'all' | null
@@ -81,11 +81,8 @@ export function VisionCategorySidebar({
           onSelectCategory={onSelectCategory}
           onDelete={handleDeleteCategory}
           onUpdateCategory={handleUpdateCategory}
+          onCreateCategory={handleCreateCategory}
         />
-      </div>
-
-      <div className="border-t border-stone-700/60 p-4">
-        <VisionCategoryCreateForm onSubmit={handleCreateCategory} />
       </div>
     </div>
   )

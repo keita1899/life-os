@@ -1,6 +1,8 @@
 'use client'
 
 import { useState, useMemo } from 'react'
+import { Button } from '@/components/ui/button'
+import { InlineCreateButton } from '@/components/ui/inline-create-button'
 import { CreateButton } from '@/components/ui/create-button'
 import { useCreateShortcut } from '@/hooks/useCreateShortcut'
 import { useDialogState } from '@/hooks/useDialogState'
@@ -194,12 +196,20 @@ export default function SubscriptionsPage() {
               </div>
             ),
             content: (
-              <SubscriptionList
-                subscriptions={group.subscriptions}
-                onEdit={handleEditSubscription}
-                onDelete={deleteConfirm.handleDeleteClick}
-                onToggleActive={handleToggleActive}
-              />
+              <div className="space-y-4">
+                <SubscriptionList
+                  subscriptions={group.subscriptions}
+                  onEdit={handleEditSubscription}
+                  onDelete={deleteConfirm.handleDeleteClick}
+                  onToggleActive={handleToggleActive}
+                />
+                {group.key === 'active' && (
+                  <InlineCreateButton
+                    label="サブスクを追加"
+                    onClick={handleCreateClick}
+                  />
+                )}
+              </div>
             ),
           }))}
         />

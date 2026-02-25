@@ -10,7 +10,7 @@ import {
   WishlistCategoryList,
   type WishlistCategoryCounts,
 } from './WishlistCategoryList'
-import { WishlistCategoryCreateForm } from './WishlistCategoryCreateForm'
+import { InlineCategoryCreateItem } from '@/components/ui/inline-category-create-item'
 
 interface WishlistCategorySidebarProps {
   selectedCategoryId: string
@@ -87,11 +87,8 @@ export function WishlistCategorySidebar({
           onDelete={handleDeleteCategory}
           onUpdateCategory={handleUpdateCategory}
           counts={counts}
+          onCreateCategory={handleCreateCategory}
         />
-      </div>
-
-      <div className="border-t border-stone-700/60 p-4">
-        <WishlistCategoryCreateForm onSubmit={handleCreateCategory} />
       </div>
     </div>
   )

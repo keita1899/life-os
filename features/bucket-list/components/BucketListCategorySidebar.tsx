@@ -10,7 +10,7 @@ import {
   BucketListCategoryList,
   type BucketListCategoryCounts,
 } from './BucketListCategoryList'
-import { BucketListCategoryCreateForm } from './BucketListCategoryCreateForm'
+import { InlineCategoryCreateItem } from '@/components/ui/inline-category-create-item'
 
 interface BucketListCategorySidebarProps {
   selectedCategoryId: string
@@ -88,11 +88,8 @@ export function BucketListCategorySidebar({
           onDelete={handleDeleteCategory}
           onUpdateCategory={handleUpdateCategory}
           counts={counts}
+          onCreateCategory={handleCreateCategory}
         />
-      </div>
-
-      <div className="border-t border-stone-700/60 p-4">
-        <BucketListCategoryCreateForm onSubmit={handleCreateCategory} />
       </div>
     </div>
   )

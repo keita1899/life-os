@@ -1,7 +1,9 @@
 'use client'
 
-import { useState, useMemo } from 'react'
-import { startOfDay, subYears, addMonths } from 'date-fns'
+import { useState, useMemo, useCallback } from 'react'
+import { startOfDay, subYears, addMonths, addDays, format } from 'date-fns'
+import { Button } from '@/components/ui/button'
+import { InlineCreateButton } from '@/components/ui/inline-create-button'
 import { CreateButton } from '@/components/ui/create-button'
 import { useCreateShortcut } from '@/hooks/useCreateShortcut'
 import { useDialogState } from '@/hooks/useDialogState'
@@ -39,6 +41,8 @@ export default function EventsPage() {
   const deleteConfirm = useDeleteConfirm<Event>()
   const { operationError, setOperationError, execute } = useAsyncOperation()
 
+  const [defaultDate, setDefaultDate] = useState<string | undefined>(undefined)
+
   const expandedEvents = useMemo(() => {
     const today = new Date()
     const rangeStart = startOfDay(subYears(today, 1))
@@ -67,8 +71,23 @@ export default function EventsPage() {
     )
     if (result !== undefined) {
       handleDialogClose(false)
+      setDefaultDate(undefined)
     }
   }
+
+  const handleInlineCreate = useCallback((date: string | undefined) => {
+    setDefaultDate(date)
+    handleCreateClick()
+  }, [handleCreateClick])
+
+  const getGroupDate = useCallback((key: string): string | undefined => {
+    const today = new Date()
+    if (key === 'today') return format(today, 'yyyy-MM-dd')
+    if (key === 'tomorrow') return format(addDays(today, 1), 'yyyy-MM-dd')
+    if (key === 'overdue') return format(today, 'yyyy-MM-dd')
+    if (/^\d{4}-\d{2}-\d{2}$/.test(key)) return key
+    return undefined
+  }, [])
 
   const handleUpdateEvent = async (input: CreateEventInput) => {
     if (!editingEvent) return
@@ -160,11 +179,19 @@ export default function EventsPage() {
               </div>
             ),
             content: (
-              <EventList
-                events={group.events}
-                onEdit={handleEditEvent}
-                onDelete={deleteConfirm.handleDeleteClick}
-              />
+              <div className="space-y-4">
+                <EventList
+                  events={group.events}
+                  onEdit={handleEditEvent}
+                  onDelete={deleteConfirm.handleDeleteClick}
+                />
+                {group.key !== 'overdue' && (
+                  <InlineCreateButton
+                    label="予定を追加"
+                    onClick={() => handleInlineCreate(getGroupDate(group.key))}
+                  />
+                )}
+              </div>
             ),
           }))}
         />
@@ -172,9 +199,13 @@ export default function EventsPage() {
 
       <EventDialog
         open={isDialogOpen}
-        onOpenChange={handleDialogClose}
+        onOpenChange={(open) => {
+          handleDialogClose(open)
+          if (!open) setDefaultDate(undefined)
+        }}
         onSubmit={editingEvent ? handleUpdateEvent : handleCreateEvent}
         event={editingEvent}
+        defaultStartDate={defaultDate}
       />
 
       {deleteConfirm.deletingItem?.recurrenceRule ? (
