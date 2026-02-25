@@ -4,8 +4,8 @@ import { useState, useMemo } from 'react'
 import { CheckCircle2, Circle, ChevronDown, ChevronUp } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { EditDeleteDropdownMenu } from '@/components/ui/edit-delete-dropdown-menu'
+import { InlineCreateButton } from '@/components/ui/inline-create-button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
-import { EmptyState } from '@/components/ui/empty-state'
 import { Progress } from '@/components/ui/progress'
 import { calculateProgress } from '@/features/goals'
 import { GroupedAccordion } from '@/components/ui/grouped-accordion'
@@ -14,7 +14,7 @@ import type { DevMonthlyGoal } from '../types/dev-monthly-goal'
 interface MonthlyGoalsSectionProps {
   goals: DevMonthlyGoal[]
   selectedYear: number
-  onCreateClick: () => void
+  onCreateClick: (defaultMonth?: number) => void
   onEditClick: (goal: DevMonthlyGoal) => void
   onDeleteClick: (e: React.MouseEvent, goal: DevMonthlyGoal) => void
   onToggleChecklistItem?: (
@@ -141,7 +141,7 @@ export const MonthlyGoalsSection = ({
         <h2 className="text-xl font-semibold text-stone-900 dark:text-stone-100">
           月間目標
         </h2>
-        <Button variant="outline" onClick={onCreateClick} size="sm">
+        <Button variant="outline" onClick={() => onCreateClick()} size="sm">
           月間目標を作成
         </Button>
       </div>
@@ -164,7 +164,10 @@ export const MonthlyGoalsSection = ({
               trigger: `${month}月`,
               content:
                 monthGoals.length === 0 ? (
-                  <EmptyState message="この月の目標はありません" />
+                  <InlineCreateButton
+                    label={`${month}月の目標を作成`}
+                    onClick={() => onCreateClick(month)}
+                  />
                 ) : (
                   <div className="grid gap-4 grid-cols-1">
                     {monthGoals.map((goal) => (

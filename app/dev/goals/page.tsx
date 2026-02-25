@@ -48,6 +48,7 @@ export default function DevGoalsPage() {
   const [editingMonthlyGoal, setEditingMonthlyGoal] = useState<
     DevMonthlyGoal | undefined
   >(undefined)
+  const [defaultMonth, setDefaultMonth] = useState<number | undefined>(undefined)
 
   const handleCreateYearlyGoal = async (input: CreateDevYearlyGoalInput) => {
     const result = await execute(
@@ -203,6 +204,7 @@ export default function DevGoalsPage() {
     setIsMonthlyDialogOpen(open)
     if (!open) {
       setEditingMonthlyGoal(undefined)
+      setDefaultMonth(undefined)
     }
   }
 
@@ -242,7 +244,8 @@ export default function DevGoalsPage() {
             <MonthlyGoalsSection
               goals={monthlyGoals}
               selectedYear={selectedYear}
-              onCreateClick={() => {
+              onCreateClick={(month) => {
+                setDefaultMonth(month)
                 setEditingMonthlyGoal(undefined)
                 setIsMonthlyDialogOpen(true)
               }}
@@ -273,6 +276,7 @@ export default function DevGoalsPage() {
           }
           goal={editingMonthlyGoal}
           selectedYear={selectedYear}
+          selectedMonth={defaultMonth}
         />
 
         <DeleteConfirmDialog
