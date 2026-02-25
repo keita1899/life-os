@@ -50,27 +50,41 @@ export function WeekStartEventsStep({
 
   const handleEditEventSubmit = useCallback(async (input: CreateEventInput) => {
     if (!editingEvent) return
-    await updateEvent(editingEvent.id, input)
-    setEditingEvent(null)
+    try {
+      await updateEvent(editingEvent.id, input)
+      setEditingEvent(null)
+    } catch (err) {
+      console.error('Failed to update event:', err)
+    }
   }, [editingEvent, updateEvent])
 
-  const handleDeleteEvent = useCallback((event: Event) => {
+  const handleDeleteEvent = useCallback(async (event: Event) => {
     if (event.recurrenceRule) {
       setDeletingEvent(event)
     } else {
-      void deleteEvent(event.id)
+      try {
+        await deleteEvent(event.id)
+      } catch (err) {
+        console.error('Failed to delete event:', err)
+      }
     }
   }, [deleteEvent])
 
   const handleRecurringDeleteConfirm = useCallback(async (deleteMode: 'single' | 'all') => {
     if (!deletingEvent) return
-    if (deleteMode === 'all') {
-      await deleteEvent(deletingEvent.id)
-    } else {
-      const excluded = [...(deletingEvent.recurrenceExcludedDates ?? []), deletingEvent.startDatetime?.split('T')[0]]
-      await updateEvent(deletingEvent.id, { recurrenceExcludedDates: excluded.filter(Boolean) as string[] })
+    try {
+      if (deleteMode === 'all') {
+        await deleteEvent(deletingEvent.id)
+      } else {
+        const excluded = [...(deletingEvent.recurrenceExcludedDates ?? []), deletingEvent.startDatetime?.split('T')[0]]
+          .filter((d): d is string => Boolean(d))
+        await updateEvent(deletingEvent.id, { recurrenceExcludedDates: excluded })
+      }
+    } catch (err) {
+      console.error('Failed to delete recurring event:', err)
+    } finally {
+      setDeletingEvent(null)
     }
-    setDeletingEvent(null)
   }, [deletingEvent, updateEvent, deleteEvent])
 
   if (!hasAny) {

@@ -130,47 +130,50 @@ export async function createDevProject(
   }
 
   try {
-    await db.execute(
-      `INSERT INTO dev_projects (name, start_date, end_date, status, production_url, github_url)
-       VALUES (?, ?, ?, ?, ?, ?)`,
-      [input.name, input.startDate || null, input.endDate || null, status, input.productionUrl || null, input.githubUrl || null],
-    )
+    await db.execute('BEGIN TRANSACTION')
 
-    const result = await db.select<DbDevProject[]>(
-      `SELECT
-        id,
-        name,
-        start_date,
-        end_date,
-        status,
-        production_url,
-        github_url,
-        created_at,
-        updated_at
-      FROM dev_projects
-      WHERE name = ? AND status = ?
-      ORDER BY created_at DESC, id DESC
-      LIMIT 1`,
-      [input.name, status],
-    )
-
-    if (result.length === 0) {
-      throw new Error(
-        'Failed to create dev project: record not found after insert',
+    try {
+      await db.execute(
+        `INSERT INTO dev_projects (name, start_date, end_date, status, production_url, github_url)
+         VALUES (?, ?, ?, ?, ?, ?)`,
+        [input.name, input.startDate || null, input.endDate || null, status, input.productionUrl || null, input.githubUrl || null],
       )
+
+      const idResult = await db.select<{ id: number }[]>(
+        'SELECT last_insert_rowid() as id',
+      )
+      const insertedId = idResult[0]?.id
+      if (!insertedId) {
+        throw new Error('Failed to create dev project: could not retrieve inserted id')
+      }
+
+      for (const title of DEFAULT_PROJECT_TASKS) {
+        await createDevTask({
+          title,
+          projectId: insertedId,
+          type: 'inbox',
+        })
+      }
+
+      await db.execute('COMMIT')
+
+      const result = await db.select<DbDevProject[]>(
+        `SELECT
+          id, name, start_date, end_date, status,
+          production_url, github_url, created_at, updated_at
+        FROM dev_projects WHERE id = ?`,
+        [insertedId],
+      )
+
+      if (result.length === 0) {
+        throw new Error('Failed to create dev project: record not found after insert')
+      }
+
+      return mapDbProjectToProject(result[0])
+    } catch (innerErr) {
+      await db.execute('ROLLBACK').catch(() => {})
+      throw innerErr
     }
-
-    const project = mapDbProjectToProject(result[0])
-
-    for (const title of DEFAULT_PROJECT_TASKS) {
-      await createDevTask({
-        title,
-        projectId: project.id,
-        type: 'inbox',
-      })
-    }
-
-    return project
   } catch (err) {
     if (
       err instanceof Error &&

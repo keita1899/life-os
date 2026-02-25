@@ -310,7 +310,7 @@ function DevProjectPageContent(): ReactElement | null {
     const todayStr = getTodayDateString()
     if (key === 'today' || key === 'overdue') return todayStr
     if (key === 'tomorrow') return getTomorrowDateString()
-    if (key === 'none') return ''
+    if (key === 'none') return null
     if (key === 'completed') return todayStr
     return key
   }

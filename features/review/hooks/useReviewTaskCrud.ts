@@ -45,11 +45,15 @@ export function useReviewTaskCrud(mode: ReviewMode) {
     }
   }, [mode, deleteTask])
 
-  const handleDelete = useCallback((task: Task) => {
+  const handleDelete = useCallback(async (task: Task) => {
     if (task.recurrenceRule) {
       setDeletingTask(task)
     } else {
-      void performDelete(task.id)
+      try {
+        await performDelete(task.id)
+      } catch (err) {
+        console.error('Failed to delete task:', err)
+      }
     }
   }, [performDelete])
 
@@ -60,7 +64,8 @@ export function useReviewTaskCrud(mode: ReviewMode) {
     } else {
       if (mode === 'life') {
         const excluded = [...(deletingTask.recurrenceExcludedDates ?? []), deletingTask.executionDate]
-        await updateTask(deletingTask.id, { recurrenceExcludedDates: excluded.filter(Boolean) as string[] })
+          .filter((d): d is string => Boolean(d))
+        await updateTask(deletingTask.id, { recurrenceExcludedDates: excluded })
       } else {
         await performDelete(deletingTask.id)
       }

@@ -32,26 +32,40 @@ export function YearEndGoalsStep({ nextYear, mode }: YearEndGoalsStepProps) {
     refreshGoals: devRefreshGoals,
   } = useDevGoals(nextYearNum)
 
+  const [error, setError] = useState<string | null>(null)
+
   const handleCreateLife = useCallback(
     async (input: CreateYearlyGoalInput) => {
-      await createYearlyGoal({
-        ...input,
-        year: nextYearNum,
-      })
-      await refreshGoals()
-      setIsDialogOpen(false)
+      try {
+        setError(null)
+        await createYearlyGoal({
+          ...input,
+          year: nextYearNum,
+        })
+        await refreshGoals()
+        setIsDialogOpen(false)
+      } catch (err) {
+        console.error('Failed to create yearly goal:', err)
+        setError('年間目標の作成に失敗しました')
+      }
     },
     [nextYearNum, createYearlyGoal, refreshGoals],
   )
 
   const handleCreateDev = useCallback(
     async (input: CreateDevYearlyGoalInput) => {
-      await createDevYearlyGoal({
-        ...input,
-        year: nextYearNum,
-      })
-      await devRefreshGoals()
-      setIsDialogOpen(false)
+      try {
+        setError(null)
+        await createDevYearlyGoal({
+          ...input,
+          year: nextYearNum,
+        })
+        await devRefreshGoals()
+        setIsDialogOpen(false)
+      } catch (err) {
+        console.error('Failed to create dev yearly goal:', err)
+        setError('年間目標の作成に失敗しました')
+      }
     },
     [nextYearNum, createDevYearlyGoal, devRefreshGoals],
   )
@@ -61,6 +75,9 @@ export function YearEndGoalsStep({ nextYear, mode }: YearEndGoalsStepProps) {
       return (
         <div className="space-y-5">
           <EmptyState message="来年の目標を立てましょう" />
+          {error && (
+            <p className="text-sm text-destructive" role="alert">{error}</p>
+          )}
           <div className="flex gap-2">
             <Button variant="outline" asChild>
               <Link href="/dev/goals">目標ページへ</Link>
@@ -95,6 +112,9 @@ export function YearEndGoalsStep({ nextYear, mode }: YearEndGoalsStepProps) {
     return (
       <div className="space-y-5">
         <EmptyState message="来年の目標を立てましょう" />
+        {error && (
+          <p className="text-sm text-destructive" role="alert">{error}</p>
+        )}
         <div className="flex gap-2">
           <Button variant="outline" asChild>
             <Link href="/goals">目標ページへ</Link>
