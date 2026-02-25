@@ -1,29 +1,31 @@
 'use client'
 
 import { useMemo, useState, useCallback } from 'react'
-import { startOfDay, endOfDay } from 'date-fns'
+import { addDays, startOfDay, endOfDay } from 'date-fns'
 import { useEvents, EventDialog, RecurringEventDeleteDialog } from '@/features/events'
 import { expandRecurringEvents } from '@/features/events'
 import { getEventsForDateSorted } from '@/features/logs'
 import { LogEventsSection } from '@/features/logs'
 import type { Event, CreateEventInput } from '@/features/events'
 
-interface MorningEventsStepProps {
+interface EveningTomorrowEventsStepProps {
   today: Date
 }
 
-export function MorningEventsStep({ today }: MorningEventsStepProps) {
+export function EveningTomorrowEventsStep({ today }: EveningTomorrowEventsStepProps) {
+  const tomorrow = useMemo(() => addDays(today, 1), [today])
+
   const { events: allEvents, updateEvent, deleteEvent } = useEvents()
 
   const [editingEvent, setEditingEvent] = useState<Event | null>(null)
   const [deletingEvent, setDeletingEvent] = useState<Event | null>(null)
 
-  const events = useMemo(() => {
-    const rangeStart = startOfDay(today)
-    const rangeEnd = endOfDay(today)
+  const lifeEvents = useMemo(() => {
+    const rangeStart = startOfDay(tomorrow)
+    const rangeEnd = endOfDay(tomorrow)
     const expanded = expandRecurringEvents(allEvents, rangeStart, rangeEnd)
-    return getEventsForDateSorted(expanded, today)
-  }, [allEvents, today])
+    return getEventsForDateSorted(expanded, tomorrow)
+  }, [allEvents, tomorrow])
 
   const handleEditEvent = useCallback((event: Event) => {
     setEditingEvent(event)
@@ -43,7 +45,7 @@ export function MorningEventsStep({ today }: MorningEventsStepProps) {
     }
   }, [deleteEvent])
 
-  const handleRecurringDeleteConfirm = useCallback(async (deleteMode: 'single' | 'all') => {
+  const handleRecurringEventDeleteConfirm = useCallback(async (deleteMode: 'single' | 'all') => {
     if (!deletingEvent) return
     if (deleteMode === 'all') {
       await deleteEvent(deletingEvent.id)
@@ -57,7 +59,7 @@ export function MorningEventsStep({ today }: MorningEventsStepProps) {
   return (
     <div className="space-y-5">
       <LogEventsSection
-        events={events}
+        events={lifeEvents}
         onEdit={handleEditEvent}
         onDelete={handleDeleteEvent}
       />
@@ -71,7 +73,7 @@ export function MorningEventsStep({ today }: MorningEventsStepProps) {
         <RecurringEventDeleteDialog
           open={!!deletingEvent}
           eventTitle={deletingEvent.title}
-          onConfirm={handleRecurringDeleteConfirm}
+          onConfirm={handleRecurringEventDeleteConfirm}
           onCancel={() => setDeletingEvent(null)}
         />
       )}

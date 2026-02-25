@@ -2,7 +2,7 @@
 
 import { Button } from '@/components/ui/button'
 import { cn } from '@/lib/utils'
-import { ChevronLeft, ChevronRight } from 'lucide-react'
+import { ChevronLeft, ChevronRight, Sun, Moon } from 'lucide-react'
 
 interface WizardShellProps {
   title?: string
@@ -15,6 +15,7 @@ interface WizardShellProps {
   onComplete: () => void
   onPrev?: () => void
   operationError?: string | null
+  variant?: 'morning' | 'evening'
   children: React.ReactNode
 }
 
@@ -29,8 +30,11 @@ export function WizardShell({
   onComplete,
   onPrev,
   operationError,
+  variant,
   children,
 }: WizardShellProps) {
+  const isMorning = variant === 'morning'
+  const isEvening = variant === 'evening'
   return (
     <div
       className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4 backdrop-blur-sm"
@@ -38,11 +42,29 @@ export function WizardShell({
       aria-modal="true"
       aria-label="確認ウィザード"
     >
-      <div className="flex min-h-[500px] max-h-[90vh] w-full max-w-2xl flex-col overflow-hidden rounded-xl border border-border/80 bg-background shadow-2xl">
+      <div className={cn(
+        'flex min-h-[500px] max-h-[90vh] w-full max-w-2xl flex-col overflow-hidden rounded-xl border shadow-2xl',
+        isMorning && 'border-amber-200/60 dark:border-amber-800/40',
+        isEvening && 'border-indigo-200/60 dark:border-indigo-800/40',
+        !variant && 'border-border/80',
+        'bg-background',
+      )}>
         {(title || stepCount > 1 || stepLabels?.[0]) && (
-          <header className="flex shrink-0 flex-col gap-4 bg-muted/30 px-6 py-4">
+          <header className={cn(
+            'flex shrink-0 flex-col gap-4 px-6 py-4',
+            isMorning && 'bg-amber-50/50 dark:bg-amber-950/20',
+            isEvening && 'bg-indigo-50/50 dark:bg-indigo-950/20',
+            !variant && 'bg-muted/30',
+          )}>
             {title && (
-              <h1 className="text-lg font-medium tracking-tight text-foreground">
+              <h1 className={cn(
+                'flex items-center gap-2 text-lg font-medium tracking-tight',
+                isMorning && 'text-amber-900 dark:text-amber-200',
+                isEvening && 'text-indigo-900 dark:text-indigo-200',
+                !variant && 'text-foreground',
+              )}>
+                {isMorning && <Sun className="h-5 w-5" />}
+                {isEvening && <Moon className="h-5 w-5" />}
                 {title}
               </h1>
             )}
@@ -55,10 +77,20 @@ export function WizardShell({
                         <div
                           className={cn(
                             'flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-sm font-medium tabular-nums transition-colors',
-                            i < currentStep &&
-                              'bg-primary text-primary-foreground',
-                            i === currentStep &&
-                              'bg-primary text-primary-foreground ring-2 ring-primary/30',
+                            i < currentStep && (
+                              isMorning
+                                ? 'bg-amber-500 text-white dark:bg-amber-600'
+                                : isEvening
+                                  ? 'bg-indigo-500 text-white dark:bg-indigo-600'
+                                  : 'bg-primary text-primary-foreground'
+                            ),
+                            i === currentStep && (
+                              isMorning
+                                ? 'bg-amber-500 text-white ring-2 ring-amber-300/50 dark:bg-amber-600 dark:ring-amber-500/30'
+                                : isEvening
+                                  ? 'bg-indigo-500 text-white ring-2 ring-indigo-300/50 dark:bg-indigo-600 dark:ring-indigo-500/30'
+                                  : 'bg-primary text-primary-foreground ring-2 ring-primary/30'
+                            ),
                             i > currentStep &&
                               'border-2 border-border bg-background text-muted-foreground',
                           )}
@@ -70,7 +102,9 @@ export function WizardShell({
                           <div
                             className={cn(
                               'h-0.5 min-w-[12px] flex-1 transition-colors',
-                              i < currentStep ? 'bg-primary' : 'bg-muted',
+                              i < currentStep
+                                ? (isMorning ? 'bg-amber-500 dark:bg-amber-600' : isEvening ? 'bg-indigo-500 dark:bg-indigo-600' : 'bg-primary')
+                                : 'bg-muted',
                             )}
                             aria-hidden
                           />
@@ -95,7 +129,12 @@ export function WizardShell({
           </header>
         )}
 
-        <div className="flex flex-1 flex-col overflow-auto bg-muted/30 px-6 py-16">
+        <div className={cn(
+          'flex flex-1 flex-col overflow-auto px-6 py-16',
+          isMorning && 'bg-amber-50/30 dark:bg-amber-950/10',
+          isEvening && 'bg-indigo-50/30 dark:bg-indigo-950/10',
+          !variant && 'bg-muted/30',
+        )}>
           {operationError && (
             <p className="mb-4 text-sm text-destructive" role="alert">
               {operationError}
@@ -104,7 +143,12 @@ export function WizardShell({
           {children}
         </div>
 
-        <footer className="flex shrink-0 justify-end gap-2 bg-muted/30 px-6 py-4">
+        <footer className={cn(
+          'flex shrink-0 justify-end gap-2 px-6 py-4',
+          isMorning && 'bg-amber-50/50 dark:bg-amber-950/20',
+          isEvening && 'bg-indigo-50/50 dark:bg-indigo-950/20',
+          !variant && 'bg-muted/30',
+        )}>
           {!isFirstStep && onPrev && (
             <Button type="button" variant="outline" size="sm" onClick={onPrev}>
               <ChevronLeft className="h-4 w-4" />

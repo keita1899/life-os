@@ -1,15 +1,13 @@
 'use client'
 
 import { useMemo } from 'react'
-import { useTasks } from '@/features/tasks'
-import {
-  useDevCalendarTasks,
-  getOverdueDevTasksInWeek,
-} from '@/features/dev/tasks'
+import { useTasks, getOverdueTasksInWeek, TaskList } from '@/features/tasks'
+import { useDevCalendarTasks, getOverdueDevTasksInWeek } from '@/features/dev/tasks'
 import { useDevProjects } from '@/features/dev/projects'
-import { getOverdueTasksInWeek } from '@/features/tasks'
-import { TaskList } from '@/features/tasks'
 import { EmptyState } from '@/components/ui/empty-state'
+import { useReviewTaskCrud } from '../../hooks/useReviewTaskCrud'
+import { ReviewTaskDialogs } from '../ReviewTaskDialogs'
+import { devTaskToTask } from '../../lib/devTaskToTask'
 import type { Task } from '@/features/tasks'
 import type { ReviewMode } from '../../types/review-completion'
 
@@ -17,34 +15,6 @@ interface WeekEndOverdueStepProps {
   weekStartDateStr: string
   beforeDateStr: string
   mode: ReviewMode
-}
-
-function devTaskToTask(devTask: {
-  id: number
-  title: string
-  executionDate: string | null
-  completed: boolean
-  order: number
-  memo: string | null
-  createdAt: string
-  updatedAt: string
-}): Task {
-  return {
-    id: devTask.id,
-    title: devTask.title,
-    executionDate: devTask.executionDate ?? '',
-    completed: devTask.completed,
-    order: devTask.order,
-    scheduledTime: null,
-    recurrenceRule: null,
-    recurrenceDaysOfWeek: null,
-    recurrenceDayOfMonth: null,
-    recurrenceEndDate: null,
-    recurrenceExcludedDates: [],
-    memo: devTask.memo,
-    createdAt: devTask.createdAt,
-    updatedAt: devTask.updatedAt,
-  }
 }
 
 export function WeekEndOverdueStep({
@@ -55,6 +25,8 @@ export function WeekEndOverdueStep({
   const { tasks: lifeTasks } = useTasks()
   const { tasks: devTasks } = useDevCalendarTasks()
   const { projects } = useDevProjects()
+
+  const crud = useReviewTaskCrud(mode)
 
   const projectNameById = useMemo(() => {
     const map = new Map<number, string>()
@@ -99,6 +71,18 @@ export function WeekEndOverdueStep({
         tasks={tasks}
         getTaskLabel={mode === 'development' ? getTaskLabel : undefined}
         dateLabelMode="overdue-only"
+        onToggleCompletion={crud.handleToggleCompletion}
+        onEdit={crud.handleEdit}
+        onDelete={crud.handleDelete}
+        onUpdateExecutionDate={crud.handleUpdateExecutionDate}
+      />
+      <ReviewTaskDialogs
+        editingTask={crud.editingTask}
+        deletingTask={crud.deletingTask}
+        onEditClose={() => crud.setEditingTask(null)}
+        onEditSubmit={crud.handleEditSubmit}
+        onRecurringDeleteConfirm={crud.handleRecurringDeleteConfirm}
+        onDeleteCancel={() => crud.setDeletingTask(null)}
       />
     </div>
   )
