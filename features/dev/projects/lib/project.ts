@@ -1,4 +1,5 @@
 import { getDatabase, handleDbError } from '@/lib/db'
+import { createDevTask } from '@/features/dev/tasks'
 import type {
   DevProject,
   CreateDevProjectInput,
@@ -6,12 +7,22 @@ import type {
   ProjectStatus,
 } from '../types/dev-project'
 
+const DEFAULT_PROJECT_TASKS = [
+  '要件定義を書く',
+  '技術選定',
+  '環境構築',
+  'README を書く',
+  'デプロイ',
+]
+
 interface DbDevProject {
   id: number
   name: string
   start_date: string | null
   end_date: string | null
   status: string
+  production_url: string | null
+  github_url: string | null
   created_at: string
   updated_at: string
 }
@@ -23,6 +34,8 @@ function mapDbProjectToProject(dbProject: DbDevProject): DevProject {
     startDate: dbProject.start_date,
     endDate: dbProject.end_date,
     status: dbProject.status as ProjectStatus,
+    productionUrl: dbProject.production_url,
+    githubUrl: dbProject.github_url,
     createdAt: dbProject.created_at,
     updatedAt: dbProject.updated_at,
   }
@@ -49,12 +62,14 @@ export async function getAllDevProjects(): Promise<DevProject[]> {
 
   try {
     const result = await db.select<DbDevProject[]>(
-      `SELECT 
+      `SELECT
         id,
         name,
         start_date,
         end_date,
         status,
+        production_url,
+        github_url,
         created_at,
         updated_at
       FROM dev_projects
@@ -72,12 +87,14 @@ export async function getDevProjectById(id: number): Promise<DevProject | null> 
 
   try {
     const result = await db.select<DbDevProject[]>(
-      `SELECT 
+      `SELECT
         id,
         name,
         start_date,
         end_date,
         status,
+        production_url,
+        github_url,
         created_at,
         updated_at
       FROM dev_projects
@@ -114,18 +131,20 @@ export async function createDevProject(
 
   try {
     await db.execute(
-      `INSERT INTO dev_projects (name, start_date, end_date, status)
-       VALUES (?, ?, ?, ?)`,
-      [input.name, input.startDate || null, input.endDate || null, status],
+      `INSERT INTO dev_projects (name, start_date, end_date, status, production_url, github_url)
+       VALUES (?, ?, ?, ?, ?, ?)`,
+      [input.name, input.startDate || null, input.endDate || null, status, input.productionUrl || null, input.githubUrl || null],
     )
 
     const result = await db.select<DbDevProject[]>(
-      `SELECT 
+      `SELECT
         id,
         name,
         start_date,
         end_date,
         status,
+        production_url,
+        github_url,
         created_at,
         updated_at
       FROM dev_projects
@@ -141,7 +160,17 @@ export async function createDevProject(
       )
     }
 
-    return mapDbProjectToProject(result[0])
+    const project = mapDbProjectToProject(result[0])
+
+    for (const title of DEFAULT_PROJECT_TASKS) {
+      await createDevTask({
+        title,
+        projectId: project.id,
+        type: 'inbox',
+      })
+    }
+
+    return project
   } catch (err) {
     if (
       err instanceof Error &&
@@ -200,6 +229,16 @@ export async function updateDevProject(
   if (input.status !== undefined) {
     updates.push('status = ?')
     values.push(input.status)
+  }
+
+  if (input.productionUrl !== undefined) {
+    updates.push('production_url = ?')
+    values.push(input.productionUrl || null)
+  }
+
+  if (input.githubUrl !== undefined) {
+    updates.push('github_url = ?')
+    values.push(input.githubUrl || null)
   }
 
   if (updates.length === 0) {

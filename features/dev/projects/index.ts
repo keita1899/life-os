@@ -1,3 +1,5 @@
+export { ProjectSwitcher } from './components/ProjectSwitcher'
+export { ProjectCreationWizard } from './components/ProjectCreationWizard'
 export { ProjectDialog } from './components/ProjectDialog'
 export { ProjectList } from './components/ProjectList'
 export { ProjectCard } from './components/ProjectCard'

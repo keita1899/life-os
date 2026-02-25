@@ -13,6 +13,12 @@ import { Loading } from '@/components/ui/loading'
 import { ErrorMessage } from '@/components/ui/error-message'
 import { Badge } from '@/components/ui/badge'
 import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu'
+import {
   deleteDevProject,
   getDevProjectById,
   updateDevProject,
@@ -20,6 +26,8 @@ import {
 } from '@/features/dev/projects'
 import type { DevProject, ProjectStatus } from '@/features/dev/projects'
 import { Button } from '@/components/ui/button'
+import { Input } from '@/components/ui/input'
+import { InlineCreateButton } from '@/components/ui/inline-create-button'
 import { CreateButton } from '@/components/ui/create-button'
 import { DeleteConfirmDialog } from '@/components/ui/delete-confirm-dialog'
 import { useState } from 'react'
@@ -31,6 +39,7 @@ import { useDialogState } from '@/hooks/useDialogState'
 import { useDeleteConfirm } from '@/hooks/useDeleteConfirm'
 import { useAsyncOperation } from '@/hooks/useAsyncOperation'
 import { FloatingActionButtons } from '@/components/floating/FloatingActionButtons'
+import { getTodayDateString, getTomorrowDateString } from '@/lib/date/formats'
 import { useAutoExpandAccordion } from '@/hooks/useAutoExpandAccordion'
 import { GroupedAccordion } from '@/components/ui/grouped-accordion'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
@@ -42,6 +51,12 @@ import {
   CheckSquare,
   StickyNote,
   FileText,
+  ChevronDown,
+  Check,
+  X,
+  Globe,
+  Github,
+  ExternalLink,
 } from 'lucide-react'
 import {
   useDevMemosByProjectId,
@@ -107,6 +122,8 @@ function DevProjectPageContent(): ReactElement | null {
   const projectDialog = useDialogState<DevProject>()
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false)
   const [deleteError, setDeleteError] = useState<string | null>(null)
+  const [editingUrl, setEditingUrl] = useState<'production' | 'github' | null>(null)
+  const [urlDraft, setUrlDraft] = useState('')
 
   const {
     tasks,
@@ -136,6 +153,7 @@ function DevProjectPageContent(): ReactElement | null {
     setOperationError: setTaskOperationError,
     execute: executeTaskOperation,
   } = useAsyncOperation()
+  const [defaultDate, setDefaultDate] = useState<string | null | undefined>(undefined)
 
   const convertedTasks: Task[] = useMemo(() => {
     return tasks.map((t) => ({
@@ -198,6 +216,8 @@ function DevProjectPageContent(): ReactElement | null {
     startDate?: string | null
     endDate?: string | null
     status?: ProjectStatus
+    productionUrl?: string | null
+    githubUrl?: string | null
   }) => {
     if (!Number.isFinite(projectId)) return
     await updateDevProject(projectId, input)
@@ -206,6 +226,46 @@ function DevProjectPageContent(): ReactElement | null {
       mutate(SWR_KEYS.devProjects),
     ])
     projectDialog.handleDialogClose(false)
+  }
+
+  const handleStatusChange = async (newStatus: ProjectStatus) => {
+    if (!Number.isFinite(projectId)) return
+    if (data?.status === newStatus) return
+    await executeTaskOperation(async () => {
+      await updateDevProject(projectId, { status: newStatus })
+      await Promise.all([
+        mutate(SWR_KEYS.devProject(projectId)),
+        mutate(SWR_KEYS.devProjects),
+      ])
+    }, 'ステータスの更新に失敗しました')
+  }
+
+  const handleStartEditUrl = (type: 'production' | 'github') => {
+    setUrlDraft(
+      type === 'production'
+        ? data?.productionUrl ?? ''
+        : data?.githubUrl ?? '',
+    )
+    setEditingUrl(type)
+  }
+
+  const handleSaveUrl = async () => {
+    if (!Number.isFinite(projectId) || !editingUrl) return
+    const field =
+      editingUrl === 'production' ? 'productionUrl' : 'githubUrl'
+    await executeTaskOperation(async () => {
+      await updateDevProject(projectId, { [field]: urlDraft || null })
+      await Promise.all([
+        mutate(SWR_KEYS.devProject(projectId)),
+        mutate(SWR_KEYS.devProjects),
+      ])
+    }, 'URL の更新に失敗しました')
+    setEditingUrl(null)
+  }
+
+  const handleCancelEditUrl = () => {
+    setEditingUrl(null)
+    setUrlDraft('')
   }
 
   const handleDelete = async () => {
@@ -237,7 +297,22 @@ function DevProjectPageContent(): ReactElement | null {
     )
     if (result !== undefined) {
       taskDialog.handleDialogClose(false)
+      setDefaultDate(undefined)
     }
+  }
+
+  const handleInlineCreate = (date: string | null) => {
+    setDefaultDate(date)
+    taskDialog.handleCreateClick()
+  }
+
+  const getGroupDate = (key: string): string | null => {
+    const todayStr = getTodayDateString()
+    if (key === 'today' || key === 'overdue') return todayStr
+    if (key === 'tomorrow') return getTomorrowDateString()
+    if (key === 'none') return ''
+    if (key === 'completed') return todayStr
+    return key
   }
 
   const handleUpdateTask = async (input: CreateTaskInput): Promise<void> => {
@@ -439,9 +514,185 @@ function DevProjectPageContent(): ReactElement | null {
                       ステータス
                     </dt>
                     <dd className="mt-1">
-                      <Badge className={statusColors[data.status]}>
-                        {statusLabels[data.status]}
-                      </Badge>
+                      <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                          <button
+                            type="button"
+                            className="inline-flex cursor-pointer items-center gap-1 rounded-full focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+                          >
+                            <Badge className={statusColors[data.status]}>
+                              {statusLabels[data.status]}
+                              <ChevronDown className="ml-1 h-3 w-3" />
+                            </Badge>
+                          </button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent align="start">
+                          {(
+                            Object.entries(statusLabels) as [
+                              ProjectStatus,
+                              string,
+                            ][]
+                          ).map(([value, label]) => (
+                            <DropdownMenuItem
+                              key={value}
+                              onClick={() => void handleStatusChange(value)}
+                            >
+                              <span className="flex items-center gap-2">
+                                {data.status === value ? (
+                                  <Check className="h-3.5 w-3.5" />
+                                ) : (
+                                  <span className="h-3.5 w-3.5" />
+                                )}
+                                <Badge className={statusColors[value]}>
+                                  {label}
+                                </Badge>
+                              </span>
+                            </DropdownMenuItem>
+                          ))}
+                        </DropdownMenuContent>
+                      </DropdownMenu>
+                    </dd>
+                  </div>
+                </dl>
+                <dl className="mt-4 grid gap-4 sm:grid-cols-2">
+                  <div>
+                    <dt className="text-xs font-medium text-muted-foreground">
+                      本番 URL
+                    </dt>
+                    <dd className="mt-1">
+                      {editingUrl === 'production' ? (
+                        <div className="flex items-center gap-2">
+                          <Input
+                            type="url"
+                            placeholder="https://example.com"
+                            value={urlDraft}
+                            onChange={(e) => setUrlDraft(e.target.value)}
+                            onKeyDown={(e) => {
+                              if (e.key === 'Enter') void handleSaveUrl()
+                              if (e.key === 'Escape') handleCancelEditUrl()
+                            }}
+                            className="h-8 text-sm"
+                            autoFocus
+                          />
+                          <Button
+                            type="button"
+                            variant="ghost"
+                            size="icon"
+                            className="h-8 w-8"
+                            onClick={() => void handleSaveUrl()}
+                            aria-label="保存"
+                          >
+                            <Check className="h-4 w-4" />
+                          </Button>
+                          <Button
+                            type="button"
+                            variant="ghost"
+                            size="icon"
+                            className="h-8 w-8"
+                            onClick={handleCancelEditUrl}
+                            aria-label="キャンセル"
+                          >
+                            <X className="h-4 w-4" />
+                          </Button>
+                        </div>
+                      ) : (
+                        <button
+                          type="button"
+                          onClick={() => handleStartEditUrl('production')}
+                          className="group flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground"
+                        >
+                          <Globe className="h-3.5 w-3.5" />
+                          {data.productionUrl ? (
+                            <span className="underline underline-offset-4">
+                              {data.productionUrl}
+                            </span>
+                          ) : (
+                            <span className="italic">未設定</span>
+                          )}
+                          <Pencil className="h-3 w-3 opacity-0 group-hover:opacity-100" />
+                        </button>
+                      )}
+                      {data.productionUrl && editingUrl !== 'production' && (
+                        <a
+                          href={data.productionUrl}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="mt-1 inline-flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground"
+                        >
+                          <ExternalLink className="h-3 w-3" />
+                          開く
+                        </a>
+                      )}
+                    </dd>
+                  </div>
+                  <div>
+                    <dt className="text-xs font-medium text-muted-foreground">
+                      GitHub URL
+                    </dt>
+                    <dd className="mt-1">
+                      {editingUrl === 'github' ? (
+                        <div className="flex items-center gap-2">
+                          <Input
+                            type="url"
+                            placeholder="https://github.com/user/repo"
+                            value={urlDraft}
+                            onChange={(e) => setUrlDraft(e.target.value)}
+                            onKeyDown={(e) => {
+                              if (e.key === 'Enter') void handleSaveUrl()
+                              if (e.key === 'Escape') handleCancelEditUrl()
+                            }}
+                            className="h-8 text-sm"
+                            autoFocus
+                          />
+                          <Button
+                            type="button"
+                            variant="ghost"
+                            size="icon"
+                            className="h-8 w-8"
+                            onClick={() => void handleSaveUrl()}
+                            aria-label="保存"
+                          >
+                            <Check className="h-4 w-4" />
+                          </Button>
+                          <Button
+                            type="button"
+                            variant="ghost"
+                            size="icon"
+                            className="h-8 w-8"
+                            onClick={handleCancelEditUrl}
+                            aria-label="キャンセル"
+                          >
+                            <X className="h-4 w-4" />
+                          </Button>
+                        </div>
+                      ) : (
+                        <button
+                          type="button"
+                          onClick={() => handleStartEditUrl('github')}
+                          className="group flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground"
+                        >
+                          <Github className="h-3.5 w-3.5" />
+                          {data.githubUrl ? (
+                            <span className="underline underline-offset-4">
+                              {data.githubUrl}
+                            </span>
+                          ) : (
+                            <span className="italic">未設定</span>
+                          )}
+                          <Pencil className="h-3 w-3 opacity-0 group-hover:opacity-100" />
+                        </button>
+                      )}
+                      {data.githubUrl && editingUrl !== 'github' && (
+                        <a
+                          href={data.githubUrl}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="mt-1 inline-flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground"
+                        >
+                          <ExternalLink className="h-3 w-3" />
+                          開く
+                        </a>
+                      )}
                     </dd>
                   </div>
                 </dl>
@@ -535,6 +786,12 @@ function DevProjectPageContent(): ReactElement | null {
                               </Button>
                             </div>
                           )}
+                          {group.key !== 'completed' && group.key !== 'overdue' && (
+                            <InlineCreateButton
+                              label="タスクを追加"
+                              onClick={() => handleInlineCreate(getGroupDate(group.key))}
+                            />
+                          )}
                         </div>
                       ),
                     }))}
@@ -594,9 +851,13 @@ function DevProjectPageContent(): ReactElement | null {
 
         <TaskDialog
           open={taskDialog.isDialogOpen}
-          onOpenChange={taskDialog.handleDialogClose}
+          onOpenChange={(open) => {
+            taskDialog.handleDialogClose(open)
+            if (!open) setDefaultDate(undefined)
+          }}
           onSubmit={taskDialog.editingItem ? handleUpdateTask : handleCreateTask}
           task={taskDialog.editingItem}
+          defaultExecutionDate={defaultDate !== undefined ? (defaultDate ?? undefined) : undefined}
         />
 
         <DeleteConfirmDialog
