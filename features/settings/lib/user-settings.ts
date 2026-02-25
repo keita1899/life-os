@@ -17,6 +17,10 @@ interface DbUserSettings {
   barcelona_ical_url: string | null
   initial_balance: number | null
   default_habit_view: string
+  notify_events: number
+  notify_tasks: number
+  notify_habits: number
+  notify_minutes_before: number
   created_at: string
   updated_at: string
 }
@@ -48,6 +52,10 @@ function mapDbUserSettingsToUserSettings(
     barcelonaIcalUrl: dbSettings.barcelona_ical_url ?? null,
     initialBalance: dbSettings.initial_balance ?? null,
     defaultHabitView: validatedDefaultHabitView,
+    notifyEvents: dbSettings.notify_events === 1,
+    notifyTasks: dbSettings.notify_tasks === 1,
+    notifyHabits: dbSettings.notify_habits === 1,
+    notifyMinutesBefore: dbSettings.notify_minutes_before,
     createdAt: dbSettings.created_at,
     updatedAt: dbSettings.updated_at,
   }
@@ -96,6 +104,10 @@ const USER_SETTINGS_UPDATE_MAPPING: FieldMapping<UpdateUserSettingsInput> = [
   { key: 'barcelonaIcalUrl', column: 'barcelona_ical_url', transform: (v) => v || null },
   { key: 'initialBalance', column: 'initial_balance', transform: (v) => v ?? null },
   { key: 'defaultHabitView', column: 'default_habit_view' },
+  { key: 'notifyEvents', column: 'notify_events', transform: (v) => (v ? 1 : 0) },
+  { key: 'notifyTasks', column: 'notify_tasks', transform: (v) => (v ? 1 : 0) },
+  { key: 'notifyHabits', column: 'notify_habits', transform: (v) => (v ? 1 : 0) },
+  { key: 'notifyMinutesBefore', column: 'notify_minutes_before' },
 ]
 
 export async function updateUserSettings(

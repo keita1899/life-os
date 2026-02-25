@@ -16,6 +16,7 @@ import {
   FormDescription,
 } from '@/components/ui/form'
 import { Input } from '@/components/ui/input'
+import { Switch } from '@/components/ui/switch'
 import { Button } from '@/components/ui/button'
 import {
   Select,
@@ -37,6 +38,10 @@ const userSettingsFormSchema = z.object({
   weekEndReviewTime: z.string().optional(),
   barcelonaIcalUrl: z.string().url().optional().or(z.literal('')),
   defaultHabitView: z.enum(['month', 'week']),
+  notifyEvents: z.boolean(),
+  notifyTasks: z.boolean(),
+  notifyHabits: z.boolean(),
+  notifyMinutesBefore: z.enum(['0', '5', '10', '15', '30']),
 })
 
 type UserSettingsFormValues = z.infer<typeof userSettingsFormSchema>
@@ -64,6 +69,10 @@ export const UserSettingsForm = ({
       weekEndReviewTime: initialData?.weekEndReviewTime || '',
       barcelonaIcalUrl: initialData?.barcelonaIcalUrl || '',
       defaultHabitView: initialData?.defaultHabitView || 'week',
+      notifyEvents: initialData?.notifyEvents ?? true,
+      notifyTasks: initialData?.notifyTasks ?? true,
+      notifyHabits: initialData?.notifyHabits ?? true,
+      notifyMinutesBefore: String(initialData?.notifyMinutesBefore ?? 5) as '0' | '5' | '10' | '15' | '30',
     }
   }, [initialData])
 
@@ -83,6 +92,10 @@ export const UserSettingsForm = ({
       weekEndReviewTime: data.weekEndReviewTime || null,
       barcelonaIcalUrl: data.barcelonaIcalUrl || null,
       defaultHabitView: data.defaultHabitView,
+      notifyEvents: data.notifyEvents,
+      notifyTasks: data.notifyTasks,
+      notifyHabits: data.notifyHabits,
+      notifyMinutesBefore: Number(data.notifyMinutesBefore),
     })
   }, [onSubmit])
 
@@ -301,6 +314,102 @@ export const UserSettingsForm = ({
             </FormItem>
           )}
         />
+        </section>
+
+        <section className="space-y-4">
+          <h2 className="text-sm font-semibold uppercase tracking-wide text-muted-foreground">
+            通知
+          </h2>
+          <FormField
+            control={form.control}
+            name="notifyEvents"
+            render={({ field }) => (
+              <FormItem className="flex items-center justify-between gap-3">
+                <div className="space-y-0.5">
+                  <FormLabel className="cursor-pointer">予定の通知</FormLabel>
+                  <FormDescription>
+                    予定の開始前に通知を送ります
+                  </FormDescription>
+                </div>
+                <FormControl>
+                  <Switch
+                    checked={field.value}
+                    onCheckedChange={field.onChange}
+                  />
+                </FormControl>
+              </FormItem>
+            )}
+          />
+          <FormField
+            control={form.control}
+            name="notifyTasks"
+            render={({ field }) => (
+              <FormItem className="flex items-center justify-between gap-3">
+                <div className="space-y-0.5">
+                  <FormLabel className="cursor-pointer">タスクの通知</FormLabel>
+                  <FormDescription>
+                    タスクの実行時間前に通知を送ります
+                  </FormDescription>
+                </div>
+                <FormControl>
+                  <Switch
+                    checked={field.value}
+                    onCheckedChange={field.onChange}
+                  />
+                </FormControl>
+              </FormItem>
+            )}
+          />
+          <FormField
+            control={form.control}
+            name="notifyHabits"
+            render={({ field }) => (
+              <FormItem className="flex items-center justify-between gap-3">
+                <div className="space-y-0.5">
+                  <FormLabel className="cursor-pointer">習慣の通知</FormLabel>
+                  <FormDescription>
+                    習慣の実行時間前に通知を送ります
+                  </FormDescription>
+                </div>
+                <FormControl>
+                  <Switch
+                    checked={field.value}
+                    onCheckedChange={field.onChange}
+                  />
+                </FormControl>
+              </FormItem>
+            )}
+          />
+          <FormField
+            control={form.control}
+            name="notifyMinutesBefore"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>通知タイミング</FormLabel>
+                <Select
+                  value={field.value}
+                  onValueChange={field.onChange}
+                >
+                  <FormControl>
+                    <SelectTrigger>
+                      <SelectValue />
+                    </SelectTrigger>
+                  </FormControl>
+                  <SelectContent>
+                    <SelectItem value="0">開始時刻</SelectItem>
+                    <SelectItem value="5">5 分前</SelectItem>
+                    <SelectItem value="10">10 分前</SelectItem>
+                    <SelectItem value="15">15 分前</SelectItem>
+                    <SelectItem value="30">30 分前</SelectItem>
+                  </SelectContent>
+                </Select>
+                <FormDescription>
+                  予定・タスク・習慣の開始前の何分前に通知するかを設定します
+                </FormDescription>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
         </section>
 
         <div className="flex justify-end pt-2">
