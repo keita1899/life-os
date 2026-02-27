@@ -226,6 +226,15 @@ const SCHEMA = {
     'created_at',
     'updated_at',
   ],
+  dev_memos: [
+    'id',
+    'title',
+    'content',
+    'project_id',
+    'tags',
+    'created_at',
+    'updated_at',
+  ],
   dev_tasks: [
     'id',
     'title',

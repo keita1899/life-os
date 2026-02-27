@@ -21,6 +21,7 @@ import type { DevMemo, CreateDevMemoInput } from '../types/dev-memo'
 import { useDevMemoTagSuggestions } from '../hooks/useDevMemoTagSuggestions'
 
 const memoFormSchema = z.object({
+  title: z.string().optional(),
   content: z.string().min(1, '本文は必須です'),
   tagInput: z.string().optional(),
 })
@@ -49,6 +50,7 @@ export function MemoForm({
   const form = useForm<MemoFormValues>({
     resolver: zodResolver(memoFormSchema),
     defaultValues: {
+      title: initialData?.title ?? '',
       content: initialData?.content ?? '',
       tagInput: '',
     },
@@ -58,11 +60,13 @@ export function MemoForm({
 
   useEffect(() => {
     if (initialData) {
+      form.setValue('title', initialData.title ?? '')
       form.setValue('content', initialData.content)
       form.setValue('tagInput', '')
       setTags(initialData.tags)
     } else {
       form.reset({
+        title: '',
         content: '',
         tagInput: '',
       })
@@ -93,6 +97,7 @@ export function MemoForm({
 
   const handleSubmit = useCallback(
     async (data: MemoFormValues): Promise<void> => {
+      const title = (data.title ?? '').trim() || null
       const content = (data.content ?? '').trim()
       if (!content) {
         form.setError('content', { message: '本文は必須です' })
@@ -101,6 +106,7 @@ export function MemoForm({
       const projectIdValue =
         fixedProjectId ?? initialData?.projectId ?? null
       await onSubmit({
+        title,
         content,
         projectId: projectIdValue,
         tags,
@@ -118,6 +124,20 @@ export function MemoForm({
     <Form {...form}>
       <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-6">
         <div className="space-y-4">
+          <FormField
+            control={form.control}
+            name="title"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>タイトル</FormLabel>
+                <FormControl>
+                  <Input placeholder="タイトル（任意）" {...field} />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+
           <FormField
             control={form.control}
             name="content"
