@@ -30,6 +30,7 @@ import { Input } from '@/components/ui/input'
 import { InlineCreateButton } from '@/components/ui/inline-create-button'
 import { CreateButton } from '@/components/ui/create-button'
 import { DeleteConfirmDialog } from '@/components/ui/delete-confirm-dialog'
+import { EditDeleteDropdownMenu } from '@/components/ui/edit-delete-dropdown-menu'
 import { useState } from 'react'
 import { TaskDialog, TaskList, groupTasks } from '@/features/tasks'
 import type { CreateTaskInput, Task } from '@/features/tasks'
@@ -140,10 +141,12 @@ function DevProjectPageContent(): ReactElement | null {
     type: undefined,
   })
 
+  const [activeTab, setActiveTab] = useState('tasks')
   const taskDialog = useDialogState<Task>()
+  const memoDialog = useDialogState<DevMemo>()
   useCreateShortcut({
-    onCreate: taskDialog.handleCreateClick,
-    enabled: shouldFetch && !taskDialog.isDialogOpen,
+    onCreate: activeTab === 'memos' ? memoDialog.handleCreateClick : taskDialog.handleCreateClick,
+    enabled: shouldFetch && !taskDialog.isDialogOpen && !memoDialog.isDialogOpen && activeTab !== 'requirements',
   })
   const deleteConfirm = useDeleteConfirm<Task>()
   const [isDeletingCompletedDialogOpen, setIsDeletingCompletedDialogOpen] =
@@ -191,7 +194,6 @@ function DevProjectPageContent(): ReactElement | null {
   const { openKeys: openAccordionKeys, setOpenKeys: setOpenAccordionKeys } =
     useAutoExpandAccordion(groupKeys)
 
-  const memoDialog = useDialogState<DevMemo>()
   const memoDeleteConfirm = useDeleteConfirm<DevMemo>()
 
   const {
@@ -445,26 +447,10 @@ function DevProjectPageContent(): ReactElement | null {
             </h1>
           </div>
           {data && (
-            <div className="flex items-center gap-2">
-              <Button
-                variant="ghost"
-                size="icon"
-                onClick={() => data && projectDialog.handleEdit(data)}
-                className="text-muted-foreground hover:text-foreground"
-                aria-label="編集"
-              >
-                <Pencil className="h-4 w-4" />
-              </Button>
-              <Button
-                variant="ghost"
-                size="icon"
-                onClick={() => setIsDeleteDialogOpen(true)}
-                className="text-muted-foreground hover:text-red-600 hover:dark:text-red-400"
-                aria-label="削除"
-              >
-                <Trash2 className="h-4 w-4" />
-              </Button>
-            </div>
+            <EditDeleteDropdownMenu
+              onEdit={() => projectDialog.handleEdit(data)}
+              onDelete={() => setIsDeleteDialogOpen(true)}
+            />
           )}
         </div>
 
@@ -699,7 +685,7 @@ function DevProjectPageContent(): ReactElement | null {
               </div>
             </section>
 
-            <Tabs defaultValue="tasks" className="space-y-8">
+            <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-8">
               <TabsList className="grid w-full max-w-[360px] grid-cols-3">
                 <TabsTrigger value="tasks" className="flex items-center gap-2">
                   <CheckSquare className="h-4 w-4" />
