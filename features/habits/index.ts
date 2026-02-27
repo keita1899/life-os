@@ -13,6 +13,8 @@ export {
 } from './hooks/useHabitHeatmapView'
 export {
   getCompletionsByDate,
+  createCompletion,
+  deleteCompletion,
   getAllHabits,
   isHabitDueOnDate,
   formatHabitFrequency,

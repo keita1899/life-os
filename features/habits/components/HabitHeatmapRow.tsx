@@ -37,6 +37,9 @@ export function HabitHeatmapRow({
   )
   const completedDateSet = new Set(completions.map((c) => c.completedDate))
   const lastDay = getDate(endOfMonth(new Date(year, month - 1)))
+  const habitCreatedDate = habit.createdAt.slice(0, 10)
+  const displayedYearMonth = `${year}-${String(month).padStart(2, '0')}`
+  const isNewThisMonth = habit.createdAt.slice(0, 7) === displayedYearMonth
 
   if (error) {
     return (
@@ -75,10 +78,11 @@ export function HabitHeatmapRow({
   let dueCount = 0
   let completedCount = 0
   for (let day = 1; day <= lastDay; day++) {
+    const dateStr = `${year}-${String(month).padStart(2, '0')}-${String(day).padStart(2, '0')}`
+    if (dateStr < habitCreatedDate) continue
     const date = new Date(year, month - 1, day)
     if (isHabitDueOnDate(habit, date)) {
       dueCount++
-      const dateStr = `${year}-${String(month).padStart(2, '0')}-${String(day).padStart(2, '0')}`
       if (completedDateSet.has(dateStr)) completedCount++
     }
   }
@@ -86,23 +90,32 @@ export function HabitHeatmapRow({
     dueCount > 0 ? Math.round((completedCount / dueCount) * 100) : null
 
   return (
-    <tr className="group">
+    <tr className={cn('group', isNewThisMonth && 'bg-amber-50/60 dark:bg-amber-950/20')}>
       <td className="w-12 shrink-0 border-b border-stone-200 px-2 py-3 text-right text-xs tabular-nums text-muted-foreground dark:border-stone-800">
         {formatHabitScheduledTime(habit.scheduledTime) || '−'}
       </td>
       <td className="max-w-[140px] truncate border-b border-stone-200 px-2 py-3 text-sm dark:border-stone-800">
-        {habit.name}
+        <span className="flex items-center gap-1.5">
+          {habit.name}
+          {isNewThisMonth && (
+            <span className="inline-flex shrink-0 rounded-full bg-amber-200 px-1.5 py-0.5 text-[10px] font-medium leading-none text-amber-800 dark:bg-amber-900 dark:text-amber-200">
+              NEW
+            </span>
+          )}
+        </span>
       </td>
-      {Array.from({ length: lastDay }, (_, i) => i + 1).map((day) => {
+      {(() => {
+      const now = new Date()
+      return Array.from({ length: lastDay }, (_, i) => i + 1).map((day) => {
         const date = new Date(year, month - 1, day)
-        const isDue = isHabitDueOnDate(habit, date)
         const dateStr = `${year}-${String(month).padStart(2, '0')}-${String(day).padStart(2, '0')}`
+        const isBeforeCreation = dateStr < habitCreatedDate
+        const isDue = !isBeforeCreation && isHabitDueOnDate(habit, date)
         const isToday = todayDay !== null && day === todayDay
         const completed = isToday
           ? completedHabitIdsToday.has(habit.id)
           : completedDateSet.has(dateStr)
-        
-        const now = new Date()
+
         const isFuture = date > now
         const isPastOrToday = !isFuture
         
@@ -158,7 +171,8 @@ export function HabitHeatmapRow({
             )}
           </td>
         )
-      })}
+      })
+      })()}
       <td className="w-14 shrink-0 border-b border-stone-200 px-2 py-3 text-right text-xs tabular-nums text-muted-foreground dark:border-stone-800">
         {rate !== null ? `${rate}%` : '−'}
       </td>

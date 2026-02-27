@@ -120,6 +120,11 @@ function HabitHeatmapWeekViewRow(props: HabitHeatmapWeekViewRowProps) {
 
   const completedDateSet = new Set(completions.map((c) => c.completedDate))
   const todayStr = format(new Date(), 'yyyy-MM-dd')
+  const habitCreatedDate = habit.createdAt.slice(0, 10)
+  const habitCreatedYearMonth = habit.createdAt.slice(0, 7)
+  const isNewThisMonth = weekDateStrings.some(
+    (ds) => ds.slice(0, 7) === habitCreatedYearMonth,
+  )
 
   if (isLoading) {
     return (
@@ -135,31 +140,43 @@ function HabitHeatmapWeekViewRow(props: HabitHeatmapWeekViewRowProps) {
   let dueCount = 0
   let completedCount = 0
   weekDates.forEach((date, i) => {
+    const dateStr = weekDateStrings[i] ?? ''
+    if (dateStr < habitCreatedDate) return
     if (isHabitDueOnDate(habit, date)) {
       dueCount++
-      if (completedDateSet.has(weekDateStrings[i] ?? '')) completedCount++
+      if (completedDateSet.has(dateStr)) completedCount++
     }
   })
   const rate =
     dueCount > 0 ? Math.round((completedCount / dueCount) * 100) : null
 
   return (
-    <div className="group grid grid-cols-[5rem_1fr_4.5rem_4.5rem_4.5rem_4.5rem_4.5rem_4.5rem_4.5rem_4rem_3rem] gap-0">
+    <div className={cn(
+      'group grid grid-cols-[5rem_1fr_4.5rem_4.5rem_4.5rem_4.5rem_4.5rem_4.5rem_4.5rem_4rem_3rem] gap-0',
+      isNewThisMonth && 'bg-amber-50/60 dark:bg-amber-950/20',
+    )}>
       <div className="flex items-center justify-end border-b border-stone-200 px-3 py-3 text-sm tabular-nums text-muted-foreground dark:border-stone-800">
         {formatHabitScheduledTime(habit.scheduledTime) || '−'}
       </div>
-      <div className="flex items-center border-b border-stone-200 px-3 py-3 text-sm font-medium dark:border-stone-800">
+      <div className="flex items-center gap-1.5 border-b border-stone-200 px-3 py-3 text-sm font-medium dark:border-stone-800">
         {habit.name}
+        {isNewThisMonth && (
+          <span className="inline-flex shrink-0 rounded-full bg-amber-200 px-1.5 py-0.5 text-[10px] font-medium leading-none text-amber-800 dark:bg-amber-900 dark:text-amber-200">
+            NEW
+          </span>
+        )}
       </div>
-      {weekDates.map((date, i) => {
+      {(() => {
+        const now = new Date()
+        return weekDates.map((date, i) => {
         const dateStr = weekDateStrings[i] ?? ''
-        const isDue = isHabitDueOnDate(habit, date)
+        const isBeforeCreation = dateStr < habitCreatedDate
+        const isDue = !isBeforeCreation && isHabitDueOnDate(habit, date)
         const isToday = dateStr === todayStr
         const completed = isToday
           ? completedHabitIdsToday.has(habit.id)
           : completedDateSet.has(dateStr)
-        
-        const now = new Date()
+
         const isFuture = date > now
         const isPastOrToday = !isFuture
         
@@ -220,7 +237,8 @@ function HabitHeatmapWeekViewRow(props: HabitHeatmapWeekViewRowProps) {
             )}
           </div>
         )
-      })}
+      })
+      })()}
       <div className="flex items-center justify-end border-b border-stone-200 px-3 py-3 text-sm tabular-nums text-muted-foreground dark:border-stone-800">
         {rate !== null ? `${rate}%` : '−'}
       </div>

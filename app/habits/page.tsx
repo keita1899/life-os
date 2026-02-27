@@ -2,6 +2,7 @@
 
 import { useMemo } from 'react'
 import { format } from 'date-fns'
+import { useSWRConfig } from 'swr'
 import { Button } from '@/components/ui/button'
 import { CreateButton } from '@/components/ui/create-button'
 import { useCreateShortcut } from '@/hooks/useCreateShortcut'
@@ -15,6 +16,8 @@ import {
   useHabits,
   useHabitCompletionsByDate,
   getCompletionsByDate,
+  createCompletion,
+  deleteCompletion,
   useHabitHeatmapView,
   type Habit,
   type CreateHabitInput,
@@ -23,6 +26,7 @@ import { DeleteConfirmDialog } from '@/components/ui/delete-confirm-dialog'
 import { EmptyState } from '@/components/ui/empty-state'
 import { Loading } from '@/components/ui/loading'
 import { ErrorMessage } from '@/components/ui/error-message'
+import { SWR_KEYS } from '@/lib/swr-keys'
 import { ChevronLeft, ChevronRight } from 'lucide-react'
 
 export default function HabitsPage() {
@@ -54,6 +58,7 @@ export default function HabitsPage() {
     year: heatmapYear,
     month: heatmapMonth,
   } = useHabitHeatmapView()
+  const { mutate: globalMutate } = useSWRConfig()
   const todayStr = format(new Date(), 'yyyy-MM-dd')
 
   useCreateShortcut({
@@ -72,6 +77,13 @@ export default function HabitsPage() {
     [todayCompletions],
   )
 
+  const hasCreatedThisMonth = useMemo(() => {
+    const currentYearMonth = format(new Date(), 'yyyy-MM')
+    return habits.some(
+      (h) => h.createdAt.slice(0, 7) === currentYearMonth,
+    )
+  }, [habits])
+
   const sortedHabits = useMemo(() => {
     const normalizeTime = (t: string | null): string => {
       if (!t?.trim()) return '99:99'
@@ -88,6 +100,10 @@ export default function HabitsPage() {
   }, [habits])
 
   const handleCreateHabit = async (input: CreateHabitInput) => {
+    if (hasCreatedThisMonth) {
+      setOperationError('今月はすでに習慣を登録済みです。習慣は月に1つまで登録できます。')
+      return
+    }
     const result = await execute(
       () => createHabit(input),
       '習慣の作成に失敗しました',
@@ -149,10 +165,13 @@ export default function HabitsPage() {
         const completions = await getCompletionsByDate(dateStr)
         const isCompleted = completions.some((c) => c.habitId === habit.id)
         if (isCompleted) {
-          await deleteHabitCompletion(habit.id, dateStr)
+          await deleteCompletion(habit.id, dateStr)
         } else {
-          await createHabitCompletion(habit.id, dateStr)
+          await createCompletion(habit.id, dateStr)
         }
+        const [y, m] = dateStr.split('-').map(Number)
+        await globalMutate(SWR_KEYS.habitCompletionsByMonth(habit.id, y!, m!))
+        await globalMutate(SWR_KEYS.habitCompletionsByDate(dateStr))
       },
       '習慣の完了状態の更新に失敗しました',
     )
@@ -163,7 +182,18 @@ export default function HabitsPage() {
       <div className="container mx-auto max-w-5xl py-8 px-4">
         <div className="mb-6 flex items-center justify-between">
           <h1 className="text-3xl font-bold">習慣</h1>
-          <CreateButton label="習慣を作成" onClick={handleCreateClick} />
+          <div className="flex items-center gap-3">
+            {hasCreatedThisMonth && (
+              <span className="text-sm text-muted-foreground">
+                今月の登録済み
+              </span>
+            )}
+            <CreateButton
+              label="習慣を作成"
+              onClick={handleCreateClick}
+              disabled={hasCreatedThisMonth}
+            />
+          </div>
         </div>
 
         <ErrorMessage
@@ -181,6 +211,7 @@ export default function HabitsPage() {
                 variant="outline"
                 className="mt-4"
                 onClick={handleCreateClick}
+                disabled={hasCreatedThisMonth}
               />
             </EmptyState>
           </div>
