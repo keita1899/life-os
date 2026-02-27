@@ -4,7 +4,7 @@ import { usePathname } from 'next/navigation'
 import {
   HOME_ITEM,
   DEV_TASK_ITEMS,
-  SETTINGS_ITEM,
+  DEV_SETTINGS_ITEM,
   getActiveHref,
 } from './sidebar-items'
 import { SidebarItem } from './SidebarItem'
@@ -14,7 +14,7 @@ const DEV_HOME_ITEM = { ...HOME_ITEM, href: '/dev' }
 const DEV_HREFS = [
   DEV_HOME_ITEM.href,
   ...DEV_TASK_ITEMS.map((i) => i.href),
-  SETTINGS_ITEM.href,
+  DEV_SETTINGS_ITEM.href,
 ]
 
 interface DevSidebarContentProps {
@@ -46,9 +46,9 @@ export function DevSidebarContent({ isCollapsed }: DevSidebarContentProps) {
       </div>
       <div className="mt-2">
         <SidebarItem
-          item={SETTINGS_ITEM}
+          item={DEV_SETTINGS_ITEM}
           isCollapsed={isCollapsed}
-          isActive={activeHref === SETTINGS_ITEM.href}
+          isActive={activeHref === DEV_SETTINGS_ITEM.href}
         />
       </div>
     </nav>

@@ -145,6 +145,16 @@ export const SETTINGS_ITEM: SidebarItemData = {
     'bg-stone-200 text-stone-800 dark:bg-stone-700 dark:text-stone-200',
 }
 
+export const DEV_SETTINGS_ITEM: SidebarItemData = {
+  href: '/dev/settings',
+  icon: Settings,
+  title: '設定',
+  hoverIcon:
+    'group-hover:bg-stone-200 group-hover:text-stone-800 dark:group-hover:bg-stone-700 dark:group-hover:text-stone-200',
+  activeIcon:
+    'bg-stone-200 text-stone-800 dark:bg-stone-700 dark:text-stone-200',
+}
+
 export const DEV_TASK_ITEMS: SidebarItemData[] = [
   {
     href: '/dev/goals',
