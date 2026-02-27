@@ -36,6 +36,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select'
+import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import type { CreateEventInput } from '@/features/events'
 import type { CreateTaskInput } from '@/features/tasks'
 
@@ -55,6 +56,7 @@ export default function BucketListPage() {
   const { createTask } = useTasks()
   const [selectedCategoryId, setSelectedCategoryId] = useState<string>('all')
   const [selectedYear, setSelectedYear] = useState<string>('all')
+  const [groupMode, setGroupMode] = useState<'period' | 'category'>('period')
   const {
     isDialogOpen,
     editingItem,
@@ -150,6 +152,24 @@ export default function BucketListPage() {
     return { byMonth, unset }
   }, [filteredItems, selectedYear])
 
+  const incompleteByCategory = useMemo(() => {
+    const incomplete = filteredItems.filter((item) => !item.completed)
+    const byCategoryId: Record<number, BucketListItem[]> = {}
+    const uncategorized: BucketListItem[] = []
+    categories.forEach((cat) => {
+      byCategoryId[cat.id] = []
+    })
+    incomplete.forEach((item) => {
+      if (item.categoryId != null) {
+        if (!byCategoryId[item.categoryId]) byCategoryId[item.categoryId] = []
+        byCategoryId[item.categoryId].push(item)
+      } else {
+        uncategorized.push(item)
+      }
+    })
+    return { byCategoryId, uncategorized }
+  }, [filteredItems, categories])
+
   const completedItems = useMemo(
     () => filteredItems.filter((item) => item.completed),
     [filteredItems],
@@ -157,13 +177,20 @@ export default function BucketListPage() {
 
   const accordionKeys = useMemo(() => {
     const values: string[] = []
-    Array.from({ length: 12 }, (_, i) => i + 1)
-      .filter((month) => (incompleteByMonth.byMonth[month] ?? []).length > 0)
-      .forEach((month) => values.push(`month-${month}`))
-    if (incompleteByMonth.unset.length > 0) values.push('month-unset')
+    if (groupMode === 'period') {
+      Array.from({ length: 12 }, (_, i) => i + 1)
+        .filter((month) => (incompleteByMonth.byMonth[month] ?? []).length > 0)
+        .forEach((month) => values.push(`month-${month}`))
+      if (incompleteByMonth.unset.length > 0) values.push('month-unset')
+    } else {
+      categories
+        .filter((cat) => (incompleteByCategory.byCategoryId[cat.id] ?? []).length > 0)
+        .forEach((cat) => values.push(`cat-${cat.id}`))
+      if (incompleteByCategory.uncategorized.length > 0) values.push('cat-uncategorized')
+    }
     if (completedItems.length > 0) values.push('completed')
     return values
-  }, [incompleteByMonth, completedItems.length])
+  }, [groupMode, incompleteByMonth, incompleteByCategory, categories, completedItems.length])
 
   const { openKeys: openAccordionKeys, setOpenKeys: setOpenAccordionKeys } =
     useAutoExpandAccordion(accordionKeys)
@@ -343,7 +370,13 @@ export default function BucketListPage() {
               </div>
             ) : (
               <>
-                <div className="mb-4 flex justify-end">
+                <div className="mb-4 flex items-center justify-between">
+                  <Tabs value={groupMode} onValueChange={(v) => setGroupMode(v as 'period' | 'category')}>
+                    <TabsList>
+                      <TabsTrigger value="period">期間</TabsTrigger>
+                      <TabsTrigger value="category">カテゴリー</TabsTrigger>
+                    </TabsList>
+                  </Tabs>
                   <Select value={selectedYear} onValueChange={setSelectedYear}>
                     <SelectTrigger className="w-[200px]">
                       <SelectValue placeholder="年を選択" />
@@ -366,90 +399,184 @@ export default function BucketListPage() {
                   value={openAccordionKeys}
                   onValueChange={setOpenAccordionKeys}
                   items={[
-                    ...Array.from({ length: 12 }, (_, i) => i + 1)
-                      .filter(
-                        (month) =>
-                          (incompleteByMonth.byMonth[month] ?? []).length > 0,
-                      )
-                      .map((month) => {
-                        const monthItems =
-                          incompleteByMonth.byMonth[month] ?? []
-                        return {
-                          key: `month-${month}`,
-                          itemClassName: 'border-none',
-                          triggerClassName: 'py-2',
-                          contentClassName: 'pt-2',
-                          trigger: (
-                            <span className="inline-flex items-center gap-1">
-                              <span className="text-stone-900 dark:text-stone-100">
-                                {month}月
-                              </span>
-                              {monthItems.length > 0 && (
-                                <span className="text-sm text-muted-foreground">
-                                  {monthItems.length}
-                                </span>
-                              )}
-                            </span>
-                          ),
-                          content: (
-                            <div className="space-y-4">
-                              <BucketListList
-                                items={monthItems}
-                                onEdit={handleEditItem}
-                                onDelete={deleteConfirm.handleDeleteClick}
-                                onToggleCompletion={handleToggleCompletion}
-                                onConvertToEvent={handleConvertToEvent}
-                                onConvertToTask={handleConvertToTask}
-                              />
-                              <InlineCreateButton
-                                label="やりたいことを追加"
-                                onClick={() => handleInlineCreate(
-                                  selectedYear !== 'all' && selectedYear !== 'none'
-                                    ? selectedYear
-                                    : undefined,
-                                  String(month),
-                                )}
-                              />
-                            </div>
-                          ),
-                        }
-                      }),
-                    ...(incompleteByMonth.unset.length > 0
+                    ...(groupMode === 'period'
                       ? [
-                          {
-                            key: 'month-unset',
-                            itemClassName: 'border-none',
-                            triggerClassName: 'py-2',
-                            contentClassName: 'pt-2',
-                            trigger: (
-                              <span className="inline-flex items-center gap-1">
-                                <span className="text-stone-900 dark:text-stone-100">
-                                  未定
-                                </span>
-                                <span className="text-sm text-muted-foreground">
-                                  {incompleteByMonth.unset.length}
-                                </span>
-                              </span>
-                            ),
-                            content: (
-                              <div className="space-y-4">
-                                <BucketListList
-                                  items={incompleteByMonth.unset}
-                                  onEdit={handleEditItem}
-                                  onDelete={deleteConfirm.handleDeleteClick}
-                                  onToggleCompletion={handleToggleCompletion}
-                                  onConvertToEvent={handleConvertToEvent}
-                                  onConvertToTask={handleConvertToTask}
-                                />
-                                <InlineCreateButton
-                                  label="やりたいことを追加"
-                                  onClick={() => handleInlineCreate('', undefined)}
-                                />
-                              </div>
-                            ),
-                          },
+                          ...Array.from({ length: 12 }, (_, i) => i + 1)
+                            .filter(
+                              (month) =>
+                                (incompleteByMonth.byMonth[month] ?? []).length > 0,
+                            )
+                            .map((month) => {
+                              const monthItems =
+                                incompleteByMonth.byMonth[month] ?? []
+                              return {
+                                key: `month-${month}`,
+                                itemClassName: 'border-none',
+                                triggerClassName: 'py-2',
+                                contentClassName: 'pt-2',
+                                trigger: (
+                                  <span className="inline-flex items-center gap-1">
+                                    <span className="text-stone-900 dark:text-stone-100">
+                                      {month}月
+                                    </span>
+                                    {monthItems.length > 0 && (
+                                      <span className="text-sm text-muted-foreground">
+                                        {monthItems.length}
+                                      </span>
+                                    )}
+                                  </span>
+                                ),
+                                content: (
+                                  <div className="space-y-4">
+                                    <BucketListList
+                                      items={monthItems}
+                                      onEdit={handleEditItem}
+                                      onDelete={deleteConfirm.handleDeleteClick}
+                                      onToggleCompletion={handleToggleCompletion}
+                                      onConvertToEvent={handleConvertToEvent}
+                                      onConvertToTask={handleConvertToTask}
+                                    />
+                                    <InlineCreateButton
+                                      label="やりたいことを追加"
+                                      onClick={() => handleInlineCreate(
+                                        selectedYear !== 'all' && selectedYear !== 'none'
+                                          ? selectedYear
+                                          : undefined,
+                                        String(month),
+                                      )}
+                                    />
+                                  </div>
+                                ),
+                              }
+                            }),
+                          ...(incompleteByMonth.unset.length > 0
+                            ? [
+                                {
+                                  key: 'month-unset',
+                                  itemClassName: 'border-none',
+                                  triggerClassName: 'py-2',
+                                  contentClassName: 'pt-2',
+                                  trigger: (
+                                    <span className="inline-flex items-center gap-1">
+                                      <span className="text-stone-900 dark:text-stone-100">
+                                        未定
+                                      </span>
+                                      <span className="text-sm text-muted-foreground">
+                                        {incompleteByMonth.unset.length}
+                                      </span>
+                                    </span>
+                                  ),
+                                  content: (
+                                    <div className="space-y-4">
+                                      <BucketListList
+                                        items={incompleteByMonth.unset}
+                                        onEdit={handleEditItem}
+                                        onDelete={deleteConfirm.handleDeleteClick}
+                                        onToggleCompletion={handleToggleCompletion}
+                                        onConvertToEvent={handleConvertToEvent}
+                                        onConvertToTask={handleConvertToTask}
+                                      />
+                                      <InlineCreateButton
+                                        label="やりたいことを追加"
+                                        onClick={() => handleInlineCreate('', undefined)}
+                                      />
+                                    </div>
+                                  ),
+                                },
+                              ]
+                            : []),
                         ]
-                      : []),
+                      : [
+                          ...categories
+                            .filter(
+                              (cat) =>
+                                (incompleteByCategory.byCategoryId[cat.id] ?? []).length > 0,
+                            )
+                            .map((cat) => {
+                              const catItems =
+                                incompleteByCategory.byCategoryId[cat.id] ?? []
+                              return {
+                                key: `cat-${cat.id}`,
+                                itemClassName: 'border-none',
+                                triggerClassName: 'py-2',
+                                contentClassName: 'pt-2',
+                                trigger: (
+                                  <span className="inline-flex items-center gap-1">
+                                    <span className="text-stone-900 dark:text-stone-100">
+                                      {cat.name}
+                                    </span>
+                                    {catItems.length > 0 && (
+                                      <span className="text-sm text-muted-foreground">
+                                        {catItems.length}
+                                      </span>
+                                    )}
+                                  </span>
+                                ),
+                                content: (
+                                  <div className="space-y-4">
+                                    <BucketListList
+                                      items={catItems}
+                                      onEdit={handleEditItem}
+                                      onDelete={deleteConfirm.handleDeleteClick}
+                                      onToggleCompletion={handleToggleCompletion}
+                                      onConvertToEvent={handleConvertToEvent}
+                                      onConvertToTask={handleConvertToTask}
+                                    />
+                                    <InlineCreateButton
+                                      label="やりたいことを追加"
+                                      onClick={() => handleInlineCreate(
+                                        selectedYear !== 'all' && selectedYear !== 'none'
+                                          ? selectedYear
+                                          : undefined,
+                                        undefined,
+                                      )}
+                                    />
+                                  </div>
+                                ),
+                              }
+                            }),
+                          ...(incompleteByCategory.uncategorized.length > 0
+                            ? [
+                                {
+                                  key: 'cat-uncategorized',
+                                  itemClassName: 'border-none',
+                                  triggerClassName: 'py-2',
+                                  contentClassName: 'pt-2',
+                                  trigger: (
+                                    <span className="inline-flex items-center gap-1">
+                                      <span className="text-stone-900 dark:text-stone-100">
+                                        未分類
+                                      </span>
+                                      <span className="text-sm text-muted-foreground">
+                                        {incompleteByCategory.uncategorized.length}
+                                      </span>
+                                    </span>
+                                  ),
+                                  content: (
+                                    <div className="space-y-4">
+                                      <BucketListList
+                                        items={incompleteByCategory.uncategorized}
+                                        onEdit={handleEditItem}
+                                        onDelete={deleteConfirm.handleDeleteClick}
+                                        onToggleCompletion={handleToggleCompletion}
+                                        onConvertToEvent={handleConvertToEvent}
+                                        onConvertToTask={handleConvertToTask}
+                                      />
+                                      <InlineCreateButton
+                                        label="やりたいことを追加"
+                                        onClick={() => handleInlineCreate(
+                                          selectedYear !== 'all' && selectedYear !== 'none'
+                                            ? selectedYear
+                                            : undefined,
+                                          undefined,
+                                        )}
+                                      />
+                                    </div>
+                                  ),
+                                },
+                              ]
+                            : []),
+                        ]),
                     ...(completedItems.length > 0
                       ? [
                           {
