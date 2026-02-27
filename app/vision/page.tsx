@@ -84,15 +84,17 @@ export default function VisionPage() {
   const { openKeys: openAccordionKeys, setOpenKeys: setOpenAccordionKeys } =
     useAutoExpandAccordion(accordionKeys)
 
-  const handleCreateItem = async (title: string) => {
+  const handleCreateItem = async (title: string, categoryId?: number | null) => {
     await execute(
       () =>
         createVisionItem({
           title,
           categoryId:
-            selectedCategoryId === 'all' || selectedCategoryId === null
-              ? null
-              : selectedCategoryId,
+            categoryId !== undefined
+              ? categoryId
+              : selectedCategoryId === 'all' || selectedCategoryId === null
+                ? null
+                : selectedCategoryId,
         }),
       'ビジョンの作成に失敗しました',
     )
@@ -114,12 +116,14 @@ export default function VisionPage() {
 
   return (
     <>
-      <div className="flex h-[calc(100vh-3.5rem)]">
-        <VisionCategorySidebar
-          selectedCategoryId={selectedCategoryId}
-          onSelectCategory={setSelectedCategoryId}
-        />
-        <div className="flex-1 overflow-y-auto">
+      <div className="flex min-h-[calc(100vh-3.5rem)]">
+        <div className="sticky top-14 h-[calc(100vh-3.5rem)] self-start">
+          <VisionCategorySidebar
+            selectedCategoryId={selectedCategoryId}
+            onSelectCategory={setSelectedCategoryId}
+          />
+        </div>
+        <div className="min-h-0 flex-1 overflow-y-auto">
           <div className="mx-auto max-w-3xl p-8">
             <h1 className="mb-6 text-3xl font-bold">{selectedCategoryName}</h1>
 
@@ -142,23 +146,30 @@ export default function VisionPage() {
                     .filter(({ categoryId }) => categoryId !== null)
                     .map(({ categoryId, category, items }) => ({
                       key: categoryId!.toString(),
-                      itemClassName: 'border-none',
-                      triggerClassName: 'text-lg font-semibold py-2',
-                      contentClassName: 'pt-2',
-                      trigger: category?.name,
+                      itemClassName: 'rounded-lg border border-border/50',
+                      triggerClassName: 'text-base font-semibold py-3 px-4',
+                      contentClassName: 'px-4 pb-3 pt-1',
+                      trigger: (
+                        <span className="flex items-center gap-2">
+                          <span className="inline-block h-2.5 w-2.5 rounded-full bg-primary/60" />
+                          {category?.name}
+                          <span className="text-xs font-normal text-muted-foreground">
+                            {items.length}
+                          </span>
+                        </span>
+                      ),
                       content: (
                         <VisionList
                           items={items}
                           onUpdate={handleUpdateItem}
                           onDelete={handleDeleteItem}
                           onCreate={(title) =>
-                            handleCreateItem(title).then(() => {})
+                            handleCreateItem(title, categoryId)
                           }
-                          showCreateForm={false}
                         />
                       ),
                     }))}
-                  className="space-y-2"
+                  className="space-y-3"
                 />
               ) : (
                 <VisionList

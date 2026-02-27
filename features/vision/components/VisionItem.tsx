@@ -39,7 +39,8 @@ export function VisionItem({ item, onUpdate, onDelete, readOnly = false }: Visio
 
   return (
     <>
-      <div className={`group flex items-center gap-3 rounded-md py-2 transition-colors ${readOnly ? '' : 'hover:bg-accent/50'}`}>
+      <div className={`group flex items-center gap-3 rounded-md px-2 py-2 transition-colors ${readOnly ? '' : 'hover:bg-accent/50'}`}>
+        <span className="h-1.5 w-1.5 shrink-0 rounded-full bg-muted-foreground/40" />
         <div className="flex-1 text-sm">{item.title}</div>
         {!readOnly && (
           <EditDeleteDropdownMenu

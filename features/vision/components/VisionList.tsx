@@ -1,8 +1,8 @@
 'use client'
 
 import { useState } from 'react'
-import { Button } from '@/components/ui/button'
 import { EmptyState } from '@/components/ui/empty-state'
+import { InlineCreateButton } from '@/components/ui/inline-create-button'
 import { VisionItem } from './VisionItem'
 import { VisionForm } from './VisionForm'
 import type { VisionItem as VisionItemType } from '../types/vision-item'
@@ -40,13 +40,10 @@ export function VisionList({
         onCancel={() => setIsCreating(false)}
       />
     ) : (
-      <Button
-        variant="ghost"
+      <InlineCreateButton
+        label="ビジョンを追加"
         onClick={() => setIsCreating(true)}
-        className="w-full justify-center text-muted-foreground hover:text-foreground"
-      >
-        + ビジョンを追加
-      </Button>
+      />
     )
   )
 
