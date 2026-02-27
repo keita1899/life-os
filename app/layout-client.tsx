@@ -10,6 +10,7 @@ import { ProjectSwitcher } from '@/features/dev/projects'
 import { Header } from '@/components/layout/Header'
 import { Sidebar } from '@/components/layout/sidebar/Sidebar'
 import { cn } from '@/lib/utils'
+import { TooltipProvider } from '@/components/ui/tooltip'
 
 const SIDEBAR_STORAGE_KEY = 'sidebar-open'
 
@@ -36,6 +37,7 @@ export function LayoutClient({ children }: LayoutClientProps) {
   useNotificationScheduler()
 
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- localStorage はマウント後にのみ読み取り可能
     setIsSidebarOpen(getSidebarStateFromStorage())
   }, [])
 
@@ -90,7 +92,7 @@ export function LayoutClient({ children }: LayoutClientProps) {
   const { activeWizard, handleComplete } = useReviewWizard()
 
   return (
-    <>
+    <TooltipProvider delayDuration={400}>
       <div className="flex min-h-screen">
         <Sidebar open={isSidebarOpen} onOpenChange={handleOpenChange} />
         <div className="flex flex-1 flex-col min-w-0">
@@ -109,6 +111,6 @@ export function LayoutClient({ children }: LayoutClientProps) {
         <ReviewWizard key={activeWizard} type={activeWizard} onComplete={handleComplete} />
       )}
       {mode === 'development' && <ProjectSwitcher />}
-    </>
+    </TooltipProvider>
   )
 }
