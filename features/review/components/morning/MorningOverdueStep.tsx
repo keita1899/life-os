@@ -2,7 +2,7 @@
 
 import { useMemo } from 'react'
 import { mutate } from 'swr'
-import { useTasks, TaskList } from '@/features/tasks'
+import { useTasks, TaskList, toTasksWithNextOccurrenceOnly } from '@/features/tasks'
 import { useDevCalendarTasks, updateDevTask, updateAllOverdueDevTasksToToday } from '@/features/dev/tasks'
 import { useDevProjects } from '@/features/dev/projects'
 import { Button } from '@/components/ui/button'
@@ -43,14 +43,15 @@ export function MorningOverdueStep({
   }, [projects])
 
   const lifeOverdue = useMemo(() => {
-    return lifeTasks.filter(
+    const withNextOnly = toTasksWithNextOccurrenceOnly(lifeTasks, today)
+    return withNextOnly.filter(
       (t) =>
         !t.completed &&
         t.executionDate != null &&
         t.executionDate !== '' &&
         t.executionDate < todayStr,
     )
-  }, [lifeTasks, todayStr])
+  }, [lifeTasks, today, todayStr])
 
   const devOverdue = useMemo(() => {
     return devTasks.filter(
