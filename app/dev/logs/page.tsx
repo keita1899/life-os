@@ -25,6 +25,7 @@ import { useLogView, LogViewHeader } from '@/features/logs'
 import {
   DevLogGoalsSection,
   DevLogDayContent,
+  DEV_REPORT_TEMPLATE,
   getDevYearlyGoalsForDate,
   getDevMonthlyGoalsForDate,
   getDevWeeklyGoalsForDate,
@@ -331,6 +332,7 @@ function DevLogPageView({
                     onDeleteTask={deleteConfirm.handleDeleteClick}
                     onUpdateExecutionDate={handleUpdateExecutionDate}
                     column="left"
+                    reportTemplate={DEV_REPORT_TEMPLATE}
                   />
                 </div>
               ))}

@@ -2,7 +2,7 @@
 
 import { format } from 'date-fns'
 import { useDevDailyLog } from '@/features/dev/logs'
-import { DevLogReportSection } from '@/features/dev/logs'
+import { DevLogReportSection, DEV_REPORT_TEMPLATE } from '@/features/dev/logs'
 
 interface EveningReportStepProps {
   today: Date
@@ -40,6 +40,7 @@ export function EveningReportStep({ today, execute }: EveningReportStepProps) {
         devDailyLog={devDailyLog}
         isLoading={isLoading}
         onUpdate={handleUpdate}
+        template={DEV_REPORT_TEMPLATE}
       />
     </div>
   )

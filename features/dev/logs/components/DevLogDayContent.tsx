@@ -23,6 +23,7 @@ interface DevLogDayContentProps {
   onDeleteTask: (task: Task) => void
   onUpdateExecutionDate: (task: Task, executionDate: string | null) => Promise<void>
   column?: 'left' | 'right'
+  reportTemplate?: string
 }
 
 function mapDevTaskToTask(devTask: DevTask): Task {
@@ -54,6 +55,7 @@ export function DevLogDayContent({
   onDeleteTask,
   onUpdateExecutionDate,
   column,
+  reportTemplate,
 }: DevLogDayContentProps) {
   const dateStr = format(logDate, 'yyyy-MM-dd')
 
@@ -111,6 +113,7 @@ export function DevLogDayContent({
       devDailyLog={devDailyLog}
       isLoading={isLoadingDailyLog}
       onUpdate={handleUpdateReport}
+      template={reportTemplate}
     />
   )
 

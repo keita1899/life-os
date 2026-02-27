@@ -27,14 +27,19 @@ interface DevLogReportSectionProps {
   devDailyLog: DevDailyLog | null | undefined
   isLoading: boolean
   onUpdate: (input: UpdateDevDailyLogInput) => Promise<void>
+  template?: string
 }
 
 export function DevLogReportSection({
   devDailyLog,
   isLoading: isLoadingLog,
   onUpdate,
+  template,
 }: DevLogReportSectionProps) {
-  const lastSavedRef = useRef<string>(devDailyLog?.report ?? '')
+  // 未保存かつテンプレートありの場合、テンプレートを初期表示する
+  // lastSavedRef もテンプレートに合わせることで、未編集なら保存が走らない
+  const initialValue = devDailyLog?.report || (devDailyLog !== undefined ? (template ?? '') : '')
+  const lastSavedRef = useRef<string>(initialValue)
   const onUpdateRef = useRef(onUpdate)
   const [isSaving, setIsSaving] = useState(false)
   const [savedMessage, setSavedMessage] = useState(false)
@@ -44,15 +49,19 @@ export function DevLogReportSection({
   const form = useForm<ReportFormValues>({
     resolver: zodResolver(reportFormSchema),
     values: {
-      report: devDailyLog?.report || '',
+      report: initialValue,
     },
   })
 
   const reportValue = form.watch('report')
 
+  // ロード完了時に lastSavedRef を同期する
+  // 既存レポートがあればその値、なければテンプレート（未編集なら保存しない）
+  const syncValue = devDailyLog === undefined ? undefined : (devDailyLog?.report || (template ?? ''))
   useEffect(() => {
-    lastSavedRef.current = devDailyLog?.report ?? ''
-  }, [devDailyLog?.report])
+    if (syncValue === undefined) return
+    lastSavedRef.current = syncValue
+  }, [syncValue])
 
   useEffect(() => {
     const value = reportValue ?? ''

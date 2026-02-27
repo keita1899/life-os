@@ -4,6 +4,7 @@ export { DevLogReportSection } from './components/DevLogReportSection'
 export { DevLogTasksSection } from './components/DevLogTasksSection'
 export { useDevDailyLog } from './hooks/useDevDailyLog'
 export {
+  DEV_REPORT_TEMPLATE,
   getDevYearlyGoalsForDate,
   getDevMonthlyGoalsForDate,
   getDevWeeklyGoalsForDate,
