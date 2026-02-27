@@ -122,16 +122,24 @@ export const MonthlyGoalsSection = ({
   onDeleteClick,
   onToggleChecklistItem,
 }: MonthlyGoalsSectionProps) => {
+  const [showAllMonths, setShowAllMonths] = useState(false)
+  const currentDate = useMemo(() => new Date(), [])
+  const currentYear = currentDate.getFullYear()
+  const currentMonth = currentDate.getMonth() + 1
+
+  const thisMonthGoals = useMemo(() => {
+    if (selectedYear !== currentYear) return []
+    return goals.filter((goal) => goal.month === currentMonth)
+  }, [goals, selectedYear, currentYear, currentMonth])
+
   const monthlyGoalsByMonth = useMemo(() => {
     const monthly: Record<number, DevMonthlyGoal[]> = {}
-
     goals.forEach((goal) => {
       if (!monthly[goal.month]) {
         monthly[goal.month] = []
       }
       monthly[goal.month].push(goal)
     })
-
     return monthly
   }, [goals])
 
@@ -145,48 +153,93 @@ export const MonthlyGoalsSection = ({
           月間目標を作成
         </Button>
       </div>
-      <div>
-        <GroupedAccordion
-          items={[1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12].map((month) => {
-            const monthGoals = monthlyGoalsByMonth[month] || []
-            const currentDate = new Date()
-            const isCurrentMonth =
-              selectedYear === currentDate.getFullYear() &&
-              month === currentDate.getMonth() + 1
-            return {
-              key: `month-${month}`,
-              itemClassName: isCurrentMonth
-                ? 'border-stone-300 dark:border-stone-700'
-                : '',
-              triggerClassName: isCurrentMonth
-                ? 'text-blue-600 dark:text-blue-400'
-                : '',
-              trigger: `${month}月`,
-              content:
-                monthGoals.length === 0 ? (
-                  <InlineCreateButton
-                    label={`${month}月の目標を作成`}
-                    onClick={() => onCreateClick(month)}
-                  />
-                ) : (
-                  <div className="grid gap-4 grid-cols-1">
-                    {monthGoals.map((goal) => (
-                      <MonthlyGoalCard
-                        key={goal.id}
-                        goal={goal}
-                        onEditClick={onEditClick}
-                        onDeleteClick={onDeleteClick}
-                        onToggleChecklistItem={onToggleChecklistItem}
-                      />
-                    ))}
-                  </div>
-                ),
-            }
-          })}
-          defaultValue={[1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12].map((m) =>
-            `month-${m}`,
+
+      {selectedYear === currentYear && (
+        <div className="mb-6">
+          <h3 className="mb-3 text-sm font-semibold text-muted-foreground">
+            今月の目標
+          </h3>
+          {thisMonthGoals.length === 0 ? (
+            <InlineCreateButton
+              label="今月の目標を作成"
+              onClick={() => onCreateClick(currentMonth)}
+            />
+          ) : (
+            <div className="grid gap-4 grid-cols-1">
+              {thisMonthGoals.map((goal) => (
+                <MonthlyGoalCard
+                  key={goal.id}
+                  goal={goal}
+                  onEditClick={onEditClick}
+                  onDeleteClick={onDeleteClick}
+                  onToggleChecklistItem={onToggleChecklistItem}
+                />
+              ))}
+            </div>
           )}
-        />
+        </div>
+      )}
+
+      <div>
+        <Button
+          variant="ghost"
+          size="sm"
+          onClick={() => setShowAllMonths((prev) => !prev)}
+          className="mb-4 text-muted-foreground"
+        >
+          {showAllMonths ? (
+            <>
+              <ChevronUp className="mr-1 h-4 w-4" />
+              すべての月を非表示
+            </>
+          ) : (
+            <>
+              <ChevronDown className="mr-1 h-4 w-4" />
+              すべての月を表示
+            </>
+          )}
+        </Button>
+        {showAllMonths && (
+          <GroupedAccordion
+            items={[1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12].map((month) => {
+              const monthGoals = monthlyGoalsByMonth[month] || []
+              const isCurrentMonth =
+                selectedYear === currentYear && month === currentMonth
+              return {
+                key: `month-${month}`,
+                itemClassName: isCurrentMonth
+                  ? 'border-stone-300 dark:border-stone-700'
+                  : '',
+                triggerClassName: isCurrentMonth
+                  ? 'text-blue-600 dark:text-blue-400'
+                  : '',
+                trigger: `${month}月`,
+                content:
+                  monthGoals.length === 0 ? (
+                    <InlineCreateButton
+                      label={`${month}月の目標を作成`}
+                      onClick={() => onCreateClick(month)}
+                    />
+                  ) : (
+                    <div className="grid gap-4 grid-cols-1">
+                      {monthGoals.map((goal) => (
+                        <MonthlyGoalCard
+                          key={goal.id}
+                          goal={goal}
+                          onEditClick={onEditClick}
+                          onDeleteClick={onDeleteClick}
+                          onToggleChecklistItem={onToggleChecklistItem}
+                        />
+                      ))}
+                    </div>
+                  ),
+              }
+            })}
+            defaultValue={[1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12].map((m) =>
+              `month-${m}`,
+            )}
+          />
+        )}
       </div>
     </div>
   )

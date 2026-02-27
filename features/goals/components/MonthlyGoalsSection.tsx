@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useMemo } from 'react'
+import { useMemo, useState } from 'react'
 import { CheckCircle2, Circle, ChevronDown, ChevronUp } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { EditDeleteDropdownMenu } from '@/components/ui/edit-delete-dropdown-menu'
@@ -123,6 +123,7 @@ export const MonthlyGoalsSection = ({
   onDeleteClick,
   onToggleChecklistItem,
 }: MonthlyGoalsSectionProps) => {
+  const [showAllMonths, setShowAllMonths] = useState(false)
   const currentDate = useMemo(() => new Date(), [])
   const currentYear = currentDate.getFullYear()
   const currentMonth = currentDate.getMonth() + 1
@@ -179,45 +180,65 @@ export const MonthlyGoalsSection = ({
       )}
 
       <div>
-        <GroupedAccordion
-          items={[1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12].map((month) => {
-            const monthGoals = monthlyGoalsByMonth[month] || []
-            const isCurrentMonth =
-              selectedYear === currentYear && month === currentMonth
-            return {
-              key: `month-${month}`,
-              itemClassName: isCurrentMonth
-                ? 'border-stone-300 dark:border-stone-700'
-                : '',
-              triggerClassName: isCurrentMonth
-                ? 'text-blue-600 dark:text-blue-400'
-                : '',
-              trigger: `${month}月`,
-              content:
-                monthGoals.length === 0 ? (
-                  <InlineCreateButton
-                    label={`${month}月の目標を作成`}
-                    onClick={() => onCreateClick(month)}
-                  />
-                ) : (
-                  <div className="grid gap-4 grid-cols-1">
-                    {monthGoals.map((goal) => (
-                      <MonthlyGoalCard
-                        key={goal.id}
-                        goal={goal}
-                        onEditClick={onEditClick}
-                        onDeleteClick={onDeleteClick}
-                        onToggleChecklistItem={onToggleChecklistItem}
-                      />
-                    ))}
-                  </div>
-                ),
-            }
-          })}
-          defaultValue={[1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12].map((m) =>
-            `month-${m}`,
+        <Button
+          variant="ghost"
+          size="sm"
+          onClick={() => setShowAllMonths((prev) => !prev)}
+          className="mb-4 text-muted-foreground"
+        >
+          {showAllMonths ? (
+            <>
+              <ChevronUp className="mr-1 h-4 w-4" />
+              すべての月を非表示
+            </>
+          ) : (
+            <>
+              <ChevronDown className="mr-1 h-4 w-4" />
+              すべての月を表示
+            </>
           )}
-        />
+        </Button>
+        {showAllMonths && (
+          <GroupedAccordion
+            items={[1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12].map((month) => {
+              const monthGoals = monthlyGoalsByMonth[month] || []
+              const isCurrentMonth =
+                selectedYear === currentYear && month === currentMonth
+              return {
+                key: `month-${month}`,
+                itemClassName: isCurrentMonth
+                  ? 'border-stone-300 dark:border-stone-700'
+                  : '',
+                triggerClassName: isCurrentMonth
+                  ? 'text-blue-600 dark:text-blue-400'
+                  : '',
+                trigger: `${month}月`,
+                content:
+                  monthGoals.length === 0 ? (
+                    <InlineCreateButton
+                      label={`${month}月の目標を作成`}
+                      onClick={() => onCreateClick(month)}
+                    />
+                  ) : (
+                    <div className="grid gap-4 grid-cols-1">
+                      {monthGoals.map((goal) => (
+                        <MonthlyGoalCard
+                          key={goal.id}
+                          goal={goal}
+                          onEditClick={onEditClick}
+                          onDeleteClick={onDeleteClick}
+                          onToggleChecklistItem={onToggleChecklistItem}
+                        />
+                      ))}
+                    </div>
+                  ),
+              }
+            })}
+            defaultValue={[1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12].map((m) =>
+              `month-${m}`,
+            )}
+          />
+        )}
       </div>
     </div>
   )
