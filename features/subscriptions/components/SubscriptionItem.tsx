@@ -8,6 +8,7 @@ import { cn } from '@/lib/utils'
 import { format } from 'date-fns'
 import { getTodayDateString, getTomorrowDateString } from '@/lib/date/formats'
 import { formatBillingCycle } from '../lib'
+import { InlineEditableText } from '@/components/ui/inline-editable-text'
 import type { Subscription } from '../types/subscription'
 
 interface SubscriptionItemProps {
@@ -15,6 +16,7 @@ interface SubscriptionItemProps {
   onEdit?: (subscription: Subscription) => void
   onDelete?: (subscription: Subscription) => void
   onToggleActive?: (subscription: Subscription) => void
+  onRename?: (subscription: Subscription, name: string) => Promise<void>
 }
 
 export function SubscriptionItem({
@@ -22,6 +24,7 @@ export function SubscriptionItem({
   onEdit,
   onDelete,
   onToggleActive,
+  onRename,
 }: SubscriptionItemProps) {
   const formattedNextBillingDate = useMemo(() => {
     return format(new Date(subscription.nextBillingDate), 'yyyy年M月d日')
@@ -73,16 +76,17 @@ export function SubscriptionItem({
       )}
       <div className="flex-1">
         <div className="flex items-center gap-2">
-          <div
+          <InlineEditableText
+            value={subscription.name}
+            onSave={(name) => onRename!(subscription, name)}
             className={cn(
               'text-sm font-medium',
               subscription.active
                 ? 'text-stone-900 dark:text-stone-100'
                 : 'text-stone-500 line-through dark:text-stone-400',
             )}
-          >
-            {subscription.name}
-          </div>
+            disabled={!onRename}
+          />
           {!subscription.active && (
             <span className="rounded-md bg-stone-200 px-2 py-0.5 text-xs text-stone-600 dark:bg-stone-800 dark:text-stone-400">
               解約済

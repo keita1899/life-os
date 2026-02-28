@@ -4,6 +4,7 @@ import { useMemo } from 'react'
 import { CheckCircle2, Circle } from 'lucide-react'
 import { EditDeleteDropdownMenu } from '@/components/ui/edit-delete-dropdown-menu'
 import { cn } from '@/lib/utils'
+import { InlineEditableText } from '@/components/ui/inline-editable-text'
 import type { WishlistItem as WishlistItemType } from '../types/wishlist-item'
 
 interface WishlistItemProps {
@@ -11,6 +12,7 @@ interface WishlistItemProps {
   onEdit?: (item: WishlistItemType) => void
   onDelete?: (item: WishlistItemType) => void
   onToggleCompletion?: (item: WishlistItemType) => void
+  onRename?: (item: WishlistItemType, name: string) => Promise<void>
 }
 
 export function WishlistItem({
@@ -18,6 +20,7 @@ export function WishlistItem({
   onEdit,
   onDelete,
   onToggleCompletion,
+  onRename,
 }: WishlistItemProps) {
   const priceLabel = useMemo(() => {
     if (item.price === null) return null
@@ -54,16 +57,17 @@ export function WishlistItem({
       </div>
       <div className="flex-1 min-w-0">
         <div className="flex items-baseline gap-2">
-          <span
+          <InlineEditableText
+            value={item.name}
+            onSave={(name) => onRename!(item, name)}
             className={cn(
               'text-sm font-medium',
               item.purchased
                 ? 'text-stone-500 line-through dark:text-stone-400'
                 : 'text-stone-900 dark:text-stone-100',
             )}
-          >
-            {item.name}
-          </span>
+            disabled={!onRename || item.purchased}
+          />
           {priceLabel && (
             <span className="text-sm text-muted-foreground shrink-0">
               {priceLabel}

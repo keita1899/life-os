@@ -19,6 +19,7 @@ interface HabitHeatmapProps {
   onToggleDate?: (habit: Habit, dateStr: string) => void
   onEdit?: (habit: Habit) => void
   onDelete?: (habit: Habit) => void
+  onRename?: (habit: Habit, name: string) => Promise<void>
 }
 
 export function HabitHeatmap({
@@ -33,6 +34,7 @@ export function HabitHeatmap({
   onToggleDate,
   onEdit,
   onDelete,
+  onRename,
 }: HabitHeatmapProps) {
   const now = new Date()
 
@@ -55,6 +57,7 @@ export function HabitHeatmap({
           onToggleDate={onToggleDate}
           onEdit={onEdit}
           onDelete={onDelete}
+          onRename={onRename}
         />
       </div>
     )
@@ -76,6 +79,7 @@ export function HabitHeatmap({
       onToggleDate={onToggleDate}
       onEdit={onEdit}
       onDelete={onDelete}
+      onRename={onRename}
     />
   )
 }

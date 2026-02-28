@@ -159,6 +159,13 @@ export default function HabitsPage() {
     )
   }
 
+  const handleRenameHabit = async (habit: Habit, name: string) => {
+    await execute(
+      () => updateHabit(habit.id, { name }),
+      '習慣名の更新に失敗しました',
+    )
+  }
+
   const handleToggleDate = async (habit: Habit, dateStr: string) => {
     await execute(
       async () => {
@@ -286,6 +293,7 @@ export default function HabitsPage() {
                 onToggleDate={handleToggleDate}
                 onEdit={handleEditHabit}
                 onDelete={deleteConfirm.handleDeleteClick}
+                onRename={handleRenameHabit}
               />
             </CardContent>
           </Card>

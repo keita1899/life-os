@@ -17,7 +17,9 @@ import {
 } from '@/features/dev/projects'
 import { upsertProjectRequirements } from '@/features/dev/requirements'
 import { Loading } from '@/components/ui/loading'
-import type { CreateDevProjectInput } from '@/features/dev/projects'
+import { useAsyncOperation } from '@/hooks/useAsyncOperation'
+import { ErrorMessage } from '@/components/ui/error-message'
+import type { CreateDevProjectInput, DevProject } from '@/features/dev/projects'
 
 export default function DevProjectsPage() {
   const {
@@ -25,8 +27,10 @@ export default function DevProjectsPage() {
     isLoading,
     error,
     createProject,
+    updateProject,
   } = useDevProjects()
   const [wizardOpen, setWizardOpen] = useState(false)
+  const { operationError, setOperationError, execute } = useAsyncOperation()
   const [statusFilter, setStatusFilter] = useState<
     'all' | 'unreleased' | 'released'
   >('all')
@@ -41,6 +45,13 @@ export default function DevProjectsPage() {
     onCreate: () => setWizardOpen(true),
     enabled: !wizardOpen,
   })
+
+  const handleRenameProject = async (project: DevProject, name: string) => {
+    await execute(
+      () => updateProject(project.id, { name }),
+      'プロジェクト名の更新に失敗しました',
+    )
+  }
 
   const handleCreateProject = async (
     input: CreateDevProjectInput,
@@ -75,7 +86,10 @@ export default function DevProjectsPage() {
           </div>
         </div>
 
-        {error && <div className="mb-4"><span className="text-destructive">{error}</span></div>}
+        <ErrorMessage
+          message={operationError || error || ''}
+          onDismiss={operationError ? () => setOperationError(null) : undefined}
+        />
 
         {isLoading ? (
           <Loading />
@@ -83,6 +97,7 @@ export default function DevProjectsPage() {
           <ProjectList
             projects={projects}
             statusFilter={statusFilter}
+            onRename={handleRenameProject}
           />
         )}
 

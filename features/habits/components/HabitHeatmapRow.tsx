@@ -6,6 +6,7 @@ import { isHabitDueOnDate, formatHabitScheduledTime } from '../lib'
 import type { Habit } from '../types/habit'
 import { cn } from '@/lib/utils'
 import { EditDeleteDropdownMenu } from '@/components/ui/edit-delete-dropdown-menu'
+import { InlineEditableText } from '@/components/ui/inline-editable-text'
 
 export interface HabitHeatmapRowProps {
   habit: Habit
@@ -17,6 +18,7 @@ export interface HabitHeatmapRowProps {
   onToggleDate?: (habit: Habit, dateStr: string) => void
   onEdit?: (habit: Habit) => void
   onDelete?: (habit: Habit) => void
+  onRename?: (habit: Habit, name: string) => Promise<void>
 }
 
 export function HabitHeatmapRow({
@@ -29,6 +31,7 @@ export function HabitHeatmapRow({
   onToggleDate,
   onEdit,
   onDelete,
+  onRename,
 }: HabitHeatmapRowProps) {
   const { completions, isLoading, error } = useHabitCompletions(
     habit.id,
@@ -96,7 +99,11 @@ export function HabitHeatmapRow({
       </td>
       <td className="max-w-[140px] truncate border-b border-stone-200 px-2 py-3 text-sm dark:border-stone-800">
         <span className="flex items-center gap-1.5">
-          {habit.name}
+          <InlineEditableText
+            value={habit.name}
+            onSave={(name) => onRename!(habit, name)}
+            disabled={!onRename}
+          />
           {isNewThisMonth && (
             <span className="inline-flex shrink-0 rounded-full bg-amber-200 px-1.5 py-0.5 text-[10px] font-medium leading-none text-amber-800 dark:bg-amber-900 dark:text-amber-200">
               NEW

@@ -9,6 +9,7 @@ interface SubscriptionListProps {
   onEdit?: (subscription: Subscription) => void
   onDelete?: (subscription: Subscription) => void
   onToggleActive?: (subscription: Subscription) => void
+  onRename?: (subscription: Subscription, name: string) => Promise<void>
 }
 
 export function SubscriptionList({
@@ -16,6 +17,7 @@ export function SubscriptionList({
   onEdit,
   onDelete,
   onToggleActive,
+  onRename,
 }: SubscriptionListProps) {
   if (subscriptions.length === 0) {
     return <EmptyState message="サブスクリプションがありません" />
@@ -30,6 +32,7 @@ export function SubscriptionList({
           onEdit={onEdit}
           onDelete={onDelete}
           onToggleActive={onToggleActive}
+          onRename={onRename}
         />
       ))}
     </div>

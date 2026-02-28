@@ -234,6 +234,13 @@ export default function BucketListPage() {
     enabled: !isDialogOpen,
   })
 
+  const handleRenameItem = async (item: BucketListItem, title: string) => {
+    await execute(
+      () => updateBucketListItem(item.id, { title }),
+      'やりたいことの名前の更新に失敗しました',
+    )
+  }
+
   const handleDeleteItem = async () => {
     const item = deleteConfirm.deletingItem
     if (!item) return
@@ -352,6 +359,7 @@ export default function BucketListPage() {
                   onToggleCompletion={handleToggleCompletion}
                   onConvertToEvent={handleConvertToEvent}
                   onConvertToTask={handleConvertToTask}
+                  onRename={handleRenameItem}
                 />
                 {filteredItems.length > 0 && (
                   <div className="flex justify-end">
@@ -435,6 +443,7 @@ export default function BucketListPage() {
                                       onToggleCompletion={handleToggleCompletion}
                                       onConvertToEvent={handleConvertToEvent}
                                       onConvertToTask={handleConvertToTask}
+                                      onRename={handleRenameItem}
                                     />
                                     <InlineCreateButton
                                       label="やりたいことを追加"
@@ -475,6 +484,7 @@ export default function BucketListPage() {
                                         onToggleCompletion={handleToggleCompletion}
                                         onConvertToEvent={handleConvertToEvent}
                                         onConvertToTask={handleConvertToTask}
+                                        onRename={handleRenameItem}
                                       />
                                       <InlineCreateButton
                                         label="やりたいことを追加"
@@ -521,6 +531,7 @@ export default function BucketListPage() {
                                       onToggleCompletion={handleToggleCompletion}
                                       onConvertToEvent={handleConvertToEvent}
                                       onConvertToTask={handleConvertToTask}
+                                      onRename={handleRenameItem}
                                     />
                                     <InlineCreateButton
                                       label="やりたいことを追加"
@@ -561,6 +572,7 @@ export default function BucketListPage() {
                                         onToggleCompletion={handleToggleCompletion}
                                         onConvertToEvent={handleConvertToEvent}
                                         onConvertToTask={handleConvertToTask}
+                                        onRename={handleRenameItem}
                                       />
                                       <InlineCreateButton
                                         label="やりたいことを追加"
@@ -603,6 +615,7 @@ export default function BucketListPage() {
                                   onToggleCompletion={handleToggleCompletion}
                                   onConvertToEvent={handleConvertToEvent}
                                   onConvertToTask={handleConvertToTask}
+                                  onRename={handleRenameItem}
                                 />
                                 <div className="flex justify-end">
                                   <Button

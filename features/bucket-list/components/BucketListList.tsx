@@ -11,6 +11,7 @@ interface BucketListListProps {
   onToggleCompletion?: (item: BucketListItemType) => void
   onConvertToEvent?: (item: BucketListItemType) => void
   onConvertToTask?: (item: BucketListItemType) => void
+  onRename?: (item: BucketListItemType, title: string) => Promise<void>
 }
 
 export function BucketListList({
@@ -20,6 +21,7 @@ export function BucketListList({
   onToggleCompletion,
   onConvertToEvent,
   onConvertToTask,
+  onRename,
 }: BucketListListProps) {
   if (items.length === 0) {
     return <EmptyState message="やりたいことがありません" />
@@ -36,6 +38,7 @@ export function BucketListList({
           onToggleCompletion={onToggleCompletion}
           onConvertToEvent={onConvertToEvent}
           onConvertToTask={onConvertToTask}
+          onRename={onRename}
         />
       ))}
     </div>

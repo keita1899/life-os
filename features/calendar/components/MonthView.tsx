@@ -67,6 +67,7 @@ function DateCell({
   const { isDevMode } = useAppMode()
   const [hasOpenPopover, setHasOpenPopover] = useState(false)
   const holidayName = getHolidayName(date, holidays)
+  const dayOfWeek = date.getDay()
 
   const navigateToDay = () => {
     if (!hasOpenPopover) {
@@ -93,10 +94,11 @@ function DateCell({
       onClick={navigateToDay}
       onKeyDown={handleKeyDown}
       className={cn(
-        'block min-h-[80px] bg-stone-50 p-1 dark:bg-stone-950',
-        'hover:bg-stone-100 dark:hover:bg-stone-800',
+        'block min-h-[80px] p-1',
         'transition-colors cursor-pointer',
         'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring',
+        'bg-stone-50 dark:bg-stone-950',
+        'hover:bg-stone-100 dark:hover:bg-stone-800',
         !isCurrentMonthDay && 'text-stone-400 dark:text-stone-600',
         isTodayDate && 'ring-2 ring-blue-500 dark:ring-blue-400',
       )}
@@ -112,7 +114,20 @@ function DateCell({
             {formatDay(date)}
           </span>
         ) : (
-          formatDay(date)
+          <span
+            className={cn(
+              dayOfWeek === 0 &&
+                (isCurrentMonthDay
+                  ? 'text-red-600 dark:text-red-400'
+                  : 'text-red-300 dark:text-red-900'),
+              dayOfWeek === 6 &&
+                (isCurrentMonthDay
+                  ? 'text-blue-600 dark:text-blue-400'
+                  : 'text-blue-300 dark:text-blue-900'),
+            )}
+          >
+            {formatDay(date)}
+          </span>
         )}
         {holidayName && (
           <span className="text-xs text-red-600 dark:text-red-400">
@@ -225,7 +240,14 @@ export function MonthView({
         {weekdaysList.map((day) => (
           <div
             key={day}
-            className="bg-stone-50 px-2 py-2 text-center text-sm font-medium text-stone-700 dark:bg-stone-950 dark:text-stone-300"
+            className={cn(
+              'bg-stone-50 px-2 py-2 text-center text-sm font-medium dark:bg-stone-950',
+              day === '日'
+                ? 'text-red-600 dark:text-red-400'
+                : day === '土'
+                  ? 'text-blue-600 dark:text-blue-400'
+                  : 'text-stone-700 dark:text-stone-300',
+            )}
           >
             {day}
           </div>

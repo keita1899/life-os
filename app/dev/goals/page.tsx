@@ -120,6 +120,28 @@ export default function DevGoalsPage() {
     }
   }
 
+  const handleRenameYearlyGoal = async (goal: DevYearlyGoal, title: string) => {
+    await execute(
+      async () => {
+        await updateDevYearlyGoal(goal.id, { title })
+        await refreshGoals()
+        return true
+      },
+      '年間目標名の更新に失敗しました',
+    )
+  }
+
+  const handleRenameMonthlyGoal = async (goal: DevMonthlyGoal, title: string) => {
+    await execute(
+      async () => {
+        await updateDevMonthlyGoal(goal.id, { title })
+        await refreshGoals()
+        return true
+      },
+      '月間目標名の更新に失敗しました',
+    )
+  }
+
   const handleToggleYearlyGoalChecklistItem = async (
     goal: DevYearlyGoal,
     itemId: string,
@@ -237,6 +259,7 @@ export default function DevGoalsPage() {
               onEditClick={handleEditClick}
               onDeleteClick={handleDeleteClick}
               onToggleChecklistItem={handleToggleYearlyGoalChecklistItem}
+              onRenameGoal={handleRenameYearlyGoal}
             />
 
             <div className="border-t border-stone-200 dark:border-stone-800" />
@@ -252,6 +275,7 @@ export default function DevGoalsPage() {
               onEditClick={handleEditClick}
               onDeleteClick={handleDeleteClick}
               onToggleChecklistItem={handleToggleMonthlyGoalChecklistItem}
+              onRenameGoal={handleRenameMonthlyGoal}
             />
           </div>
         )}

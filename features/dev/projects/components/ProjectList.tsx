@@ -9,11 +9,13 @@ import type { DevProject } from '../types/dev-project'
 interface ProjectListProps {
   projects: DevProject[]
   statusFilter?: 'all' | 'unreleased' | 'released'
+  onRename?: (project: DevProject, name: string) => Promise<void>
 }
 
 export function ProjectList({
   projects,
   statusFilter = 'all',
+  onRename,
 }: ProjectListProps): ReactElement {
   const filteredProjects = useMemo(() => {
     if (statusFilter === 'all') {
@@ -65,6 +67,7 @@ export function ProjectList({
               <ProjectCard
                 key={project.id}
                 project={project}
+                onRename={onRename}
               />
             ))}
           </div>

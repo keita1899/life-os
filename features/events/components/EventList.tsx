@@ -8,9 +8,10 @@ interface EventListProps {
   events: Event[]
   onEdit?: (event: Event) => void
   onDelete?: (event: Event) => void
+  onRename?: (event: Event, title: string) => Promise<void>
 }
 
-export function EventList({ events, onEdit, onDelete }: EventListProps) {
+export function EventList({ events, onEdit, onDelete, onRename }: EventListProps) {
   if (events.length === 0) {
     return <EmptyState message="予定がありません" />
   }
@@ -23,6 +24,7 @@ export function EventList({ events, onEdit, onDelete }: EventListProps) {
           event={event}
           onEdit={onEdit}
           onDelete={onDelete}
+          onRename={onRename}
         />
       ))}
     </div>

@@ -29,8 +29,8 @@ import { useDialogState } from '@/hooks/useDialogState'
 import { useDeleteConfirm } from '@/hooks/useDeleteConfirm'
 import { useUserSettings } from '@/features/settings'
 import { useBarcelonaMatches } from '@/hooks/useBarcelonaMatches'
-import { EventDialog } from '@/features/events'
-import { TaskDialog } from '@/features/tasks'
+import { EventDialog, RecurringEventDeleteDialog } from '@/features/events'
+import { TaskDialog, RecurringTaskDeleteDialog } from '@/features/tasks'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { DeleteConfirmDialog } from '@/components/ui/delete-confirm-dialog'
 import { ErrorMessage } from '@/components/ui/error-message'
@@ -166,13 +166,23 @@ export function CalendarView({ initialDate }: CalendarViewProps) {
     }
   }
 
-  const handleDeleteEvent = async () => {
+  const handleDeleteEvent = async (mode?: 'single' | 'all') => {
     const eventToDelete = eventDeleteConfirm.deletingItem
     if (!eventToDelete) return
 
     const result = await execute(
       async () => {
-        await deleteEvent(eventToDelete.id)
+        if (eventToDelete.recurrenceRule && mode === 'single' && eventToDelete.startDatetime) {
+          const eventDate = eventToDelete.startDatetime.split('T')[0]
+          const currentExcludedDates = eventToDelete.recurrenceExcludedDates || []
+          if (!currentExcludedDates.includes(eventDate)) {
+            await updateEvent(eventToDelete.id, {
+              recurrenceExcludedDates: [...currentExcludedDates, eventDate],
+            })
+          }
+        } else {
+          await deleteEvent(eventToDelete.id)
+        }
         return true
       },
       '予定の削除に失敗しました',
@@ -205,13 +215,22 @@ export function CalendarView({ initialDate }: CalendarViewProps) {
     }
   }
 
-  const handleDeleteTask = async () => {
+  const handleDeleteTask = async (mode?: 'single' | 'all') => {
     const taskToDelete = taskDeleteConfirm.deletingItem
     if (!taskToDelete) return
 
     const result = await execute(
       async () => {
-        await deleteTask(taskToDelete.id)
+        if (taskToDelete.recurrenceRule && mode === 'single' && taskToDelete.executionDate) {
+          const currentExcludedDates = taskToDelete.recurrenceExcludedDates || []
+          if (!currentExcludedDates.includes(taskToDelete.executionDate)) {
+            await updateTask(taskToDelete.id, {
+              recurrenceExcludedDates: [...currentExcludedDates, taskToDelete.executionDate],
+            })
+          }
+        } else {
+          await deleteTask(taskToDelete.id)
+        }
         return true
       },
       'タスクの削除に失敗しました',
@@ -366,16 +385,21 @@ export function CalendarView({ initialDate }: CalendarViewProps) {
         event={eventDialog.editingItem}
       />
 
-      <DeleteConfirmDialog
-        open={!!eventDeleteConfirm.deletingItem}
-        message={
-          eventDeleteConfirm.deletingItem?.recurrenceRule
-            ? `「${eventDeleteConfirm.deletingItem.title}」の繰り返し予定をすべて削除しますか？この操作は取り消せません。`
-            : `「${eventDeleteConfirm.deletingItem?.title}」を削除しますか？この操作は取り消せません。`
-        }
-        onConfirm={handleDeleteEvent}
-        onCancel={eventDeleteConfirm.handleDeleteCancel}
-      />
+      {eventDeleteConfirm.deletingItem?.recurrenceRule ? (
+        <RecurringEventDeleteDialog
+          open={!!eventDeleteConfirm.deletingItem}
+          eventTitle={eventDeleteConfirm.deletingItem.title}
+          onConfirm={handleDeleteEvent}
+          onCancel={eventDeleteConfirm.handleDeleteCancel}
+        />
+      ) : (
+        <DeleteConfirmDialog
+          open={!!eventDeleteConfirm.deletingItem}
+          message={`「${eventDeleteConfirm.deletingItem?.title}」を削除しますか？この操作は取り消せません。`}
+          onConfirm={() => handleDeleteEvent()}
+          onCancel={eventDeleteConfirm.handleDeleteCancel}
+        />
+      )}
 
       <TaskDialog
         open={taskDialog.isDialogOpen}
@@ -384,16 +408,21 @@ export function CalendarView({ initialDate }: CalendarViewProps) {
         task={taskDialog.editingItem}
       />
 
-      <DeleteConfirmDialog
-        open={!!taskDeleteConfirm.deletingItem}
-        message={
-          taskDeleteConfirm.deletingItem?.recurrenceRule
-            ? `「${taskDeleteConfirm.deletingItem?.title}」は繰り返しタスクです。削除するとすべての発生が削除されます。この操作は取り消せません。`
-            : `「${taskDeleteConfirm.deletingItem?.title}」を削除しますか？この操作は取り消せません。`
-        }
-        onConfirm={handleDeleteTask}
-        onCancel={taskDeleteConfirm.handleDeleteCancel}
-      />
+      {taskDeleteConfirm.deletingItem?.recurrenceRule ? (
+        <RecurringTaskDeleteDialog
+          open={!!taskDeleteConfirm.deletingItem}
+          taskTitle={taskDeleteConfirm.deletingItem.title}
+          onConfirm={handleDeleteTask}
+          onCancel={taskDeleteConfirm.handleDeleteCancel}
+        />
+      ) : (
+        <DeleteConfirmDialog
+          open={!!taskDeleteConfirm.deletingItem}
+          message={`「${taskDeleteConfirm.deletingItem?.title}」を削除しますか？この操作は取り消せません。`}
+          onConfirm={() => handleDeleteTask()}
+          onCancel={taskDeleteConfirm.handleDeleteCancel}
+        />
+      )}
 
       <BucketListDialog
         open={bucketListDialog.isDialogOpen}

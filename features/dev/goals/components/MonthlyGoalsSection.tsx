@@ -8,6 +8,7 @@ import { InlineCreateButton } from '@/components/ui/inline-create-button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Progress } from '@/components/ui/progress'
 import { calculateProgress } from '@/features/goals'
+import { InlineEditableText } from '@/components/ui/inline-editable-text'
 import { GroupedAccordion } from '@/components/ui/grouped-accordion'
 import type { DevMonthlyGoal } from '../types/dev-monthly-goal'
 
@@ -22,6 +23,7 @@ interface MonthlyGoalsSectionProps {
     itemId: string,
     completed: boolean,
   ) => void
+  onRenameGoal?: (goal: DevMonthlyGoal, title: string) => Promise<void>
 }
 
 function MonthlyGoalCard({
@@ -29,6 +31,7 @@ function MonthlyGoalCard({
   onEditClick,
   onDeleteClick,
   onToggleChecklistItem,
+  onRenameGoal,
 }: {
   goal: DevMonthlyGoal
   onEditClick: (goal: DevMonthlyGoal) => void
@@ -38,6 +41,7 @@ function MonthlyGoalCard({
     itemId: string,
     completed: boolean,
   ) => void
+  onRenameGoal?: (goal: DevMonthlyGoal, title: string) => Promise<void>
 }) {
   const [isExpanded, setIsExpanded] = useState(false)
   const progress = calculateProgress(goal.checklist)
@@ -48,7 +52,11 @@ function MonthlyGoalCard({
     <Card className="group relative border-stone-200 dark:border-stone-800">
       <CardHeader className="pr-20">
         <CardTitle className="mb-3 text-stone-900 dark:text-stone-100 line-clamp-2 break-words">
-          {goal.title}
+          <InlineEditableText
+            value={goal.title}
+            onSave={(title) => onRenameGoal!(goal, title)}
+            disabled={!onRenameGoal}
+          />
         </CardTitle>
         {hasChecklist && (
           <button
@@ -121,6 +129,7 @@ export const MonthlyGoalsSection = ({
   onEditClick,
   onDeleteClick,
   onToggleChecklistItem,
+  onRenameGoal,
 }: MonthlyGoalsSectionProps) => {
   const [showAllMonths, setShowAllMonths] = useState(false)
   const currentDate = useMemo(() => new Date(), [])
@@ -173,6 +182,7 @@ export const MonthlyGoalsSection = ({
                   onEditClick={onEditClick}
                   onDeleteClick={onDeleteClick}
                   onToggleChecklistItem={onToggleChecklistItem}
+                  onRenameGoal={onRenameGoal}
                 />
               ))}
             </div>

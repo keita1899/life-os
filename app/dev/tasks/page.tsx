@@ -170,6 +170,13 @@ export default function DevTasksPage() {
     )
   }
 
+  const handleRenameTask = async (task: Task, title: string) => {
+    await execute(
+      () => updateTask(task.id, { title }),
+      'タスク名の更新に失敗しました',
+    )
+  }
+
   const handleUpdateExecutionDate = async (
     task: Task,
     executionDate: string | null,
@@ -255,6 +262,7 @@ export default function DevTasksPage() {
                     onDelete={deleteConfirm.handleDeleteClick}
                     onToggleCompletion={handleToggleCompletion}
                     onUpdateExecutionDate={handleUpdateExecutionDate}
+                    onRename={handleRenameTask}
                   />
                   {group.key === 'overdue' && group.tasks.length > 0 && (
                     <div className="flex justify-end">

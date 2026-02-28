@@ -165,6 +165,13 @@ export default function WishlistPage() {
     }
   }
 
+  const handleRenameItem = async (item: WishlistItem, name: string) => {
+    await execute(
+      () => updateWishlistItem(item.id, { name }),
+      '欲しいものの名前の更新に失敗しました',
+    )
+  }
+
   const handleDeleteItem = async () => {
     const item = deleteConfirm.deletingItem
     if (!item) return
@@ -286,6 +293,7 @@ export default function WishlistPage() {
                             onEdit={handleEditItem}
                             onDelete={deleteConfirm.handleDeleteClick}
                             onToggleCompletion={handleTogglePurchased}
+                            onRename={handleRenameItem}
                           />
                           <InlineCreateButton
                             label="欲しいものを追加"

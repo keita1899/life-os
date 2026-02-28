@@ -28,6 +28,7 @@ import type { DevProject, ProjectStatus } from '@/features/dev/projects'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { InlineCreateButton } from '@/components/ui/inline-create-button'
+import { InlineEditableText } from '@/components/ui/inline-editable-text'
 import { CreateButton } from '@/components/ui/create-button'
 import { DeleteConfirmDialog } from '@/components/ui/delete-confirm-dialog'
 import { EditDeleteDropdownMenu } from '@/components/ui/edit-delete-dropdown-menu'
@@ -230,6 +231,17 @@ function DevProjectPageContent(): ReactElement | null {
     projectDialog.handleDialogClose(false)
   }
 
+  const handleRenameProject = async (name: string) => {
+    if (!Number.isFinite(projectId)) return
+    await executeTaskOperation(async () => {
+      await updateDevProject(projectId, { name })
+      await Promise.all([
+        mutate(SWR_KEYS.devProject(projectId)),
+        mutate(SWR_KEYS.devProjects),
+      ])
+    }, 'プロジェクト名の更新に失敗しました')
+  }
+
   const handleStatusChange = async (newStatus: ProjectStatus) => {
     if (!Number.isFinite(projectId)) return
     if (data?.status === newStatus) return
@@ -365,6 +377,13 @@ function DevProjectPageContent(): ReactElement | null {
     )
   }
 
+  const handleRenameTask = async (task: Task, title: string) => {
+    await executeTaskOperation(
+      () => updateTask(task.id, { title }),
+      'タスク名の更新に失敗しました',
+    )
+  }
+
   const handleDeleteCompletedTasksClick = () => {
     setIsDeletingCompletedDialogOpen(true)
   }
@@ -443,7 +462,14 @@ function DevProjectPageContent(): ReactElement | null {
               ← プロジェクト一覧へ
             </Link>
             <h1 className="mt-2 text-3xl font-bold">
-              {data?.name ?? 'プロジェクト'}
+              {data ? (
+                <InlineEditableText
+                  value={data.name}
+                  onSave={handleRenameProject}
+                />
+              ) : (
+                'プロジェクト'
+              )}
             </h1>
           </div>
           {data && (
@@ -742,6 +768,7 @@ function DevProjectPageContent(): ReactElement | null {
                             onDelete={deleteConfirm.handleDeleteClick}
                             onToggleCompletion={handleToggleCompletion}
                             onUpdateExecutionDate={handleUpdateExecutionDate}
+                            onRename={handleRenameTask}
                           />
                           {group.key === 'overdue' && group.tasks.length > 0 && (
                             <div className="flex justify-end">

@@ -1,7 +1,6 @@
 'use client'
 
 import { useMemo, useState, useCallback } from 'react'
-import Link from 'next/link'
 import { useGoals } from '@/features/goals'
 import { useDevGoals } from '@/features/dev/goals'
 import { getMonthlyGoalsForDate } from '@/features/calendar'
@@ -103,14 +102,9 @@ export function MonthEndGoalsStep({
       return (
         <div className="space-y-5">
           <EmptyState message="来月の目標を立てましょう" />
-          <div className="flex gap-2">
-            <Button variant="outline" asChild>
-              <Link href="/dev/goals">目標ページへ</Link>
-            </Button>
-            <Button onClick={() => setIsDialogOpen(true)}>
-              来月の目標を作成
-            </Button>
-          </div>
+          <Button onClick={() => setIsDialogOpen(true)}>
+            来月の目標を作成
+          </Button>
           <DevMonthlyGoalDialog
             open={isDialogOpen}
             onOpenChange={setIsDialogOpen}
@@ -138,14 +132,9 @@ export function MonthEndGoalsStep({
     return (
       <div className="space-y-5">
         <EmptyState message="来月の目標を立てましょう" />
-        <div className="flex gap-2">
-          <Button variant="outline" asChild>
-            <Link href="/goals">目標ページへ</Link>
-          </Button>
-          <Button onClick={() => setIsDialogOpen(true)}>
-            来月の目標を作成
-          </Button>
-        </div>
+        <Button onClick={() => setIsDialogOpen(true)}>
+          来月の目標を作成
+        </Button>
         <MonthlyGoalDialog
           open={isDialogOpen}
           onOpenChange={setIsDialogOpen}

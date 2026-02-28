@@ -143,6 +143,28 @@ const GoalsPage = () => {
     }
   }
 
+  const handleRenameYearlyGoal = async (goal: YearlyGoal, title: string) => {
+    await execute(
+      async () => {
+        await updateYearlyGoal(goal.id, { title })
+        await refreshGoals()
+        return true
+      },
+      '年間目標名の更新に失敗しました',
+    )
+  }
+
+  const handleRenameMonthlyGoal = async (goal: MonthlyGoal, title: string) => {
+    await execute(
+      async () => {
+        await updateMonthlyGoal(goal.id, { title })
+        await refreshGoals()
+        return true
+      },
+      '月間目標名の更新に失敗しました',
+    )
+  }
+
   const handleToggleYearlyGoalChecklistItem = async (
     goal: YearlyGoal,
     itemId: string,
@@ -209,6 +231,7 @@ const GoalsPage = () => {
             onEditClick={handleEditClick}
             onDeleteClick={handleDeleteClick}
             onToggleChecklistItem={handleToggleYearlyGoalChecklistItem}
+            onRenameGoal={handleRenameYearlyGoal}
           />
 
           <div className="border-t border-stone-200 dark:border-stone-800" />
@@ -223,6 +246,7 @@ const GoalsPage = () => {
             onEditClick={handleEditClick}
             onDeleteClick={handleDeleteClick}
             onToggleChecklistItem={handleToggleMonthlyGoalChecklistItem}
+            onRenameGoal={handleRenameMonthlyGoal}
           />
         </div>
       )}

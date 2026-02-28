@@ -1,7 +1,6 @@
 'use client'
 
 import { useState, useCallback } from 'react'
-import Link from 'next/link'
 import { useGoals, YearlyGoalDialog } from '@/features/goals'
 import { useDevGoals, YearlyGoalDialog as DevYearlyGoalDialog } from '@/features/dev/goals'
 import { LogGoalsSection } from '@/features/logs'
@@ -78,14 +77,9 @@ export function YearEndGoalsStep({ nextYear, mode }: YearEndGoalsStepProps) {
           {error && (
             <p className="text-sm text-destructive" role="alert">{error}</p>
           )}
-          <div className="flex gap-2">
-            <Button variant="outline" asChild>
-              <Link href="/dev/goals">目標ページへ</Link>
-            </Button>
-            <Button onClick={() => setIsDialogOpen(true)}>
-              来年の目標を作成
-            </Button>
-          </div>
+          <Button onClick={() => setIsDialogOpen(true)}>
+            来年の目標を作成
+          </Button>
           <DevYearlyGoalDialog
             open={isDialogOpen}
             onOpenChange={setIsDialogOpen}
@@ -115,14 +109,9 @@ export function YearEndGoalsStep({ nextYear, mode }: YearEndGoalsStepProps) {
         {error && (
           <p className="text-sm text-destructive" role="alert">{error}</p>
         )}
-        <div className="flex gap-2">
-          <Button variant="outline" asChild>
-            <Link href="/goals">目標ページへ</Link>
-          </Button>
-          <Button onClick={() => setIsDialogOpen(true)}>
-            来年の目標を作成
-          </Button>
-        </div>
+        <Button onClick={() => setIsDialogOpen(true)}>
+          来年の目標を作成
+        </Button>
         <YearlyGoalDialog
           open={isDialogOpen}
           onOpenChange={setIsDialogOpen}

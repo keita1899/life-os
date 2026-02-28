@@ -113,6 +113,13 @@ export default function EventsPage() {
     }
   }
 
+  const handleRenameEvent = async (event: Event, title: string) => {
+    await execute(
+      () => updateEvent(event.id, { title }),
+      '予定名の更新に失敗しました',
+    )
+  }
+
   const handleDeleteEvent = async (mode?: 'single' | 'all') => {
     const event = deleteConfirm.deletingItem
     if (!event) return
@@ -184,6 +191,7 @@ export default function EventsPage() {
                   events={group.events}
                   onEdit={handleEditEvent}
                   onDelete={deleteConfirm.handleDeleteClick}
+                  onRename={handleRenameEvent}
                 />
                 {group.key !== 'overdue' && (
                   <InlineCreateButton

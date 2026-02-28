@@ -21,15 +21,17 @@ import {
   BARCELONA_MATCH_TITLE_COLOR,
 } from '@/lib/football'
 import { EventDateTime } from './EventDateTime'
+import { InlineEditableText } from '@/components/ui/inline-editable-text'
 import type { Event } from '../types/event'
 
 interface EventItemProps {
   event: Event
   onEdit?: (event: Event) => void
   onDelete?: (event: Event) => void
+  onRename?: (event: Event, title: string) => Promise<void>
 }
 
-export function EventItem({ event, onEdit, onDelete }: EventItemProps) {
+export function EventItem({ event, onEdit, onDelete, onRename }: EventItemProps) {
   const [isDark, setIsDark] = useState(false)
 
   useEffect(() => {
@@ -91,11 +93,13 @@ export function EventItem({ event, onEdit, onDelete }: EventItemProps) {
         />
       </div>
       <div className="flex-1">
-        <div
-          className="text-sm font-medium text-stone-900 dark:text-stone-100"
-          style={isBarca ? { color: BARCELONA_MATCH_TITLE_COLOR } : undefined}
-        >
-          {event.title}
+        <div style={isBarca ? { color: BARCELONA_MATCH_TITLE_COLOR } : undefined}>
+          <InlineEditableText
+            value={event.title}
+            onSave={(title) => onRename!(event, title)}
+            className="text-sm font-medium text-stone-900 dark:text-stone-100"
+            disabled={!onRename}
+          />
         </div>
         <div
           className={cn(

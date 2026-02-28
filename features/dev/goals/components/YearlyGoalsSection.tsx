@@ -7,6 +7,7 @@ import { EditDeleteDropdownMenu } from '@/components/ui/edit-delete-dropdown-men
 import { EmptyState } from '@/components/ui/empty-state'
 import { Progress } from '@/components/ui/progress'
 import { calculateProgress } from '@/features/goals'
+import { InlineEditableText } from '@/components/ui/inline-editable-text'
 import type { DevYearlyGoal } from '../types/dev-yearly-goal'
 
 interface YearlyGoalsSectionProps {
@@ -19,6 +20,7 @@ interface YearlyGoalsSectionProps {
     itemId: string,
     completed: boolean,
   ) => void
+  onRenameGoal?: (goal: DevYearlyGoal, title: string) => Promise<void>
 }
 
 export const YearlyGoalsSection = ({
@@ -27,6 +29,7 @@ export const YearlyGoalsSection = ({
   onEditClick,
   onDeleteClick,
   onToggleChecklistItem,
+  onRenameGoal,
 }: YearlyGoalsSectionProps) => {
   const [expandedGoals, setExpandedGoals] = useState<Set<number>>(new Set())
 
@@ -75,7 +78,11 @@ export const YearlyGoalsSection = ({
               >
                 <div className="relative z-10 pr-10">
                   <h3 className="mb-4 text-3xl font-bold leading-tight text-stone-900 dark:text-stone-100 md:text-4xl lg:text-5xl">
-                    {goal.title}
+                    <InlineEditableText
+                      value={goal.title}
+                      onSave={(title) => onRenameGoal!(goal, title)}
+                      disabled={!onRenameGoal}
+                    />
                   </h3>
                   {hasChecklist && (
                     <div className="mt-4 space-y-3">

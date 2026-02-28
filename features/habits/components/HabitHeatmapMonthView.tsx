@@ -15,6 +15,7 @@ interface HabitHeatmapMonthViewProps {
   onToggleDate?: (habit: Habit, dateStr: string) => void
   onEdit?: (habit: Habit) => void
   onDelete?: (habit: Habit) => void
+  onRename?: (habit: Habit, name: string) => Promise<void>
 }
 
 export function HabitHeatmapMonthView({
@@ -27,6 +28,7 @@ export function HabitHeatmapMonthView({
   onToggleDate,
   onEdit,
   onDelete,
+  onRename,
 }: HabitHeatmapMonthViewProps) {
   const lastDay = getDate(endOfMonth(new Date(year, month - 1)))
 
@@ -71,6 +73,7 @@ export function HabitHeatmapMonthView({
               onToggleDate={onToggleDate}
               onEdit={onEdit}
               onDelete={onDelete}
+              onRename={onRename}
             />
           ))}
         </tbody>

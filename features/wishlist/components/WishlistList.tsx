@@ -9,6 +9,7 @@ interface WishlistListProps {
   onEdit?: (item: WishlistItemType) => void
   onDelete?: (item: WishlistItemType) => void
   onToggleCompletion?: (item: WishlistItemType) => void
+  onRename?: (item: WishlistItemType, name: string) => Promise<void>
 }
 
 export function WishlistList({
@@ -16,6 +17,7 @@ export function WishlistList({
   onEdit,
   onDelete,
   onToggleCompletion,
+  onRename,
 }: WishlistListProps) {
   if (items.length === 0) {
     return <EmptyState message="欲しいものがありません" />
@@ -30,6 +32,7 @@ export function WishlistList({
           onEdit={onEdit}
           onDelete={onDelete}
           onToggleCompletion={onToggleCompletion}
+          onRename={onRename}
         />
       ))}
     </div>

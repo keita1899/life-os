@@ -1,6 +1,7 @@
 'use client'
 
 import { useMemo, useState } from 'react'
+import { InlineEditableText } from '@/components/ui/inline-editable-text'
 import {
   CheckCircle2,
   Circle,
@@ -46,6 +47,7 @@ interface TaskItemProps {
   onDelete?: (task: Task) => void
   onToggleCompletion?: (task: Task) => void
   onUpdateExecutionDate?: (task: Task, executionDate: string | null) => void
+  onRename?: (task: Task, title: string) => Promise<void>
 }
 
 export function TaskItem({
@@ -56,6 +58,7 @@ export function TaskItem({
   onDelete,
   onToggleCompletion,
   onUpdateExecutionDate,
+  onRename,
 }: TaskItemProps) {
   const { isDevMode } = useAppMode()
   const dateLabel = useMemo(
@@ -140,16 +143,17 @@ export function TaskItem({
               {label}
             </span>
           )}
-          <span
+          <InlineEditableText
+            value={task.title}
+            onSave={(title) => onRename!(task, title)}
             className={cn(
               'text-sm font-medium',
               task.completed
                 ? 'text-stone-500 line-through dark:text-stone-400'
                 : 'text-stone-900 dark:text-stone-100',
             )}
-          >
-            {task.title}
-          </span>
+            disabled={!onRename || task.completed}
+          />
         </div>
         {(task.recurrenceRule || isValidScheduledTime) && (
           <div className="mt-1 flex flex-wrap items-center gap-2 text-xs text-muted-foreground">

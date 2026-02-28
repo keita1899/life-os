@@ -63,6 +63,7 @@ function WeekDateCell({
   const visibleEvents = isExpanded ? dayEvents : dayEvents.slice(0, 3)
   const hasMoreEvents = dayEvents.length > 3
   const holidayName = getHolidayName(date, holidays)
+  const dayOfWeek = date.getDay()
 
   const navigateToDay = () => {
     if (!hasOpenPopover && !hasOpenTaskPopover && !hasOpenSubscriptionPopover) {
@@ -89,10 +90,11 @@ function WeekDateCell({
       onClick={navigateToDay}
       onKeyDown={handleKeyDown}
       className={cn(
-        'block min-h-[400px] bg-stone-50 p-2 dark:bg-stone-950',
-        'hover:bg-stone-100 dark:hover:bg-stone-800',
+        'block min-h-[400px] p-2',
         'transition-colors cursor-pointer',
         'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring',
+        'bg-stone-50 dark:bg-stone-950',
+        'hover:bg-stone-100 dark:hover:bg-stone-800',
         isTodayDate && 'ring-2 ring-blue-500 dark:ring-blue-400',
       )}
     >
@@ -107,7 +109,14 @@ function WeekDateCell({
             {formatDay(date)}
           </span>
         ) : (
-          formatDay(date)
+          <span
+            className={cn(
+              dayOfWeek === 0 && 'text-red-600 dark:text-red-400',
+              dayOfWeek === 6 && 'text-blue-600 dark:text-blue-400',
+            )}
+          >
+            {formatDay(date)}
+          </span>
         )}
         {holidayName && (
           <span className="text-xs text-red-600 dark:text-red-400">
@@ -242,7 +251,14 @@ export function WeekView({
         {weekdaysList.map((day) => (
           <div
             key={day}
-            className="bg-stone-50 px-2 py-2 text-center text-sm font-medium text-stone-700 dark:bg-stone-950 dark:text-stone-300"
+            className={cn(
+              'bg-stone-50 px-2 py-2 text-center text-sm font-medium dark:bg-stone-950',
+              day === '日'
+                ? 'text-red-600 dark:text-red-400'
+                : day === '土'
+                  ? 'text-blue-600 dark:text-blue-400'
+                  : 'text-stone-700 dark:text-stone-300',
+            )}
           >
             {day}
           </div>

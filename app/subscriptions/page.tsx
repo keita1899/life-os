@@ -126,6 +126,13 @@ export default function SubscriptionsPage() {
     }
   }
 
+  const handleRenameSubscription = async (subscription: Subscription, name: string) => {
+    await execute(
+      () => updateSubscription(subscription.id, { name }),
+      'サブスク名の更新に失敗しました',
+    )
+  }
+
   const handleToggleActive = async (subscription: Subscription) => {
     await execute(
       () => toggleSubscriptionActive(subscription.id, !subscription.active),
@@ -202,6 +209,7 @@ export default function SubscriptionsPage() {
                   onEdit={handleEditSubscription}
                   onDelete={deleteConfirm.handleDeleteClick}
                   onToggleActive={handleToggleActive}
+                  onRename={handleRenameSubscription}
                 />
                 {group.key === 'active' && (
                   <InlineCreateButton

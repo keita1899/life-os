@@ -14,6 +14,7 @@ import { EditDeleteDropdownMenu } from '@/components/ui/edit-delete-dropdown-men
 import { cn } from '@/lib/utils'
 import { calculateAgeAtYear } from '../lib/age-calculation'
 import { useUserSettings } from '@/features/settings'
+import { InlineEditableText } from '@/components/ui/inline-editable-text'
 import type { BucketListItem as BucketListItemType } from '../types/bucket-list-item'
 
 interface BucketListItemProps {
@@ -23,6 +24,7 @@ interface BucketListItemProps {
   onToggleCompletion?: (item: BucketListItemType) => void
   onConvertToEvent?: (item: BucketListItemType) => void
   onConvertToTask?: (item: BucketListItemType) => void
+  onRename?: (item: BucketListItemType, title: string) => Promise<void>
 }
 
 export function BucketListItem({
@@ -32,6 +34,7 @@ export function BucketListItem({
   onToggleCompletion,
   onConvertToEvent,
   onConvertToTask,
+  onRename,
 }: BucketListItemProps) {
   const { userSettings } = useUserSettings()
   const birthday = userSettings?.birthday ?? null
@@ -91,16 +94,17 @@ export function BucketListItem({
         )}
       </div>
       <div className="flex-1">
-        <div
+        <InlineEditableText
+          value={item.title}
+          onSave={(title) => onRename!(item, title)}
           className={cn(
             'text-sm font-medium',
             item.completed
               ? 'text-stone-500 line-through dark:text-stone-400'
               : 'text-stone-900 dark:text-stone-100',
           )}
-        >
-          {item.title}
-        </div>
+          disabled={!onRename || item.completed}
+        />
         <div className="mt-2 flex flex-wrap gap-2 text-xs text-muted-foreground">
           {item.category && (
             <span className="rounded-md bg-stone-100 px-2 py-1 dark:bg-stone-800">

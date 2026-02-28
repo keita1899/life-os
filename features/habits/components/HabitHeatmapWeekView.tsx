@@ -8,6 +8,7 @@ import { isHabitDueOnDate, formatHabitScheduledTime } from '../lib'
 import type { Habit } from '../types/habit'
 import { cn } from '@/lib/utils'
 import { EditDeleteDropdownMenu } from '@/components/ui/edit-delete-dropdown-menu'
+import { InlineEditableText } from '@/components/ui/inline-editable-text'
 import { SWR_KEYS } from '@/lib/swr-keys'
 
 export interface HabitHeatmapWeekViewProps {
@@ -19,6 +20,7 @@ export interface HabitHeatmapWeekViewProps {
   onToggleDate?: (habit: Habit, dateStr: string) => void
   onEdit?: (habit: Habit) => void
   onDelete?: (habit: Habit) => void
+  onRename?: (habit: Habit, name: string) => Promise<void>
 }
 
 export function HabitHeatmapWeekView({
@@ -30,6 +32,7 @@ export function HabitHeatmapWeekView({
   onToggleDate,
   onEdit,
   onDelete,
+  onRename,
 }: HabitHeatmapWeekViewProps) {
   const todayStr = format(new Date(), 'yyyy-MM-dd')
 
@@ -81,6 +84,7 @@ export function HabitHeatmapWeekView({
           onToggleDate={onToggleDate}
           onEdit={onEdit}
           onDelete={onDelete}
+          onRename={onRename}
         />
       ))}
     </div>
@@ -96,6 +100,7 @@ interface HabitHeatmapWeekViewRowProps {
   onToggleDate?: (habit: Habit, dateStr: string) => void
   onEdit?: (habit: Habit) => void
   onDelete?: (habit: Habit) => void
+  onRename?: (habit: Habit, name: string) => Promise<void>
 }
 
 function HabitHeatmapWeekViewRow(props: HabitHeatmapWeekViewRowProps) {
@@ -108,6 +113,7 @@ function HabitHeatmapWeekViewRow(props: HabitHeatmapWeekViewRowProps) {
     onToggleDate,
     onEdit,
     onDelete,
+    onRename,
   } = props
   const { mutate } = useSWRConfig()
   const weekStartStr = weekDateStrings[0] ?? ''
@@ -159,7 +165,11 @@ function HabitHeatmapWeekViewRow(props: HabitHeatmapWeekViewRowProps) {
         {formatHabitScheduledTime(habit.scheduledTime) || '−'}
       </div>
       <div className="flex items-center gap-1.5 border-b border-stone-200 px-3 py-3 text-sm font-medium dark:border-stone-800">
-        {habit.name}
+        <InlineEditableText
+          value={habit.name}
+          onSave={(name) => onRename!(habit, name)}
+          disabled={!onRename}
+        />
         {isNewThisMonth && (
           <span className="inline-flex shrink-0 rounded-full bg-amber-200 px-1.5 py-0.5 text-[10px] font-medium leading-none text-amber-800 dark:bg-amber-900 dark:text-amber-200">
             NEW

@@ -12,6 +12,7 @@ interface TaskListProps {
   onDelete?: (task: Task) => void
   onToggleCompletion?: (task: Task) => void
   onUpdateExecutionDate?: (task: Task, executionDate: string | null) => void
+  onRename?: (task: Task, title: string) => Promise<void>
 }
 
 export function TaskList({
@@ -22,6 +23,7 @@ export function TaskList({
   onDelete,
   onToggleCompletion,
   onUpdateExecutionDate,
+  onRename,
 }: TaskListProps) {
   if (tasks.length === 0) {
     return <EmptyState message="タスクがありません" />
@@ -39,6 +41,7 @@ export function TaskList({
           onDelete={onDelete}
           onToggleCompletion={onToggleCompletion}
           onUpdateExecutionDate={onUpdateExecutionDate}
+          onRename={onRename}
         />
       ))}
     </div>
