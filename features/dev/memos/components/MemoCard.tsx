@@ -7,6 +7,7 @@ import { Button } from '@/components/ui/button'
 import { EditDeleteDropdownMenu } from '@/components/ui/edit-delete-dropdown-menu'
 import { Badge } from '@/components/ui/badge'
 import { useCopyToClipboard } from '@/hooks/useCopyToClipboard'
+import { parseUtcTimestamp } from '@/lib/date/formats'
 import { MemoMarkdown } from './MemoMarkdown'
 import type { DevMemo } from '../types/dev-memo'
 
@@ -18,7 +19,7 @@ interface MemoCardProps {
 }
 
 function formatDateTime(dateStr: string): string {
-  return new Date(dateStr).toLocaleString('ja-JP', {
+  return parseUtcTimestamp(dateStr).toLocaleString('ja-JP', {
     year: 'numeric',
     month: 'short',
     day: 'numeric',
