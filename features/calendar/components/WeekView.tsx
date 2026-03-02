@@ -40,6 +40,7 @@ function WeekDateCell({
   onEditTask,
   onDeleteTask,
   onToggleTaskCompletion,
+  compact,
 }: {
   date: Date
   isTodayDate: boolean
@@ -54,6 +55,7 @@ function WeekDateCell({
   onEditTask?: (task: Task) => void
   onDeleteTask?: (task: Task) => void
   onToggleTaskCompletion?: (task: Task) => void
+  compact?: boolean
 }) {
   const router = useRouter()
   const { isDevMode } = useAppMode()
@@ -90,7 +92,8 @@ function WeekDateCell({
       onClick={navigateToDay}
       onKeyDown={handleKeyDown}
       className={cn(
-        'block min-h-[400px] p-2',
+        'block p-2',
+        compact ? 'min-h-[120px]' : 'min-h-[400px]',
         'transition-colors cursor-pointer',
         'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring',
         'bg-stone-50 dark:bg-stone-950',
@@ -196,6 +199,7 @@ interface WeekViewProps {
   subscriptions?: Subscription[]
   weekStartDay?: number
   showWeeklyGoalForm?: boolean
+  compact?: boolean
   holidays?: Map<string, string>
   onEditEvent?: (event: Event) => void
   onDeleteEvent?: (event: Event) => void
@@ -212,6 +216,7 @@ export function WeekView({
   subscriptions = [],
   weekStartDay = 0,
   showWeeklyGoalForm = true,
+  compact = false,
   holidays = new Map(),
   onEditEvent,
   onDeleteEvent,
@@ -289,6 +294,7 @@ export function WeekView({
               onEditTask={onEditTask}
               onDeleteTask={onDeleteTask}
               onToggleTaskCompletion={onToggleTaskCompletion}
+              compact={compact}
             />
           )
         })}

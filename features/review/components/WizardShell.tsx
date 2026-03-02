@@ -16,6 +16,7 @@ interface WizardShellProps {
   onPrev?: () => void
   operationError?: string | null
   variant?: 'morning' | 'evening'
+  wide?: boolean
   children: React.ReactNode
 }
 
@@ -31,6 +32,7 @@ export function WizardShell({
   onPrev,
   operationError,
   variant,
+  wide,
   children,
 }: WizardShellProps) {
   const isMorning = variant === 'morning'
@@ -43,7 +45,8 @@ export function WizardShell({
       aria-label="確認ウィザード"
     >
       <div className={cn(
-        'flex min-h-[500px] max-h-[90vh] w-full max-w-2xl flex-col overflow-hidden rounded-xl border shadow-2xl',
+        'flex min-h-[500px] max-h-[90vh] w-full flex-col overflow-hidden rounded-xl border shadow-2xl',
+        wide ? 'max-w-6xl' : 'max-w-2xl',
         isMorning && 'border-amber-200/60 dark:border-amber-800/40',
         isEvening && 'border-indigo-200/60 dark:border-indigo-800/40',
         !variant && 'border-border/80',
