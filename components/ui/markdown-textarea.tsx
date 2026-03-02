@@ -17,17 +17,17 @@ const MarkdownTextarea = React.forwardRef<
   MarkdownTextareaProps
 >((props, forwardedRef) => {
   const prevNodeRef = useRef<HTMLTextAreaElement | null>(null)
-  const justComposedRef = useRef(false)
+  const hasJustComposedRef = useRef(false)
 
   const handleCompositionEnd = useCallback(() => {
-    justComposedRef.current = true
+    hasJustComposedRef.current = true
   }, [])
 
   const handleKeyDown = useCallback((e: KeyboardEvent) => {
-    if (e.key === 'Enter' && (e.isComposing || justComposedRef.current)) {
+    if (e.key === 'Enter' && (e.isComposing || hasJustComposedRef.current)) {
       e.stopImmediatePropagation()
     }
-    justComposedRef.current = false
+    hasJustComposedRef.current = false
   }, [])
 
   const setRefs = useCallback(
@@ -45,7 +45,7 @@ const MarkdownTextarea = React.forwardRef<
       if (typeof forwardedRef === 'function') {
         forwardedRef(node)
       } else if (forwardedRef) {
-        (forwardedRef as React.MutableRefObject<HTMLTextAreaElement | null>).current = node
+        forwardedRef.current = node
       }
     },
     [forwardedRef, handleCompositionEnd, handleKeyDown],

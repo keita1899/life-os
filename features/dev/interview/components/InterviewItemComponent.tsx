@@ -53,18 +53,22 @@ export function InterviewItemComponent({
     if (!editingField) return
     const trimmed = editValue.trim()
 
-    if (editingField === 'question') {
-      if (trimmed && trimmed !== item.question) {
-        await onUpdate(item.id, { question: trimmed })
+    try {
+      if (editingField === 'question') {
+        if (trimmed && trimmed !== item.question) {
+          await onUpdate(item.id, { question: trimmed })
+        }
+      } else {
+        const newAnswer = trimmed || null
+        if (newAnswer !== item.answer) {
+          await onUpdate(item.id, { answer: newAnswer })
+        }
       }
-    } else {
-      const newAnswer = trimmed || null
-      if (newAnswer !== item.answer) {
-        await onUpdate(item.id, { answer: newAnswer })
-      }
+      setEditingField(null)
+      setEditValue('')
+    } catch {
+      // エラー時は編集状態を維持
     }
-    setEditingField(null)
-    setEditValue('')
   }, [editingField, editValue, item, onUpdate])
 
   const handleQuestionKeyDown = useCallback((e: React.KeyboardEvent) => {

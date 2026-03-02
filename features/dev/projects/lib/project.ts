@@ -40,6 +40,15 @@ function mapDbProjectToProject(dbProject: DbDevProject): DevProject {
   }
 }
 
+function hasLastInsertId(value: unknown): value is { lastInsertId: number } {
+  return (
+    value != null &&
+    typeof value === 'object' &&
+    'lastInsertId' in value &&
+    typeof (value as Record<string, unknown>).lastInsertId === 'number'
+  )
+}
+
 const MAX_UNRELEASED_PROJECTS = 10
 
 async function getUnreleasedProjectCount(): Promise<number> {
@@ -139,14 +148,10 @@ export async function createDevProject(
       )
 
       let insertedId: number | undefined
-      if (
-        insertResult &&
-        typeof insertResult === 'object' &&
-        'lastInsertId' in insertResult
-      ) {
-        insertedId = (insertResult as { lastInsertId: number }).lastInsertId
+      if (hasLastInsertId(insertResult)) {
+        insertedId = insertResult.lastInsertId
       }
-      if (!insertedId) {
+      if (insertedId == null) {
         const fallback = await db.select<{ last_insert_rowid: number }[]>(
           'SELECT last_insert_rowid() as last_insert_rowid',
         )

@@ -13,42 +13,6 @@ export function useFocusTasks<T extends TaskLike>({ allTasks }: UseFocusTasksOpt
   const [focusTaskIds, setFocusTaskIds] = useState<number[]>([])
   const [availableTaskIds, setAvailableTaskIds] = useState<number[]>([])
 
-  const focusTasks = useMemo(() => {
-    const taskMap = new Map(allTasks.map((task) => [task.id, task]))
-    return focusTaskIds
-      .map((id) => taskMap.get(id))
-      .filter((task): task is T => task !== undefined)
-  }, [allTasks, focusTaskIds])
-
-  const availableTasks = useMemo(() => {
-    const focusTaskIdSet = new Set(focusTaskIds)
-    const filtered = allTasks.filter((task) => !focusTaskIdSet.has(task.id))
-    
-    if (availableTaskIds.length === 0) {
-      return filtered
-    }
-    
-    const taskMap = new Map(filtered.map((task) => [task.id, task]))
-    const ordered: T[] = []
-    const unordered: T[] = []
-    
-    availableTaskIds.forEach((id) => {
-      const task = taskMap.get(id)
-      if (task) {
-        ordered.push(task)
-        taskMap.delete(id)
-      }
-    })
-    
-    filtered.forEach((task) => {
-      if (taskMap.has(task.id)) {
-        unordered.push(task)
-      }
-    })
-    
-    return [...ordered, ...unordered]
-  }, [allTasks, focusTaskIds, availableTaskIds])
-
   const [prevAllTasks, setPrevAllTasks] = useState(allTasks)
   const [prevFocusTaskIds, setPrevFocusTaskIds] = useState(focusTaskIds)
   if (allTasks !== prevAllTasks || focusTaskIds !== prevFocusTaskIds) {
@@ -60,7 +24,7 @@ export function useFocusTasks<T extends TaskLike>({ allTasks }: UseFocusTasksOpt
       .filter((task) => !focusTaskIdSet.has(task.id))
       .map((task) => task.id)
 
-    const prevSet = new Set(availableTaskIds)
+    const currentIdSet = new Set(availableTaskIds)
     const newSet = new Set(newAvailableTaskIds)
 
     if (availableTaskIds.length === 0 || !availableTaskIds.every((id) => newSet.has(id))) {
@@ -76,7 +40,7 @@ export function useFocusTasks<T extends TaskLike>({ allTasks }: UseFocusTasksOpt
       })
 
       newAvailableTaskIds.forEach((id) => {
-        if (!prevSet.has(id)) {
+        if (!currentIdSet.has(id)) {
           unordered.push(id)
         }
       })
@@ -84,6 +48,42 @@ export function useFocusTasks<T extends TaskLike>({ allTasks }: UseFocusTasksOpt
       setAvailableTaskIds([...ordered, ...unordered])
     }
   }
+
+  const focusTasks = useMemo(() => {
+    const taskMap = new Map(allTasks.map((task) => [task.id, task]))
+    return focusTaskIds
+      .map((id) => taskMap.get(id))
+      .filter((task): task is T => task !== undefined)
+  }, [allTasks, focusTaskIds])
+
+  const availableTasks = useMemo(() => {
+    const focusTaskIdSet = new Set(focusTaskIds)
+    const filtered = allTasks.filter((task) => !focusTaskIdSet.has(task.id))
+
+    if (availableTaskIds.length === 0) {
+      return filtered
+    }
+
+    const taskMap = new Map(filtered.map((task) => [task.id, task]))
+    const ordered: T[] = []
+    const unordered: T[] = []
+
+    availableTaskIds.forEach((id) => {
+      const task = taskMap.get(id)
+      if (task) {
+        ordered.push(task)
+        taskMap.delete(id)
+      }
+    })
+
+    filtered.forEach((task) => {
+      if (taskMap.has(task.id)) {
+        unordered.push(task)
+      }
+    })
+
+    return [...ordered, ...unordered]
+  }, [allTasks, focusTaskIds, availableTaskIds])
 
   const toggleTask = (taskId: number) => {
     setFocusTaskIds((prev) => {

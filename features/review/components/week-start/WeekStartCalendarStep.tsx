@@ -103,8 +103,11 @@ export function WeekStartCalendarStep({
       if (deleteMode === 'all') {
         await deleteEvent(deletingEvent.id)
       } else {
-        const excluded = [...(deletingEvent.recurrenceExcludedDates ?? []), deletingEvent.startDatetime?.split('T')[0]]
-          .filter((d): d is string => Boolean(d))
+        const currentDate = deletingEvent.startDatetime?.split('T')[0]
+        const excluded = [
+          ...(deletingEvent.recurrenceExcludedDates ?? []),
+          ...(currentDate ? [currentDate] : []),
+        ]
         await updateEvent(deletingEvent.id, { recurrenceExcludedDates: excluded })
       }
     } finally {

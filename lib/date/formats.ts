@@ -113,5 +113,9 @@ export function isValidTimeFormat(time: string | null): boolean {
  * "YYYY-MM-DD HH:MM:SS" 形式を想定。
  */
 export function parseUtcTimestamp(utcStr: string): Date {
-  return new Date(utcStr.replace(' ', 'T') + 'Z')
+  const result = new Date(utcStr.replace(' ', 'T') + 'Z')
+  if (isNaN(result.getTime())) {
+    throw new Error(`Invalid UTC timestamp: "${utcStr}"`)
+  }
+  return result
 }

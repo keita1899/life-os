@@ -150,10 +150,13 @@ export default function InterviewPage() {
   }
 
   const handleInlineUpdate = useCallback(async (id: number, input: UpdateInterviewItemInput) => {
-    await execute(
+    const result = await execute(
       () => updateItem(id, input),
       'Q&Aの更新に失敗しました',
     )
+    if (result === undefined) {
+      throw new Error('Q&Aの更新に失敗しました')
+    }
   }, [execute, updateItem])
 
   const handleDelete = async () => {

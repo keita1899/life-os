@@ -26,12 +26,12 @@ interface DbInterviewItemWithCategory extends DbInterviewItem {
 
 function mapToItem(db: DbInterviewItemWithCategory): InterviewItem {
   const category: InterviewCategory | null =
-    db.category_id_from_join && db.category_name
+    db.category_id_from_join && db.category_name && db.category_created_at && db.category_updated_at
       ? {
           id: db.category_id_from_join,
           name: db.category_name,
-          createdAt: db.category_created_at!,
-          updatedAt: db.category_updated_at!,
+          createdAt: db.category_created_at,
+          updatedAt: db.category_updated_at,
         }
       : null
 

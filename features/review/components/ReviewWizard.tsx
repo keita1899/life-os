@@ -372,7 +372,7 @@ export function ReviewWizard({ type, onComplete }: ReviewWizardProps) {
       onPrev={wizard.goPrev}
       operationError={operationError}
       variant={wizardVariant}
-      wide={type === 'week_start' && wizard.currentStep === 1}
+      isWide={type === 'week_start' && wizard.currentStep === 1}
     >
       {content}
     </WizardShell>

@@ -34,9 +34,10 @@ export function InterviewCategorySidebar({
       () => createCategory({ name }),
       'カテゴリーの作成に失敗しました',
     )
-    if (newCategory !== undefined) {
-      onSelectCategory(newCategory.id)
+    if (newCategory === undefined) {
+      throw new Error('カテゴリーの作成に失敗しました')
     }
+    onSelectCategory(newCategory.id)
   }
 
   const handleUpdate = async (id: number, name: string) => {
