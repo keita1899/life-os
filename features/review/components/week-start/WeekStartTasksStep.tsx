@@ -1,7 +1,7 @@
 'use client'
 
 import { useMemo } from 'react'
-import { useTasks, getTasksForWeek, TaskList } from '@/features/tasks'
+import { useTasks, getTasksForWeek, expandRecurringTasks, TaskList } from '@/features/tasks'
 import { useDevCalendarTasks, getDevTasksForWeek } from '@/features/dev/tasks'
 import { useDevProjects } from '@/features/dev/projects'
 import { EmptyState } from '@/components/ui/empty-state'
@@ -10,6 +10,7 @@ import { ReviewTaskDialogs } from '../ReviewTaskDialogs'
 import { devTaskToTask } from '../../lib/devTaskToTask'
 import type { Task } from '@/features/tasks'
 import type { ReviewMode } from '../../types/review-completion'
+import { parseISO } from 'date-fns'
 
 interface WeekStartTasksStepProps {
   weekStartDateStr: string
@@ -34,10 +35,14 @@ export function WeekStartTasksStep({
     return map
   }, [projects])
 
-  const lifeWeekTasks = useMemo(
-    () => getTasksForWeek(lifeTasks, weekStartDateStr, weekEndDateStr),
-    [lifeTasks, weekStartDateStr, weekEndDateStr],
-  )
+  const lifeWeekTasks = useMemo(() => {
+    const expanded = expandRecurringTasks(
+      lifeTasks,
+      parseISO(weekStartDateStr),
+      parseISO(weekEndDateStr),
+    )
+    return getTasksForWeek(expanded, weekStartDateStr, weekEndDateStr)
+  }, [lifeTasks, weekStartDateStr, weekEndDateStr])
 
   const devWeekTasks = useMemo(() => {
     const devForWeek = getDevTasksForWeek(

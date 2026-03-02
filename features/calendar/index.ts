@@ -1,4 +1,5 @@
 export { CalendarView } from './components/CalendarView'
+export { WeekView } from './components/WeekView'
 export { DevCalendarView } from './components/DevCalendarView'
 export { useCalendarView } from './hooks/useCalendarView'
 export {

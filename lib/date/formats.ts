@@ -107,3 +107,15 @@ export function isValidTimeFormat(time: string | null): boolean {
   if (!time || time.trim() === '') return false
   return /^\d{2}:\d{2}$/.test(time.trim())
 }
+
+/**
+ * SQLite の CURRENT_TIMESTAMP (UTC) をローカル Date に変換する。
+ * "YYYY-MM-DD HH:MM:SS" 形式を想定。
+ */
+export function parseUtcTimestamp(utcStr: string): Date {
+  const result = new Date(utcStr.replace(' ', 'T') + 'Z')
+  if (isNaN(result.getTime())) {
+    throw new Error(`Invalid UTC timestamp: "${utcStr}"`)
+  }
+  return result
+}

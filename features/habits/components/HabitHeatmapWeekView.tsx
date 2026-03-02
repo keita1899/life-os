@@ -2,6 +2,7 @@
 
 import { format } from 'date-fns'
 import { ja } from 'date-fns/locale/ja'
+import { parseUtcTimestamp } from '@/lib/date/formats'
 import { useSWRConfig } from 'swr'
 import { useHabitCompletionsByDateRange } from '../hooks/useHabitCompletions'
 import { isHabitDueOnDate, formatHabitScheduledTime } from '../lib'
@@ -126,8 +127,9 @@ function HabitHeatmapWeekViewRow(props: HabitHeatmapWeekViewRowProps) {
 
   const completedDateSet = new Set(completions.map((c) => c.completedDate))
   const todayStr = format(new Date(), 'yyyy-MM-dd')
-  const habitCreatedDate = habit.createdAt.slice(0, 10)
-  const habitCreatedYearMonth = habit.createdAt.slice(0, 7)
+  const createdLocal = parseUtcTimestamp(habit.createdAt)
+  const habitCreatedDate = format(createdLocal, 'yyyy-MM-dd')
+  const habitCreatedYearMonth = format(createdLocal, 'yyyy-MM')
   const isNewThisMonth = weekDateStrings.some(
     (ds) => ds.slice(0, 7) === habitCreatedYearMonth,
   )

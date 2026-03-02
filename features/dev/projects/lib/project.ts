@@ -1,5 +1,4 @@
 import { getDatabase, handleDbError } from '@/lib/db'
-import { createDevTask } from '@/features/dev/tasks'
 import type {
   DevProject,
   CreateDevProjectInput,
@@ -39,6 +38,15 @@ function mapDbProjectToProject(dbProject: DbDevProject): DevProject {
     createdAt: dbProject.created_at,
     updatedAt: dbProject.updated_at,
   }
+}
+
+function hasLastInsertId(value: unknown): value is { lastInsertId: number } {
+  return (
+    value != null &&
+    typeof value === 'object' &&
+    'lastInsertId' in value &&
+    typeof (value as Record<string, unknown>).lastInsertId === 'number'
+  )
 }
 
 const MAX_UNRELEASED_PROJECTS = 10
@@ -133,26 +141,31 @@ export async function createDevProject(
     await db.execute('BEGIN TRANSACTION')
 
     try {
-      await db.execute(
+      const insertResult = await db.execute(
         `INSERT INTO dev_projects (name, start_date, end_date, status, production_url, github_url)
          VALUES (?, ?, ?, ?, ?, ?)`,
         [input.name, input.startDate || null, input.endDate || null, status, input.productionUrl || null, input.githubUrl || null],
       )
 
-      const idResult = await db.select<{ id: number }[]>(
-        'SELECT last_insert_rowid() as id',
-      )
-      const insertedId = idResult[0]?.id
-      if (!insertedId) {
+      let insertedId: number | undefined
+      if (hasLastInsertId(insertResult)) {
+        insertedId = insertResult.lastInsertId
+      }
+      if (insertedId == null) {
+        const fallback = await db.select<{ last_insert_rowid: number }[]>(
+          'SELECT last_insert_rowid() as last_insert_rowid',
+        )
+        insertedId = fallback[0]?.last_insert_rowid
+      }
+      if (insertedId == null) {
         throw new Error('Failed to create dev project: could not retrieve inserted id')
       }
 
-      for (const title of DEFAULT_PROJECT_TASKS) {
-        await createDevTask({
-          title,
-          projectId: insertedId,
-          type: 'inbox',
-        })
+      for (let i = 0; i < DEFAULT_PROJECT_TASKS.length; i++) {
+        await db.execute(
+          `INSERT INTO dev_tasks (title, project_id, type, "order") VALUES (?, ?, 'inbox', ?)`,
+          [DEFAULT_PROJECT_TASKS[i], insertedId, i],
+        )
       }
 
       await db.execute('COMMIT')

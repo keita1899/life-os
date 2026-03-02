@@ -262,6 +262,21 @@ const SCHEMA = {
     'created_at',
     'updated_at',
   ],
+  interview_categories: [
+    'id',
+    'name',
+    'created_at',
+    'updated_at',
+  ],
+  interview_items: [
+    'id',
+    'question',
+    'answer',
+    'category_id',
+    'order',
+    'created_at',
+    'updated_at',
+  ],
 } as const
 
 // ────────────────────────────────────────────

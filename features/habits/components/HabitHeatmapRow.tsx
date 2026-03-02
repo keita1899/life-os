@@ -1,6 +1,7 @@
 'use client'
 
-import { getDate, endOfMonth } from 'date-fns'
+import { getDate, endOfMonth, format } from 'date-fns'
+import { parseUtcTimestamp } from '@/lib/date/formats'
 import { useHabitCompletions } from '../hooks/useHabitCompletions'
 import { isHabitDueOnDate, formatHabitScheduledTime } from '../lib'
 import type { Habit } from '../types/habit'
@@ -40,9 +41,10 @@ export function HabitHeatmapRow({
   )
   const completedDateSet = new Set(completions.map((c) => c.completedDate))
   const lastDay = getDate(endOfMonth(new Date(year, month - 1)))
-  const habitCreatedDate = habit.createdAt.slice(0, 10)
+  const createdLocal = parseUtcTimestamp(habit.createdAt)
+  const habitCreatedDate = format(createdLocal, 'yyyy-MM-dd')
   const displayedYearMonth = `${year}-${String(month).padStart(2, '0')}`
-  const isNewThisMonth = habit.createdAt.slice(0, 7) === displayedYearMonth
+  const isNewThisMonth = format(createdLocal, 'yyyy-MM') === displayedYearMonth
 
   if (error) {
     return (

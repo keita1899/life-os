@@ -2,6 +2,7 @@
 
 import { useMemo } from 'react'
 import { format } from 'date-fns'
+import { parseUtcTimestamp } from '@/lib/date/formats'
 import { useSWRConfig } from 'swr'
 import { Button } from '@/components/ui/button'
 import { CreateButton } from '@/components/ui/create-button'
@@ -80,7 +81,7 @@ export default function HabitsPage() {
   const hasCreatedThisMonth = useMemo(() => {
     const currentYearMonth = format(new Date(), 'yyyy-MM')
     return habits.some(
-      (h) => h.createdAt.slice(0, 7) === currentYearMonth,
+      (h) => format(parseUtcTimestamp(h.createdAt), 'yyyy-MM') === currentYearMonth,
     )
   }, [habits])
 
