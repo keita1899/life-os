@@ -1,7 +1,7 @@
 'use client'
 
 import { useMemo } from 'react'
-import { useTasks, getOverdueTasksInWeek, TaskList } from '@/features/tasks'
+import { useTasks, getOverdueTasksInWeek, expandRecurringTasks, TaskList } from '@/features/tasks'
 import { useDevCalendarTasks, getOverdueDevTasksInWeek } from '@/features/dev/tasks'
 import { useDevProjects } from '@/features/dev/projects'
 import { EmptyState } from '@/components/ui/empty-state'
@@ -10,6 +10,7 @@ import { ReviewTaskDialogs } from '../ReviewTaskDialogs'
 import { devTaskToTask } from '../../lib/devTaskToTask'
 import type { Task } from '@/features/tasks'
 import type { ReviewMode } from '../../types/review-completion'
+import { parseISO } from 'date-fns'
 
 interface WeekEndOverdueStepProps {
   weekStartDateStr: string
@@ -34,10 +35,14 @@ export function WeekEndOverdueStep({
     return map
   }, [projects])
 
-  const lifeOverdue = useMemo(
-    () => getOverdueTasksInWeek(lifeTasks, weekStartDateStr, beforeDateStr),
-    [lifeTasks, weekStartDateStr, beforeDateStr],
-  )
+  const lifeOverdue = useMemo(() => {
+    const expanded = expandRecurringTasks(
+      lifeTasks,
+      parseISO(weekStartDateStr),
+      parseISO(beforeDateStr),
+    )
+    return getOverdueTasksInWeek(expanded, weekStartDateStr, beforeDateStr)
+  }, [lifeTasks, weekStartDateStr, beforeDateStr])
   const devOverdue = useMemo(
     () =>
       getOverdueDevTasksInWeek(devTasks, weekStartDateStr, beforeDateStr),
