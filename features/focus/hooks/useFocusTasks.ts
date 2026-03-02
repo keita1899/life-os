@@ -1,4 +1,4 @@
-import { useMemo, useState, useEffect } from 'react'
+import { useMemo, useState } from 'react'
 import { arrayMove } from '@dnd-kit/sortable'
 
 interface TaskLike {
@@ -49,38 +49,41 @@ export function useFocusTasks<T extends TaskLike>({ allTasks }: UseFocusTasksOpt
     return [...ordered, ...unordered]
   }, [allTasks, focusTaskIds, availableTaskIds])
 
-  useEffect(() => {
+  const [prevAllTasks, setPrevAllTasks] = useState(allTasks)
+  const [prevFocusTaskIds, setPrevFocusTaskIds] = useState(focusTaskIds)
+  if (allTasks !== prevAllTasks || focusTaskIds !== prevFocusTaskIds) {
+    setPrevAllTasks(allTasks)
+    setPrevFocusTaskIds(focusTaskIds)
+
     const focusTaskIdSet = new Set(focusTaskIds)
     const newAvailableTaskIds = allTasks
       .filter((task) => !focusTaskIdSet.has(task.id))
       .map((task) => task.id)
-    
-    setAvailableTaskIds((prev) => {
-      const prevSet = new Set(prev)
-      const newSet = new Set(newAvailableTaskIds)
-      
-      if (prev.length === 0 || !prev.every((id) => newSet.has(id))) {
-        return newAvailableTaskIds
-      }
-      
+
+    const prevSet = new Set(availableTaskIds)
+    const newSet = new Set(newAvailableTaskIds)
+
+    if (availableTaskIds.length === 0 || !availableTaskIds.every((id) => newSet.has(id))) {
+      setAvailableTaskIds(newAvailableTaskIds)
+    } else {
       const ordered: number[] = []
       const unordered: number[] = []
-      
-      prev.forEach((id) => {
+
+      availableTaskIds.forEach((id) => {
         if (newSet.has(id)) {
           ordered.push(id)
         }
       })
-      
+
       newAvailableTaskIds.forEach((id) => {
         if (!prevSet.has(id)) {
           unordered.push(id)
         }
       })
-      
-      return [...ordered, ...unordered]
-    })
-  }, [allTasks, focusTaskIds])
+
+      setAvailableTaskIds([...ordered, ...unordered])
+    }
+  }
 
   const toggleTask = (taskId: number) => {
     setFocusTaskIds((prev) => {

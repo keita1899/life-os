@@ -9,8 +9,7 @@ const MARKDOWN_COMMANDS = [
   { name: 'italic' as const, shortcut: 'mod+i' },
 ]
 
-interface MarkdownTextareaProps
-  extends React.ComponentProps<typeof AutoResizeTextarea> {}
+type MarkdownTextareaProps = React.ComponentProps<typeof AutoResizeTextarea>
 
 const MarkdownTextarea = React.forwardRef<
   HTMLTextAreaElement,

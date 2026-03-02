@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useMemo, useEffect } from 'react'
+import { useState, useMemo } from 'react'
 import { useCreateShortcut } from '@/hooks/useCreateShortcut'
 import { useDialogState } from '@/hooks/useDialogState'
 import { useDeleteConfirm } from '@/hooks/useDeleteConfirm'
@@ -93,10 +93,6 @@ export default function KakeiboPage() {
     onCreate: handleCreateClick,
     enabled: !isDialogOpen,
   })
-
-  useEffect(() => {
-    setFilterCategoryId('all')
-  }, [filterType])
 
   const filteredTransactions = useMemo(() => {
     let filtered = transactions
