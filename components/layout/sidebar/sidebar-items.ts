@@ -13,6 +13,7 @@ import {
   Repeat,
   Settings,
   StickyNote,
+  MessagesSquare,
 } from 'lucide-react'
 
 export interface SidebarItemData {
@@ -191,5 +192,14 @@ export const DEV_TASK_ITEMS: SidebarItemData[] = [
       'group-hover:bg-amber-100 group-hover:text-amber-600 dark:group-hover:bg-amber-900/30 dark:group-hover:text-amber-400',
     activeIcon:
       'bg-amber-100 text-amber-600 dark:bg-amber-900/30 dark:text-amber-400',
+  },
+  {
+    href: '/dev/interview',
+    icon: MessagesSquare,
+    title: '面接Q&A',
+    hoverIcon:
+      'group-hover:bg-teal-100 group-hover:text-teal-600 dark:group-hover:bg-teal-900/30 dark:group-hover:text-teal-400',
+    activeIcon:
+      'bg-teal-100 text-teal-600 dark:bg-teal-900/30 dark:text-teal-400',
   },
 ]
