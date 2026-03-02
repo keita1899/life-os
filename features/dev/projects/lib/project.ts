@@ -157,7 +157,7 @@ export async function createDevProject(
         )
         insertedId = fallback[0]?.last_insert_rowid
       }
-      if (!insertedId) {
+      if (insertedId == null) {
         throw new Error('Failed to create dev project: could not retrieve inserted id')
       }
 

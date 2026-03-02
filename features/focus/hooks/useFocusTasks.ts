@@ -11,7 +11,9 @@ interface UseFocusTasksOptions<T extends TaskLike> {
 
 export function useFocusTasks<T extends TaskLike>({ allTasks }: UseFocusTasksOptions<T>) {
   const [focusTaskIds, setFocusTaskIds] = useState<number[]>([])
-  const [availableTaskIds, setAvailableTaskIds] = useState<number[]>([])
+  const [availableTaskIds, setAvailableTaskIds] = useState<number[]>(() =>
+    allTasks.map((task) => task.id),
+  )
 
   const [prevAllTasks, setPrevAllTasks] = useState(allTasks)
   const [prevFocusTaskIds, setPrevFocusTaskIds] = useState(focusTaskIds)

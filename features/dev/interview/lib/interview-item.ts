@@ -7,6 +7,15 @@ import type {
 } from '../types/interview-item'
 import type { InterviewCategory } from '../types/interview-category'
 
+function hasLastInsertId(value: unknown): value is { lastInsertId: number } {
+  return (
+    value != null &&
+    typeof value === 'object' &&
+    'lastInsertId' in value &&
+    typeof (value as Record<string, unknown>).lastInsertId === 'number'
+  )
+}
+
 interface DbInterviewItem {
   id: number
   question: string
@@ -107,20 +116,16 @@ export async function createInterviewItem(
     )
 
     let insertedId: number | undefined
-    if (
-      insertResult &&
-      typeof insertResult === 'object' &&
-      'lastInsertId' in insertResult
-    ) {
-      insertedId = (insertResult as { lastInsertId: number }).lastInsertId
+    if (hasLastInsertId(insertResult)) {
+      insertedId = insertResult.lastInsertId
     }
-    if (!insertedId) {
+    if (insertedId == null) {
       const fallback = await db.select<{ last_insert_rowid: number }[]>(
         'SELECT last_insert_rowid() as last_insert_rowid',
       )
       insertedId = fallback[0]?.last_insert_rowid
     }
-    if (!insertedId) {
+    if (insertedId == null) {
       throw new Error('Failed to get inserted interview item id')
     }
 

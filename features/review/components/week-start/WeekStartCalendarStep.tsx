@@ -13,11 +13,11 @@ import {
   expandRecurringEvents,
 } from '@/features/events'
 import { useDevCalendarTasks, getDevTasksForWeek } from '@/features/dev/tasks'
-import { useReviewTaskCrud } from '../../hooks/useReviewTaskCrud'
-import { ReviewTaskDialogs } from '../ReviewTaskDialogs'
-import { devTaskToTask } from '../../lib/devTaskToTask'
+import { useReviewTaskCrud } from '@/features/review/hooks/useReviewTaskCrud'
+import { ReviewTaskDialogs } from '@/features/review/components/ReviewTaskDialogs'
+import { devTaskToTask } from '@/features/review/lib/devTaskToTask'
 import type { Event, CreateEventInput } from '@/features/events'
-import type { ReviewMode } from '../../types/review-completion'
+import type { ReviewMode } from '@/features/review/types/review-completion'
 import { format } from 'date-fns'
 
 interface WeekStartCalendarStepProps {
@@ -35,7 +35,7 @@ export function WeekStartCalendarStep({
   const { tasks: devTasks } = useDevCalendarTasks()
   const { events: allEvents, updateEvent, deleteEvent } = useEvents()
 
-  const crud = useReviewTaskCrud(mode)
+  const taskCrudHandlers = useReviewTaskCrud(mode)
 
   const weekDays = useMemo(
     () => getWeekDays(weekStartDate, weekStartDay),
@@ -110,8 +110,9 @@ export function WeekStartCalendarStep({
         ]
         await updateEvent(deletingEvent.id, { recurrenceExcludedDates: excluded })
       }
-    } finally {
       setDeletingEvent(null)
+    } catch {
+      // エラー時はダイアログを維持してリトライ可能にする
     }
   }, [deletingEvent, updateEvent, deleteEvent])
 
@@ -128,9 +129,9 @@ export function WeekStartCalendarStep({
         holidays={holidays}
         onEditEvent={mode === 'life' ? handleEditEvent : undefined}
         onDeleteEvent={mode === 'life' ? handleDeleteEvent : undefined}
-        onEditTask={crud.handleEdit}
-        onDeleteTask={crud.handleDelete}
-        onToggleTaskCompletion={crud.handleToggleCompletion}
+        onEditTask={taskCrudHandlers.handleEdit}
+        onDeleteTask={taskCrudHandlers.handleDelete}
+        onToggleTaskCompletion={taskCrudHandlers.handleToggleCompletion}
       />
 
       {mode === 'life' && (
@@ -153,12 +154,12 @@ export function WeekStartCalendarStep({
       )}
 
       <ReviewTaskDialogs
-        editingTask={crud.editingTask}
-        deletingTask={crud.deletingTask}
-        onEditClose={() => crud.setEditingTask(null)}
-        onEditSubmit={crud.handleEditSubmit}
-        onRecurringDeleteConfirm={crud.handleRecurringDeleteConfirm}
-        onDeleteCancel={() => crud.setDeletingTask(null)}
+        editingTask={taskCrudHandlers.editingTask}
+        deletingTask={taskCrudHandlers.deletingTask}
+        onEditClose={() => taskCrudHandlers.setEditingTask(null)}
+        onEditSubmit={taskCrudHandlers.handleEditSubmit}
+        onRecurringDeleteConfirm={taskCrudHandlers.handleRecurringDeleteConfirm}
+        onDeleteCancel={() => taskCrudHandlers.setDeletingTask(null)}
       />
     </div>
   )

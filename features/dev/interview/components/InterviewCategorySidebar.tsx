@@ -4,10 +4,9 @@ import { Loading } from '@/components/ui/loading'
 import { ErrorMessage } from '@/components/ui/error-message'
 import { useAsyncOperation } from '@/hooks/useAsyncOperation'
 import { useEditState } from '@/hooks/useEditState'
-import { useInterviewCategories } from '../hooks/useInterviewCategories'
-import type { InterviewCategory } from '../types/interview-category'
-import { InterviewCategoryList } from './InterviewCategoryList'
-import { InlineCategoryCreateItem } from '@/components/ui/inline-category-create-item'
+import { useInterviewCategories } from '@/features/dev/interview/hooks/useInterviewCategories'
+import type { InterviewCategory } from '@/features/dev/interview/types/interview-category'
+import { InterviewCategoryList } from '@/features/dev/interview/components/InterviewCategoryList'
 
 interface InterviewCategorySidebarProps {
   selectedCategoryId: number | 'all' | 'none' | null
@@ -29,7 +28,7 @@ export function InterviewCategorySidebar({
   const editState = useEditState()
   const { operationError, execute } = useAsyncOperation()
 
-  const handleCreate = async (name: string) => {
+  const handleCreate = async (name: string): Promise<void> => {
     const newCategory = await execute(
       () => createCategory({ name }),
       'カテゴリーの作成に失敗しました',
@@ -40,7 +39,7 @@ export function InterviewCategorySidebar({
     onSelectCategory(newCategory.id)
   }
 
-  const handleUpdate = async (id: number, name: string) => {
+  const handleUpdate = async (id: number, name: string): Promise<void> => {
     const result = await execute(
       () => updateCategory(id, { name }),
       'カテゴリーの更新に失敗しました',
@@ -50,7 +49,7 @@ export function InterviewCategorySidebar({
     }
   }
 
-  const handleDelete = async (category: InterviewCategory) => {
+  const handleDelete = async (category: InterviewCategory): Promise<void> => {
     const result = await execute(
       () => deleteCategory(category.id),
       'カテゴリーの削除に失敗しました',

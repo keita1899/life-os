@@ -41,7 +41,7 @@ export default function InterviewPage() {
   const deleteConfirm = useDeleteConfirm<InterviewItem>()
   const [dialogDefaultCategoryId, setDialogDefaultCategoryId] = useState<number | null>(null)
 
-  const handleCreateWithCategory = useCallback((categoryId: number | null) => {
+  const handleCreateWithCategory = useCallback((categoryId: number | null): void => {
     setDialogDefaultCategoryId(categoryId)
     dialog.handleCreateClick()
   }, [dialog])
@@ -53,7 +53,7 @@ export default function InterviewPage() {
     return selectedCategoryId
   }, [selectedCategoryId])
 
-  const handleTopLevelCreate = useCallback(() => {
+  const handleTopLevelCreate = useCallback((): void => {
     handleCreateWithCategory(topLevelDefaultCategoryId)
   }, [handleCreateWithCategory, topLevelDefaultCategoryId])
 
@@ -128,7 +128,7 @@ export default function InterviewPage() {
 
   const { openKeys, setOpenKeys } = useAutoExpandAccordion(accordionKeys)
 
-  const handleCreate = async (input: CreateInterviewItemInput) => {
+  const handleCreate = async (input: CreateInterviewItemInput): Promise<void> => {
     const result = await execute(
       () => createItem(input),
       'Q&Aの作成に失敗しました',
@@ -138,7 +138,7 @@ export default function InterviewPage() {
     }
   }
 
-  const handleUpdate = async (input: CreateInterviewItemInput) => {
+  const handleUpdate = async (input: CreateInterviewItemInput): Promise<void> => {
     if (!dialog.editingItem) return
     const result = await execute(
       () => updateItem(dialog.editingItem!.id, input),
@@ -149,7 +149,7 @@ export default function InterviewPage() {
     }
   }
 
-  const handleInlineUpdate = useCallback(async (id: number, input: UpdateInterviewItemInput) => {
+  const handleInlineUpdate = useCallback(async (id: number, input: UpdateInterviewItemInput): Promise<void> => {
     const result = await execute(
       () => updateItem(id, input),
       'Q&Aの更新に失敗しました',
@@ -159,7 +159,7 @@ export default function InterviewPage() {
     }
   }, [execute, updateItem])
 
-  const handleDelete = async () => {
+  const handleDelete = async (): Promise<void> => {
     const item = deleteConfirm.deletingItem
     if (!item) return
     const result = await execute(
@@ -243,7 +243,7 @@ export default function InterviewPage() {
                               ),
                               content: (
                                 <InterviewList
-                                  items={groupedItems.uncategorized.sort((a, b) => a.order - b.order)}
+                                  items={[...groupedItems.uncategorized].sort((a, b) => a.order - b.order)}
                                   onEdit={dialog.handleEdit}
                                   onDelete={deleteConfirm.handleDeleteClick}
                                   onUpdate={handleInlineUpdate}
@@ -258,7 +258,7 @@ export default function InterviewPage() {
                   )}
                   {groupedItems.categorized.length === 0 && groupedItems.uncategorized.length > 0 && (
                     <InterviewList
-                      items={groupedItems.uncategorized.sort((a, b) => a.order - b.order)}
+                      items={[...groupedItems.uncategorized].sort((a, b) => a.order - b.order)}
                       onEdit={dialog.handleEdit}
                       onDelete={deleteConfirm.handleDeleteClick}
                       onUpdate={handleInlineUpdate}
@@ -277,7 +277,7 @@ export default function InterviewPage() {
               )
             ) : (
               <InterviewList
-                items={filteredItems.sort((a, b) => a.order - b.order)}
+                items={[...filteredItems].sort((a, b) => a.order - b.order)}
                 onEdit={dialog.handleEdit}
                 onDelete={deleteConfirm.handleDeleteClick}
                 onUpdate={handleInlineUpdate}
