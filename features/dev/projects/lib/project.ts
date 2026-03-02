@@ -1,5 +1,4 @@
 import { getDatabase, handleDbError } from '@/lib/db'
-import { createDevTask } from '@/features/dev/tasks'
 import type {
   DevProject,
   CreateDevProjectInput,
@@ -133,26 +132,35 @@ export async function createDevProject(
     await db.execute('BEGIN TRANSACTION')
 
     try {
-      await db.execute(
+      const insertResult = await db.execute(
         `INSERT INTO dev_projects (name, start_date, end_date, status, production_url, github_url)
          VALUES (?, ?, ?, ?, ?, ?)`,
         [input.name, input.startDate || null, input.endDate || null, status, input.productionUrl || null, input.githubUrl || null],
       )
 
-      const idResult = await db.select<{ id: number }[]>(
-        'SELECT last_insert_rowid() as id',
-      )
-      const insertedId = idResult[0]?.id
+      let insertedId: number | undefined
+      if (
+        insertResult &&
+        typeof insertResult === 'object' &&
+        'lastInsertId' in insertResult
+      ) {
+        insertedId = (insertResult as { lastInsertId: number }).lastInsertId
+      }
+      if (!insertedId) {
+        const fallback = await db.select<{ last_insert_rowid: number }[]>(
+          'SELECT last_insert_rowid() as last_insert_rowid',
+        )
+        insertedId = fallback[0]?.last_insert_rowid
+      }
       if (!insertedId) {
         throw new Error('Failed to create dev project: could not retrieve inserted id')
       }
 
-      for (const title of DEFAULT_PROJECT_TASKS) {
-        await createDevTask({
-          title,
-          projectId: insertedId,
-          type: 'inbox',
-        })
+      for (let i = 0; i < DEFAULT_PROJECT_TASKS.length; i++) {
+        await db.execute(
+          `INSERT INTO dev_tasks (title, project_id, type, "order") VALUES (?, ?, 'inbox', ?)`,
+          [DEFAULT_PROJECT_TASKS[i], insertedId, i],
+        )
       }
 
       await db.execute('COMMIT')
