@@ -1,14 +1,15 @@
 'use client'
 
 import type { ReactElement } from 'react'
-import { useState, useEffect, useCallback, useRef } from 'react'
-import { Button } from '@/components/ui/button'
+import { useState, useEffect, useRef } from 'react'
 import { MarkdownTextarea } from '@/components/ui/markdown-textarea'
 import { RequirementsMarkdown } from './RequirementsMarkdown'
 import { cn } from '@/lib/utils'
-import { FileText, Eye, SplitSquareVertical, Save } from 'lucide-react'
+import { FileText, Eye, SplitSquareVertical, Loader2 } from 'lucide-react'
 
 export type RequirementsViewMode = 'form' | 'preview' | 'split'
+
+const AUTO_SAVE_DELAY_MS = 800
 
 interface RequirementsEditorProps {
   initialContent: string
@@ -22,24 +23,39 @@ export function RequirementsEditor({
   const [content, setContent] = useState(initialContent)
   const [viewMode, setViewMode] = useState<RequirementsViewMode>('split')
   const [isSaving, setIsSaving] = useState(false)
-  const lastSavedContentRef = useRef(initialContent)
+  const [savedMessage, setSavedMessage] = useState(false)
+  const lastSavedRef = useRef(initialContent)
+  const onSaveRef = useRef(onSave)
+
+  onSaveRef.current = onSave
 
   useEffect(() => {
-    if (content === lastSavedContentRef.current) {
-      setContent(initialContent)
-      lastSavedContentRef.current = initialContent
-    }
-  }, [initialContent, content])
+    lastSavedRef.current = initialContent
+    setContent(initialContent)
+  }, [initialContent])
 
-  const handleSave = useCallback(async () => {
-    setIsSaving(true)
-    try {
-      await onSave(content)
-      lastSavedContentRef.current = content
-    } finally {
-      setIsSaving(false)
-    }
-  }, [content, onSave])
+  useEffect(() => {
+    if (content === lastSavedRef.current) return
+
+    const timeoutId = setTimeout(async () => {
+      setIsSaving(true)
+      try {
+        await onSaveRef.current(content)
+        lastSavedRef.current = content
+        setSavedMessage(true)
+      } finally {
+        setIsSaving(false)
+      }
+    }, AUTO_SAVE_DELAY_MS)
+
+    return () => clearTimeout(timeoutId)
+  }, [content])
+
+  useEffect(() => {
+    if (!savedMessage) return
+    const id = setTimeout(() => setSavedMessage(false), 2000)
+    return () => clearTimeout(id)
+  }, [savedMessage])
 
   return (
     <div className="space-y-4">
@@ -85,15 +101,17 @@ export function RequirementsEditor({
             <SplitSquareVertical className="h-4 w-4" />
           </button>
         </div>
-        <Button
-          type="button"
-          onClick={handleSave}
-          disabled={isSaving}
-          className="h-10 gap-2"
-        >
-          <Save className="h-4 w-4" />
-          保存
-        </Button>
+        <div className="flex items-center gap-1.5 text-sm text-muted-foreground">
+          {isSaving && (
+            <>
+              <Loader2 className="h-3.5 w-3.5 animate-spin" />
+              保存中...
+            </>
+          )}
+          {savedMessage && !isSaving && (
+            <span>保存しました</span>
+          )}
+        </div>
       </div>
 
       <div
