@@ -457,26 +457,29 @@ export const UserSettingsForm = ({
             各曜日にテーマを設定すると、カレンダーの曜日ヘッダーに表示されます
           </p>
           <div className="grid grid-cols-7 gap-2">
-            {WEEKDAY_LABELS.map((label, index) => (
-              <FormField
-                key={index}
-                control={form.control}
-                name={`weekdayTheme${index}` as keyof UserSettingsFormValues}
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel className="text-center block text-xs">{label}</FormLabel>
-                    <FormControl>
-                      <Input
-                        placeholder=""
-                        {...field}
-                        value={(field.value as string) || ''}
-                        className="text-center text-sm"
-                      />
-                    </FormControl>
-                  </FormItem>
-                )}
-              />
-            ))}
+            {Array.from({ length: 7 }, (_, i) => {
+              const dayIndex = form.watch('weekStartDay') === '0' ? i : ((i + 1) % 7)
+              return (
+                <FormField
+                  key={dayIndex}
+                  control={form.control}
+                  name={`weekdayTheme${dayIndex}` as keyof UserSettingsFormValues}
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel className="text-center block text-xs">{WEEKDAY_LABELS[dayIndex]}</FormLabel>
+                      <FormControl>
+                        <Input
+                          placeholder=""
+                          {...field}
+                          value={(field.value as string) || ''}
+                          className="text-center text-sm"
+                        />
+                      </FormControl>
+                    </FormItem>
+                  )}
+                />
+              )
+            })}
           </div>
         </section>
 
