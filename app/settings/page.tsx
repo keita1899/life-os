@@ -66,6 +66,7 @@ export default function SettingsPage() {
               onSubmit={handleSubmit}
               initialData={userSettings}
               isSubmitting={isSaving}
+              mode="life"
             />
           </CardContent>
         </Card>

@@ -66,6 +66,7 @@ export default function DevSettingsPage() {
               onSubmit={handleSubmit}
               initialData={userSettings}
               isSubmitting={isSaving}
+              mode="dev"
             />
           </CardContent>
         </Card>

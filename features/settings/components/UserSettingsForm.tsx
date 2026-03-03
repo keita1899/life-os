@@ -25,8 +25,10 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select'
-import type { UserSettings, UpdateUserSettingsInput } from '../types/user-settings'
+import type { UserSettings, UpdateUserSettingsInput, WeekdayThemes } from '../types/user-settings'
 import { formatDateForInput } from '@/lib/date/formats'
+
+const WEEKDAY_LABELS = ['日', '月', '火', '水', '木', '金', '土'] as const
 
 const userSettingsFormSchema = z.object({
   birthday: z.string().optional(),
@@ -42,6 +44,13 @@ const userSettingsFormSchema = z.object({
   notifyTasks: z.boolean(),
   notifyHabits: z.boolean(),
   notifyMinutesBefore: z.enum(['0', '5', '10', '15', '30']),
+  weekdayTheme0: z.string().optional(),
+  weekdayTheme1: z.string().optional(),
+  weekdayTheme2: z.string().optional(),
+  weekdayTheme3: z.string().optional(),
+  weekdayTheme4: z.string().optional(),
+  weekdayTheme5: z.string().optional(),
+  weekdayTheme6: z.string().optional(),
 })
 
 type UserSettingsFormValues = z.infer<typeof userSettingsFormSchema>
@@ -50,15 +59,23 @@ interface UserSettingsFormProps {
   onSubmit: (data: UpdateUserSettingsInput) => Promise<void>
   initialData?: UserSettings
   isSubmitting?: boolean
+  mode?: 'life' | 'dev'
+}
+
+function getThemesForMode(initialData: UserSettings | undefined, mode: 'life' | 'dev'): WeekdayThemes {
+  if (!initialData) return {}
+  return mode === 'life' ? initialData.lifeWeekdayThemes : initialData.devWeekdayThemes
 }
 
 export const UserSettingsForm = ({
   onSubmit,
   initialData,
   isSubmitting = false,
+  mode = 'life',
 }: UserSettingsFormProps) => {
   const formValues = useMemo<UserSettingsFormValues>(() => {
     const weekStartDayValue = initialData?.weekStartDay ?? 1
+    const themes = getThemesForMode(initialData, mode)
     return {
       birthday: initialData?.birthday ? formatDateForInput(initialData.birthday) : '',
       defaultCalendarView: initialData?.defaultCalendarView || 'week',
@@ -73,8 +90,15 @@ export const UserSettingsForm = ({
       notifyTasks: initialData?.notifyTasks ?? true,
       notifyHabits: initialData?.notifyHabits ?? true,
       notifyMinutesBefore: String(initialData?.notifyMinutesBefore ?? 5) as '0' | '5' | '10' | '15' | '30',
+      weekdayTheme0: themes['0'] || '',
+      weekdayTheme1: themes['1'] || '',
+      weekdayTheme2: themes['2'] || '',
+      weekdayTheme3: themes['3'] || '',
+      weekdayTheme4: themes['4'] || '',
+      weekdayTheme5: themes['5'] || '',
+      weekdayTheme6: themes['6'] || '',
     }
-  }, [initialData])
+  }, [initialData, mode])
 
   const form = useForm<UserSettingsFormValues>({
     resolver: zodResolver(userSettingsFormSchema),
@@ -82,6 +106,18 @@ export const UserSettingsForm = ({
   })
 
   const handleSubmit = useCallback(async (data: UserSettingsFormValues) => {
+    const themes: WeekdayThemes = {}
+    for (let i = 0; i < 7; i++) {
+      const value = data[`weekdayTheme${i}` as keyof UserSettingsFormValues] as string
+      if (value) {
+        themes[String(i)] = value
+      }
+    }
+
+    const themeUpdate = mode === 'life'
+      ? { lifeWeekdayThemes: themes }
+      : { devWeekdayThemes: themes }
+
     await onSubmit({
       birthday: data.birthday || null,
       defaultCalendarView: data.defaultCalendarView,
@@ -96,8 +132,9 @@ export const UserSettingsForm = ({
       notifyTasks: data.notifyTasks,
       notifyHabits: data.notifyHabits,
       notifyMinutesBefore: Number(data.notifyMinutesBefore),
+      ...themeUpdate,
     })
-  }, [onSubmit])
+  }, [onSubmit, mode])
 
   useFormSubmitShortcut({
     form,
@@ -410,6 +447,37 @@ export const UserSettingsForm = ({
               </FormItem>
             )}
           />
+        </section>
+
+        <section className="space-y-4">
+          <h2 className="text-sm font-semibold uppercase tracking-wide text-muted-foreground">
+            曜日テーマ
+          </h2>
+          <p className="text-[0.8rem] text-muted-foreground">
+            各曜日にテーマを設定すると、カレンダーの曜日ヘッダーに表示されます
+          </p>
+          <div className="grid grid-cols-7 gap-2">
+            {WEEKDAY_LABELS.map((label, index) => (
+              <FormField
+                key={index}
+                control={form.control}
+                name={`weekdayTheme${index}` as keyof UserSettingsFormValues}
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel className="text-center block text-xs">{label}</FormLabel>
+                    <FormControl>
+                      <Input
+                        placeholder=""
+                        {...field}
+                        value={(field.value as string) || ''}
+                        className="text-center text-sm"
+                      />
+                    </FormControl>
+                  </FormItem>
+                )}
+              />
+            ))}
+          </div>
         </section>
 
         <div className="flex justify-end pt-2">

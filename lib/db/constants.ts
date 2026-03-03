@@ -81,6 +81,8 @@ const SCHEMA = {
     'notify_tasks',
     'notify_habits',
     'notify_minutes_before',
+    'life_weekday_themes',
+    'dev_weekday_themes',
     'created_at',
     'updated_at',
   ],

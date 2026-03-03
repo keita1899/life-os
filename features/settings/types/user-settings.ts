@@ -1,5 +1,9 @@
 export type CalendarViewMode = 'month' | 'week'
 
+export interface WeekdayThemes {
+  [dayIndex: string]: string // "0"=日, "1"=月, ..., "6"=土
+}
+
 export interface UserSettings {
   id: number
   birthday: string | null
@@ -16,6 +20,8 @@ export interface UserSettings {
   notifyTasks: boolean
   notifyHabits: boolean
   notifyMinutesBefore: number
+  lifeWeekdayThemes: WeekdayThemes
+  devWeekdayThemes: WeekdayThemes
   createdAt: string
   updatedAt: string
 }
@@ -35,4 +41,6 @@ export interface UpdateUserSettingsInput {
   notifyTasks?: boolean
   notifyHabits?: boolean
   notifyMinutesBefore?: number
+  lifeWeekdayThemes?: WeekdayThemes
+  devWeekdayThemes?: WeekdayThemes
 }

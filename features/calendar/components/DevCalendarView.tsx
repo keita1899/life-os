@@ -12,6 +12,7 @@ import {
 import { useDevCalendarTasks } from '@/features/dev/tasks'
 import { useDevProjects } from '@/features/dev/projects'
 import { useCalendarView } from '../hooks/useCalendarView'
+import { useUserSettings } from '@/features/settings'
 import { useAsyncOperation } from '@/hooks/useAsyncOperation'
 import { useDialogState } from '@/hooks/useDialogState'
 import { useDeleteConfirm } from '@/hooks/useDeleteConfirm'
@@ -62,6 +63,7 @@ export function DevCalendarView({ initialDate }: DevCalendarViewProps) {
     isLoading: isLoadingProjects,
     error: projectsError,
   } = useDevProjects()
+  const { userSettings } = useUserSettings()
 
   const projectNameById = useMemo(() => {
     const map = new Map<number, string>()
@@ -238,6 +240,7 @@ export function DevCalendarView({ initialDate }: DevCalendarViewProps) {
             events={[]}
             tasks={calendarTasks}
             weekStartDay={weekStartDay}
+            weekdayThemes={userSettings?.devWeekdayThemes}
             holidays={holidays}
             onEditTask={handleEditTask}
             onDeleteTask={taskDeleteConfirm.handleDeleteClick}
@@ -250,6 +253,7 @@ export function DevCalendarView({ initialDate }: DevCalendarViewProps) {
             events={[]}
             tasks={calendarTasks}
             weekStartDay={weekStartDay}
+            weekdayThemes={userSettings?.devWeekdayThemes}
             showWeeklyGoalForm={false}
             holidays={holidays}
             onEditTask={handleEditTask}

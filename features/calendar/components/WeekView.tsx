@@ -23,6 +23,7 @@ import type { WeeklyGoal } from '@/features/goals'
 import type { Event } from '@/features/events'
 import type { Task } from '@/features/tasks'
 import type { Subscription } from '@/features/subscriptions'
+import type { WeekdayThemes } from '@/features/settings'
 import { getTasksForDate } from '@/features/tasks'
 import { getSubscriptionsForDate } from '@/features/subscriptions'
 
@@ -198,6 +199,7 @@ interface WeekViewProps {
   tasks?: Task[]
   subscriptions?: Subscription[]
   weekStartDay?: number
+  weekdayThemes?: WeekdayThemes
   showWeeklyGoalForm?: boolean
   compact?: boolean
   holidays?: Map<string, string>
@@ -215,6 +217,7 @@ export function WeekView({
   tasks = [],
   subscriptions = [],
   weekStartDay = 0,
+  weekdayThemes,
   showWeeklyGoalForm = true,
   compact = false,
   holidays = new Map(),
@@ -253,21 +256,30 @@ export function WeekView({
         />
       )}
       <div className="grid grid-cols-7 gap-px border border-stone-200 bg-stone-200 dark:border-stone-800 dark:bg-stone-800">
-        {weekdaysList.map((day) => (
-          <div
-            key={day}
-            className={cn(
-              'bg-stone-50 px-2 py-2 text-center text-sm font-medium dark:bg-stone-950',
-              day === '日'
-                ? 'text-red-600 dark:text-red-400'
-                : day === '土'
-                  ? 'text-blue-600 dark:text-blue-400'
-                  : 'text-stone-700 dark:text-stone-300',
-            )}
-          >
-            {day}
-          </div>
-        ))}
+        {weekdaysList.map((day, index) => {
+          const dayIndex = weekStartDay === 0 ? index : ((index + 1) % 7)
+          const theme = weekdayThemes?.[String(dayIndex)]
+          return (
+            <div
+              key={day}
+              className={cn(
+                'bg-stone-50 px-2 py-2 text-center text-sm font-medium dark:bg-stone-950',
+                day === '日'
+                  ? 'text-red-600 dark:text-red-400'
+                  : day === '土'
+                    ? 'text-blue-600 dark:text-blue-400'
+                    : 'text-stone-700 dark:text-stone-300',
+              )}
+            >
+              {day}
+              {theme && (
+                <div className="text-[10px] font-normal text-muted-foreground truncate">
+                  {theme}
+                </div>
+              )}
+            </div>
+          )
+        })}
       </div>
       <div className="grid grid-cols-7 gap-px border-x border-b border-stone-200 bg-stone-200 dark:border-stone-800 dark:bg-stone-800">
         {weekDays.map((date) => {

@@ -3,6 +3,7 @@ import { buildUpdateParams, type FieldMapping } from '@/lib/db/build-update-para
 import type {
   UserSettings,
   UpdateUserSettingsInput,
+  WeekdayThemes,
 } from '../types/user-settings'
 
 interface DbUserSettings {
@@ -21,8 +22,19 @@ interface DbUserSettings {
   notify_tasks: number
   notify_habits: number
   notify_minutes_before: number
+  life_weekday_themes: string
+  dev_weekday_themes: string
   created_at: string
   updated_at: string
+}
+
+function parseWeekdayThemes(json: string | null | undefined): WeekdayThemes {
+  if (!json) return {}
+  try {
+    return JSON.parse(json) as WeekdayThemes
+  } catch {
+    return {}
+  }
 }
 
 function mapDbUserSettingsToUserSettings(
@@ -56,6 +68,8 @@ function mapDbUserSettingsToUserSettings(
     notifyTasks: dbSettings.notify_tasks === 1,
     notifyHabits: dbSettings.notify_habits === 1,
     notifyMinutesBefore: dbSettings.notify_minutes_before,
+    lifeWeekdayThemes: parseWeekdayThemes(dbSettings.life_weekday_themes),
+    devWeekdayThemes: parseWeekdayThemes(dbSettings.dev_weekday_themes),
     createdAt: dbSettings.created_at,
     updatedAt: dbSettings.updated_at,
   }
@@ -108,6 +122,8 @@ const USER_SETTINGS_UPDATE_MAPPING: FieldMapping<UpdateUserSettingsInput> = [
   { key: 'notifyTasks', column: 'notify_tasks', transform: (v) => (v ? 1 : 0) },
   { key: 'notifyHabits', column: 'notify_habits', transform: (v) => (v ? 1 : 0) },
   { key: 'notifyMinutesBefore', column: 'notify_minutes_before' },
+  { key: 'lifeWeekdayThemes', column: 'life_weekday_themes', transform: (v) => JSON.stringify(v ?? {}) },
+  { key: 'devWeekdayThemes', column: 'dev_weekday_themes', transform: (v) => JSON.stringify(v ?? {}) },
 ]
 
 export async function updateUserSettings(

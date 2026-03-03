@@ -330,6 +330,7 @@ export function CalendarView({ initialDate }: CalendarViewProps) {
             tasks={expandedTasks}
             subscriptions={subscriptions}
             weekStartDay={weekStartDay}
+            weekdayThemes={userSettings?.lifeWeekdayThemes}
             holidays={holidays}
             onEditEvent={eventDialog.handleEdit}
             onDeleteEvent={eventDeleteConfirm.handleDeleteClick}
@@ -345,6 +346,7 @@ export function CalendarView({ initialDate }: CalendarViewProps) {
             tasks={expandedTasks}
             subscriptions={subscriptions}
             weekStartDay={weekStartDay}
+            weekdayThemes={userSettings?.lifeWeekdayThemes}
             holidays={holidays}
             onEditEvent={eventDialog.handleEdit}
             onDeleteEvent={eventDeleteConfirm.handleDeleteClick}
