@@ -26,6 +26,8 @@ export const SWR_KEYS = {
   subscriptions: 'subscriptions',
   vision: 'vision',
   visionCategories: 'vision-categories',
+  rules: 'rules',
+  ruleCategories: 'rule-categories',
   userSettings: 'user-settings',
   reviewCompletion: (completedDate: string, type: string, mode: string) =>
     ['review-completion', completedDate, type, mode] as const,

@@ -10,6 +10,7 @@ import { migration008 } from './008_notification_settings'
 import { migration009 } from './009_dev_project_urls'
 import { migration010 } from './010_dev_memo_title'
 import { migration011 } from './011_interview_qa'
+import { migration012 } from './012_my_rules'
 
 export const allMigrations: Migration[] = [
   migration001,
@@ -23,4 +24,5 @@ export const allMigrations: Migration[] = [
   migration009,
   migration010,
   migration011,
+  migration012,
 ]

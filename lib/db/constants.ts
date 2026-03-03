@@ -277,6 +277,20 @@ const SCHEMA = {
     'created_at',
     'updated_at',
   ],
+  rule_categories: [
+    'id',
+    'name',
+    'created_at',
+    'updated_at',
+  ],
+  rule_items: [
+    'id',
+    'title',
+    'category_id',
+    'order',
+    'created_at',
+    'updated_at',
+  ],
 } as const
 
 // ────────────────────────────────────────────

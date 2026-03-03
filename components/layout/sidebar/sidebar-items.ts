@@ -9,6 +9,7 @@ import {
   CreditCard,
   FolderKanban,
   Eye,
+  ScrollText,
   Wallet,
   Repeat,
   Settings,
@@ -133,6 +134,15 @@ export const LIST_ITEMS: SidebarItemData[] = [
       'group-hover:bg-indigo-100 group-hover:text-indigo-600 dark:group-hover:bg-indigo-900/30 dark:group-hover:text-indigo-400',
     activeIcon:
       'bg-indigo-100 text-indigo-600 dark:bg-indigo-900/30 dark:text-indigo-400',
+  },
+  {
+    href: '/rules',
+    icon: ScrollText,
+    title: 'マイルール',
+    hoverIcon:
+      'group-hover:bg-cyan-100 group-hover:text-cyan-600 dark:group-hover:bg-cyan-900/30 dark:group-hover:text-cyan-400',
+    activeIcon:
+      'bg-cyan-100 text-cyan-600 dark:bg-cyan-900/30 dark:text-cyan-400',
   },
 ]
 
