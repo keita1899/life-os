@@ -291,6 +291,12 @@ const SCHEMA = {
     'created_at',
     'updated_at',
   ],
+  dev_project_db_designs: [
+    'id',
+    'project_id',
+    'content',
+    'updated_at',
+  ],
 } as const
 
 // ────────────────────────────────────────────

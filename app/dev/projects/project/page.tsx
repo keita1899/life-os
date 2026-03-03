@@ -53,6 +53,7 @@ import {
   CheckSquare,
   StickyNote,
   FileText,
+  Database,
   ChevronDown,
   Check,
   X,
@@ -74,6 +75,11 @@ import {
   useProjectRequirements,
   DEFAULT_REQUIREMENTS_TEMPLATE,
 } from '@/features/dev/requirements'
+import {
+  useProjectDbDesign,
+  DEFAULT_DB_DESIGN_DATA,
+  serializeDesignData,
+} from '@/features/dev/db-designs'
 
 const RequirementsEditor = dynamic(
   () =>
@@ -81,6 +87,14 @@ const RequirementsEditor = dynamic(
       default: m.RequirementsEditor,
     })),
   { loading: () => <Loading /> },
+)
+
+const DbDesignEditor = dynamic(
+  () =>
+    import('@/features/dev/db-designs').then((m) => ({
+      default: m.DbDesignEditor,
+    })),
+  { loading: () => <Loading />, ssr: false },
 )
 
 const statusLabels: Record<ProjectStatus, string> = {
@@ -147,7 +161,7 @@ function DevProjectPageContent(): ReactElement | null {
   const memoDialog = useDialogState<DevMemo>()
   useCreateShortcut({
     onCreate: activeTab === 'memos' ? memoDialog.handleCreateClick : taskDialog.handleCreateClick,
-    enabled: shouldFetch && !taskDialog.isDialogOpen && !memoDialog.isDialogOpen && activeTab !== 'requirements',
+    enabled: shouldFetch && !taskDialog.isDialogOpen && !memoDialog.isDialogOpen && activeTab !== 'requirements' && activeTab !== 'db-design',
   })
   const deleteConfirm = useDeleteConfirm<Task>()
   const [isDeletingCompletedDialogOpen, setIsDeletingCompletedDialogOpen] =
@@ -211,6 +225,13 @@ function DevProjectPageContent(): ReactElement | null {
     isLoading: isRequirementsLoading,
     upsertRequirements,
   } = useProjectRequirements(
+    Number.isFinite(projectId) ? projectId : null,
+  )
+  const {
+    dbDesign,
+    isLoading: isDbDesignLoading,
+    upsertDbDesign,
+  } = useProjectDbDesign(
     Number.isFinite(projectId) ? projectId : null,
   )
 
@@ -447,6 +468,13 @@ function DevProjectPageContent(): ReactElement | null {
     await executeTaskOperation(
       () => upsertRequirements(content),
       '要件定義の保存に失敗しました',
+    )
+  }
+
+  const handleSaveDbDesign = async (content: string): Promise<void> => {
+    await executeTaskOperation(
+      () => upsertDbDesign(content),
+      'DB設計の保存に失敗しました',
     )
   }
 
@@ -712,7 +740,7 @@ function DevProjectPageContent(): ReactElement | null {
             </section>
 
             <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-8">
-              <TabsList className="grid w-full max-w-[360px] grid-cols-3">
+              <TabsList className="grid w-full max-w-[480px] grid-cols-4">
                 <TabsTrigger value="tasks" className="flex items-center gap-2">
                   <CheckSquare className="h-4 w-4" />
                   タスク
@@ -727,6 +755,13 @@ function DevProjectPageContent(): ReactElement | null {
                 >
                   <FileText className="h-4 w-4" />
                   要件定義
+                </TabsTrigger>
+                <TabsTrigger
+                  value="db-design"
+                  className="flex items-center gap-2"
+                >
+                  <Database className="h-4 w-4" />
+                  DB設計
                 </TabsTrigger>
               </TabsList>
 
@@ -841,6 +876,19 @@ function DevProjectPageContent(): ReactElement | null {
                       requirements?.content ?? DEFAULT_REQUIREMENTS_TEMPLATE
                     }
                     onSave={handleSaveRequirements}
+                  />
+                )}
+              </TabsContent>
+
+              <TabsContent value="db-design" className="mt-6 space-y-4">
+                {isDbDesignLoading ? (
+                  <Loading />
+                ) : (
+                  <DbDesignEditor
+                    initialContent={
+                      dbDesign?.content ?? serializeDesignData(DEFAULT_DB_DESIGN_DATA)
+                    }
+                    onSave={handleSaveDbDesign}
                   />
                 )}
               </TabsContent>

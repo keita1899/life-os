@@ -59,6 +59,8 @@ export const SWR_KEYS = {
   devMemo: (id: number) => `dev-memo-${id}` as const,
   devProjectRequirements: (projectId: number) =>
     `dev-project-requirements-${projectId}` as const,
+  devProjectDbDesign: (projectId: number) =>
+    `dev-project-db-design-${projectId}` as const,
 
   // ── Interview ──
   interviewItems: 'interview-items',
