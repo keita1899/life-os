@@ -34,7 +34,7 @@ export function TransactionItem({
 
   return (
     <div className="group flex items-start gap-3 rounded-lg border border-stone-200/60 bg-stone-900/10 p-4 dark:border-stone-700/40 dark:bg-stone-900/20">
-      <div className="flex-1">
+      <div className="min-w-0 flex-1">
         <div className="flex items-center gap-2">
           <div className="text-sm font-medium text-stone-900 dark:text-stone-100">
             {transaction.name}
@@ -64,9 +64,6 @@ export function TransactionItem({
         </div>
         <div className="mt-2 flex flex-wrap items-center gap-x-4 gap-y-1 text-xs text-muted-foreground">
           <span>{formattedDate}</span>
-          <span className={cn('font-semibold', amountColor)}>
-            {transaction.amount.toLocaleString()}円
-          </span>
           {categoryName ? (
             <span className="rounded-md bg-stone-100 px-2 py-1 dark:bg-stone-800">
               {categoryName}
@@ -78,7 +75,15 @@ export function TransactionItem({
           )}
         </div>
       </div>
-      <div className="mt-0.5 flex min-w-[40px] items-center justify-end">
+      <div className="flex shrink-0 items-start gap-1">
+        <div
+          className={cn(
+            'pt-0.5 text-sm font-semibold tabular-nums',
+            amountColor,
+          )}
+        >
+          {transaction.amount.toLocaleString()}円
+        </div>
         <EditDeleteDropdownMenu
           onEdit={onEdit ? () => onEdit(transaction) : undefined}
           onDelete={onDelete ? () => onDelete(transaction) : undefined}

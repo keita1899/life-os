@@ -1,6 +1,5 @@
 import { formatDateISO, getTodayDateString } from '@/lib/date/formats'
 import {
-  startOfWeek,
   startOfMonth,
   endOfMonth,
   startOfYear,
@@ -8,7 +7,7 @@ import {
   format,
 } from 'date-fns'
 
-export type PeriodType = 'today' | 'thisWeek' | 'thisMonth' | 'lastMonth' | 'thisYear' | 'custom'
+export type PeriodType = 'thisMonth' | 'lastMonth' | 'thisYear' | 'custom'
 
 export interface PeriodRange {
   startDate: string
@@ -21,25 +20,6 @@ export function getPeriodRange(periodType: PeriodType, year?: number, month?: nu
   today.setHours(0, 0, 0, 0)
 
   switch (periodType) {
-    case 'today': {
-      const todayStr = getTodayDateString()
-      return {
-        startDate: todayStr,
-        endDate: todayStr,
-        label: '今日',
-      }
-    }
-
-    case 'thisWeek': {
-      const weekStart = startOfWeek(today, { weekStartsOn: 1 })
-      weekStart.setHours(0, 0, 0, 0)
-      return {
-        startDate: formatDateISO(weekStart),
-        endDate: getTodayDateString(),
-        label: '今週',
-      }
-    }
-
     case 'thisMonth': {
       const monthStart = startOfMonth(today)
       return {

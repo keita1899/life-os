@@ -43,7 +43,7 @@ const transactionFormSchema = z.object({
       },
       '金額は0より大きい数値で入力してください',
     ),
-  categoryId: z.string().optional(),
+  categoryId: z.string().min(1, 'カテゴリーは必須です'),
   isFixed: z.boolean().optional(),
 })
 
@@ -275,7 +275,7 @@ export const TransactionForm = ({
               )
               return (
                 <FormItem>
-                  <FormLabel>カテゴリー（任意）</FormLabel>
+                  <FormLabel>カテゴリー</FormLabel>
                   <Popover
                     open={categoryComboboxOpen}
                     onOpenChange={setCategoryComboboxOpen}
@@ -289,7 +289,7 @@ export const TransactionForm = ({
                           aria-expanded={categoryComboboxOpen}
                           className="h-10 w-full justify-between font-normal"
                         >
-                          {displayValue ?? 'カテゴリーを選択（オプション）'}
+                          {displayValue ?? 'カテゴリーを選択'}
                           <ChevronDown className="h-4 w-4 shrink-0 opacity-50" />
                         </Button>
                       </PopoverTrigger>
@@ -318,15 +318,6 @@ export const TransactionForm = ({
                           >
                             <Plus className="mr-2 h-4 w-4" />
                             カテゴリー「{categorySearchQuery.trim()}」を作成
-                          </button>
-                        )}
-                        {categorySearchQuery.trim() === '' && (
-                          <button
-                            type="button"
-                            className="w-full rounded-sm px-2 py-1.5 text-left text-sm hover:bg-accent hover:text-accent-foreground"
-                            onClick={() => handleCategoryChange('none')}
-                          >
-                            未分類
                           </button>
                         )}
                         {filteredCategories.map((category) => (

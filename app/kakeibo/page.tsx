@@ -11,9 +11,11 @@ import {
   TransactionList,
   PeriodSummary,
   PeriodSelector,
+  BalanceCard,
   TransactionTypeFilter,
   CategoryFilter,
   InitialBalanceDialog,
+  ExpensePieChart,
   useTransactions,
   useTransactionsByMonth,
   useTransactionsByDateRange,
@@ -160,10 +162,6 @@ export default function KakeiboPage() {
 
   const balanceLabel = useMemo(() => {
     switch (periodType) {
-      case 'today':
-        return { start: '開始時残高', end: '終了時残高' }
-      case 'thisWeek':
-        return { start: '週初残高', end: '週末残高' }
       case 'thisMonth':
       case 'lastMonth':
       case 'custom':
@@ -278,11 +276,26 @@ export default function KakeiboPage() {
           fixedExpense={periodSummary.fixedExpense}
           variableExpense={periodSummary.variableExpense}
           totalExpense={periodSummary.totalExpense}
-          beginningBalance={periodSummary.beginningBalance}
-          endingBalance={periodSummary.endingBalance}
-          balanceLabelStart={balanceLabel.start}
-          balanceLabelEnd={balanceLabel.end}
         />
+
+        {/* 残高推移 + 支出内訳 */}
+        <div className="mb-6 grid grid-cols-1 gap-4 md:grid-cols-2">
+          <BalanceCard
+            beginningBalance={periodSummary.beginningBalance}
+            endingBalance={periodSummary.endingBalance}
+            balanceLabelStart={balanceLabel.start}
+            balanceLabelEnd={balanceLabel.end}
+          />
+          <div className="rounded-lg border border-stone-200 p-4 dark:border-stone-800">
+            <h2 className="mb-2 text-sm font-semibold text-muted-foreground">
+              支出内訳
+            </h2>
+            <ExpensePieChart
+              transactions={transactions}
+              expenseCategories={expenseCategories.categories}
+            />
+          </div>
+        </div>
 
         <div className="mb-4 flex items-center justify-between">
           <div className="text-sm text-muted-foreground">

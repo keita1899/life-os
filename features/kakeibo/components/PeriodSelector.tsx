@@ -36,22 +36,6 @@ export function PeriodSelector({
       <div className="mb-3 flex flex-wrap gap-2">
         <Button
           type="button"
-          variant={periodType === 'today' ? 'default' : 'outline'}
-          size="sm"
-          onClick={() => onPeriodTypeChange('today')}
-        >
-          今日
-        </Button>
-        <Button
-          type="button"
-          variant={periodType === 'thisWeek' ? 'default' : 'outline'}
-          size="sm"
-          onClick={() => onPeriodTypeChange('thisWeek')}
-        >
-          今週
-        </Button>
-        <Button
-          type="button"
           variant={periodType === 'thisMonth' ? 'default' : 'outline'}
           size="sm"
           onClick={() => onPeriodTypeChange('thisMonth')}

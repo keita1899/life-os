@@ -4,9 +4,11 @@ export { TransactionItem } from './components/TransactionItem'
 export { TransactionList } from './components/TransactionList'
 export { PeriodSelector } from './components/PeriodSelector'
 export { PeriodSummary } from './components/PeriodSummary'
+export { BalanceCard } from './components/BalanceCard'
 export { TransactionTypeFilter } from './components/TransactionTypeFilter'
 export { CategoryFilter } from './components/CategoryFilter'
 export { InitialBalanceDialog } from './components/InitialBalanceDialog'
+export { ExpensePieChart } from './components/ExpensePieChart'
 export {
   useTransactions,
   useTransactionsByMonth,
