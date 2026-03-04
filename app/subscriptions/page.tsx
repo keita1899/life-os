@@ -34,6 +34,7 @@ export default function SubscriptionsPage() {
     updateSubscription,
     deleteSubscription,
     toggleSubscriptionActive,
+    reorderSubscriptions,
   } = useSubscriptions()
   const {
     isDialogOpen,
@@ -210,6 +211,7 @@ export default function SubscriptionsPage() {
                   onDelete={deleteConfirm.handleDeleteClick}
                   onToggleActive={handleToggleActive}
                   onRename={handleRenameSubscription}
+                  onReorder={reorderSubscriptions}
                 />
                 {group.key === 'active' && (
                   <InlineCreateButton

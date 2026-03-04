@@ -14,6 +14,7 @@ import { migration012 } from './012_my_rules'
 import { migration013 } from './013_dev_project_db_designs'
 import { migration014 } from './014_weekday_themes'
 import { migration015 } from './015_category_sort_order'
+import { migration016 } from './016_subscription_order'
 
 export const allMigrations: Migration[] = [
   migration001,
@@ -31,4 +32,5 @@ export const allMigrations: Migration[] = [
   migration013,
   migration014,
   migration015,
+  migration016,
 ]

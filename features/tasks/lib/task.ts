@@ -289,3 +289,20 @@ export async function updateOverdueTasksToToday(): Promise<number> {
     handleDbError(err, 'update overdue tasks to today')
   }
 }
+
+export async function reorderTasks(
+  updates: { id: number; order: number }[],
+): Promise<void> {
+  const db = await getDatabase()
+
+  try {
+    for (const { id, order } of updates) {
+      await db.execute(
+        'UPDATE tasks SET "order" = ? WHERE id = ?',
+        [order, id],
+      )
+    }
+  } catch (err) {
+    handleDbError(err, 'reorder tasks')
+  }
+}

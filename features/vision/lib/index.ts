@@ -10,4 +10,5 @@ export {
   createVisionItem,
   updateVisionItem,
   deleteVisionItem,
+  reorderVisionItems,
 } from './vision-item'

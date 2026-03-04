@@ -7,6 +7,7 @@ export {
   deleteCompletedDevTasks,
   updateOverdueDevTasksToToday,
   updateAllOverdueDevTasksToToday,
+  reorderDevTasks,
 } from './task'
 export {
   getTodayDevTasks,

@@ -9,6 +9,7 @@ export interface Subscription {
   startDate: string | null
   cancellationUrl: string | null
   active: boolean
+  order: number
   createdAt: string
   updatedAt: string
 }

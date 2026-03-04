@@ -10,4 +10,5 @@ export {
   createInterviewItem,
   updateInterviewItem,
   deleteInterviewItem,
+  reorderInterviewItems,
 } from './interview-item'

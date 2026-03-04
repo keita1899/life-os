@@ -5,6 +5,7 @@ import {
   getAllSubscriptions,
   updateSubscription,
   deleteSubscription,
+  reorderSubscriptions,
 } from '../lib'
 import type {
   Subscription,
@@ -51,6 +52,13 @@ export function useSubscriptions() {
     await mutate(SWR_KEYS.subscriptions)
   }
 
+  const handleReorderSubscriptions = async (
+    updates: { id: number; order: number }[],
+  ) => {
+    await reorderSubscriptions(updates)
+    await mutate(SWR_KEYS.subscriptions)
+  }
+
   return {
     subscriptions: data,
     isLoading,
@@ -63,6 +71,7 @@ export function useSubscriptions() {
     updateSubscription: handleUpdateSubscription,
     deleteSubscription: handleDeleteSubscription,
     toggleSubscriptionActive: handleToggleSubscriptionActive,
+    reorderSubscriptions: handleReorderSubscriptions,
     refreshSubscriptions: () => mutate(SWR_KEYS.subscriptions),
   }
 }

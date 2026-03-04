@@ -12,6 +12,7 @@ import {
 import { getDateLabel } from '@/lib/date/labels'
 import { Button } from '@/components/ui/button'
 import { EditDeleteDropdownMenu } from '@/components/ui/edit-delete-dropdown-menu'
+import { SortableDragHandle } from '@/components/ui/sortable-list-item'
 import {
   Popover,
   PopoverContent,
@@ -117,6 +118,7 @@ export function TaskItem({
           : 'border-stone-200/60 bg-stone-900/10 dark:border-stone-700/40 dark:bg-stone-900/20',
       )}
     >
+      <SortableDragHandle />
       <div className="mt-0.5">
         {onToggleCompletion ? (
           <button

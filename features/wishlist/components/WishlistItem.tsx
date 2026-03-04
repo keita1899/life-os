@@ -3,6 +3,7 @@
 import { useMemo } from 'react'
 import { CheckCircle2, Circle } from 'lucide-react'
 import { EditDeleteDropdownMenu } from '@/components/ui/edit-delete-dropdown-menu'
+import { SortableDragHandle } from '@/components/ui/sortable-list-item'
 import { cn } from '@/lib/utils'
 import { InlineEditableText } from '@/components/ui/inline-editable-text'
 import type { WishlistItem as WishlistItemType } from '../types/wishlist-item'
@@ -36,6 +37,7 @@ export function WishlistItem({
           : 'border-stone-200/60 bg-stone-900/10 dark:border-stone-700/40 dark:bg-stone-900/20',
       )}
     >
+      <SortableDragHandle />
       <div className="mt-0.5">
         {onToggleCompletion ? (
           <button

@@ -206,3 +206,20 @@ export async function deleteInterviewItem(id: number): Promise<void> {
     handleDbError(err, 'delete interview item')
   }
 }
+
+export async function reorderInterviewItems(
+  updates: { id: number; order: number }[],
+): Promise<void> {
+  const db = await getDatabase()
+
+  try {
+    for (const { id, order } of updates) {
+      await db.execute(
+        'UPDATE interview_items SET "order" = ? WHERE id = ?',
+        [order, id],
+      )
+    }
+  } catch (err) {
+    handleDbError(err, 'reorder interview items')
+  }
+}

@@ -250,3 +250,20 @@ export async function deleteRuleItem(id: number): Promise<void> {
     handleDbError(err, 'delete rule item')
   }
 }
+
+export async function reorderRuleItems(
+  updates: { id: number; order: number }[],
+): Promise<void> {
+  const db = await getDatabase()
+
+  try {
+    for (const { id, order } of updates) {
+      await db.execute(
+        'UPDATE rule_items SET "order" = ? WHERE id = ?',
+        [order, id],
+      )
+    }
+  } catch (err) {
+    handleDbError(err, 'reorder rule items')
+  }
+}

@@ -10,4 +10,5 @@ export {
   createRuleItem,
   updateRuleItem,
   deleteRuleItem,
+  reorderRuleItems,
 } from './rule-item'

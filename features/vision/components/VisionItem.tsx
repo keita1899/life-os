@@ -3,6 +3,7 @@
 import { useState } from 'react'
 import { DeleteConfirmDialog } from '@/components/ui/delete-confirm-dialog'
 import { EditDeleteDropdownMenu } from '@/components/ui/edit-delete-dropdown-menu'
+import { SortableDragHandle } from '@/components/ui/sortable-list-item'
 import type { VisionItem as VisionItemType } from '../types/vision-item'
 import { VisionForm } from './VisionForm'
 
@@ -40,6 +41,7 @@ export function VisionItem({ item, onUpdate, onDelete, readOnly = false }: Visio
   return (
     <>
       <div className={`group flex items-center gap-3 rounded-md px-2 py-2 transition-colors ${readOnly ? '' : 'hover:bg-accent/50'}`}>
+        {!readOnly && <SortableDragHandle />}
         <span className="h-1.5 w-1.5 shrink-0 rounded-full bg-muted-foreground/40" />
         <div className="flex-1 text-sm">{item.title}</div>
         {!readOnly && (

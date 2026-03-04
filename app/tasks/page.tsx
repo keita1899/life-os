@@ -44,6 +44,7 @@ export default function TasksPage() {
     toggleTaskCompletion,
     deleteCompletedTasks,
     updateOverdueTasksToToday,
+    reorderTasks,
   } = useTasks()
   const {
     isDialogOpen,
@@ -304,6 +305,7 @@ export default function TasksPage() {
                   onToggleCompletion={handleToggleCompletion}
                   onUpdateExecutionDate={handleUpdateExecutionDate}
                   onRename={handleRenameTask}
+                  onReorder={reorderTasks}
                 />
                 {group.key === 'overdue' && group.tasks.length > 0 && (
                   <div className="flex justify-end">

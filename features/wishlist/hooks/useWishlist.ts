@@ -6,6 +6,7 @@ import {
   updateWishlistItem,
   deleteWishlistItem,
   deleteWishlistItemsByIds,
+  reorderWishlistItems,
 } from '../lib'
 import type {
   WishlistItem,
@@ -50,6 +51,13 @@ export function useWishlist() {
     return true
   }
 
+  const handleReorderWishlistItems = async (
+    updates: { id: number; order: number }[],
+  ) => {
+    await reorderWishlistItems(updates)
+    await mutate(SWR_KEYS.wishlist)
+  }
+
   return {
     items: data,
     isLoading,
@@ -62,5 +70,6 @@ export function useWishlist() {
     updateWishlistItem: handleUpdateWishlistItem,
     deleteWishlistItem: handleDeleteWishlistItem,
     deleteWishlistItemsByIds: handleDeleteWishlistItemsByIds,
+    reorderWishlistItems: handleReorderWishlistItems,
   }
 }

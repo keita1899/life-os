@@ -3,6 +3,7 @@ export {
   createSubscription,
   updateSubscription,
   deleteSubscription,
+  reorderSubscriptions,
 } from './subscription'
 
 export {

@@ -3,6 +3,7 @@
 import { useState, useRef, useEffect, useCallback } from 'react'
 import { MessageCircle } from 'lucide-react'
 import { EditDeleteDropdownMenu } from '@/components/ui/edit-delete-dropdown-menu'
+import { SortableDragHandle } from '@/components/ui/sortable-list-item'
 import { cn } from '@/lib/utils'
 import type { InterviewItem, UpdateInterviewItemInput } from '../types/interview-item'
 
@@ -92,6 +93,7 @@ export function InterviewItemComponent({
   return (
     <div className="group rounded-lg border border-stone-200 p-4 transition-colors hover:bg-stone-50 dark:border-stone-800 dark:hover:bg-stone-900">
       <div className="flex items-start gap-3">
+        <SortableDragHandle />
         <div className="flex-1 min-w-0">
           <div className="flex items-start gap-2">
             <span className="mt-0.5 shrink-0 rounded bg-blue-100 px-1.5 py-0.5 text-xs font-medium text-blue-700 dark:bg-blue-900/30 dark:text-blue-400">

@@ -250,3 +250,20 @@ export async function deleteVisionItem(id: number): Promise<void> {
     handleDbError(err, 'delete vision item')
   }
 }
+
+export async function reorderVisionItems(
+  updates: { id: number; order: number }[],
+): Promise<void> {
+  const db = await getDatabase()
+
+  try {
+    for (const { id, order } of updates) {
+      await db.execute(
+        'UPDATE vision_items SET "order" = ? WHERE id = ?',
+        [order, id],
+      )
+    }
+  } catch (err) {
+    handleDbError(err, 'reorder vision items')
+  }
+}

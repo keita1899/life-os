@@ -39,6 +39,7 @@ export default function DevTasksPage() {
     toggleTaskCompletion,
     deleteCompletedTasks,
     updateOverdueTasksToToday,
+    reorderTasks,
   } = useDevTasks({
     projectId: null,
     type: activeType,
@@ -263,6 +264,7 @@ export default function DevTasksPage() {
                     onToggleCompletion={handleToggleCompletion}
                     onUpdateExecutionDate={handleUpdateExecutionDate}
                     onRename={handleRenameTask}
+                    onReorder={reorderTasks}
                   />
                   {group.key === 'overdue' && group.tasks.length > 0 && (
                     <div className="flex justify-end">

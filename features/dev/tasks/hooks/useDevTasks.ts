@@ -7,6 +7,7 @@ import {
   deleteDevTask,
   deleteCompletedDevTasks,
   updateOverdueDevTasksToToday,
+  reorderDevTasks,
 } from '../lib'
 import type {
   DevTask,
@@ -28,6 +29,7 @@ interface UseDevTasksResult {
   toggleTaskCompletion: (id: number, completed: boolean) => Promise<void>
   deleteCompletedTasks: () => Promise<number | undefined>
   updateOverdueTasksToToday: () => Promise<number | undefined>
+  reorderTasks: (updates: { id: number; order: number }[]) => Promise<void>
 }
 
 export function useDevTasks(input: {
@@ -106,6 +108,13 @@ export function useDevTasks(input: {
     return count
   }
 
+  const handleReorderTasks = async (
+    updates: { id: number; order: number }[],
+  ) => {
+    await reorderDevTasks(updates)
+    await Promise.all([refreshTasks(), mutate(SWR_KEYS.devTasks)])
+  }
+
   return {
     tasks: data,
     isLoading,
@@ -120,6 +129,7 @@ export function useDevTasks(input: {
     toggleTaskCompletion: handleToggleTaskCompletion,
     deleteCompletedTasks: handleDeleteCompletedTasks,
     updateOverdueTasksToToday: handleUpdateOverdueTasksToToday,
+    reorderTasks: handleReorderTasks,
   }
 }
 

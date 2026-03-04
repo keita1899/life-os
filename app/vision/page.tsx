@@ -23,6 +23,7 @@ export default function VisionPage() {
     createVisionItem,
     updateVisionItem,
     deleteVisionItem,
+    reorderVisionItems,
   } = useVision()
   const [selectedCategoryId, setSelectedCategoryId] = useState<
     number | 'all' | null
@@ -162,6 +163,7 @@ export default function VisionPage() {
                           onCreate={(title) =>
                             handleCreateItem(title, categoryId)
                           }
+                          onReorder={reorderVisionItems}
                         />
                       ),
                     }))}
@@ -182,6 +184,7 @@ export default function VisionPage() {
                 onUpdate={handleUpdateItem}
                 onDelete={handleDeleteItem}
                 onCreate={(title) => handleCreateItem(title).then(() => {})}
+                onReorder={reorderVisionItems}
               />
             )}
           </div>

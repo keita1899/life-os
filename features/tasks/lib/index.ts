@@ -5,6 +5,7 @@ export {
   deleteTask,
   deleteCompletedTasks,
   updateOverdueTasksToToday,
+  reorderTasks,
 } from './task'
 export {
   expandRecurringTasks,

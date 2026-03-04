@@ -42,6 +42,7 @@ export default function WishlistPage() {
     updateWishlistItem,
     deleteWishlistItem,
     deleteWishlistItemsByIds,
+    reorderWishlistItems,
   } = useWishlist()
   const { categories } = useWishlistCategories()
   const [selectedCategoryId, setSelectedCategoryId] = useState<string>('all')
@@ -294,6 +295,7 @@ export default function WishlistPage() {
                             onDelete={deleteConfirm.handleDeleteClick}
                             onToggleCompletion={handleTogglePurchased}
                             onRename={handleRenameItem}
+                            onReorder={reorderWishlistItems}
                           />
                           <InlineCreateButton
                             label="欲しいものを追加"
@@ -323,6 +325,7 @@ export default function WishlistPage() {
                                   onEdit={handleEditItem}
                                   onDelete={deleteConfirm.handleDeleteClick}
                                   onToggleCompletion={handleTogglePurchased}
+                                  onReorder={reorderWishlistItems}
                                 />
                                 <div className="flex justify-end">
                                   <Button

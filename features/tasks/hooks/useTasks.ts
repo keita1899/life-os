@@ -6,6 +6,7 @@ import {
   deleteTask,
   deleteCompletedTasks,
   updateOverdueTasksToToday,
+  reorderTasks,
 } from '../lib'
 import type { Task, CreateTaskInput, UpdateTaskInput } from '../types/task'
 import { SWR_KEYS } from '@/lib/swr-keys'
@@ -94,6 +95,13 @@ export function useTasks() {
     return count
   }
 
+  const handleReorderTasks = async (
+    updates: { id: number; order: number }[],
+  ) => {
+    await reorderTasks(updates)
+    await mutate(SWR_KEYS.tasks)
+  }
+
   return {
     tasks: data,
     isLoading,
@@ -108,5 +116,6 @@ export function useTasks() {
     toggleTaskCompletion: handleToggleTaskCompletion,
     deleteCompletedTasks: handleDeleteCompletedTasks,
     updateOverdueTasksToToday: handleUpdateOverdueTasksToToday,
+    reorderTasks: handleReorderTasks,
   }
 }

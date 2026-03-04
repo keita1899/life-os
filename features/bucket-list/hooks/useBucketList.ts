@@ -6,6 +6,7 @@ import {
   updateBucketListItem,
   deleteBucketListItem,
   deleteBucketListItemsByIds,
+  reorderBucketListItems,
 } from '../lib'
 import type {
   BucketListItem,
@@ -58,6 +59,13 @@ export function useBucketList() {
     return true
   }
 
+  const handleReorderBucketListItems = async (
+    updates: { id: number; order: number }[],
+  ) => {
+    await reorderBucketListItems(updates)
+    await mutate(SWR_KEYS.bucketList)
+  }
+
   return {
     items: data,
     isLoading,
@@ -71,5 +79,6 @@ export function useBucketList() {
     deleteBucketListItem: handleDeleteBucketListItem,
     toggleBucketListItemCompletion: handleToggleBucketListItemCompletion,
     deleteBucketListItemsByIds: handleDeleteBucketListItemsByIds,
+    reorderBucketListItems: handleReorderBucketListItems,
   }
 }

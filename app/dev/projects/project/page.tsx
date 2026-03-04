@@ -151,6 +151,7 @@ function DevProjectPageContent(): ReactElement | null {
     toggleTaskCompletion,
     deleteCompletedTasks,
     updateOverdueTasksToToday,
+    reorderTasks,
   } = useDevTasks({
     projectId: Number.isFinite(projectId) ? projectId : undefined,
     type: undefined,
@@ -804,6 +805,7 @@ function DevProjectPageContent(): ReactElement | null {
                             onToggleCompletion={handleToggleCompletion}
                             onUpdateExecutionDate={handleUpdateExecutionDate}
                             onRename={handleRenameTask}
+                            onReorder={reorderTasks}
                           />
                           {group.key === 'overdue' && group.tasks.length > 0 && (
                             <div className="flex justify-end">

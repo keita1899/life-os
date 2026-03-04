@@ -31,6 +31,7 @@ export default function InterviewPage() {
     createItem,
     updateItem,
     deleteItem,
+    reorderItems,
   } = useInterviewItems()
 
   const [selectedCategoryId, setSelectedCategoryId] = useState<
@@ -219,6 +220,7 @@ export default function InterviewPage() {
                               onDelete={deleteConfirm.handleDeleteClick}
                               onUpdate={handleInlineUpdate}
                               onCreate={() => handleCreateWithCategory(categoryId)}
+                              onReorder={reorderItems}
                             />
                           ),
                         })),
@@ -244,6 +246,7 @@ export default function InterviewPage() {
                                   onDelete={deleteConfirm.handleDeleteClick}
                                   onUpdate={handleInlineUpdate}
                                   onCreate={() => handleCreateWithCategory(null)}
+                                  onReorder={reorderItems}
                                 />
                               ),
                             }]
@@ -259,6 +262,7 @@ export default function InterviewPage() {
                       onDelete={deleteConfirm.handleDeleteClick}
                       onUpdate={handleInlineUpdate}
                       onCreate={() => handleCreateWithCategory(null)}
+                      onReorder={reorderItems}
                     />
                   )}
                 </div>
@@ -278,6 +282,7 @@ export default function InterviewPage() {
                 onDelete={deleteConfirm.handleDeleteClick}
                 onUpdate={handleInlineUpdate}
                 onCreate={handleTopLevelCreate}
+                onReorder={reorderItems}
               />
             )}
           </div>

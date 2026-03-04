@@ -16,8 +16,15 @@ interface DbSubscription {
   start_date: string | null
   cancellation_url: string | null
   active: number
+  order: number
   created_at: string
   updated_at: string
+}
+
+function getSelectColumns(): string {
+  return DB_COLUMNS.SUBSCRIPTIONS.map((col) =>
+    col === 'order' ? '"order"' : col,
+  ).join(', ')
 }
 
 function isValidBillingCycle(
@@ -44,6 +51,7 @@ function mapDbSubscriptionToSubscription(
     startDate: dbSubscription.start_date,
     cancellationUrl: dbSubscription.cancellation_url,
     active: dbSubscription.active === 1,
+    order: dbSubscription.order,
     createdAt: dbSubscription.created_at,
     updatedAt: dbSubscription.updated_at,
   }
@@ -54,8 +62,8 @@ export async function getAllSubscriptions(): Promise<Subscription[]> {
 
   try {
     const result = await db.select<DbSubscription[]>(
-      `SELECT ${DB_COLUMNS.SUBSCRIPTIONS.join(', ')} FROM subscriptions
-       ORDER BY active DESC, next_billing_date ASC`,
+      `SELECT ${getSelectColumns()} FROM subscriptions
+       ORDER BY "order" ASC, id ASC`,
     )
 
     return result.map(mapDbSubscriptionToSubscription)
@@ -70,9 +78,14 @@ export async function createSubscription(
   const db = await getDatabase()
 
   try {
+    const maxOrderResult = await db.select<{ max_order: number | null }[]>(
+      'SELECT MAX("order") as max_order FROM subscriptions',
+    )
+    const newOrder = (maxOrderResult[0]?.max_order ?? -1) + 1
+
     const insertResult = await db.execute(
-      `INSERT INTO subscriptions (name, monthly_price, billing_cycle, next_billing_date, start_date, cancellation_url, active)
-       VALUES (?, ?, ?, ?, ?, ?, ?)`,
+      `INSERT INTO subscriptions (name, monthly_price, billing_cycle, next_billing_date, start_date, cancellation_url, active, "order")
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
       [
         input.name,
         input.monthlyPrice,
@@ -81,6 +94,7 @@ export async function createSubscription(
         input.startDate || null,
         input.cancellationUrl || null,
         input.active !== undefined ? (input.active ? 1 : 0) : 1,
+        newOrder,
       ],
     )
 
@@ -106,7 +120,7 @@ export async function createSubscription(
     }
 
     const result = await db.select<DbSubscription[]>(
-      `SELECT ${DB_COLUMNS.SUBSCRIPTIONS.join(', ')} FROM subscriptions
+      `SELECT ${getSelectColumns()} FROM subscriptions
        WHERE id = ?
        LIMIT 1`,
       [insertedId],
@@ -167,7 +181,7 @@ export async function updateSubscription(
     )
 
     const result = await db.select<DbSubscription[]>(
-      `SELECT ${DB_COLUMNS.SUBSCRIPTIONS.join(', ')} FROM subscriptions
+      `SELECT ${getSelectColumns()} FROM subscriptions
        WHERE id = ?`,
       [id],
     )
@@ -179,6 +193,23 @@ export async function updateSubscription(
     return mapDbSubscriptionToSubscription(result[0])
   } catch (err) {
     handleDbError(err, 'update subscription')
+  }
+}
+
+export async function reorderSubscriptions(
+  updates: { id: number; order: number }[],
+): Promise<void> {
+  const db = await getDatabase()
+
+  try {
+    for (const { id, order } of updates) {
+      await db.execute('UPDATE subscriptions SET "order" = ? WHERE id = ?', [
+        order,
+        id,
+      ])
+    }
+  } catch (err) {
+    handleDbError(err, 'reorder subscriptions')
   }
 }
 

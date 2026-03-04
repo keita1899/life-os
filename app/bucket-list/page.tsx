@@ -50,6 +50,7 @@ export default function BucketListPage() {
     deleteBucketListItem,
     toggleBucketListItemCompletion,
     deleteBucketListItemsByIds,
+    reorderBucketListItems,
   } = useBucketList()
   const { categories } = useBucketListCategories()
   const { createEvent } = useEvents()
@@ -360,6 +361,7 @@ export default function BucketListPage() {
                   onConvertToEvent={handleConvertToEvent}
                   onConvertToTask={handleConvertToTask}
                   onRename={handleRenameItem}
+                  onReorder={reorderBucketListItems}
                 />
                 {filteredItems.length > 0 && (
                   <div className="flex justify-end">
@@ -444,6 +446,7 @@ export default function BucketListPage() {
                                       onConvertToEvent={handleConvertToEvent}
                                       onConvertToTask={handleConvertToTask}
                                       onRename={handleRenameItem}
+                                      onReorder={reorderBucketListItems}
                                     />
                                     <InlineCreateButton
                                       label="やりたいことを追加"
@@ -485,6 +488,7 @@ export default function BucketListPage() {
                                         onConvertToEvent={handleConvertToEvent}
                                         onConvertToTask={handleConvertToTask}
                                         onRename={handleRenameItem}
+                                        onReorder={reorderBucketListItems}
                                       />
                                       <InlineCreateButton
                                         label="やりたいことを追加"
@@ -532,6 +536,7 @@ export default function BucketListPage() {
                                       onConvertToEvent={handleConvertToEvent}
                                       onConvertToTask={handleConvertToTask}
                                       onRename={handleRenameItem}
+                                      onReorder={reorderBucketListItems}
                                     />
                                     <InlineCreateButton
                                       label="やりたいことを追加"
@@ -573,6 +578,7 @@ export default function BucketListPage() {
                                         onConvertToEvent={handleConvertToEvent}
                                         onConvertToTask={handleConvertToTask}
                                         onRename={handleRenameItem}
+                                        onReorder={reorderBucketListItems}
                                       />
                                       <InlineCreateButton
                                         label="やりたいことを追加"
@@ -616,6 +622,7 @@ export default function BucketListPage() {
                                   onConvertToEvent={handleConvertToEvent}
                                   onConvertToTask={handleConvertToTask}
                                   onRename={handleRenameItem}
+                                  onReorder={reorderBucketListItems}
                                 />
                                 <div className="flex justify-end">
                                   <Button

@@ -281,3 +281,20 @@ export async function deleteWishlistItemsByIds(ids: number[]): Promise<void> {
     handleDbError(err, 'delete wishlist items by ids')
   }
 }
+
+export async function reorderWishlistItems(
+  updates: { id: number; order: number }[],
+): Promise<void> {
+  const db = await getDatabase()
+
+  try {
+    for (const { id, order } of updates) {
+      await db.execute(
+        'UPDATE wishlist_items SET "order" = ? WHERE id = ?',
+        [order, id],
+      )
+    }
+  } catch (err) {
+    handleDbError(err, 'reorder wishlist items')
+  }
+}

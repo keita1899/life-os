@@ -5,6 +5,7 @@ import {
   getAllRuleItems,
   updateRuleItem,
   deleteRuleItem,
+  reorderRuleItems,
 } from '../lib'
 import type {
   RuleItem,
@@ -40,6 +41,13 @@ export function useRules() {
     await mutate(SWR_KEYS.rules)
   }
 
+  const handleReorderRuleItems = async (
+    updates: { id: number; order: number }[],
+  ) => {
+    await reorderRuleItems(updates)
+    await mutate(SWR_KEYS.rules)
+  }
+
   return {
     items: data,
     isLoading,
@@ -51,5 +59,6 @@ export function useRules() {
     createRuleItem: handleCreateRuleItem,
     updateRuleItem: handleUpdateRuleItem,
     deleteRuleItem: handleDeleteRuleItem,
+    reorderRuleItems: handleReorderRuleItems,
   }
 }

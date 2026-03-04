@@ -4,6 +4,7 @@ import { useMemo } from 'react'
 import { ExternalLink, Power } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { EditDeleteDropdownMenu } from '@/components/ui/edit-delete-dropdown-menu'
+import { SortableDragHandle } from '@/components/ui/sortable-list-item'
 import { cn } from '@/lib/utils'
 import { format } from 'date-fns'
 import { getTodayDateString, getTomorrowDateString } from '@/lib/date/formats'
@@ -50,6 +51,7 @@ export function SubscriptionItem({
           : 'border-stone-200/60 bg-stone-900/5 dark:border-stone-700/40 dark:bg-stone-900/20',
       )}
     >
+      <SortableDragHandle />
       {onToggleActive && (
         <div className="mt-0.5 flex items-center">
           <Button

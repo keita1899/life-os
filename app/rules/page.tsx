@@ -23,6 +23,7 @@ export default function RulesPage() {
     createRuleItem,
     updateRuleItem,
     deleteRuleItem,
+    reorderRuleItems,
   } = useRules()
   const [selectedCategoryId, setSelectedCategoryId] = useState<
     number | 'all' | null
@@ -158,6 +159,7 @@ export default function RulesPage() {
                           onCreate={(title) =>
                             handleCreateItem(title, categoryId)
                           }
+                          onReorder={reorderRuleItems}
                         />
                       ),
                     }))}
@@ -170,6 +172,7 @@ export default function RulesPage() {
                 onUpdate={handleUpdateItem}
                 onDelete={handleDeleteItem}
                 onCreate={(title) => handleCreateItem(title).then(() => {})}
+                onReorder={reorderRuleItems}
               />
             )}
           </div>

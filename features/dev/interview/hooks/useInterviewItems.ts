@@ -5,6 +5,7 @@ import {
   createInterviewItem,
   updateInterviewItem,
   deleteInterviewItem,
+  reorderInterviewItems,
 } from '../lib'
 import type {
   InterviewItem,
@@ -43,6 +44,13 @@ export function useInterviewItems() {
     return true
   }
 
+  const handleReorder = async (
+    updates: { id: number; order: number }[],
+  ) => {
+    await reorderInterviewItems(updates)
+    await mutate(SWR_KEYS.interviewItems)
+  }
+
   return {
     items: data,
     isLoading,
@@ -54,5 +62,6 @@ export function useInterviewItems() {
     createItem: handleCreate,
     updateItem: handleUpdate,
     deleteItem: handleDelete,
+    reorderItems: handleReorder,
   }
 }

@@ -334,6 +334,23 @@ export async function updateOverdueDevTasksToToday(input: {
   }
 }
 
+export async function reorderDevTasks(
+  updates: { id: number; order: number }[],
+): Promise<void> {
+  const db = await getDatabase()
+
+  try {
+    for (const { id, order } of updates) {
+      await db.execute('UPDATE dev_tasks SET "order" = ? WHERE id = ?', [
+        order,
+        id,
+      ])
+    }
+  } catch (err) {
+    handleDbError(err, 'reorder dev tasks')
+  }
+}
+
 export async function updateAllOverdueDevTasksToToday(): Promise<number> {
   const db = await getDatabase()
   const today = getTodayDateString()
