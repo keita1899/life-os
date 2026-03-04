@@ -97,7 +97,10 @@ export function EventItem({ event, onEdit, onDelete, onRename }: EventItemProps)
           <InlineEditableText
             value={event.title}
             onSave={(title) => onRename!(event, title)}
-            className="text-sm font-medium text-stone-900 dark:text-stone-100"
+            className={cn(
+              'text-sm font-medium',
+              !isBarca && 'text-stone-900 dark:text-stone-100',
+            )}
             disabled={!onRename}
           />
         </div>

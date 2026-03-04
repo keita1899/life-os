@@ -37,14 +37,22 @@ export function getDevWeeklyGoalsForDate(
   return goals.filter((goal) => goal.weekStartDate === weekStartDate)
 }
 
+function sortByProject(tasks: DevTask[]): DevTask[] {
+  return [...tasks].sort((a, b) => {
+    const aKey = a.projectId ?? -1
+    const bKey = b.projectId ?? -1
+    return aKey - bKey
+  })
+}
+
 export function getDevTasksForDate(tasks: DevTask[], date: Date): DevTask[] {
   const dateStr = formatDateISO(date)
   const filteredTasks = tasks.filter(
     (task) => task.executionDate !== null && task.executionDate === dateStr,
   )
 
-  const incompleteTasks = filteredTasks.filter((task) => !task.completed)
-  const completedTasks = filteredTasks.filter((task) => task.completed)
+  const incompleteTasks = sortByProject(filteredTasks.filter((task) => !task.completed))
+  const completedTasks = sortByProject(filteredTasks.filter((task) => task.completed))
 
   return [...incompleteTasks, ...completedTasks]
 }

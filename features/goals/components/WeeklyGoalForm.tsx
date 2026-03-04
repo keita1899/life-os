@@ -149,10 +149,10 @@ export function WeeklyGoalForm({
 
   return (
     <div className="mb-4">
-      <div className="flex items-center gap-3">
+      <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:gap-3">
         <Label
           htmlFor="weekly-goal-title"
-          className="text-sm font-semibold text-stone-900 dark:text-stone-100 whitespace-nowrap min-w-[80px]"
+          className="text-sm font-semibold text-stone-900 dark:text-stone-100 whitespace-nowrap"
         >
           週間目標
         </Label>
@@ -160,7 +160,7 @@ export function WeeklyGoalForm({
           <Form {...form}>
             <form
               onSubmit={form.handleSubmit(handleSubmit)}
-              className="flex items-center gap-2 flex-1"
+              className="flex min-w-0 flex-wrap items-center gap-2 flex-1"
             >
               <FormField
               control={form.control}
@@ -208,7 +208,7 @@ export function WeeklyGoalForm({
             </form>
           </Form>
         ) : (
-          <div className="group relative flex h-10 flex-1 items-center gap-2 rounded-lg border border-purple-200 bg-purple-50 px-3 py-2 text-sm font-medium text-purple-900 transition-colors hover:bg-purple-100 dark:border-purple-800 dark:bg-purple-950/50 dark:text-purple-100 dark:hover:bg-purple-900/50">
+          <div className="group relative flex min-h-10 min-w-0 flex-1 items-center gap-2 rounded-lg border border-purple-200 bg-purple-50 px-3 py-2 text-sm font-medium text-purple-900 transition-colors hover:bg-purple-100 dark:border-purple-800 dark:bg-purple-950/50 dark:text-purple-100 dark:hover:bg-purple-900/50">
             <button
               type="button"
               onClick={async () => {
@@ -239,11 +239,11 @@ export function WeeklyGoalForm({
                   handleDoubleClick()
                 }
               }}
-              className="flex-1 cursor-pointer"
+              className="min-w-0 flex-1 cursor-pointer"
             >
               <span
                 className={cn(
-                  'truncate',
+                  'block truncate',
                   currentWeeklyGoal.achieved &&
                     'line-through text-stone-500 dark:text-stone-400',
                 )}

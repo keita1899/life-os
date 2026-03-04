@@ -21,20 +21,6 @@ interface DbDevTask {
   updated_at: string
 }
 
-function isUniqueConstraintError(err: unknown): boolean {
-  const errorStr = String(err).toLowerCase()
-  const errorMessage =
-    err instanceof Error ? err.message.toLowerCase() : errorStr
-
-  return (
-    errorMessage.includes('unique') ||
-    errorMessage.includes('constraint') ||
-    errorStr.includes('unique') ||
-    errorStr.includes('constraint') ||
-    (err instanceof Error && (err.message.includes('19') || err.message.includes('2067')))
-  )
-}
-
 function mapDbDevTaskToDevTask(dbTask: DbDevTask): DevTask {
   return {
     id: dbTask.id,
@@ -77,9 +63,7 @@ async function getMaxOrder(
 export async function createDevTask(input: CreateDevTaskInput): Promise<DevTask> {
   const db = await getDatabase()
 
-  const maxAttempts = 5
-
-  for (let attempt = 0; attempt < maxAttempts; attempt++) {
+  try {
     const maxOrder = await getMaxOrder(input.projectId, input.type)
     const newOrder = maxOrder + 1
 
@@ -89,42 +73,35 @@ export async function createDevTask(input: CreateDevTaskInput): Promise<DevTask>
         ? [input.title, input.type, newOrder]
         : [input.title, input.projectId, input.type, newOrder]
 
-    try {
-      await db.execute(
-        `INSERT INTO dev_tasks (title, project_id, type, execution_date, "order", memo)
-         VALUES (?, ?, ?, ?, ?, ?)`,
-        [
-          input.title,
-          input.projectId,
-          input.type,
-          input.executionDate || null,
-          newOrder,
-          input.memo || null,
-        ],
-      )
+    await db.execute(
+      `INSERT INTO dev_tasks (title, project_id, type, execution_date, "order", memo)
+       VALUES (?, ?, ?, ?, ?, ?)`,
+      [
+        input.title,
+        input.projectId,
+        input.type,
+        input.executionDate || null,
+        newOrder,
+        input.memo || null,
+      ],
+    )
 
-      const result = await db.select<DbDevTask[]>(
-        `SELECT ${getSelectColumns()} FROM dev_tasks
-         WHERE title = ? AND ${whereProject} AND type = ? AND "order" = ?
-         ORDER BY created_at DESC, id DESC
-         LIMIT 1`,
-        values,
-      )
+    const result = await db.select<DbDevTask[]>(
+      `SELECT ${getSelectColumns()} FROM dev_tasks
+       WHERE title = ? AND ${whereProject} AND type = ? AND "order" = ?
+       ORDER BY created_at DESC, id DESC
+       LIMIT 1`,
+      values,
+    )
 
-      if (result.length === 0) {
-        throw new Error('Failed to create dev task: record not found after insert')
-      }
-
-      return mapDbDevTaskToDevTask(result[0])
-    } catch (err) {
-      if (isUniqueConstraintError(err) && attempt < maxAttempts - 1) {
-        continue
-      }
-      handleDbError(err, 'create dev task')
+    if (result.length === 0) {
+      throw new Error('Failed to create dev task: record not found after insert')
     }
-  }
 
-  throw new Error('Failed to create dev task: retry limit exceeded')
+    return mapDbDevTaskToDevTask(result[0])
+  } catch (err) {
+    handleDbError(err, 'create dev task')
+  }
 }
 
 export async function getDevTasks(input: {
