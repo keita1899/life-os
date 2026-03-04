@@ -10,6 +10,7 @@ import type {
 interface DbBucketListCategory {
   id: number
   name: string
+  sort_order: number
   created_at: string
   updated_at: string
 }
@@ -20,6 +21,7 @@ function mapDbBucketListCategoryToBucketListCategory(
   return {
     id: dbCategory.id,
     name: dbCategory.name,
+    sortOrder: dbCategory.sort_order,
     createdAt: dbCategory.created_at,
     updatedAt: dbCategory.updated_at,
   }
@@ -46,7 +48,7 @@ export async function getAllBucketListCategories(): Promise<BucketListCategory[]
   try {
     const result = await db.select<DbBucketListCategory[]>(
       `SELECT ${DB_COLUMNS.BUCKET_LIST_CATEGORIES.join(', ')} FROM bucket_list_categories
-       ORDER BY name ASC`,
+       ORDER BY sort_order ASC, id ASC`,
     )
 
     return result.map(mapDbBucketListCategoryToBucketListCategory)
@@ -62,8 +64,8 @@ export async function createBucketListCategory(
 
   try {
     await db.execute(
-      `INSERT INTO bucket_list_categories (name)
-       VALUES (?)`,
+      `INSERT INTO bucket_list_categories (name, sort_order)
+       VALUES (?, (SELECT COALESCE(MAX(sort_order), 0) + 1 FROM bucket_list_categories))`,
       [input.name],
     )
 
@@ -91,6 +93,7 @@ export async function createBucketListCategory(
 
 const BUCKET_LIST_CATEGORY_UPDATE_MAPPING: FieldMapping<UpdateBucketListCategoryInput> = [
   { key: 'name', column: 'name' },
+  { key: 'sortOrder', column: 'sort_order' },
 ]
 
 export async function updateBucketListCategory(
@@ -156,5 +159,22 @@ export async function deleteBucketListCategory(id: number): Promise<void> {
     }
   } catch (err) {
     handleDbError(err, 'delete bucket list category')
+  }
+}
+
+export async function reorderBucketListCategories(
+  updates: { id: number; sortOrder: number }[],
+): Promise<void> {
+  const db = await getDatabase()
+
+  try {
+    for (const { id, sortOrder } of updates) {
+      await db.execute(
+        'UPDATE bucket_list_categories SET sort_order = ? WHERE id = ?',
+        [sortOrder, id],
+      )
+    }
+  } catch (err) {
+    handleDbError(err, 'reorder bucket list categories')
   }
 }

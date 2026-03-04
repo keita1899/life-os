@@ -1,6 +1,7 @@
 export interface WishlistCategory {
   id: number
   name: string
+  sortOrder: number
   createdAt: string
   updatedAt: string
 }
@@ -11,4 +12,5 @@ export interface CreateWishlistCategoryInput {
 
 export interface UpdateWishlistCategoryInput {
   name?: string
+  sortOrder?: number
 }

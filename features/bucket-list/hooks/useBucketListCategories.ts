@@ -5,6 +5,7 @@ import {
   createBucketListCategory,
   updateBucketListCategory,
   deleteBucketListCategory,
+  reorderBucketListCategories,
 } from '../lib'
 import type {
   BucketListCategory,
@@ -51,6 +52,13 @@ export function useBucketListCategories() {
     return true
   }
 
+  const handleReorderCategories = async (
+    updates: { id: number; sortOrder: number }[],
+  ): Promise<void> => {
+    await reorderBucketListCategories(updates)
+    await mutate(SWR_KEYS.bucketListCategories)
+  }
+
   return {
     categories: data,
     isLoading,
@@ -62,5 +70,6 @@ export function useBucketListCategories() {
     createBucketListCategory: handleCreateBucketListCategory,
     updateBucketListCategory: handleUpdateBucketListCategory,
     deleteBucketListCategory: handleDeleteBucketListCategory,
+    reorderCategories: handleReorderCategories,
   }
 }

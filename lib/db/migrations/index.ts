@@ -13,6 +13,7 @@ import { migration011 } from './011_interview_qa'
 import { migration012 } from './012_my_rules'
 import { migration013 } from './013_dev_project_db_designs'
 import { migration014 } from './014_weekday_themes'
+import { migration015 } from './015_category_sort_order'
 
 export const allMigrations: Migration[] = [
   migration001,
@@ -29,4 +30,5 @@ export const allMigrations: Migration[] = [
   migration012,
   migration013,
   migration014,
+  migration015,
 ]

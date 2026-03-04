@@ -3,6 +3,7 @@ export {
   createInterviewCategory,
   updateInterviewCategory,
   deleteInterviewCategory,
+  reorderInterviewCategories,
 } from './category'
 export {
   getAllInterviewItems,

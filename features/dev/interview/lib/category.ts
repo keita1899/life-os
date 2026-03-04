@@ -10,6 +10,7 @@ import type {
 interface DbInterviewCategory {
   id: number
   name: string
+  sort_order: number
   created_at: string
   updated_at: string
 }
@@ -18,6 +19,7 @@ function mapToCategory(db: DbInterviewCategory): InterviewCategory {
   return {
     id: db.id,
     name: db.name,
+    sortOrder: db.sort_order,
     createdAt: db.created_at,
     updatedAt: db.updated_at,
   }
@@ -43,7 +45,7 @@ export async function getAllInterviewCategories(): Promise<InterviewCategory[]> 
   try {
     const result = await db.select<DbInterviewCategory[]>(
       `SELECT ${DB_COLUMNS.INTERVIEW_CATEGORIES.join(', ')} FROM interview_categories
-       ORDER BY name ASC`,
+       ORDER BY sort_order ASC, id ASC`,
     )
     return result.map(mapToCategory)
   } catch (err) {
@@ -58,7 +60,8 @@ export async function createInterviewCategory(
 
   try {
     await db.execute(
-      `INSERT INTO interview_categories (name) VALUES (?)`,
+      `INSERT INTO interview_categories (name, sort_order)
+       VALUES (?, (SELECT COALESCE(MAX(sort_order), 0) + 1 FROM interview_categories))`,
       [input.name],
     )
 
@@ -85,6 +88,7 @@ export async function createInterviewCategory(
 
 const UPDATE_MAPPING: FieldMapping<UpdateInterviewCategoryInput> = [
   { key: 'name', column: 'name' },
+  { key: 'sortOrder', column: 'sort_order' },
 ]
 
 export async function updateInterviewCategory(
@@ -144,5 +148,22 @@ export async function deleteInterviewCategory(id: number): Promise<void> {
     }
   } catch (err) {
     handleDbError(err, 'delete interview category')
+  }
+}
+
+export async function reorderInterviewCategories(
+  updates: { id: number; sortOrder: number }[],
+): Promise<void> {
+  const db = await getDatabase()
+
+  try {
+    for (const { id, sortOrder } of updates) {
+      await db.execute(
+        'UPDATE interview_categories SET sort_order = ? WHERE id = ?',
+        [sortOrder, id],
+      )
+    }
+  } catch (err) {
+    handleDbError(err, 'reorder interview categories')
   }
 }

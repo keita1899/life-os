@@ -1,6 +1,7 @@
 export interface RuleCategory {
   id: number
   name: string
+  sortOrder: number
   createdAt: string
   updatedAt: string
 }
@@ -11,4 +12,5 @@ export interface CreateRuleCategoryInput {
 
 export interface UpdateRuleCategoryInput {
   name?: string
+  sortOrder?: number
 }

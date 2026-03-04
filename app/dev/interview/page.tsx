@@ -106,11 +106,7 @@ export default function InterviewPage() {
         category: categoryMap.get(categoryId!) || null,
         items: groupItems.sort((a, b) => a.order - b.order),
       }))
-      .sort((a, b) => {
-        const aName = a.category?.name || ''
-        const bName = b.category?.name || ''
-        return aName.localeCompare(bName, 'ja')
-      })
+      .sort((a, b) => (a.category?.sortOrder ?? 0) - (b.category?.sortOrder ?? 0))
 
     const uncategorized = grouped.get(null) || []
 

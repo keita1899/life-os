@@ -5,6 +5,7 @@ import {
   createInterviewCategory,
   updateInterviewCategory,
   deleteInterviewCategory,
+  reorderInterviewCategories,
 } from '../lib'
 import type {
   InterviewCategory,
@@ -46,6 +47,13 @@ export function useInterviewCategories() {
     return true
   }
 
+  const handleReorderCategories = async (
+    updates: { id: number; sortOrder: number }[],
+  ): Promise<void> => {
+    await reorderInterviewCategories(updates)
+    await mutate(SWR_KEYS.interviewCategories)
+  }
+
   return {
     categories: data,
     isLoading,
@@ -57,5 +65,6 @@ export function useInterviewCategories() {
     createCategory: handleCreate,
     updateCategory: handleUpdate,
     deleteCategory: handleDelete,
+    reorderCategories: handleReorderCategories,
   }
 }

@@ -3,6 +3,7 @@ export {
   createRuleCategory,
   updateRuleCategory,
   deleteRuleCategory,
+  reorderRuleCategories,
 } from './category'
 export {
   getAllRuleItems,

@@ -69,11 +69,7 @@ export default function RulesPage() {
         category: categories.find((c) => c.id === categoryId) || null,
         items: categoryItems.sort((a, b) => a.order - b.order),
       }))
-      .sort((a, b) => {
-        const aName = a.category?.name || ''
-        const bName = b.category?.name || ''
-        return aName.localeCompare(bName, 'ja')
-      })
+      .sort((a, b) => (a.category?.sortOrder ?? 0) - (b.category?.sortOrder ?? 0))
   }, [items, categories, selectedCategoryId])
 
   const accordionKeys = useMemo(() => {

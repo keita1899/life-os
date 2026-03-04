@@ -5,6 +5,7 @@ import {
   createWishlistCategory,
   updateWishlistCategory,
   deleteWishlistCategory,
+  reorderWishlistCategories,
 } from '../lib'
 import type {
   WishlistCategory,
@@ -51,6 +52,13 @@ export function useWishlistCategories() {
     return true
   }
 
+  const handleReorderCategories = async (
+    updates: { id: number; sortOrder: number }[],
+  ): Promise<void> => {
+    await reorderWishlistCategories(updates)
+    await mutate(SWR_KEYS.wishlistCategories)
+  }
+
   return {
     categories: data,
     isLoading,
@@ -62,6 +70,7 @@ export function useWishlistCategories() {
     createWishlistCategory: handleCreateWishlistCategory,
     updateWishlistCategory: handleUpdateWishlistCategory,
     deleteWishlistCategory: handleDeleteWishlistCategory,
+    reorderCategories: handleReorderCategories,
     refreshCategories: () => mutate(SWR_KEYS.wishlistCategories),
   }
 }

@@ -24,6 +24,7 @@ export function RuleCategorySidebar({
     createRuleCategory,
     updateRuleCategory,
     deleteRuleCategory,
+    reorderCategories,
   } = useRuleCategories()
   const editState = useEditState()
   const { operationError, execute } = useAsyncOperation()
@@ -81,6 +82,7 @@ export function RuleCategorySidebar({
           onDelete={handleDeleteCategory}
           onUpdateCategory={handleUpdateCategory}
           onCreateCategory={handleCreateCategory}
+          onReorder={reorderCategories}
         />
       </div>
     </div>

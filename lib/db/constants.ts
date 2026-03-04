@@ -96,6 +96,7 @@ const SCHEMA = {
   bucket_list_categories: [
     'id',
     'name',
+    'sort_order',
     'created_at',
     'updated_at',
   ],
@@ -114,6 +115,7 @@ const SCHEMA = {
   wishlist_categories: [
     'id',
     'name',
+    'sort_order',
     'created_at',
     'updated_at',
   ],
@@ -253,6 +255,7 @@ const SCHEMA = {
   vision_categories: [
     'id',
     'name',
+    'sort_order',
     'created_at',
     'updated_at',
   ],
@@ -267,6 +270,7 @@ const SCHEMA = {
   interview_categories: [
     'id',
     'name',
+    'sort_order',
     'created_at',
     'updated_at',
   ],
@@ -282,6 +286,7 @@ const SCHEMA = {
   rule_categories: [
     'id',
     'name',
+    'sort_order',
     'created_at',
     'updated_at',
   ],

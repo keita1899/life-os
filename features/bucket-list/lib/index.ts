@@ -3,6 +3,7 @@ export {
   createBucketListCategory,
   updateBucketListCategory,
   deleteBucketListCategory,
+  reorderBucketListCategories,
 } from './category'
 export * from './bucket-list-item'
 export { getDateFromBucketItem } from './conversion'

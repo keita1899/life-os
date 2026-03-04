@@ -10,8 +10,6 @@ import {
   WishlistCategoryList,
   type WishlistCategoryCounts,
 } from './WishlistCategoryList'
-import { InlineCategoryCreateItem } from '@/components/ui/inline-category-create-item'
-
 interface WishlistCategorySidebarProps {
   selectedCategoryId: string
   onSelectCategory: (categoryId: string) => void
@@ -30,6 +28,7 @@ export function WishlistCategorySidebar({
     createWishlistCategory,
     updateWishlistCategory,
     deleteWishlistCategory,
+    reorderCategories,
   } = useWishlistCategories()
   const editState = useEditState()
   const { operationError, setOperationError, execute } = useAsyncOperation()
@@ -88,6 +87,7 @@ export function WishlistCategorySidebar({
           onUpdateCategory={handleUpdateCategory}
           counts={counts}
           onCreateCategory={handleCreateCategory}
+          onReorder={reorderCategories}
         />
       </div>
     </div>

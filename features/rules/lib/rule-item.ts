@@ -31,6 +31,7 @@ function mapDbRuleItemToRuleItem(
       ? {
           id: dbItem.category_id_from_join,
           name: dbItem.category_name,
+          sortOrder: 0,
           createdAt: dbItem.category_created_at!,
           updatedAt: dbItem.category_updated_at!,
         }

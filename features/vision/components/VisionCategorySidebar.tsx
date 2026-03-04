@@ -7,8 +7,6 @@ import { useEditState } from '@/hooks/useEditState'
 import { useVisionCategories } from '../hooks/useVisionCategories'
 import type { VisionCategory } from '../types/vision-category'
 import { VisionCategoryList } from './VisionCategoryList'
-import { InlineCategoryCreateItem } from '@/components/ui/inline-category-create-item'
-
 interface VisionCategorySidebarProps {
   selectedCategoryId: number | 'all' | null
   onSelectCategory: (categoryId: number | 'all' | null) => void
@@ -25,6 +23,7 @@ export function VisionCategorySidebar({
     createVisionCategory,
     updateVisionCategory,
     deleteVisionCategory,
+    reorderCategories,
   } = useVisionCategories()
   const editState = useEditState()
   const { operationError, execute } = useAsyncOperation()
@@ -82,6 +81,7 @@ export function VisionCategorySidebar({
           onDelete={handleDeleteCategory}
           onUpdateCategory={handleUpdateCategory}
           onCreateCategory={handleCreateCategory}
+          onReorder={reorderCategories}
         />
       </div>
     </div>

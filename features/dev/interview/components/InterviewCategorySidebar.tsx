@@ -24,6 +24,7 @@ export function InterviewCategorySidebar({
     createCategory,
     updateCategory,
     deleteCategory,
+    reorderCategories,
   } = useInterviewCategories()
   const editState = useEditState()
   const { operationError, execute } = useAsyncOperation()
@@ -82,6 +83,7 @@ export function InterviewCategorySidebar({
           onDelete={handleDelete}
           onUpdateCategory={handleUpdate}
           onCreateCategory={handleCreate}
+          onReorder={reorderCategories}
         />
       </div>
     </div>

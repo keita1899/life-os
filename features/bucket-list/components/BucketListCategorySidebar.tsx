@@ -10,8 +10,6 @@ import {
   BucketListCategoryList,
   type BucketListCategoryCounts,
 } from './BucketListCategoryList'
-import { InlineCategoryCreateItem } from '@/components/ui/inline-category-create-item'
-
 interface BucketListCategorySidebarProps {
   selectedCategoryId: string
   onSelectCategory: (categoryId: string) => void
@@ -30,6 +28,7 @@ export function BucketListCategorySidebar({
     createBucketListCategory,
     updateBucketListCategory,
     deleteBucketListCategory,
+    reorderCategories,
   } = useBucketListCategories()
   const editState = useEditState()
   const { operationError, execute } = useAsyncOperation()
@@ -89,6 +88,7 @@ export function BucketListCategorySidebar({
           onUpdateCategory={handleUpdateCategory}
           counts={counts}
           onCreateCategory={handleCreateCategory}
+          onReorder={reorderCategories}
         />
       </div>
     </div>

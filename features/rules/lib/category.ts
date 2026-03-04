@@ -10,6 +10,7 @@ import type {
 interface DbRuleCategory {
   id: number
   name: string
+  sort_order: number
   created_at: string
   updated_at: string
 }
@@ -20,6 +21,7 @@ function mapDbRuleCategoryToRuleCategory(
   return {
     id: dbCategory.id,
     name: dbCategory.name,
+    sortOrder: dbCategory.sort_order,
     createdAt: dbCategory.created_at,
     updatedAt: dbCategory.updated_at,
   }
@@ -50,7 +52,7 @@ export async function getAllRuleCategories(): Promise<RuleCategory[]> {
   try {
     const result = await db.select<DbRuleCategory[]>(
       `SELECT ${DB_COLUMNS.RULE_CATEGORIES.join(', ')} FROM rule_categories
-       ORDER BY name ASC`,
+       ORDER BY sort_order ASC, id ASC`,
     )
 
     return result.map(mapDbRuleCategoryToRuleCategory)
@@ -66,8 +68,8 @@ export async function createRuleCategory(
 
   try {
     await db.execute(
-      `INSERT INTO rule_categories (name)
-       VALUES (?)`,
+      `INSERT INTO rule_categories (name, sort_order)
+       VALUES (?, (SELECT COALESCE(MAX(sort_order), 0) + 1 FROM rule_categories))`,
       [input.name],
     )
 
@@ -95,6 +97,7 @@ export async function createRuleCategory(
 
 const RULE_CATEGORY_UPDATE_MAPPING: FieldMapping<UpdateRuleCategoryInput> = [
   { key: 'name', column: 'name' },
+  { key: 'sortOrder', column: 'sort_order' },
 ]
 
 export async function updateRuleCategory(
@@ -164,5 +167,22 @@ export async function deleteRuleCategory(id: number): Promise<void> {
     }
   } catch (err) {
     handleDbError(err, 'delete rule category')
+  }
+}
+
+export async function reorderRuleCategories(
+  updates: { id: number; sortOrder: number }[],
+): Promise<void> {
+  const db = await getDatabase()
+
+  try {
+    for (const { id, sortOrder } of updates) {
+      await db.execute(
+        'UPDATE rule_categories SET sort_order = ? WHERE id = ?',
+        [sortOrder, id],
+      )
+    }
+  } catch (err) {
+    handleDbError(err, 'reorder rule categories')
   }
 }

@@ -39,6 +39,7 @@ function mapToItem(db: DbInterviewItemWithCategory): InterviewItem {
       ? {
           id: db.category_id_from_join,
           name: db.category_name,
+          sortOrder: 0,
           createdAt: db.category_created_at,
           updatedAt: db.category_updated_at,
         }

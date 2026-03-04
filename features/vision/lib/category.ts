@@ -10,6 +10,7 @@ import type {
 interface DbVisionCategory {
   id: number
   name: string
+  sort_order: number
   created_at: string
   updated_at: string
 }
@@ -20,6 +21,7 @@ function mapDbVisionCategoryToVisionCategory(
   return {
     id: dbCategory.id,
     name: dbCategory.name,
+    sortOrder: dbCategory.sort_order,
     createdAt: dbCategory.created_at,
     updatedAt: dbCategory.updated_at,
   }
@@ -50,7 +52,7 @@ export async function getAllVisionCategories(): Promise<VisionCategory[]> {
   try {
     const result = await db.select<DbVisionCategory[]>(
       `SELECT ${DB_COLUMNS.VISION_CATEGORIES.join(', ')} FROM vision_categories
-       ORDER BY name ASC`,
+       ORDER BY sort_order ASC, id ASC`,
     )
 
     return result.map(mapDbVisionCategoryToVisionCategory)
@@ -66,8 +68,8 @@ export async function createVisionCategory(
 
   try {
     await db.execute(
-      `INSERT INTO vision_categories (name)
-       VALUES (?)`,
+      `INSERT INTO vision_categories (name, sort_order)
+       VALUES (?, (SELECT COALESCE(MAX(sort_order), 0) + 1 FROM vision_categories))`,
       [input.name],
     )
 
@@ -95,6 +97,7 @@ export async function createVisionCategory(
 
 const VISION_CATEGORY_UPDATE_MAPPING: FieldMapping<UpdateVisionCategoryInput> = [
   { key: 'name', column: 'name' },
+  { key: 'sortOrder', column: 'sort_order' },
 ]
 
 export async function updateVisionCategory(
@@ -164,5 +167,22 @@ export async function deleteVisionCategory(id: number): Promise<void> {
     }
   } catch (err) {
     handleDbError(err, 'delete vision category')
+  }
+}
+
+export async function reorderVisionCategories(
+  updates: { id: number; sortOrder: number }[],
+): Promise<void> {
+  const db = await getDatabase()
+
+  try {
+    for (const { id, sortOrder } of updates) {
+      await db.execute(
+        'UPDATE vision_categories SET sort_order = ? WHERE id = ?',
+        [sortOrder, id],
+      )
+    }
+  } catch (err) {
+    handleDbError(err, 'reorder vision categories')
   }
 }

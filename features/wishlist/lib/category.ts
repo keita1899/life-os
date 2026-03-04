@@ -10,6 +10,7 @@ import type {
 interface DbWishlistCategory {
   id: number
   name: string
+  sort_order: number
   created_at: string
   updated_at: string
 }
@@ -20,6 +21,7 @@ function mapDbWishlistCategoryToWishlistCategory(
   return {
     id: dbCategory.id,
     name: dbCategory.name,
+    sortOrder: dbCategory.sort_order,
     createdAt: dbCategory.created_at,
     updatedAt: dbCategory.updated_at,
   }
@@ -46,7 +48,7 @@ export async function getAllWishlistCategories(): Promise<WishlistCategory[]> {
   try {
     const result = await db.select<DbWishlistCategory[]>(
       `SELECT ${DB_COLUMNS.WISHLIST_CATEGORIES.join(', ')} FROM wishlist_categories
-       ORDER BY name ASC`,
+       ORDER BY sort_order ASC, id ASC`,
     )
 
     return result.map(mapDbWishlistCategoryToWishlistCategory)
@@ -62,8 +64,8 @@ export async function createWishlistCategory(
 
   try {
     await db.execute(
-      `INSERT INTO wishlist_categories (name)
-       VALUES (?)`,
+      `INSERT INTO wishlist_categories (name, sort_order)
+       VALUES (?, (SELECT COALESCE(MAX(sort_order), 0) + 1 FROM wishlist_categories))`,
       [input.name],
     )
 
@@ -91,6 +93,7 @@ export async function createWishlistCategory(
 
 const WISHLIST_CATEGORY_UPDATE_MAPPING: FieldMapping<UpdateWishlistCategoryInput> = [
   { key: 'name', column: 'name' },
+  { key: 'sortOrder', column: 'sort_order' },
 ]
 
 export async function updateWishlistCategory(
@@ -160,5 +163,22 @@ export async function deleteWishlistCategory(id: number): Promise<void> {
     }
   } catch (err) {
     handleDbError(err, 'delete wishlist category')
+  }
+}
+
+export async function reorderWishlistCategories(
+  updates: { id: number; sortOrder: number }[],
+): Promise<void> {
+  const db = await getDatabase()
+
+  try {
+    for (const { id, sortOrder } of updates) {
+      await db.execute(
+        'UPDATE wishlist_categories SET sort_order = ? WHERE id = ?',
+        [sortOrder, id],
+      )
+    }
+  } catch (err) {
+    handleDbError(err, 'reorder wishlist categories')
   }
 }

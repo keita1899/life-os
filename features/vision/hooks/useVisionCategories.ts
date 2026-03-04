@@ -5,6 +5,7 @@ import {
   createVisionCategory,
   updateVisionCategory,
   deleteVisionCategory,
+  reorderVisionCategories,
 } from '../lib'
 import type {
   VisionCategory,
@@ -46,6 +47,13 @@ export function useVisionCategories() {
     return true
   }
 
+  const handleReorderCategories = async (
+    updates: { id: number; sortOrder: number }[],
+  ): Promise<void> => {
+    await reorderVisionCategories(updates)
+    await mutate(SWR_KEYS.visionCategories)
+  }
+
   return {
     categories: data,
     isLoading,
@@ -57,5 +65,6 @@ export function useVisionCategories() {
     createVisionCategory: handleCreateVisionCategory,
     updateVisionCategory: handleUpdateVisionCategory,
     deleteVisionCategory: handleDeleteVisionCategory,
+    reorderCategories: handleReorderCategories,
   }
 }

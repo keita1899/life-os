@@ -67,11 +67,7 @@ export default function VisionPage() {
         category: categoryMap.get(categoryId!) || null,
         items: items.sort((a, b) => a.order - b.order),
       }))
-      .sort((a, b) => {
-        const aName = a.category?.name || ''
-        const bName = b.category?.name || ''
-        return aName.localeCompare(bName, 'ja')
-      })
+      .sort((a, b) => (a.category?.sortOrder ?? 0) - (b.category?.sortOrder ?? 0))
   }, [items, categories, selectedCategoryId])
 
   const accordionKeys = useMemo(() => {

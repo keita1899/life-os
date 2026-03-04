@@ -5,6 +5,7 @@ import {
   createRuleCategory,
   updateRuleCategory,
   deleteRuleCategory,
+  reorderRuleCategories,
 } from '../lib'
 import type {
   RuleCategory,
@@ -46,6 +47,13 @@ export function useRuleCategories() {
     return true
   }
 
+  const handleReorderCategories = async (
+    updates: { id: number; sortOrder: number }[],
+  ): Promise<void> => {
+    await reorderRuleCategories(updates)
+    await mutate(SWR_KEYS.ruleCategories)
+  }
+
   return {
     categories: data,
     isLoading,
@@ -57,5 +65,6 @@ export function useRuleCategories() {
     createRuleCategory: handleCreateRuleCategory,
     updateRuleCategory: handleUpdateRuleCategory,
     deleteRuleCategory: handleDeleteRuleCategory,
+    reorderCategories: handleReorderCategories,
   }
 }

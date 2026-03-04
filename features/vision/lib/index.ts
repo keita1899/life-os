@@ -3,6 +3,7 @@ export {
   createVisionCategory,
   updateVisionCategory,
   deleteVisionCategory,
+  reorderVisionCategories,
 } from './category'
 export {
   getAllVisionItems,
