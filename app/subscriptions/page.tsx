@@ -1,7 +1,6 @@
 'use client'
 
-import { useState, useMemo } from 'react'
-import { Button } from '@/components/ui/button'
+import { useMemo } from 'react'
 import { InlineCreateButton } from '@/components/ui/inline-create-button'
 import { CreateButton } from '@/components/ui/create-button'
 import { useCreateShortcut } from '@/hooks/useCreateShortcut'
@@ -9,7 +8,10 @@ import { useDialogState } from '@/hooks/useDialogState'
 import { useDeleteConfirm } from '@/hooks/useDeleteConfirm'
 import { useAsyncOperation } from '@/hooks/useAsyncOperation'
 import { useAutoExpandAccordion } from '@/hooks/useAutoExpandAccordion'
+import { useCrossGroupDnd } from '@/hooks/useCrossGroupDnd'
 import { GroupedAccordion } from '@/components/ui/grouped-accordion'
+import { DndContext, closestCenter } from '@dnd-kit/core'
+import { DragOverlayPreview } from '@/components/ui/drag-overlay-preview'
 import {
   SubscriptionList,
   SubscriptionDialog,
@@ -52,8 +54,12 @@ export default function SubscriptionsPage() {
   })
 
   const groupedSubscriptions = useMemo(() => {
-    const active = subscriptions.filter((sub) => sub.active)
-    const inactive = subscriptions.filter((sub) => !sub.active)
+    const active = subscriptions
+      .filter((sub) => sub.active)
+      .sort((a, b) => a.order - b.order)
+    const inactive = subscriptions
+      .filter((sub) => !sub.active)
+      .sort((a, b) => a.order - b.order)
     return [
       {
         key: 'active',
@@ -74,6 +80,28 @@ export default function SubscriptionsPage() {
   )
   const { openKeys: openAccordionKeys, setOpenKeys: setOpenAccordionKeys } =
     useAutoExpandAccordion(groupKeys)
+
+  // クロスグループ DnD
+  const dndGroups = useMemo(() => {
+    return groupedSubscriptions.map((g) => ({
+      key: g.key,
+      items: g.subscriptions.map((s) => ({ id: s.id, title: s.name })),
+    }))
+  }, [groupedSubscriptions])
+
+  const crossGroupDnd = useCrossGroupDnd({
+    visibleGroups: dndGroups,
+    allItems: subscriptions.map((s) => ({ id: s.id, title: s.name })),
+    reorderItems: reorderSubscriptions,
+    updateDate: async (id, groupKey) => {
+      const active = groupKey === 'active'
+      await execute(
+        () => toggleSubscriptionActive(id, active),
+        'サブスクの移動に失敗しました',
+      )
+    },
+    excludedGroupKeys: [],
+  })
 
   const monthlyTotal = useMemo(() => {
     return calculateMonthlyTotal(subscriptions)
@@ -178,51 +206,64 @@ export default function SubscriptionsPage() {
       {isLoading ? (
         <Loading />
       ) : (
-        <GroupedAccordion
-          value={openAccordionKeys}
-          onValueChange={setOpenAccordionKeys}
-          items={groupedSubscriptions.map((group) => ({
-            key: group.key,
-            trigger: (
-              <div className="flex w-full items-center gap-2">
-                <h2 className="text-lg font-semibold text-stone-900 dark:text-stone-100">
-                  {group.title}
-                </h2>
-                {group.subscriptions.length > 0 && (
-                  <span className="text-sm text-muted-foreground">
-                    {group.subscriptions.length}
-                  </span>
-                )}
-                {group.key === 'active' && monthlyTotal > 0 && (
-                  <span className="ml-auto text-lg text-muted-foreground">
-                    月額合計:{' '}
-                    <span className="font-semibold text-foreground tabular-nums">
-                      {monthlyTotal.toLocaleString()}円
+        <DndContext
+          sensors={crossGroupDnd.sensors}
+          collisionDetection={closestCenter}
+          onDragStart={crossGroupDnd.handleDragStart}
+          onDragOver={crossGroupDnd.handleDragOver}
+          onDragEnd={crossGroupDnd.handleDragEnd}
+          onDragCancel={crossGroupDnd.handleDragCancel}
+        >
+          <GroupedAccordion
+            value={openAccordionKeys}
+            onValueChange={setOpenAccordionKeys}
+            items={groupedSubscriptions.map((group) => ({
+              key: group.key,
+              trigger: (
+                <div className="flex w-full items-center gap-2">
+                  <h2 className="text-lg font-semibold text-stone-900 dark:text-stone-100">
+                    {group.title}
+                  </h2>
+                  {group.subscriptions.length > 0 && (
+                    <span className="text-sm text-muted-foreground">
+                      {group.subscriptions.length}
                     </span>
-                  </span>
-                )}
-              </div>
-            ),
-            content: (
-              <div className="space-y-4">
-                <SubscriptionList
-                  subscriptions={group.subscriptions}
-                  onEdit={handleEditSubscription}
-                  onDelete={deleteConfirm.handleDeleteClick}
-                  onToggleActive={handleToggleActive}
-                  onRename={handleRenameSubscription}
-                  onReorder={reorderSubscriptions}
-                />
-                {group.key === 'active' && (
-                  <InlineCreateButton
-                    label="サブスクを追加"
-                    onClick={handleCreateClick}
+                  )}
+                  {group.key === 'active' && monthlyTotal > 0 && (
+                    <span className="ml-auto text-lg text-muted-foreground">
+                      月額合計:{' '}
+                      <span className="font-semibold text-foreground tabular-nums">
+                        {monthlyTotal.toLocaleString()}円
+                      </span>
+                    </span>
+                  )}
+                </div>
+              ),
+              content: (
+                <div className="space-y-4">
+                  <SubscriptionList
+                    subscriptions={group.subscriptions}
+                    onEdit={handleEditSubscription}
+                    onDelete={deleteConfirm.handleDeleteClick}
+                    onToggleActive={handleToggleActive}
+                    onRename={handleRenameSubscription}
+                    onReorder={reorderSubscriptions}
+                    groupKey={group.key}
+                    isDropTarget={crossGroupDnd.isDropTarget(group.key)}
+                    insertBeforeId={crossGroupDnd.isDropTarget(group.key) ? crossGroupDnd.insertBeforeId : undefined}
                   />
-                )}
-              </div>
-            ),
-          }))}
-        />
+                  {group.key === 'active' && (
+                    <InlineCreateButton
+                      label="サブスクを追加"
+                      onClick={handleCreateClick}
+                    />
+                  )}
+                </div>
+              ),
+            }))}
+          />
+          <DragOverlayPreview activeItem={crossGroupDnd.activeTask} />
+        </DndContext>
       )}
 
       <SubscriptionDialog
