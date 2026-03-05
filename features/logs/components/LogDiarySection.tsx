@@ -11,7 +11,7 @@ import {
   FormItem,
 } from '@/components/ui/form'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
-import { AutoResizeTextarea } from '@/components/ui/textarea-autosize'
+import { MarkdownTextarea } from '@/components/ui/markdown-textarea'
 import { Loader2 } from 'lucide-react'
 import type { DailyLog, UpdateDailyLogInput } from '../types/daily-log'
 
@@ -59,7 +59,7 @@ export function LogDiarySection({
     if (value === lastSavedRef.current) return
 
     const timeoutId = setTimeout(async () => {
-      const normalized = value.trim() || null
+      const normalized = value.trim() ? value : null
       setIsSaving(true)
       try {
         await onUpdateRef.current({ diary: normalized })
@@ -109,7 +109,7 @@ export function LogDiarySection({
                 render={({ field }) => (
                   <FormItem>
                     <FormControl>
-                      <AutoResizeTextarea
+                      <MarkdownTextarea
                         {...field}
                         ref={field.ref}
                         placeholder="今日の日記を書いてください..."
