@@ -8,6 +8,11 @@ import type {
   RecurrenceRule,
 } from '../types/event'
 
+/** order は SQLite 予約語のためクォートが必要 */
+const EVENT_COLUMNS = DB_COLUMNS.EVENTS.map((col) =>
+  col === 'order' ? '"order"' : col,
+).join(', ')
+
 const EVENT_UPDATE_MAPPING: FieldMapping<UpdateEventInput> = [
   { key: 'title', column: 'title' },
   { key: 'startDatetime', column: 'start_datetime' },
@@ -50,6 +55,7 @@ interface DbEvent {
   recurrence_day_of_month: number | null
   recurrence_end_date: string | null
   recurrence_excluded_dates: string | null
+  order: number
   created_at: string
   updated_at: string
 }
@@ -97,6 +103,7 @@ function mapDbEventToEvent(dbEvent: DbEvent): Event {
     recurrenceDayOfMonth: dbEvent.recurrence_day_of_month ?? null,
     recurrenceEndDate: dbEvent.recurrence_end_date || null,
     recurrenceExcludedDates: excludedDates,
+    order: dbEvent.order,
     createdAt: dbEvent.created_at,
     updatedAt: dbEvent.updated_at,
   }
@@ -111,9 +118,14 @@ export async function createEvent(input: CreateEventInput): Promise<Event> {
         ? input.recurrenceDaysOfWeek!.join(',')
         : null
 
+    const maxOrderResult = await db.select<{ max_order: number | null }[]>(
+      'SELECT MAX("order") as max_order FROM events',
+    )
+    const nextOrder = (maxOrderResult[0]?.max_order ?? -1) + 1
+
     await db.execute(
-      `INSERT INTO events (title, start_datetime, end_datetime, all_day, category, description, recurrence_rule, recurrence_day_of_week, recurrence_days_of_week, recurrence_day_of_month, recurrence_end_date, recurrence_excluded_dates)
-       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+      `INSERT INTO events (title, start_datetime, end_datetime, all_day, category, description, recurrence_rule, recurrence_day_of_week, recurrence_days_of_week, recurrence_day_of_month, recurrence_end_date, recurrence_excluded_dates, "order")
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
       [
         input.title,
         input.startDatetime,
@@ -127,11 +139,12 @@ export async function createEvent(input: CreateEventInput): Promise<Event> {
         input.recurrenceDayOfMonth ?? null,
         input.recurrenceEndDate || null,
         null,
+        nextOrder,
       ],
     )
 
     const result = await db.select<DbEvent[]>(
-      `SELECT ${DB_COLUMNS.EVENTS.join(', ')} FROM events 
+      `SELECT ${EVENT_COLUMNS} FROM events 
        WHERE title = ? AND start_datetime = ?
        ORDER BY created_at DESC, id DESC 
        LIMIT 1`,
@@ -153,14 +166,30 @@ export async function getAllEvents(): Promise<Event[]> {
 
   try {
     const result = await db.select<DbEvent[]>(
-      `SELECT ${DB_COLUMNS.EVENTS.join(
-        ', ',
-      )} FROM events ORDER BY start_datetime ASC, created_at ASC`,
+      `SELECT ${EVENT_COLUMNS} FROM events ORDER BY "order" ASC, start_datetime ASC`,
     )
 
     return result.map(mapDbEventToEvent)
   } catch (err) {
     handleDbError(err, 'get events')
+  }
+}
+
+export async function reorderEvents(
+  updates: { id: number; order: number }[],
+): Promise<void> {
+  if (updates.length === 0) return
+  const db = await getDatabase()
+
+  try {
+    for (const { id, order } of updates) {
+      await db.execute('UPDATE events SET "order" = ? WHERE id = ?', [
+        order,
+        id,
+      ])
+    }
+  } catch (err) {
+    handleDbError(err, 'reorder events')
   }
 }
 
@@ -175,7 +204,7 @@ export async function updateEvent(
   if (params === null) {
     try {
       const result = await db.select<DbEvent[]>(
-        `SELECT ${DB_COLUMNS.EVENTS.join(', ')} FROM events WHERE id = ?`,
+        `SELECT ${EVENT_COLUMNS} FROM events WHERE id = ?`,
         [id],
       )
       if (result.length === 0) {
@@ -196,7 +225,7 @@ export async function updateEvent(
     )
 
     const result = await db.select<DbEvent[]>(
-      `SELECT ${DB_COLUMNS.EVENTS.join(', ')} FROM events WHERE id = ?`,
+      `SELECT ${EVENT_COLUMNS} FROM events WHERE id = ?`,
       [id],
     )
 

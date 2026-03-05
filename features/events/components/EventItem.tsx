@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react'
 import { Calendar, FileText } from 'lucide-react'
+import { SortableDragHandle } from '@/components/ui/sortable-list-item'
 import { EditDeleteDropdownMenu } from '@/components/ui/edit-delete-dropdown-menu'
 import {
   Accordion,
@@ -29,9 +30,10 @@ interface EventItemProps {
   onEdit?: (event: Event) => void
   onDelete?: (event: Event) => void
   onRename?: (event: Event, title: string) => Promise<void>
+  showDragHandle?: boolean
 }
 
-export function EventItem({ event, onEdit, onDelete, onRename }: EventItemProps) {
+export function EventItem({ event, onEdit, onDelete, onRename, showDragHandle }: EventItemProps) {
   const [isDark, setIsDark] = useState(false)
 
   useEffect(() => {
@@ -84,6 +86,7 @@ export function EventItem({ event, onEdit, onDelete, onRename }: EventItemProps)
           : undefined
       }
     >
+      {showDragHandle && <SortableDragHandle />}
       <div className="mt-0.5">
         <Calendar
           className={cn(

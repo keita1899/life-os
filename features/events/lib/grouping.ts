@@ -91,9 +91,19 @@ export function groupEvents(events: Event[]): EventGroup[] {
     }
   })
 
+  // 各グループ内を開始時間順にソート
+  const sortByTime = (a: Event, b: Event) =>
+    a.startDatetime.localeCompare(b.startDatetime)
+  todayGroup.events.sort(sortByTime)
+  tomorrowGroup.events.sort(sortByTime)
+  overdueGroup.events.sort(sortByTime)
+
   const sortedDateGroups = Array.from(dateGroups.entries())
     .sort(([a], [b]) => a.localeCompare(b))
-    .map(([dateStr, evts]) => ({ ...createDateGroup(dateStr), events: evts }))
+    .map(([dateStr, evts]) => ({
+      ...createDateGroup(dateStr),
+      events: evts.sort(sortByTime),
+    }))
 
   const result: EventGroup[] = [todayGroup, tomorrowGroup]
   if (overdueGroup.events.length > 0) result.push(overdueGroup)

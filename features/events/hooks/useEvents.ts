@@ -1,5 +1,5 @@
 import useSWR, { useSWRConfig } from 'swr'
-import { createEvent, getAllEvents, updateEvent, deleteEvent } from '../lib'
+import { createEvent, getAllEvents, updateEvent, deleteEvent, reorderEvents as reorderEventsDb } from '../lib'
 import type { Event, CreateEventInput, UpdateEventInput } from '../types/event'
 import { SWR_KEYS } from '@/lib/swr-keys'
 
@@ -48,6 +48,22 @@ export function useEvents() {
     return true
   }
 
+  const handleReorderEvents = async (updates: { id: number; order: number }[]) => {
+    await reorderEventsDb(updates)
+    await mutate(
+      SWR_KEYS.events,
+      (current: Event[] | undefined) => {
+        if (!current) return current
+        const orderMap = new Map(updates.map((u) => [u.id, u.order]))
+        return [...current].map((e) => {
+          const newOrder = orderMap.get(e.id)
+          return newOrder !== undefined ? { ...e, order: newOrder } : e
+        }).sort((a, b) => a.order - b.order)
+      },
+      { revalidate: false },
+    )
+  }
+
   return {
     events: data,
     isLoading,
@@ -55,6 +71,7 @@ export function useEvents() {
     createEvent: handleCreateEvent,
     updateEvent: handleUpdateEvent,
     deleteEvent: handleDeleteEvent,
+    reorderEvents: handleReorderEvents,
     refreshEvents: () => mutate(SWR_KEYS.events),
   }
 }

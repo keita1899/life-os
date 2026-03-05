@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useMemo, useCallback } from 'react'
-import { startOfDay, subYears, addMonths, addDays, format } from 'date-fns'
+import { startOfDay, subYears, addMonths, addDays, format, parseISO, setHours, setMinutes, setSeconds, getHours, getMinutes, getSeconds } from 'date-fns'
 import { Button } from '@/components/ui/button'
 import { InlineCreateButton } from '@/components/ui/inline-create-button'
 import { CreateButton } from '@/components/ui/create-button'
@@ -10,7 +10,11 @@ import { useDialogState } from '@/hooks/useDialogState'
 import { useDeleteConfirm } from '@/hooks/useDeleteConfirm'
 import { useAsyncOperation } from '@/hooks/useAsyncOperation'
 import { useAutoExpandAccordion } from '@/hooks/useAutoExpandAccordion'
+import { useCrossGroupDnd } from '@/hooks/useCrossGroupDnd'
 import { GroupedAccordion } from '@/components/ui/grouped-accordion'
+import { DndContext, closestCenter } from '@dnd-kit/core'
+import { DragOverlayPreview } from '@/components/ui/drag-overlay-preview'
+import { Calendar } from 'lucide-react'
 import {
   EventList,
   EventDialog,
@@ -29,7 +33,7 @@ import type {
 } from '@/features/events'
 
 export default function EventsPage() {
-  const { events, isLoading, error, createEvent, updateEvent, deleteEvent } =
+  const { events, isLoading, error, createEvent, updateEvent, deleteEvent, reorderEvents } =
     useEvents()
   const {
     isDialogOpen,
@@ -63,6 +67,58 @@ export default function EventsPage() {
   const groupKeys = useMemo(() => visibleGroups.map((g) => g.key), [visibleGroups])
   const { openKeys: openAccordionKeys, setOpenKeys: setOpenAccordionKeys } =
     useAutoExpandAccordion(groupKeys)
+
+  // DnD 用グループ: 各グループ内のイベントをアイテムとして渡す
+  const dndGroups = useMemo(
+    () =>
+      visibleGroups.map((g) => ({
+        key: g.key,
+        items: g.events,
+      })),
+    [visibleGroups],
+  )
+
+  const crossGroupDnd = useCrossGroupDnd({
+    visibleGroups: dndGroups,
+    allItems: expandedEvents,
+    reorderItems: reorderEvents,
+    updateDate: async (id, dateStr) => {
+      const event = events.find((e) => e.id === id)
+      if (!event || !dateStr) return
+
+      // 元の時刻を保持しつつ日付を変更
+      const originalDate = parseISO(event.startDatetime)
+      const newDate = parseISO(dateStr)
+      const newStart = setSeconds(
+        setMinutes(
+          setHours(newDate, getHours(originalDate)),
+          getMinutes(originalDate),
+        ),
+        getSeconds(originalDate),
+      )
+      const newStartDatetime = format(newStart, "yyyy-MM-dd'T'HH:mm:ss")
+
+      // endDatetime も同じ日数分シフト
+      let newEndDatetime: string | null = null
+      if (event.endDatetime) {
+        const originalEnd = parseISO(event.endDatetime)
+        const durationMs = originalEnd.getTime() - originalDate.getTime()
+        const newEnd = new Date(newStart.getTime() + durationMs)
+        newEndDatetime = format(newEnd, "yyyy-MM-dd'T'HH:mm:ss")
+      }
+
+      await execute(
+        () =>
+          updateEvent(id, {
+            startDatetime: newStartDatetime,
+            endDatetime: newEndDatetime,
+          }),
+        '予定の移動に失敗しました',
+      )
+    },
+    excludedGroupKeys: [],
+    disableSameGroupReorder: true,
+  })
 
   const handleCreateEvent = async (input: CreateEventInput) => {
     const result = await execute(
@@ -168,41 +224,58 @@ export default function EventsPage() {
       {isLoading ? (
         <Loading />
       ) : (
-        <GroupedAccordion
-          value={openAccordionKeys}
-          onValueChange={setOpenAccordionKeys}
-          items={visibleGroups.map((group) => ({
-            key: group.key,
-            trigger: (
-              <div className="flex items-center gap-2">
-                <h2 className="text-lg font-semibold text-stone-900 dark:text-stone-100">
-                  {group.title}
-                </h2>
-                {group.events.length > 0 && (
-                  <span className="text-sm text-muted-foreground">
-                    {group.events.length}
-                  </span>
-                )}
-              </div>
-            ),
-            content: (
-              <div className="space-y-4">
-                <EventList
-                  events={group.events}
-                  onEdit={handleEditEvent}
-                  onDelete={deleteConfirm.handleDeleteClick}
-                  onRename={handleRenameEvent}
-                />
-                {group.key !== 'overdue' && (
-                  <InlineCreateButton
-                    label="予定を追加"
-                    onClick={() => handleInlineCreate(getGroupDate(group.key))}
+        <DndContext
+          sensors={crossGroupDnd.sensors}
+          collisionDetection={closestCenter}
+          onDragStart={crossGroupDnd.handleDragStart}
+          onDragOver={crossGroupDnd.handleDragOver}
+          onDragEnd={crossGroupDnd.handleDragEnd}
+          onDragCancel={crossGroupDnd.handleDragCancel}
+        >
+          <GroupedAccordion
+            value={openAccordionKeys}
+            onValueChange={setOpenAccordionKeys}
+            items={visibleGroups.map((group) => ({
+              key: group.key,
+              trigger: (
+                <div className="flex items-center gap-2">
+                  <h2 className="text-lg font-semibold text-stone-900 dark:text-stone-100">
+                    {group.title}
+                  </h2>
+                  {group.events.length > 0 && (
+                    <span className="text-sm text-muted-foreground">
+                      {group.events.length}
+                    </span>
+                  )}
+                </div>
+              ),
+              content: (
+                <div className="space-y-4">
+                  <EventList
+                    events={group.events}
+                    onEdit={handleEditEvent}
+                    onDelete={deleteConfirm.handleDeleteClick}
+                    onRename={handleRenameEvent}
+                    onReorder={reorderEvents}
+                    groupKey={group.key}
+                    isDropTarget={crossGroupDnd.isDropTarget(group.key)}
+                    insertBeforeId={crossGroupDnd.isDropTarget(group.key) ? crossGroupDnd.insertBeforeId : undefined}
                   />
-                )}
-              </div>
-            ),
-          }))}
-        />
+                  {group.key !== 'overdue' && (
+                    <InlineCreateButton
+                      label="予定を追加"
+                      onClick={() => handleInlineCreate(getGroupDate(group.key))}
+                    />
+                  )}
+                </div>
+              ),
+            }))}
+          />
+          <DragOverlayPreview
+            activeItem={crossGroupDnd.activeTask}
+            icon={<Calendar className="mt-0.5 h-5 w-5 shrink-0 text-sky-700 dark:text-sky-300" />}
+          />
+        </DndContext>
       )}
 
       <EventDialog

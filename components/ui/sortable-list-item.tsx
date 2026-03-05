@@ -17,11 +17,14 @@ const SortableItemContext = createContext<DragHandleContext | null>(null)
 interface SortableListItemProps {
   id: number
   children: ReactNode
+  /** ドラッグ中に破線プレースホルダーを表示（DragOverlay と併用する場合に有効化） */
+  ghostPlaceholder?: boolean
 }
 
 export function SortableListItem({
   id,
   children,
+  ghostPlaceholder = false,
 }: SortableListItemProps) {
   const {
     attributes,
@@ -35,12 +38,16 @@ export function SortableListItem({
   const style = {
     transform: CSS.Transform.toString(transform),
     transition,
-    opacity: isDragging ? 0.5 : 1,
+    opacity: isDragging && !ghostPlaceholder ? 0.5 : undefined,
   }
 
   return (
     <SortableItemContext.Provider value={{ attributes, listeners }}>
-      <div ref={setNodeRef} style={style}>
+      <div
+        ref={setNodeRef}
+        style={style}
+        className={isDragging && ghostPlaceholder ? 'opacity-30 rounded-lg border-2 border-dashed border-primary/40' : ''}
+      >
         {children}
       </div>
     </SortableItemContext.Provider>

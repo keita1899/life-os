@@ -12,6 +12,7 @@ export {
   createEvent,
   getAllEvents,
   deleteBarcelonaMatches,
+  reorderEvents,
   getEventsForDate,
   formatEventTime,
   sortEventsByTime,

@@ -12,7 +12,10 @@ import { useDialogState } from '@/hooks/useDialogState'
 import { useDeleteConfirm } from '@/hooks/useDeleteConfirm'
 import { useAsyncOperation } from '@/hooks/useAsyncOperation'
 import { useAutoExpandAccordion } from '@/hooks/useAutoExpandAccordion'
+import { useCrossGroupDnd } from '@/hooks/useCrossGroupDnd'
 import { GroupedAccordion } from '@/components/ui/grouped-accordion'
+import { DndContext, closestCenter } from '@dnd-kit/core'
+import { DragOverlayPreview } from '@/components/ui/drag-overlay-preview'
 import {
   TaskList,
   TaskDialog,
@@ -97,6 +100,23 @@ export default function TasksPage() {
   const groupKeys = useMemo(() => visibleGroups.map((g) => g.key), [visibleGroups])
   const { openKeys: openAccordionKeys, setOpenKeys: setOpenAccordionKeys } =
     useAutoExpandAccordion(groupKeys)
+
+  const dndGroups = useMemo(
+    () => visibleGroups.map((g) => ({ key: g.key, items: g.tasks })),
+    [visibleGroups],
+  )
+
+  const crossGroupDnd = useCrossGroupDnd({
+    visibleGroups: dndGroups,
+    allItems: tasksWithNextOnly,
+    reorderItems: reorderTasks,
+    updateDate: async (id, executionDate) => {
+      await execute(
+        () => updateTask(id, { executionDate }),
+        'タスクの移動に失敗しました',
+      )
+    },
+  })
 
   const handleCreateTask = async (input: CreateTaskInput) => {
     const result = await execute(
@@ -277,75 +297,91 @@ export default function TasksPage() {
       {isLoading ? (
         <Loading />
       ) : (
-        <GroupedAccordion
-          value={openAccordionKeys}
-          onValueChange={setOpenAccordionKeys}
-          items={visibleGroups.map((group) => ({
-            key: group.key,
-            trigger: (
-              <div className="flex w-full items-center justify-between">
-                <div className="flex items-center gap-2">
-                  <h2 className="text-lg font-semibold text-stone-900 dark:text-stone-100">
-                    {group.title}
-                  </h2>
-                  {group.tasks.length > 0 && (
-                    <span className="text-sm text-muted-foreground">
-                      {group.tasks.length}
-                    </span>
-                  )}
-                </div>
-              </div>
-            ),
-            content: (
-              <div className="space-y-4">
-                <TaskList
-                  tasks={group.tasks}
-                  onEdit={handleEditTask}
-                  onDelete={deleteConfirm.handleDeleteClick}
-                  onToggleCompletion={handleToggleCompletion}
-                  onUpdateExecutionDate={handleUpdateExecutionDate}
-                  onRename={handleRenameTask}
-                  onReorder={reorderTasks}
-                />
-                {group.key === 'overdue' && group.tasks.length > 0 && (
-                  <div className="flex justify-end">
-                    <Button
-                      type="button"
-                      variant="outline"
-                      size="sm"
-                      onClick={() =>
-                        void handleUpdateOverdueTasksToToday()
-                      }
-                    >
-                      <Calendar className="mr-2 h-4 w-4" />
-                      今日に戻す
-                    </Button>
+        <DndContext
+          sensors={crossGroupDnd.sensors}
+          collisionDetection={closestCenter}
+          onDragStart={crossGroupDnd.handleDragStart}
+          onDragOver={crossGroupDnd.handleDragOver}
+          onDragEnd={crossGroupDnd.handleDragEnd}
+          onDragCancel={crossGroupDnd.handleDragCancel}
+        >
+          <GroupedAccordion
+            value={openAccordionKeys}
+            onValueChange={setOpenAccordionKeys}
+            items={visibleGroups.map((group) => {
+              const isCompleted = group.key === 'completed'
+              return {
+                key: group.key,
+                trigger: (
+                  <div className="flex w-full items-center justify-between">
+                    <div className="flex items-center gap-2">
+                      <h2 className="text-lg font-semibold text-stone-900 dark:text-stone-100">
+                        {group.title}
+                      </h2>
+                      {group.tasks.length > 0 && (
+                        <span className="text-sm text-muted-foreground">
+                          {group.tasks.length}
+                        </span>
+                      )}
+                    </div>
                   </div>
-                )}
-                {group.key === 'completed' && group.tasks.length > 0 && (
-                  <div className="flex justify-end">
-                    <Button
-                      type="button"
-                      variant="outline"
-                      size="sm"
-                      className="text-destructive hover:text-destructive hover:bg-destructive/10"
-                      onClick={handleDeleteCompletedTasksClick}
-                    >
-                      <Trash2 className="mr-2 h-4 w-4" />
-                      完了済みを一括削除
-                    </Button>
+                ),
+                content: (
+                  <div className="space-y-4">
+                    <TaskList
+                      tasks={group.tasks}
+                      onEdit={handleEditTask}
+                      onDelete={deleteConfirm.handleDeleteClick}
+                      onToggleCompletion={handleToggleCompletion}
+                      onUpdateExecutionDate={handleUpdateExecutionDate}
+                      onRename={handleRenameTask}
+                      onReorder={reorderTasks}
+                      groupKey={isCompleted ? undefined : group.key}
+                      isDropTarget={!isCompleted && crossGroupDnd.isDropTarget(group.key)}
+                      insertBeforeId={!isCompleted && crossGroupDnd.isDropTarget(group.key) ? crossGroupDnd.insertBeforeId : undefined}
+                    />
+                    {group.key === 'overdue' && group.tasks.length > 0 && (
+                      <div className="flex justify-end">
+                        <Button
+                          type="button"
+                          variant="outline"
+                          size="sm"
+                          onClick={() =>
+                            void handleUpdateOverdueTasksToToday()
+                          }
+                        >
+                          <Calendar className="mr-2 h-4 w-4" />
+                          今日に戻す
+                        </Button>
+                      </div>
+                    )}
+                    {isCompleted && group.tasks.length > 0 && (
+                      <div className="flex justify-end">
+                        <Button
+                          type="button"
+                          variant="outline"
+                          size="sm"
+                          className="text-destructive hover:text-destructive hover:bg-destructive/10"
+                          onClick={handleDeleteCompletedTasksClick}
+                        >
+                          <Trash2 className="mr-2 h-4 w-4" />
+                          完了済みを一括削除
+                        </Button>
+                      </div>
+                    )}
+                    {!isCompleted && group.key !== 'overdue' && (
+                      <InlineCreateButton
+                        label="タスクを追加"
+                        onClick={() => handleInlineCreate(getGroupDate(group.key))}
+                      />
+                    )}
                   </div>
-                )}
-                {group.key !== 'completed' && group.key !== 'overdue' && (
-                  <InlineCreateButton
-                    label="タスクを追加"
-                    onClick={() => handleInlineCreate(getGroupDate(group.key))}
-                  />
-                )}
-              </div>
-            ),
-          }))}
-        />
+                ),
+              }
+            })}
+          />
+          <DragOverlayPreview activeItem={crossGroupDnd.activeTask} />
+        </DndContext>
       )}
 
       <TaskDialog

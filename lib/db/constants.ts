@@ -18,6 +18,7 @@ const SCHEMA = {
     'recurrence_day_of_month',
     'recurrence_end_date',
     'recurrence_excluded_dates',
+    'order',
     'created_at',
     'updated_at',
   ],

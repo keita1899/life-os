@@ -16,6 +16,7 @@ import { migration014 } from './014_weekday_themes'
 import { migration015 } from './015_category_sort_order'
 import { migration016 } from './016_subscription_order'
 import { migration017 } from './017_drop_dev_tasks_order_unique'
+import { migration018 } from './018_event_order'
 
 export const allMigrations: Migration[] = [
   migration001,
@@ -35,4 +36,5 @@ export const allMigrations: Migration[] = [
   migration015,
   migration016,
   migration017,
+  migration018,
 ]

@@ -29,6 +29,7 @@ export interface Event {
   recurrenceDayOfMonth: number | null
   recurrenceEndDate: string | null
   recurrenceExcludedDates: string[]
+  order: number
   createdAt: string
   updatedAt: string
 }

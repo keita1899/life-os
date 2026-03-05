@@ -4,6 +4,7 @@ export {
   updateEvent,
   deleteEvent,
   deleteBarcelonaMatches,
+  reorderEvents,
 } from './event'
 export { expandRecurringEvents } from './recurrence'
 export { groupEvents } from './grouping'
