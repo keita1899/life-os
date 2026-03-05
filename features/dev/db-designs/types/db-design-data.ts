@@ -41,5 +41,6 @@ export const COLUMN_TYPES = [
   'date',
   'datetime',
   'float',
+  'decimal',
   'json',
 ] as const

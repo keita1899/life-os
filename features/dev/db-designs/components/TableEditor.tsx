@@ -1,7 +1,7 @@
 'use client'
 
 import type { ReactElement } from 'react'
-import { useCallback } from 'react'
+import { useCallback, useState } from 'react'
 import {
   Plus,
   Trash2,
@@ -9,7 +9,22 @@ import {
   ChevronRight,
   GripVertical,
 } from 'lucide-react'
-import { useState } from 'react'
+import {
+  DndContext,
+  closestCenter,
+  PointerSensor,
+  KeyboardSensor,
+  useSensor,
+  useSensors,
+  type DragEndEvent,
+} from '@dnd-kit/core'
+import {
+  SortableContext,
+  verticalListSortingStrategy,
+  sortableKeyboardCoordinates,
+  useSortable,
+} from '@dnd-kit/sortable'
+import { CSS } from '@dnd-kit/utilities'
 import { cn } from '@/lib/utils'
 import type {
   DbDesignData,
@@ -32,10 +47,38 @@ interface ColumnRowProps {
   onDelete: () => void
 }
 
-function ColumnRow({ column, onUpdate, onDelete }: ColumnRowProps): ReactElement {
+function SortableColumnRow({ column, onUpdate, onDelete }: ColumnRowProps): ReactElement {
+  const {
+    attributes,
+    listeners,
+    setNodeRef,
+    transform,
+    transition,
+    isDragging,
+  } = useSortable({ id: column.id })
+
+  const style = {
+    transform: CSS.Transform.toString(transform),
+    transition,
+  }
+
   return (
-    <div className="flex items-center gap-1.5">
-      <GripVertical className="h-3.5 w-3.5 shrink-0 text-muted-foreground/40" />
+    <div
+      ref={setNodeRef}
+      style={style}
+      className={cn(
+        'group/col flex items-center gap-1.5',
+        isDragging && 'opacity-50',
+      )}
+    >
+      <button
+        type="button"
+        className="cursor-grab touch-none rounded p-0.5 opacity-0 transition-opacity group-hover/col:opacity-100"
+        {...attributes}
+        {...listeners}
+      >
+        <GripVertical className="h-3.5 w-3.5 shrink-0 text-muted-foreground/40" />
+      </button>
       <input
         type="text"
         value={column.name}
@@ -85,7 +128,7 @@ function ColumnRow({ column, onUpdate, onDelete }: ColumnRowProps): ReactElement
       <button
         type="button"
         onClick={onDelete}
-        className="rounded p-1 text-muted-foreground hover:bg-destructive/10 hover:text-destructive"
+        className="rounded p-1 text-muted-foreground opacity-0 transition-opacity hover:bg-destructive/10 hover:text-destructive group-hover/col:opacity-100"
         title="カラムを削除"
       >
         <Trash2 className="h-3.5 w-3.5" />
@@ -139,6 +182,28 @@ function TableCard({
     })
   }, [table, onUpdate])
 
+  const handleColumnDragEnd = useCallback(
+    (event: DragEndEvent) => {
+      const { active, over } = event
+      if (!over || active.id === over.id) return
+
+      const oldIndex = table.columns.findIndex((c) => c.id === active.id)
+      const newIndex = table.columns.findIndex((c) => c.id === over.id)
+      if (oldIndex === -1 || newIndex === -1) return
+
+      const reordered = [...table.columns]
+      const [moved] = reordered.splice(oldIndex, 1)
+      reordered.splice(newIndex, 0, moved)
+      onUpdate({ ...table, columns: reordered })
+    },
+    [table, onUpdate],
+  )
+
+  const sensors = useSensors(
+    useSensor(PointerSensor, { activationConstraint: { distance: 5 } }),
+    useSensor(KeyboardSensor, { coordinateGetter: sortableKeyboardCoordinates }),
+  )
+
   return (
     <div className="rounded-md border border-input">
       <div className="flex items-center gap-2 px-3 py-2">
@@ -174,14 +239,25 @@ function TableCard({
       </div>
       {isOpen && (
         <div className="space-y-1.5 border-t px-3 py-2">
-          {table.columns.map((col) => (
-            <ColumnRow
-              key={col.id}
-              column={col}
-              onUpdate={(updated) => handleUpdateColumn(col.id, updated)}
-              onDelete={() => handleDeleteColumn(col.id)}
-            />
-          ))}
+          <DndContext
+            sensors={sensors}
+            collisionDetection={closestCenter}
+            onDragEnd={handleColumnDragEnd}
+          >
+            <SortableContext
+              items={table.columns.map((c) => c.id)}
+              strategy={verticalListSortingStrategy}
+            >
+              {table.columns.map((col) => (
+                <SortableColumnRow
+                  key={col.id}
+                  column={col}
+                  onUpdate={(updated) => handleUpdateColumn(col.id, updated)}
+                  onDelete={() => handleDeleteColumn(col.id)}
+                />
+              ))}
+            </SortableContext>
+          </DndContext>
           <button
             type="button"
             onClick={handleAddColumn}
