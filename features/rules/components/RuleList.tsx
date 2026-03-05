@@ -9,6 +9,9 @@ import {
   SortableContext,
   verticalListSortingStrategy,
 } from '@dnd-kit/sortable'
+import { EmptyState } from '@/components/ui/empty-state'
+import { InsertIndicator } from '@/components/ui/insert-indicator'
+import { DroppableGroup } from '@/components/ui/droppable-group'
 import { InlineCreateButton } from '@/components/ui/inline-create-button'
 import { SortableListItem } from '@/components/ui/sortable-list-item'
 import { useSortableList } from '@/hooks/useSortableList'
@@ -24,6 +27,12 @@ interface RuleListProps {
   onReorder?: (updates: { id: number; order: number }[]) => Promise<void>
   showCreateForm?: boolean
   readOnly?: boolean
+  /** 親が DndContext を管理する場合のグループキー */
+  groupKey?: string
+  /** このグループが現在ドロップ先としてハイライトされているか */
+  isDropTarget?: boolean
+  /** クロスグループ移動時、このアイテムの前に挿入されることを示す ID */
+  insertBeforeId?: number | null
 }
 
 export function RuleList({
@@ -34,6 +43,9 @@ export function RuleList({
   onReorder,
   showCreateForm = true,
   readOnly = false,
+  groupKey,
+  isDropTarget: isDropTargetProp = false,
+  insertBeforeId,
 }: RuleListProps) {
   const [isCreating, setIsCreating] = useState(false)
   const [createKey, setCreateKey] = useState(0)
@@ -62,6 +74,44 @@ export function RuleList({
       />
     )
   )
+
+  const renderItems = (ghost: boolean) =>
+    items.map((item) => (
+      <div key={item.id}>
+        {insertBeforeId === item.id && <InsertIndicator />}
+        <SortableListItem id={item.id} ghostPlaceholder={ghost}>
+          <RuleItem
+            item={item}
+            onUpdate={onUpdate}
+            onDelete={onDelete}
+            readOnly={readOnly}
+          />
+        </SortableListItem>
+      </div>
+    ))
+
+  // 親が DndContext を管理するモード（クロスグループ DnD）
+  if (groupKey && onReorder) {
+    return (
+      <div className="space-y-3">
+        <DroppableGroup groupKey={groupKey} isDropTarget={isDropTargetProp}>
+          <SortableContext
+            items={items.map((item) => item.id)}
+            strategy={verticalListSortingStrategy}
+          >
+            <div className="space-y-1">
+              {items.length === 0 ? (
+                <EmptyState message="マイルールがありません" />
+              ) : (
+                renderItems(true)
+              )}
+            </div>
+          </SortableContext>
+        </DroppableGroup>
+        {addButton}
+      </div>
+    )
+  }
 
   return (
     <div className="space-y-3">

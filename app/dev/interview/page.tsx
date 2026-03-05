@@ -12,7 +12,10 @@ import {
   type UpdateInterviewItemInput,
 } from '@/features/dev/interview'
 import { useAutoExpandAccordion } from '@/hooks/useAutoExpandAccordion'
+import { useCrossGroupDnd } from '@/hooks/useCrossGroupDnd'
 import { GroupedAccordion } from '@/components/ui/grouped-accordion'
+import { DndContext, closestCenter } from '@dnd-kit/core'
+import { DragOverlayPreview } from '@/components/ui/drag-overlay-preview'
 import { CreateButton } from '@/components/ui/create-button'
 import { Loading } from '@/components/ui/loading'
 import { ErrorMessage } from '@/components/ui/error-message'
@@ -125,6 +128,41 @@ export default function InterviewPage() {
 
   const { openKeys, setOpenKeys } = useAutoExpandAccordion(accordionKeys)
 
+  // クロスグループ DnD
+  const toItemLike = useCallback((item: InterviewItem) => ({
+    id: item.id,
+    title: item.question,
+  }), [])
+
+  const dndGroups = useMemo(() => {
+    if (!groupedItems) return []
+    const groups = groupedItems.categorized.map((g) => ({
+      key: g.categoryId.toString(),
+      items: g.items.map(toItemLike),
+    }))
+    if (groupedItems.uncategorized.length > 0) {
+      groups.push({
+        key: 'none',
+        items: [...groupedItems.uncategorized].sort((a, b) => a.order - b.order).map(toItemLike),
+      })
+    }
+    return groups
+  }, [groupedItems, toItemLike])
+
+  const crossGroupDnd = useCrossGroupDnd({
+    visibleGroups: dndGroups,
+    allItems: items.map(toItemLike),
+    reorderItems,
+    updateDate: async (id, categoryIdStr) => {
+      const categoryId = categoryIdStr ? parseInt(categoryIdStr, 10) : null
+      await execute(
+        () => updateItem(id, { categoryId }),
+        'Q&Aの移動に失敗しました',
+      )
+    },
+    excludedGroupKeys: [],
+  })
+
   const handleCreate = async (input: CreateInterviewItemInput): Promise<void> => {
     const result = await execute(
       () => createItem(input),
@@ -168,6 +206,99 @@ export default function InterviewPage() {
     }
   }
 
+  const isAllView = selectedCategoryId === 'all' || selectedCategoryId === null
+  const hasContent = groupedItems && (groupedItems.categorized.length > 0 || groupedItems.uncategorized.length > 0)
+
+  const accordionContent = hasContent ? (
+    <div className="space-y-6">
+      {groupedItems!.categorized.length > 0 && (
+        <GroupedAccordion
+          value={openKeys}
+          onValueChange={setOpenKeys}
+          items={[
+            ...groupedItems!.categorized.map(({ categoryId, category, items: groupItems }) => ({
+              key: categoryId.toString(),
+              itemClassName: 'rounded-lg border border-border/50',
+              triggerClassName: 'text-base font-semibold py-3 px-4',
+              contentClassName: 'px-4 pb-3 pt-1',
+              trigger: (
+                <span className="flex items-center gap-2">
+                  <span className="inline-block h-2.5 w-2.5 rounded-full bg-primary/60" />
+                  {category?.name}
+                  <span className="text-xs font-normal text-muted-foreground">
+                    {groupItems.length}
+                  </span>
+                </span>
+              ),
+              content: (
+                <InterviewList
+                  items={groupItems}
+                  onEdit={dialog.handleEdit}
+                  onDelete={deleteConfirm.handleDeleteClick}
+                  onUpdate={handleInlineUpdate}
+                  onCreate={() => handleCreateWithCategory(categoryId)}
+                  onReorder={reorderItems}
+                  groupKey={categoryId.toString()}
+                  isDropTarget={crossGroupDnd.isDropTarget(categoryId.toString())}
+                  insertBeforeId={crossGroupDnd.isDropTarget(categoryId.toString()) ? crossGroupDnd.insertBeforeId : undefined}
+                />
+              ),
+            })),
+            ...(groupedItems!.uncategorized.length > 0
+              ? [{
+                  key: 'uncategorized',
+                  itemClassName: 'rounded-lg border border-border/50',
+                  triggerClassName: 'text-base font-semibold py-3 px-4',
+                  contentClassName: 'px-4 pb-3 pt-1',
+                  trigger: (
+                    <span className="flex items-center gap-2">
+                      <span className="inline-block h-2.5 w-2.5 rounded-full bg-muted-foreground/40" />
+                      未分類
+                      <span className="text-xs font-normal text-muted-foreground">
+                        {groupedItems!.uncategorized.length}
+                      </span>
+                    </span>
+                  ),
+                  content: (
+                    <InterviewList
+                      items={[...groupedItems!.uncategorized].sort((a, b) => a.order - b.order)}
+                      onEdit={dialog.handleEdit}
+                      onDelete={deleteConfirm.handleDeleteClick}
+                      onUpdate={handleInlineUpdate}
+                      onCreate={() => handleCreateWithCategory(null)}
+                      onReorder={reorderItems}
+                      groupKey="none"
+                      isDropTarget={crossGroupDnd.isDropTarget('none')}
+                      insertBeforeId={crossGroupDnd.isDropTarget('none') ? crossGroupDnd.insertBeforeId : undefined}
+                    />
+                  ),
+                }]
+              : []),
+          ]}
+          className="space-y-3"
+        />
+      )}
+      {groupedItems!.categorized.length === 0 && groupedItems!.uncategorized.length > 0 && (
+        <InterviewList
+          items={[...groupedItems!.uncategorized].sort((a, b) => a.order - b.order)}
+          onEdit={dialog.handleEdit}
+          onDelete={deleteConfirm.handleDeleteClick}
+          onUpdate={handleInlineUpdate}
+          onCreate={() => handleCreateWithCategory(null)}
+          onReorder={reorderItems}
+        />
+      )}
+    </div>
+  ) : (
+    <InterviewList
+      items={[]}
+      onEdit={dialog.handleEdit}
+      onDelete={deleteConfirm.handleDeleteClick}
+      onUpdate={handleInlineUpdate}
+      onCreate={handleTopLevelCreate}
+    />
+  )
+
   return (
     <>
       <div className="flex min-h-[calc(100vh-3.5rem)]">
@@ -191,90 +322,18 @@ export default function InterviewPage() {
 
             {isLoading ? (
               <Loading />
-            ) : selectedCategoryId === 'all' || selectedCategoryId === null ? (
-              groupedItems && (groupedItems.categorized.length > 0 || groupedItems.uncategorized.length > 0) ? (
-                <div className="space-y-6">
-                  {groupedItems.categorized.length > 0 && (
-                    <GroupedAccordion
-                      value={openKeys}
-                      onValueChange={setOpenKeys}
-                      items={[
-                        ...groupedItems.categorized.map(({ categoryId, category, items: groupItems }) => ({
-                          key: categoryId.toString(),
-                          itemClassName: 'rounded-lg border border-border/50',
-                          triggerClassName: 'text-base font-semibold py-3 px-4',
-                          contentClassName: 'px-4 pb-3 pt-1',
-                          trigger: (
-                            <span className="flex items-center gap-2">
-                              <span className="inline-block h-2.5 w-2.5 rounded-full bg-primary/60" />
-                              {category?.name}
-                              <span className="text-xs font-normal text-muted-foreground">
-                                {groupItems.length}
-                              </span>
-                            </span>
-                          ),
-                          content: (
-                            <InterviewList
-                              items={groupItems}
-                              onEdit={dialog.handleEdit}
-                              onDelete={deleteConfirm.handleDeleteClick}
-                              onUpdate={handleInlineUpdate}
-                              onCreate={() => handleCreateWithCategory(categoryId)}
-                              onReorder={reorderItems}
-                            />
-                          ),
-                        })),
-                        ...(groupedItems.uncategorized.length > 0
-                          ? [{
-                              key: 'uncategorized',
-                              itemClassName: 'rounded-lg border border-border/50',
-                              triggerClassName: 'text-base font-semibold py-3 px-4',
-                              contentClassName: 'px-4 pb-3 pt-1',
-                              trigger: (
-                                <span className="flex items-center gap-2">
-                                  <span className="inline-block h-2.5 w-2.5 rounded-full bg-muted-foreground/40" />
-                                  未分類
-                                  <span className="text-xs font-normal text-muted-foreground">
-                                    {groupedItems.uncategorized.length}
-                                  </span>
-                                </span>
-                              ),
-                              content: (
-                                <InterviewList
-                                  items={[...groupedItems.uncategorized].sort((a, b) => a.order - b.order)}
-                                  onEdit={dialog.handleEdit}
-                                  onDelete={deleteConfirm.handleDeleteClick}
-                                  onUpdate={handleInlineUpdate}
-                                  onCreate={() => handleCreateWithCategory(null)}
-                                  onReorder={reorderItems}
-                                />
-                              ),
-                            }]
-                          : []),
-                      ]}
-                      className="space-y-3"
-                    />
-                  )}
-                  {groupedItems.categorized.length === 0 && groupedItems.uncategorized.length > 0 && (
-                    <InterviewList
-                      items={[...groupedItems.uncategorized].sort((a, b) => a.order - b.order)}
-                      onEdit={dialog.handleEdit}
-                      onDelete={deleteConfirm.handleDeleteClick}
-                      onUpdate={handleInlineUpdate}
-                      onCreate={() => handleCreateWithCategory(null)}
-                      onReorder={reorderItems}
-                    />
-                  )}
-                </div>
-              ) : (
-                <InterviewList
-                  items={[]}
-                  onEdit={dialog.handleEdit}
-                  onDelete={deleteConfirm.handleDeleteClick}
-                  onUpdate={handleInlineUpdate}
-                  onCreate={handleTopLevelCreate}
-                />
-              )
+            ) : isAllView ? (
+              <DndContext
+                sensors={crossGroupDnd.sensors}
+                collisionDetection={closestCenter}
+                onDragStart={crossGroupDnd.handleDragStart}
+                onDragOver={crossGroupDnd.handleDragOver}
+                onDragEnd={crossGroupDnd.handleDragEnd}
+                onDragCancel={crossGroupDnd.handleDragCancel}
+              >
+                {accordionContent}
+                <DragOverlayPreview activeItem={crossGroupDnd.activeTask} />
+              </DndContext>
             ) : (
               <InterviewList
                 items={[...filteredItems].sort((a, b) => a.order - b.order)}
