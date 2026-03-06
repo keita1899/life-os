@@ -5,7 +5,7 @@ import { useState, useEffect, useRef } from 'react'
 import { MarkdownTextarea } from '@/components/ui/markdown-textarea'
 import { RequirementsMarkdown } from './RequirementsMarkdown'
 import { cn } from '@/lib/utils'
-import { FileText, Eye, SplitSquareVertical, Loader2 } from 'lucide-react'
+import { FileText, Eye, SplitSquareVertical, Loader2, Copy, Check } from 'lucide-react'
 
 export type RequirementsViewMode = 'form' | 'preview' | 'split'
 
@@ -24,6 +24,7 @@ export function RequirementsEditor({
   const [viewMode, setViewMode] = useState<RequirementsViewMode>('split')
   const [isSaving, setIsSaving] = useState(false)
   const [savedMessage, setSavedMessage] = useState(false)
+  const [isCopied, setIsCopied] = useState(false)
   const lastSavedRef = useRef(initialContent)
   const onSaveRef = useRef(onSave)
 
@@ -57,9 +58,16 @@ export function RequirementsEditor({
     return () => clearTimeout(id)
   }, [savedMessage])
 
+  const handleCopy = async () => {
+    await navigator.clipboard.writeText(content)
+    setIsCopied(true)
+    setTimeout(() => setIsCopied(false), 2000)
+  }
+
   return (
     <div className="space-y-4">
       <div className="flex flex-wrap items-center justify-between gap-2">
+        <div className="flex items-center gap-2">
         <div className="flex h-10 box-border items-center rounded-md border border-input">
           <button
             type="button"
@@ -99,6 +107,19 @@ export function RequirementsEditor({
             )}
           >
             <SplitSquareVertical className="h-4 w-4" />
+          </button>
+        </div>
+          <button
+            type="button"
+            onClick={() => void handleCopy()}
+            title="コピー"
+            className="rounded p-2 text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
+          >
+            {isCopied ? (
+              <Check className="h-4 w-4 text-green-600" />
+            ) : (
+              <Copy className="h-4 w-4" />
+            )}
           </button>
         </div>
         <div className="flex items-center gap-1.5 text-sm text-muted-foreground">
