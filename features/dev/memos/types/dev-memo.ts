@@ -4,6 +4,7 @@ export interface DevMemo {
   content: string
   projectId: number | null
   tags: string[]
+  category: string | null
   createdAt: string
   updatedAt: string
 }
@@ -13,6 +14,7 @@ export interface CreateDevMemoInput {
   content: string
   projectId?: number | null
   tags?: string[]
+  category?: string | null
 }
 
 export interface UpdateDevMemoInput {
@@ -20,4 +22,5 @@ export interface UpdateDevMemoInput {
   content?: string
   projectId?: number | null
   tags?: string[]
+  category?: string | null
 }

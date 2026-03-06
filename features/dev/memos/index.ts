@@ -6,6 +6,7 @@ export {
   updateDevMemo,
   deleteDevMemo,
 } from './lib'
+export { MEMO_CATEGORIES, MEMO_CATEGORY_LABEL_MAP } from './lib/categories'
 export type { GetDevMemosOptions, DevMemosOrderBy } from './lib/memo'
 export type {
   DevMemo,

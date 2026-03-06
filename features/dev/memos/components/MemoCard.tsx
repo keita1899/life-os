@@ -10,6 +10,7 @@ import { useCopyToClipboard } from '@/hooks/useCopyToClipboard'
 import { parseUtcTimestamp } from '@/lib/date/formats'
 import { MemoMarkdown } from './MemoMarkdown'
 import type { DevMemo } from '../types/dev-memo'
+import { MEMO_CATEGORY_LABEL_MAP } from '../lib/categories'
 
 interface MemoCardProps {
   memo: DevMemo
@@ -62,6 +63,11 @@ export function MemoCard({
         <div className="min-w-0 flex-1">
           <div className="mb-2 flex flex-wrap items-center gap-2 text-xs text-muted-foreground">
             <span>{formatDateTime(memo.createdAt)}</span>
+            {memo.category != null && MEMO_CATEGORY_LABEL_MAP[memo.category] && (
+              <Badge variant="outline" className="text-xs">
+                {MEMO_CATEGORY_LABEL_MAP[memo.category]}
+              </Badge>
+            )}
             {memo.projectId != null && (
               projectName ? (
                 <Link

@@ -41,6 +41,7 @@ export default function DevMemosPage() {
   const memoDialog = useDialogState<DevMemo>()
   const deleteConfirm = useDeleteConfirm<DevMemo>()
   const [selectedTag, setSelectedTag] = useState<string | null>(null)
+  const [selectedCategory, setSelectedCategory] = useState<string | null>(null)
 
   useCreateShortcut({
     onCreate: memoDialog.handleCreateClick,
@@ -122,6 +123,8 @@ export default function DevMemosPage() {
           <MemoList
             memos={memos}
             projects={projects}
+            selectedCategory={selectedCategory}
+            onCategorySelect={setSelectedCategory}
             selectedTag={selectedTag}
             onTagSelect={setSelectedTag}
             onEdit={memoDialog.handleEdit}

@@ -238,6 +238,7 @@ const SCHEMA = {
     'content',
     'project_id',
     'tags',
+    'category',
     'created_at',
     'updated_at',
   ],

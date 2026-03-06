@@ -11,6 +11,7 @@ interface DbDevMemo {
   content: string
   project_id: number | null
   tags: string
+  category: string | null
   created_at: string
   updated_at: string
 }
@@ -33,6 +34,7 @@ function mapDbMemoToMemo(dbMemo: DbDevMemo): DevMemo {
     content: dbMemo.content,
     projectId: dbMemo.project_id,
     tags: parseTags(dbMemo.tags),
+    category: dbMemo.category,
     createdAt: dbMemo.created_at,
     updatedAt: dbMemo.updated_at,
   }
@@ -44,6 +46,7 @@ export interface GetDevMemosOptions {
   projectId?: number | null
   keyword?: string
   orderBy?: DevMemosOrderBy
+  category?: string | null
 }
 
 const ORDER_CLAUSE = {
@@ -58,48 +61,38 @@ export async function getDevMemos(
   const rawKeyword = options?.keyword?.trim()
   const hasKeyword = Boolean(rawKeyword)
   const projectId = options?.projectId
+  const category = options?.category
   const orderClause = ORDER_CLAUSE[options?.orderBy ?? 'newest']
 
-  const keywordPattern = hasKeyword
-    ? `%${String(rawKeyword).replace(/\\/g, '\\\\').replace(/%/g, '\\%').replace(/_/g, '\\_')}%`
-    : ''
+  const conditions: string[] = []
+  const values: unknown[] = []
+
+  if (projectId != null) {
+    conditions.push('project_id = ?')
+    values.push(projectId)
+  }
+
+  if (hasKeyword) {
+    const keywordPattern = `%${String(rawKeyword).replace(/\\/g, '\\\\').replace(/%/g, '\\%').replace(/_/g, '\\_')}%`
+    conditions.push("(title LIKE ? ESCAPE '\\' OR content LIKE ? ESCAPE '\\')")
+    values.push(keywordPattern, keywordPattern)
+  }
+
+  if (category != null) {
+    conditions.push('category = ?')
+    values.push(category)
+  }
+
+  const whereClause =
+    conditions.length > 0 ? `WHERE ${conditions.join(' AND ')}` : ''
 
   try {
-    if (projectId != null && hasKeyword) {
-      const result = await db.select<DbDevMemo[]>(
-        `SELECT id, title, content, project_id, tags, created_at, updated_at
-         FROM dev_memos
-         WHERE project_id = ? AND (title LIKE ? ESCAPE '\\' OR content LIKE ? ESCAPE '\\')
-         ${orderClause}`,
-        [projectId, keywordPattern, keywordPattern],
-      )
-      return result.map(mapDbMemoToMemo)
-    }
-    if (projectId != null) {
-      const result = await db.select<DbDevMemo[]>(
-        `SELECT id, title, content, project_id, tags, created_at, updated_at
-         FROM dev_memos
-         WHERE project_id = ?
-         ${orderClause}`,
-        [projectId],
-      )
-      return result.map(mapDbMemoToMemo)
-    }
-    if (hasKeyword) {
-      const result = await db.select<DbDevMemo[]>(
-        `SELECT id, title, content, project_id, tags, created_at, updated_at
-         FROM dev_memos
-         WHERE (title LIKE ? ESCAPE '\\' OR content LIKE ? ESCAPE '\\')
-         ${orderClause}`,
-        [keywordPattern, keywordPattern],
-      )
-      return result.map(mapDbMemoToMemo)
-    }
-
     const result = await db.select<DbDevMemo[]>(
-      `SELECT id, title, content, project_id, tags, created_at, updated_at
+      `SELECT id, title, content, project_id, tags, category, created_at, updated_at
        FROM dev_memos
+       ${whereClause}
        ${orderClause}`,
+      values,
     )
     return result.map(mapDbMemoToMemo)
   } catch (err) {
@@ -118,7 +111,7 @@ export async function getDevMemoById(id: number): Promise<DevMemo | null> {
 
   try {
     const result = await db.select<DbDevMemo[]>(
-      `SELECT id, title, content, project_id, tags, created_at, updated_at
+      `SELECT id, title, content, project_id, tags, category, created_at, updated_at
        FROM dev_memos
        WHERE id = ?`,
       [id],
@@ -142,9 +135,9 @@ export async function createDevMemo(
 
   try {
     const insertResult = await db.execute(
-      `INSERT INTO dev_memos (title, content, project_id, tags)
-       VALUES (?, ?, ?, ?)`,
-      [input.title ?? null, input.content, input.projectId ?? null, tagsJson],
+      `INSERT INTO dev_memos (title, content, project_id, tags, category)
+       VALUES (?, ?, ?, ?, ?)`,
+      [input.title ?? null, input.content, input.projectId ?? null, tagsJson, input.category ?? null],
     )
 
     const lastId =
@@ -153,7 +146,7 @@ export async function createDevMemo(
         : undefined
     if (lastId === undefined) {
       const fallback = await db.select<DbDevMemo[]>(
-        `SELECT id, title, content, project_id, tags, created_at, updated_at
+        `SELECT id, title, content, project_id, tags, category, created_at, updated_at
          FROM dev_memos
          ORDER BY id DESC
          LIMIT 1`,
@@ -167,7 +160,7 @@ export async function createDevMemo(
     }
 
     const result = await db.select<DbDevMemo[]>(
-      `SELECT id, title, content, project_id, tags, created_at, updated_at
+      `SELECT id, title, content, project_id, tags, category, created_at, updated_at
        FROM dev_memos
        WHERE id = ?`,
       [lastId],
@@ -220,6 +213,11 @@ export async function updateDevMemo(
   if (input.tags !== undefined) {
     updates.push('tags = ?')
     values.push(JSON.stringify(input.tags))
+  }
+
+  if (input.category !== undefined) {
+    updates.push('category = ?')
+    values.push(input.category ?? null)
   }
 
   if (updates.length === 0) {

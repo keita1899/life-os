@@ -18,6 +18,7 @@ import { migration016 } from './016_subscription_order'
 import { migration017 } from './017_drop_dev_tasks_order_unique'
 import { migration018 } from './018_event_order'
 import { migration019 } from './019_dev_project_readmes'
+import { migration020 } from './020_dev_memos_category'
 
 export const allMigrations: Migration[] = [
   migration001,
@@ -39,4 +40,5 @@ export const allMigrations: Migration[] = [
   migration017,
   migration018,
   migration019,
+  migration020,
 ]

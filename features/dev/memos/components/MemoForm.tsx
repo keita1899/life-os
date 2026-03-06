@@ -19,6 +19,7 @@ import { Input } from '@/components/ui/input'
 import { Button } from '@/components/ui/button'
 import type { DevMemo, CreateDevMemoInput } from '../types/dev-memo'
 import { useDevMemoTagSuggestions } from '../hooks/useDevMemoTagSuggestions'
+import { MEMO_CATEGORIES } from '../lib/categories'
 
 const memoFormSchema = z.object({
   title: z.string().optional(),
@@ -44,6 +45,7 @@ export function MemoForm({
   fixedProjectId,
 }: MemoFormProps): ReactElement {
   const [tags, setTags] = useState<string[]>(initialData?.tags ?? [])
+  const [category, setCategory] = useState<string | null>(initialData?.category ?? null)
   const [isTagInputFocused, setIsTagInputFocused] = useState(false)
   const allSuggestions = useDevMemoTagSuggestions()
 
@@ -64,6 +66,7 @@ export function MemoForm({
       form.setValue('content', initialData.content)
       form.setValue('tagInput', '')
       setTags(initialData.tags)
+      setCategory(initialData.category ?? null)
     } else {
       form.reset({
         title: '',
@@ -71,6 +74,7 @@ export function MemoForm({
         tagInput: '',
       })
       setTags([])
+      setCategory(null)
     }
   }, [initialData, form])
 
@@ -110,9 +114,10 @@ export function MemoForm({
         content,
         projectId: projectIdValue,
         tags,
+        category,
       })
     },
-    [onSubmit, tags, fixedProjectId, initialData?.projectId, form],
+    [onSubmit, tags, category, fixedProjectId, initialData?.projectId, form],
   )
 
   useFormSubmitShortcut({
@@ -124,6 +129,26 @@ export function MemoForm({
     <Form {...form}>
       <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-6">
         <div className="space-y-4">
+          <div>
+            <label className="text-sm font-medium leading-none">カテゴリー</label>
+            <div className="mt-2 flex flex-wrap gap-1.5">
+              {MEMO_CATEGORIES.map((cat) => (
+                <button
+                  key={cat.value}
+                  type="button"
+                  onClick={() => setCategory(category === cat.value ? null : cat.value)}
+                  className={`rounded-full border px-3 py-1.5 text-xs transition-colors ${
+                    category === cat.value
+                      ? 'border-slate-800 bg-slate-800 text-white dark:border-slate-400 dark:bg-slate-400 dark:text-slate-900'
+                      : 'border-slate-300 text-slate-500 hover:border-slate-400 dark:border-slate-600 dark:text-slate-400 dark:hover:border-slate-500'
+                  }`}
+                >
+                  {cat.label}
+                </button>
+              ))}
+            </div>
+          </div>
+
           <FormField
             control={form.control}
             name="title"
