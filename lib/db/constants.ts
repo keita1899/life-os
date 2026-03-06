@@ -306,6 +306,12 @@ const SCHEMA = {
     'content',
     'updated_at',
   ],
+  dev_project_readmes: [
+    'id',
+    'project_id',
+    'content',
+    'updated_at',
+  ],
 } as const
 
 // ────────────────────────────────────────────

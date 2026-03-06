@@ -61,10 +61,13 @@ export const SWR_KEYS = {
     `dev-project-requirements-${projectId}` as const,
   devProjectDbDesign: (projectId: number) =>
     `dev-project-db-design-${projectId}` as const,
+  devProjectReadme: (projectId: number) =>
+    `dev-project-readme-${projectId}` as const,
 
   // ── Interview ──
   interviewItems: 'interview-items',
   interviewCategories: 'interview-categories',
+
 } as const
 
 export function isTransactionsRelatedKey(key: unknown): boolean {

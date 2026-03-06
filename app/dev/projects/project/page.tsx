@@ -57,6 +57,7 @@ import {
   StickyNote,
   FileText,
   Database,
+  BookOpen,
   ChevronDown,
   Check,
   X,
@@ -83,6 +84,10 @@ import {
   DEFAULT_DB_DESIGN_DATA,
   serializeDesignData,
 } from '@/features/dev/db-designs'
+import {
+  useProjectReadme,
+  DEFAULT_README_TEMPLATE,
+} from '@/features/dev/readmes'
 
 const RequirementsEditor = dynamic(
   () =>
@@ -98,6 +103,14 @@ const DbDesignEditor = dynamic(
       default: m.DbDesignEditor,
     })),
   { loading: () => <Loading />, ssr: false },
+)
+
+const ReadmeEditor = dynamic(
+  () =>
+    import('@/features/dev/readmes').then((m) => ({
+      default: m.ReadmeEditor,
+    })),
+  { loading: () => <Loading /> },
 )
 
 const statusLabels: Record<ProjectStatus, string> = {
@@ -165,7 +178,7 @@ function DevProjectPageContent(): ReactElement | null {
   const memoDialog = useDialogState<DevMemo>()
   useCreateShortcut({
     onCreate: activeTab === 'memos' ? memoDialog.handleCreateClick : taskDialog.handleCreateClick,
-    enabled: shouldFetch && !taskDialog.isDialogOpen && !memoDialog.isDialogOpen && activeTab !== 'requirements' && activeTab !== 'db-design',
+    enabled: shouldFetch && !taskDialog.isDialogOpen && !memoDialog.isDialogOpen && activeTab !== 'requirements' && activeTab !== 'db-design' && activeTab !== 'readme',
   })
   const deleteConfirm = useDeleteConfirm<Task>()
   const [isDeletingCompletedDialogOpen, setIsDeletingCompletedDialogOpen] =
@@ -253,6 +266,13 @@ function DevProjectPageContent(): ReactElement | null {
     isLoading: isDbDesignLoading,
     upsertDbDesign,
   } = useProjectDbDesign(
+    Number.isFinite(projectId) ? projectId : null,
+  )
+  const {
+    readme,
+    isLoading: isReadmeLoading,
+    upsertReadme,
+  } = useProjectReadme(
     Number.isFinite(projectId) ? projectId : null,
   )
 
@@ -496,6 +516,13 @@ function DevProjectPageContent(): ReactElement | null {
     await executeTaskOperation(
       () => upsertDbDesign(content),
       'DB設計の保存に失敗しました',
+    )
+  }
+
+  const handleSaveReadme = async (content: string): Promise<void> => {
+    await executeTaskOperation(
+      () => upsertReadme(content),
+      'READMEの保存に失敗しました',
     )
   }
 
@@ -761,7 +788,7 @@ function DevProjectPageContent(): ReactElement | null {
             </section>
 
             <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-8">
-              <TabsList className="grid w-full max-w-[480px] grid-cols-4">
+              <TabsList className="grid w-full max-w-[600px] grid-cols-5">
                 <TabsTrigger value="tasks" className="flex items-center gap-2">
                   <CheckSquare className="h-4 w-4" />
                   タスク
@@ -783,6 +810,13 @@ function DevProjectPageContent(): ReactElement | null {
                 >
                   <Database className="h-4 w-4" />
                   DB設計
+                </TabsTrigger>
+                <TabsTrigger
+                  value="readme"
+                  className="flex items-center gap-2"
+                >
+                  <BookOpen className="h-4 w-4" />
+                  README
                 </TabsTrigger>
               </TabsList>
 
@@ -927,6 +961,19 @@ function DevProjectPageContent(): ReactElement | null {
                       dbDesign?.content ?? serializeDesignData(DEFAULT_DB_DESIGN_DATA)
                     }
                     onSave={handleSaveDbDesign}
+                  />
+                )}
+              </TabsContent>
+
+              <TabsContent value="readme" className="mt-6 space-y-4">
+                {isReadmeLoading ? (
+                  <Loading />
+                ) : (
+                  <ReadmeEditor
+                    initialContent={
+                      readme?.content ?? DEFAULT_README_TEMPLATE
+                    }
+                    onSave={handleSaveReadme}
                   />
                 )}
               </TabsContent>
