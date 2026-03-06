@@ -68,6 +68,9 @@ export const SWR_KEYS = {
   interviewItems: 'interview-items',
   interviewCategories: 'interview-categories',
 
+  // ── Topics ──
+  topics: 'topics',
+  topicCategories: 'topic-categories',
 } as const
 
 export function isTransactionsRelatedKey(key: unknown): boolean {

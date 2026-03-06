@@ -15,6 +15,7 @@ import {
   Settings,
   StickyNote,
   MessagesSquare,
+  MessageCircleQuestion,
 } from 'lucide-react'
 
 export interface SidebarItemData {
@@ -143,6 +144,15 @@ export const LIST_ITEMS: SidebarItemData[] = [
       'group-hover:bg-cyan-100 group-hover:text-cyan-600 dark:group-hover:bg-cyan-900/30 dark:group-hover:text-cyan-400',
     activeIcon:
       'bg-cyan-100 text-cyan-600 dark:bg-cyan-900/30 dark:text-cyan-400',
+  },
+  {
+    href: '/topics',
+    icon: MessageCircleQuestion,
+    title: 'トピック',
+    hoverIcon:
+      'group-hover:bg-violet-100 group-hover:text-violet-600 dark:group-hover:bg-violet-900/30 dark:group-hover:text-violet-400',
+    activeIcon:
+      'bg-violet-100 text-violet-600 dark:bg-violet-900/30 dark:text-violet-400',
   },
 ]
 
