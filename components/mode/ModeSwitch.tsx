@@ -3,18 +3,27 @@
 import { useEffect, Suspense } from 'react'
 import { useHotkeys } from 'react-hotkeys-hook'
 import { useAppMode } from '@/hooks/useAppMode'
+import { useFocusSessionActive } from '@/hooks/useFocusSessionActive'
 import { Button } from '@/components/ui/button'
 import { usePathname, useRouter, useSearchParams } from 'next/navigation'
 import { cn } from '@/lib/utils'
 
 const LAST_PATH_LIFE_KEY = 'life-os-last-path-life'
 const LAST_PATH_DEV_KEY = 'life-os-last-path-development'
+const LAST_NONFOCUS_PATH_LIFE_KEY = 'life-os-last-nonfocus-path-life'
+const LAST_NONFOCUS_PATH_DEV_KEY = 'life-os-last-nonfocus-path-development'
 
 function isValidPathForMode(mode: 'life' | 'development', pathname: string): boolean {
   if (!pathname) return false
   const pathOnly = pathname.split('?')[0]
   if (mode === 'life') return !pathOnly.startsWith('/dev')
   return pathOnly.startsWith('/dev')
+}
+
+function isFocusPath(pathname: string | null): boolean {
+  if (!pathname) return false
+  const pathOnly = pathname.split('?')[0]
+  return pathOnly === '/focus' || pathOnly === '/dev/focus'
 }
 
 function getLastPathKey(mode: 'life' | 'development'): string {
@@ -39,6 +48,7 @@ function safeSetLocalStorage(key: string, value: string): void {
 
 function ModeSwitchContent() {
   const { mode } = useAppMode()
+  const { isActive: isFocusSessionActive } = useFocusSessionActive()
   const router = useRouter()
   const pathname = usePathname()
   const searchParams = useSearchParams()
@@ -48,7 +58,13 @@ function ModeSwitchContent() {
     if (!isValidPathForMode(mode, pathname)) return
     const queryString = searchParams.toString()
     const fullPath = queryString ? `${pathname}?${queryString}` : pathname
+    // モード切替用: すべてのページを保存
     safeSetLocalStorage(getLastPathKey(mode), fullPath)
+    // フォーカスの戻る用: 非フォーカスページのみ保存
+    if (!isFocusPath(pathname)) {
+      const nonfocusKey = mode === 'life' ? LAST_NONFOCUS_PATH_LIFE_KEY : LAST_NONFOCUS_PATH_DEV_KEY
+      safeSetLocalStorage(nonfocusKey, fullPath)
+    }
   }, [mode, pathname, searchParams])
 
   const handleModeChange = (newMode: 'life' | 'development') => {
@@ -67,8 +83,8 @@ function ModeSwitchContent() {
         router.push(isValidPathForMode('life', lastPath) ? lastPath : '/')
       }
     },
-    { enableOnFormTags: false, preventDefault: true },
-    [mode, router],
+    { enableOnFormTags: false, preventDefault: true, enabled: !isFocusSessionActive },
+    [mode, router, isFocusSessionActive],
   )
   useHotkeys(
     'mod+d',
@@ -80,8 +96,8 @@ function ModeSwitchContent() {
         )
       }
     },
-    { enableOnFormTags: false, preventDefault: true },
-    [mode, router],
+    { enableOnFormTags: false, preventDefault: true, enabled: !isFocusSessionActive },
+    [mode, router, isFocusSessionActive],
   )
 
   return (
