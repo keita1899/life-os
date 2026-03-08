@@ -88,7 +88,11 @@ export function WeekStartEventsStep({
   }, [deletingEvent, updateEvent, deleteEvent])
 
   if (!hasAny) {
-    return <EmptyState message="今週の予定がありません" />
+    return (
+      <div className="space-y-5">
+        <EmptyState message="今週の予定はありません" />
+      </div>
+    )
   }
 
   return (

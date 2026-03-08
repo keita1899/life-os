@@ -6,6 +6,7 @@ import { useEvents, EventDialog, RecurringEventDeleteDialog } from '@/features/e
 import { expandRecurringEvents } from '@/features/events'
 import { getEventsForDateSorted } from '@/features/logs'
 import { LogEventsSection } from '@/features/logs'
+import { EmptyState } from '@/components/ui/empty-state'
 import type { Event, CreateEventInput } from '@/features/events'
 
 interface EveningTomorrowEventsStepProps {
@@ -55,6 +56,14 @@ export function EveningTomorrowEventsStep({ today }: EveningTomorrowEventsStepPr
     }
     setDeletingEvent(null)
   }, [deletingEvent, updateEvent, deleteEvent])
+
+  if (lifeEvents.length === 0) {
+    return (
+      <div className="space-y-5">
+        <EmptyState message="明日の予定はありません" />
+      </div>
+    )
+  }
 
   return (
     <div className="space-y-5">
