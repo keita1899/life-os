@@ -1,7 +1,9 @@
 'use client'
 
-import { useMemo } from 'react'
+import { useEffect, useMemo } from 'react'
 import { useRouter } from 'next/navigation'
+import { useAppMode } from '@/hooks/useAppMode'
+import { useFocusSessionActive } from '@/hooks/useFocusSessionActive'
 import { ArrowLeft, Play, GripVertical } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Loading } from '@/components/ui/loading'
@@ -58,6 +60,7 @@ export function FocusView<T extends TaskLike>({
   headerContent,
 }: FocusViewProps<T>) {
   const router = useRouter()
+  const { mode } = useAppMode()
 
   const sensors = useSensors(
     useSensor(PointerSensor),
@@ -117,13 +120,26 @@ export function FocusView<T extends TaskLike>({
 
   useSessionHistory(isSessionActive)
 
+  const { setActive: setFocusSessionActive } = useFocusSessionActive()
+  useEffect(() => {
+    setFocusSessionActive(isSessionActive)
+    return () => setFocusSessionActive(false)
+  }, [isSessionActive, setFocusSessionActive])
+
   const activeTask = useMemo(() => {
     if (activeId === null) return null
     return tasks.find((task) => task.id === activeId) ?? null
   }, [activeId, tasks])
 
   const handleBack = () => {
-    router.back()
+    const key = mode === 'life' ? 'life-os-last-nonfocus-path-life' : 'life-os-last-nonfocus-path-development'
+    const defaultPath = mode === 'life' ? '/' : '/dev'
+    try {
+      const lastPath = localStorage.getItem(key) || defaultPath
+      router.push(lastPath)
+    } catch {
+      router.push(defaultPath)
+    }
   }
 
   if (isSessionActive) {

@@ -1,9 +1,10 @@
 'use client'
 
-import { useCallback, useEffect, useState } from 'react'
+import { useCallback, useEffect, useMemo, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { useHotkeys } from 'react-hotkeys-hook'
 import { useAppMode } from '@/hooks/useAppMode'
+import { FocusSessionActiveContext } from '@/hooks/useFocusSessionActive'
 import { ReviewWizard, useReviewWizard } from '@/features/review'
 import { useNotificationScheduler } from '@/features/notifications'
 import { ProjectSwitcher } from '@/features/dev/projects'
@@ -34,6 +35,11 @@ export function LayoutClient({ children }: LayoutClientProps) {
   const router = useRouter()
   const { mode } = useAppMode()
   const [isSidebarOpen, setIsSidebarOpen] = useState(false)
+  const [isFocusSessionActive, setFocusSessionActive] = useState(false)
+  const focusSessionContextValue = useMemo(
+    () => ({ isActive: isFocusSessionActive, setActive: setFocusSessionActive }),
+    [isFocusSessionActive],
+  )
   useNotificationScheduler()
 
   useEffect(() => {
@@ -44,26 +50,26 @@ export function LayoutClient({ children }: LayoutClientProps) {
   useHotkeys(
     'mod+h',
     () => router.push(mode === 'development' ? '/dev' : '/'),
-    { enableOnFormTags: false, preventDefault: true },
-    [mode, router],
+    { enableOnFormTags: false, preventDefault: true, enabled: !isFocusSessionActive },
+    [mode, router, isFocusSessionActive],
   )
   useHotkeys(
     'd',
     () => router.push(mode === 'development' ? '/dev/logs' : '/logs'),
-    { enableOnFormTags: false, preventDefault: true },
-    [mode, router],
+    { enableOnFormTags: false, preventDefault: true, enabled: !isFocusSessionActive },
+    [mode, router, isFocusSessionActive],
   )
   useHotkeys(
     'm',
     () => router.push(mode === 'development' ? '/dev?view=month' : '/?view=month'),
-    { enableOnFormTags: false, preventDefault: true },
-    [mode, router],
+    { enableOnFormTags: false, preventDefault: true, enabled: !isFocusSessionActive },
+    [mode, router, isFocusSessionActive],
   )
   useHotkeys(
     'w',
     () => router.push(mode === 'development' ? '/dev?view=week' : '/?view=week'),
-    { enableOnFormTags: false, preventDefault: true },
-    [mode, router],
+    { enableOnFormTags: false, preventDefault: true, enabled: !isFocusSessionActive },
+    [mode, router, isFocusSessionActive],
   )
 
   const handleOpenChange = useCallback((open: boolean): void => {
@@ -81,8 +87,9 @@ export function LayoutClient({ children }: LayoutClientProps) {
     {
       enableOnFormTags: false,
       preventDefault: true,
+      enabled: !isFocusSessionActive,
     },
-    [handleOpenChange, isSidebarOpen],
+    [handleOpenChange, isSidebarOpen, isFocusSessionActive],
   )
 
   const handleMenuClick = useCallback((): void => {
@@ -92,25 +99,31 @@ export function LayoutClient({ children }: LayoutClientProps) {
   const { activeWizard, handleComplete } = useReviewWizard()
 
   return (
-    <TooltipProvider delayDuration={400}>
-      <div className="flex min-h-screen">
-        <Sidebar open={isSidebarOpen} onOpenChange={handleOpenChange} />
-        <div className="flex flex-1 flex-col min-w-0">
-          <Header onMenuClick={handleMenuClick} />
-          <main
-            className={cn(
-              'flex-1',
-              mode === 'development' && 'bg-slate-950',
+    <FocusSessionActiveContext.Provider value={focusSessionContextValue}>
+      <TooltipProvider delayDuration={400}>
+        <div className="flex min-h-screen">
+          {!isFocusSessionActive && (
+            <Sidebar open={isSidebarOpen} onOpenChange={handleOpenChange} />
+          )}
+          <div className="flex flex-1 flex-col min-w-0">
+            {!isFocusSessionActive && (
+              <Header onMenuClick={handleMenuClick} />
             )}
-          >
-            {children}
-          </main>
+            <main
+              className={cn(
+                'flex-1',
+                mode === 'development' && 'bg-slate-950',
+              )}
+            >
+              {children}
+            </main>
+          </div>
         </div>
-      </div>
-      {activeWizard && (
-        <ReviewWizard key={activeWizard} type={activeWizard} onComplete={handleComplete} />
-      )}
-      {mode === 'development' && <ProjectSwitcher />}
-    </TooltipProvider>
+        {!isFocusSessionActive && activeWizard && (
+          <ReviewWizard key={activeWizard} type={activeWizard} onComplete={handleComplete} />
+        )}
+        {!isFocusSessionActive && mode === 'development' && <ProjectSwitcher />}
+      </TooltipProvider>
+    </FocusSessionActiveContext.Provider>
   )
 }
