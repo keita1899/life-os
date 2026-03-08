@@ -104,6 +104,7 @@ export function InterviewDialog({
   useFormSubmitShortcut({
     form,
     onSubmit: handleSubmit,
+    enabled: open,
   })
 
   return (

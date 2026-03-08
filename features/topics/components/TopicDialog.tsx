@@ -104,6 +104,7 @@ export function TopicDialog({
   useFormSubmitShortcut({
     form,
     onSubmit: handleSubmit,
+    enabled: open,
   })
 
   return (
