@@ -4,6 +4,7 @@ import { usePathname } from 'next/navigation'
 import {
   HOME_ITEM,
   TASK_ITEMS,
+  DIARY_ITEM,
   FINANCE_ITEMS,
   LIST_ITEMS,
   SETTINGS_ITEM,
@@ -14,6 +15,7 @@ import { SidebarItem } from './SidebarItem'
 const LIFE_HREFS = [
   HOME_ITEM.href,
   ...TASK_ITEMS.map((i) => i.href),
+  DIARY_ITEM.href,
   ...FINANCE_ITEMS.map((i) => i.href),
   ...LIST_ITEMS.map((i) => i.href),
   SETTINGS_ITEM.href,
@@ -45,6 +47,13 @@ export function LifeSidebarContent({ isCollapsed }: LifeSidebarContentProps) {
             isActive={activeHref === item.href}
           />
         ))}
+      </div>
+      <div className="mt-2">
+        <SidebarItem
+          item={DIARY_ITEM}
+          isCollapsed={isCollapsed}
+          isActive={activeHref === DIARY_ITEM.href}
+        />
       </div>
       <div className="mt-2">
         {FINANCE_ITEMS.map((item) => (

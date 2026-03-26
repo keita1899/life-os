@@ -33,6 +33,12 @@ export function useLogView({ basePath }: UseLogViewOptions) {
     router.push(`${basePath}?${params.toString()}`)
   }
 
+  const navigateToDate = (date: Date) => {
+    const params = new URLSearchParams(searchParams.toString())
+    params.set('date', format(date, 'yyyy-MM-dd'))
+    router.push(`${basePath}?${params.toString()}`)
+  }
+
   return {
     currentDate,
     datesToShow: [currentDate],
@@ -41,5 +47,6 @@ export function useLogView({ basePath }: UseLogViewOptions) {
     dateString: format(currentDate, 'yyyy-MM-dd'),
     handlePrev,
     handleNext,
+    navigateToDate,
   }
 }

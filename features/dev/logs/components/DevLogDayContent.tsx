@@ -39,6 +39,7 @@ function mapDevTaskToTask(devTask: DevTask): Task {
     recurrenceDayOfMonth: null,
     recurrenceEndDate: null,
     recurrenceExcludedDates: [],
+    recurrenceCompletedDates: [],
     memo: devTask.memo,
     createdAt: devTask.createdAt,
     updatedAt: devTask.updatedAt,

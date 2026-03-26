@@ -2,6 +2,8 @@ export { LogViewHeader } from './components/LogViewHeader'
 export { LogDayContent } from './components/LogDayContent'
 export { LogGoalsSection } from './components/LogGoalsSection'
 export { LogDiarySection } from './components/LogDiarySection'
+export { LogReportSection } from './components/LogReportSection'
+
 export { LogEventItem } from './components/LogEventItem'
 export { LogTaskItem } from './components/LogTaskItem'
 export { HabitItem } from './components/HabitItem'

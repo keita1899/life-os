@@ -15,7 +15,19 @@ import {
   Settings,
   StickyNote,
   MessagesSquare,
+  BookOpen,
+  ClipboardPen,
 } from 'lucide-react'
+
+export const DEV_REPORT_ITEM: SidebarItemData = {
+  href: '/dev/report',
+  icon: ClipboardPen,
+  title: '日報',
+  hoverIcon:
+    'group-hover:bg-orange-100 group-hover:text-orange-600 dark:group-hover:bg-orange-900/30 dark:group-hover:text-orange-400',
+  activeIcon:
+    'bg-orange-100 text-orange-600 dark:bg-orange-900/30 dark:text-orange-400',
+}
 
 export interface SidebarItemData {
   href: string
@@ -85,6 +97,16 @@ export const TASK_ITEMS: SidebarItemData[] = [
       'bg-teal-100 text-teal-600 dark:bg-teal-900/30 dark:text-teal-400',
   },
 ]
+
+export const DIARY_ITEM: SidebarItemData = {
+  href: '/diary',
+  icon: BookOpen,
+  title: '日記',
+  hoverIcon:
+    'group-hover:bg-amber-100 group-hover:text-amber-600 dark:group-hover:bg-amber-900/30 dark:group-hover:text-amber-400',
+  activeIcon:
+    'bg-amber-100 text-amber-600 dark:bg-amber-900/30 dark:text-amber-400',
+}
 
 export const FINANCE_ITEMS: SidebarItemData[] = [
   {
