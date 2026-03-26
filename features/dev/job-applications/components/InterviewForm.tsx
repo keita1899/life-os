@@ -36,7 +36,7 @@ import {
 } from '../types/job-interview'
 
 const interviewFormSchema = z.object({
-  round: z.coerce.number().int().min(1, '面接回数は1以上です'),
+  round: z.preprocess((v) => Number(v), z.number().int().min(1, '面接回数は1以上です')),
   interviewType: z
     .enum(['casual', 'interview', 'technical', 'final', 'other'])
     .optional(),
