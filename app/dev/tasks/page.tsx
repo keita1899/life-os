@@ -74,6 +74,7 @@ export default function DevTasksPage() {
       recurrenceDayOfMonth: null,
       recurrenceEndDate: null,
       recurrenceExcludedDates: [],
+      recurrenceCompletedDates: [],
       memo: t.memo,
       createdAt: t.createdAt,
       updatedAt: t.updatedAt,

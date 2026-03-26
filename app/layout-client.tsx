@@ -1,7 +1,7 @@
 'use client'
 
 import { useCallback, useEffect, useMemo, useState } from 'react'
-import { useRouter } from 'next/navigation'
+import { useRouter, usePathname } from 'next/navigation'
 import { useHotkeys } from 'react-hotkeys-hook'
 import { useAppMode } from '@/hooks/useAppMode'
 import { FocusSessionActiveContext } from '@/hooks/useFocusSessionActive'
@@ -33,6 +33,7 @@ interface LayoutClientProps {
 
 export function LayoutClient({ children }: LayoutClientProps) {
   const router = useRouter()
+  const pathname = usePathname()
   const { mode } = useAppMode()
   const [isSidebarOpen, setIsSidebarOpen] = useState(false)
   const [isFocusSessionActive, setFocusSessionActive] = useState(false)
@@ -59,17 +60,18 @@ export function LayoutClient({ children }: LayoutClientProps) {
     { enableOnFormTags: false, preventDefault: true, enabled: !isFocusSessionActive },
     [mode, router, isFocusSessionActive],
   )
+  const isHabitsPage = pathname === '/habits'
   useHotkeys(
     'm',
     () => router.push(mode === 'development' ? '/dev?view=month' : '/?view=month'),
-    { enableOnFormTags: false, preventDefault: true, enabled: !isFocusSessionActive },
-    [mode, router, isFocusSessionActive],
+    { enableOnFormTags: false, preventDefault: true, enabled: !isFocusSessionActive && !isHabitsPage },
+    [mode, router, isFocusSessionActive, isHabitsPage],
   )
   useHotkeys(
     'w',
     () => router.push(mode === 'development' ? '/dev?view=week' : '/?view=week'),
-    { enableOnFormTags: false, preventDefault: true, enabled: !isFocusSessionActive },
-    [mode, router, isFocusSessionActive],
+    { enableOnFormTags: false, preventDefault: true, enabled: !isFocusSessionActive && !isHabitsPage },
+    [mode, router, isFocusSessionActive, isHabitsPage],
   )
 
   const handleOpenChange = useCallback((open: boolean): void => {

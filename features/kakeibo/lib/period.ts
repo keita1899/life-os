@@ -1,8 +1,9 @@
-import { formatDateISO, getTodayDateString } from '@/lib/date/formats'
+import { formatDateISO } from '@/lib/date/formats'
 import {
   startOfMonth,
   endOfMonth,
   startOfYear,
+  endOfYear,
   subMonths,
   format,
 } from 'date-fns'
@@ -22,9 +23,10 @@ export function getPeriodRange(periodType: PeriodType, year?: number, month?: nu
   switch (periodType) {
     case 'thisMonth': {
       const monthStart = startOfMonth(today)
+      const monthEnd = endOfMonth(today)
       return {
         startDate: formatDateISO(monthStart),
-        endDate: getTodayDateString(),
+        endDate: formatDateISO(monthEnd),
         label: '今月',
       }
     }
@@ -42,9 +44,10 @@ export function getPeriodRange(periodType: PeriodType, year?: number, month?: nu
 
     case 'thisYear': {
       const yearStart = startOfYear(today)
+      const yearEnd = endOfYear(today)
       return {
         startDate: formatDateISO(yearStart),
-        endDate: getTodayDateString(),
+        endDate: formatDateISO(yearEnd),
         label: '今年',
       }
     }

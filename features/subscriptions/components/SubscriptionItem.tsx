@@ -99,7 +99,7 @@ export function SubscriptionItem({
           <span>
             {subscription.monthlyPrice.toLocaleString()}円 / {billingCycleLabel}
           </span>
-          {subscription.active && (
+          {subscription.active ? (
             <span
               className={cn(
                 'rounded-md px-2.5 py-1 font-medium',
@@ -109,6 +109,10 @@ export function SubscriptionItem({
               )}
             >
               次回更新: {formattedNextBillingDate}
+            </span>
+          ) : (
+            <span className="rounded-md bg-stone-100 px-2.5 py-1 font-medium text-stone-700 dark:bg-stone-800 dark:text-stone-300">
+              終了日: {formattedNextBillingDate}
             </span>
           )}
           {subscription.cancellationUrl && (

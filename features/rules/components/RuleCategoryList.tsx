@@ -108,6 +108,7 @@ export function RuleCategoryList({
                     onSelectCategory(category.id)
                   }
                 }}
+                onDoubleClick={() => editState.startEdit(category.id)}
                 onKeyDown={(e) => {
                   if (editState.isEditing(category.id)) return
                   if (e.key === 'Enter' || e.key === ' ') {

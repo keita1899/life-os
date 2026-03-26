@@ -1,3 +1,4 @@
+import { useEffect, useRef } from 'react'
 import useSWR from 'swr'
 import { mutate } from 'swr'
 import {
@@ -7,6 +8,10 @@ import {
   deleteSubscription,
   reorderSubscriptions,
 } from '../lib'
+import {
+  getExpiredActiveSubscriptions,
+  advanceBillingDate,
+} from '../lib/utils'
 import type {
   Subscription,
   CreateSubscriptionInput,
@@ -22,6 +27,25 @@ export function useSubscriptions() {
   } = useSWR<Subscription[]>(SWR_KEYS.subscriptions, () =>
     getAllSubscriptions(),
   )
+  const hasAutoRenewed = useRef(false)
+
+  useEffect(() => {
+    if (isLoading || hasAutoRenewed.current || data.length === 0) return
+    hasAutoRenewed.current = true
+
+    const expired = getExpiredActiveSubscriptions(data)
+    if (expired.length === 0) return
+
+    void (async () => {
+      for (const sub of expired) {
+        const nextDate = advanceBillingDate(sub.nextBillingDate, sub.billingCycle)
+        if (nextDate) {
+          await updateSubscription(sub.id, { nextBillingDate: nextDate })
+        }
+      }
+      await mutate(SWR_KEYS.subscriptions)
+    })()
+  }, [data, isLoading])
 
   const handleCreateSubscription = async (input: CreateSubscriptionInput) => {
     const result = await createSubscription(input)

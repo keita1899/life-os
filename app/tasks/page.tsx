@@ -187,22 +187,41 @@ export default function TasksPage() {
 
   const handleToggleCompletion = async (task: Task) => {
     await execute(async () => {
-      if (
-        task.recurrenceRule &&
-        !task.completed &&
-        task.executionDate
-      ) {
-        const nextDate = getNextOccurrenceAfter(
-          task,
-          parseISO(task.executionDate),
-        )
-        if (nextDate !== null) {
+      if (task.recurrenceRule && task.executionDate) {
+        // 元タスクのデータを取得（仮想エントリではなくDBの値）
+        const originalTask = tasks.find((t) => t.id === task.id)
+        if (!originalTask) return
+
+        if (!task.completed) {
+          // 完了にする: executionDate を completedDates に追加し、次の日付に進める
+          const newCompletedDates = [
+            ...(originalTask.recurrenceCompletedDates || []),
+            task.executionDate,
+          ]
+          const nextDate = getNextOccurrenceAfter(
+            { ...originalTask, recurrenceCompletedDates: newCompletedDates },
+            parseISO(task.executionDate),
+          )
           await updateTask(task.id, {
-            executionDate: nextDate,
+            ...(nextDate ? { executionDate: nextDate } : {}),
+            recurrenceCompletedDates: newCompletedDates,
             completed: false,
           })
-          return
+        } else {
+          // 未完了に戻す: executionDate を completedDates から除去
+          const newCompletedDates = (originalTask.recurrenceCompletedDates || [])
+            .filter((d) => d !== task.executionDate)
+          // 戻す日付が元の executionDate より前なら、executionDate を戻す
+          const shouldRollback =
+            originalTask.executionDate &&
+            task.executionDate! < originalTask.executionDate
+          await updateTask(task.id, {
+            ...(shouldRollback ? { executionDate: task.executionDate } : {}),
+            recurrenceCompletedDates: newCompletedDates,
+            completed: false,
+          })
         }
+        return
       }
       await toggleTaskCompletion(task.id, !task.completed)
     }, 'タスクの完了状態の更新に失敗しました')

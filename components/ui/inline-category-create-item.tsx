@@ -7,11 +7,15 @@ import { cn } from '@/lib/utils'
 interface InlineCategoryCreateItemProps {
   onSubmit: (name: string) => Promise<void>
   className?: string
+  label?: string
+  placeholder?: string
 }
 
 export function InlineCategoryCreateItem({
   onSubmit,
   className,
+  label = 'カテゴリーを追加',
+  placeholder = 'カテゴリー名',
 }: InlineCategoryCreateItemProps) {
   const [isEditing, setIsEditing] = useState(false)
   const [name, setName] = useState('')
@@ -68,7 +72,7 @@ export function InlineCategoryCreateItem({
           onBlur={() => {
             if (!name.trim()) handleCancel()
           }}
-          placeholder="カテゴリー名"
+          placeholder={placeholder}
           disabled={isSubmitting}
           className="h-7 min-w-0 flex-1 rounded border border-stone-300 bg-transparent px-2 text-sm outline-none focus:border-stone-500 dark:border-stone-600 dark:focus:border-stone-400"
         />
@@ -105,7 +109,7 @@ export function InlineCategoryCreateItem({
       )}
     >
       <Plus className="h-3.5 w-3.5 shrink-0" />
-      <span>カテゴリーを追加</span>
+      <span>{label}</span>
     </button>
   )
 }

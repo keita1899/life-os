@@ -1,11 +1,11 @@
 'use client'
 
-import { useState } from 'react'
+import { useCallback, useState } from 'react'
 import { DeleteConfirmDialog } from '@/components/ui/delete-confirm-dialog'
 import { EditDeleteDropdownMenu } from '@/components/ui/edit-delete-dropdown-menu'
+import { InlineEditableText } from '@/components/ui/inline-editable-text'
 import { SortableDragHandle } from '@/components/ui/sortable-list-item'
 import type { RuleItem as RuleItemType } from '../types/rule-item'
-import { RuleForm } from './RuleForm'
 
 interface RuleItemProps {
   item: RuleItemType
@@ -15,27 +15,15 @@ interface RuleItemProps {
 }
 
 export function RuleItem({ item, onUpdate, onDelete, readOnly = false }: RuleItemProps) {
-  const [isEditing, setIsEditing] = useState(false)
   const [isDeleting, setIsDeleting] = useState(false)
 
-  const handleUpdate = async (title: string) => {
+  const handleSave = useCallback(async (title: string) => {
     await onUpdate(item.id, title)
-    setIsEditing(false)
-  }
+  }, [item.id, onUpdate])
 
   const handleDelete = async () => {
     await onDelete(item.id)
     setIsDeleting(false)
-  }
-
-  if (isEditing) {
-    return (
-      <RuleForm
-        initialTitle={item.title}
-        onSubmit={handleUpdate}
-        onCancel={() => setIsEditing(false)}
-      />
-    )
   }
 
   return (
@@ -43,10 +31,15 @@ export function RuleItem({ item, onUpdate, onDelete, readOnly = false }: RuleIte
       <div className={`group flex items-center gap-3 rounded-md px-2 py-2 transition-colors ${readOnly ? '' : 'hover:bg-accent/50'}`}>
         {!readOnly && <SortableDragHandle />}
         <span className="h-1.5 w-1.5 shrink-0 rounded-full bg-muted-foreground/40" />
-        <div className="flex-1 text-sm">{item.title}</div>
+        <div className="flex-1 text-sm">
+          <InlineEditableText
+            value={item.title}
+            onSave={handleSave}
+            disabled={readOnly}
+          />
+        </div>
         {!readOnly && (
           <EditDeleteDropdownMenu
-            onEdit={() => setIsEditing(true)}
             onDelete={() => setIsDeleting(true)}
             triggerClassName="opacity-0 transition-opacity group-hover:opacity-100"
           />
