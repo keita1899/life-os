@@ -314,6 +314,35 @@ const SCHEMA = {
     'content',
     'updated_at',
   ],
+  roadmap_projects: [
+    'id',
+    'name',
+    'sort_order',
+    'created_at',
+    'updated_at',
+  ],
+  roadmap_sections: [
+    'id',
+    'name',
+    'project_id',
+    'sort_order',
+    'status',
+    'created_at',
+    'updated_at',
+  ],
+  roadmap_tasks: [
+    'id',
+    'title',
+    'project_id',
+    'section_id',
+    'target_year',
+    'target_month',
+    'completed',
+    'achieved_date',
+    'order',
+    'created_at',
+    'updated_at',
+  ],
 } as const
 
 // ────────────────────────────────────────────

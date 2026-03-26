@@ -68,6 +68,13 @@ export const SWR_KEYS = {
   interviewItems: 'interview-items',
   interviewCategories: 'interview-categories',
 
+  // ── Roadmap ──
+  roadmapProjects: 'roadmap-projects',
+  roadmapSections: (projectId: number) =>
+    ['roadmap-sections', projectId] as const,
+  roadmapTasks: (projectId: number) =>
+    ['roadmap-tasks', projectId] as const,
+  roadmapTaskCounts: 'roadmap-task-counts',
 } as const
 
 export function isTransactionsRelatedKey(key: unknown): boolean {

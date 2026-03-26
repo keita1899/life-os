@@ -17,6 +17,7 @@ import {
   MessagesSquare,
   BookOpen,
   ClipboardPen,
+  Map,
 } from 'lucide-react'
 
 export const DEV_REPORT_ITEM: SidebarItemData = {
@@ -156,6 +157,15 @@ export const LIST_ITEMS: SidebarItemData[] = [
       'group-hover:bg-indigo-100 group-hover:text-indigo-600 dark:group-hover:bg-indigo-900/30 dark:group-hover:text-indigo-400',
     activeIcon:
       'bg-indigo-100 text-indigo-600 dark:bg-indigo-900/30 dark:text-indigo-400',
+  },
+  {
+    href: '/roadmap',
+    icon: Map,
+    title: 'ロードマップ',
+    hoverIcon:
+      'group-hover:bg-violet-100 group-hover:text-violet-600 dark:group-hover:bg-violet-900/30 dark:group-hover:text-violet-400',
+    activeIcon:
+      'bg-violet-100 text-violet-600 dark:bg-violet-900/30 dark:text-violet-400',
   },
   {
     href: '/rules',
