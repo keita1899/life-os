@@ -146,6 +146,11 @@ export function getNextOccurrenceDate(
   const rangeEnd = endLimit
     ? endLimit
     : startOfDay(addMonths(fromDate, 12))
+  // 除外日と完了済み日を合わせて除外
+  const allExcluded = [
+    ...(task.recurrenceExcludedDates || []),
+    ...(task.recurrenceCompletedDates || []),
+  ]
   const dates = getOccurrenceDatesUpTo(
     task.recurrenceRule,
     startDate,
@@ -154,7 +159,7 @@ export function getNextOccurrenceDate(
     task.recurrenceEndDate,
     task.recurrenceDaysOfWeek,
     task.recurrenceDayOfMonth,
-    task.recurrenceExcludedDates || [],
+    allExcluded,
   )
   return dates.length > 0 ? format(dates[0], 'yyyy-MM-dd') : null
 }
@@ -172,6 +177,11 @@ export function getNextOccurrenceAfter(
   const rangeEnd = endLimit
     ? endLimit
     : startOfDay(addMonths(afterDate, 13))
+  // 除外日と完了済み日を合わせて除外
+  const allExcluded = [
+    ...(task.recurrenceExcludedDates || []),
+    ...(task.recurrenceCompletedDates || []),
+  ]
   const dates = getOccurrenceDatesUpTo(
     task.recurrenceRule,
     startDate,
@@ -180,7 +190,7 @@ export function getNextOccurrenceAfter(
     task.recurrenceEndDate,
     task.recurrenceDaysOfWeek,
     task.recurrenceDayOfMonth,
-    task.recurrenceExcludedDates || [],
+    allExcluded,
   )
   return dates.length > 0 ? format(dates[0], 'yyyy-MM-dd') : null
 }
@@ -198,13 +208,23 @@ export function toTasksWithNextOccurrenceOnly(
       continue
     }
 
+    // 次の未完了繰り返し日を生成
     const nextDate = getNextOccurrenceDate(task, fromDay)
-    if (!nextDate) continue
+    if (nextDate) {
+      result.push({
+        ...task,
+        executionDate: nextDate,
+      })
+    }
 
-    result.push({
-      ...task,
-      executionDate: nextDate,
-    })
+    // 完了済み日付ごとに completed: true の仮想エントリを生成
+    for (const completedDate of task.recurrenceCompletedDates || []) {
+      result.push({
+        ...task,
+        executionDate: completedDate,
+        completed: true,
+      })
+    }
   }
 
   return result
@@ -238,11 +258,14 @@ export function expandRecurringTasks(
       task.recurrenceExcludedDates || [],
     )
 
+    const completedDatesSet = new Set(task.recurrenceCompletedDates || [])
+
     for (const occDate of occurrenceDates) {
       const occExecutionDate = format(occDate, 'yyyy-MM-dd')
       result.push({
         ...task,
         executionDate: occExecutionDate,
+        completed: completedDatesSet.has(occExecutionDate),
       })
     }
   }

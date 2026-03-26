@@ -32,6 +32,12 @@ const TASK_UPDATE_MAPPING: FieldMapping<UpdateTaskInput> = [
     transform: (v) =>
       Array.isArray(v) && v.length > 0 ? JSON.stringify(v) : null,
   },
+  {
+    key: 'recurrenceCompletedDates',
+    column: 'recurrence_completed_dates',
+    transform: (v) =>
+      Array.isArray(v) && v.length > 0 ? JSON.stringify(v) : null,
+  },
   { key: 'memo', column: 'memo', transform: (v) => v ?? null },
 ]
 
@@ -47,6 +53,7 @@ interface DbTask {
   recurrence_day_of_month: number | null
   recurrence_end_date: string | null
   recurrence_excluded_dates: string | null
+  recurrence_completed_dates: string | null
   memo: string | null
   created_at: string
   updated_at: string
@@ -70,6 +77,15 @@ function mapDbTaskToTask(dbTask: DbTask): Task {
     }
   }
 
+  let completedDates: string[] = []
+  if (dbTask.recurrence_completed_dates) {
+    try {
+      completedDates = JSON.parse(dbTask.recurrence_completed_dates)
+    } catch {
+      completedDates = []
+    }
+  }
+
   return {
     id: dbTask.id,
     title: dbTask.title,
@@ -82,6 +98,7 @@ function mapDbTaskToTask(dbTask: DbTask): Task {
     recurrenceDayOfMonth: dbTask.recurrence_day_of_month,
     recurrenceEndDate: dbTask.recurrence_end_date,
     recurrenceExcludedDates: excludedDates,
+    recurrenceCompletedDates: completedDates,
     memo: dbTask.memo ?? null,
     createdAt: dbTask.created_at,
     updatedAt: dbTask.updated_at,
@@ -229,7 +246,17 @@ export async function deleteCompletedTasks(): Promise<number> {
   const db = await getDatabase()
 
   try {
-    const result = await db.execute('DELETE FROM tasks WHERE completed = 1')
+    // 通常タスク（非繰り返し）の完了済みを削除
+    const result = await db.execute(
+      'DELETE FROM tasks WHERE completed = 1 AND recurrence_rule IS NULL',
+    )
+
+    // 繰り返しタスクの完了済み日付をクリア
+    await db.execute(
+      `UPDATE tasks SET recurrence_completed_dates = NULL, updated_at = CURRENT_TIMESTAMP
+       WHERE recurrence_rule IS NOT NULL AND recurrence_completed_dates IS NOT NULL`,
+    )
+
     return result.rowsAffected
   } catch (err) {
     handleDbError(err, 'delete completed tasks')

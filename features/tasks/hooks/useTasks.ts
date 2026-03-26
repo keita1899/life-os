@@ -78,12 +78,20 @@ export function useTasks() {
   }
 
   const handleDeleteCompletedTasks = async () => {
-    const completedIds = data.filter((t) => t.completed).map((t) => t.id)
+    const completedIds = data
+      .filter((t) => t.completed && !t.recurrenceRule)
+      .map((t) => t.id)
     const count = await deleteCompletedTasks()
     await mutate(
       SWR_KEYS.tasks,
       (current: Task[] | undefined) =>
-        (current ?? []).filter((t) => !completedIds.includes(t.id)),
+        (current ?? [])
+          .filter((t) => !completedIds.includes(t.id))
+          .map((t) =>
+            t.recurrenceRule && t.recurrenceCompletedDates.length > 0
+              ? { ...t, recurrenceCompletedDates: [] }
+              : t,
+          ),
       { revalidate: false },
     )
     return count
