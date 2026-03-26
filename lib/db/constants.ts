@@ -313,22 +313,6 @@ const SCHEMA = {
     'content',
     'updated_at',
   ],
-  topic_categories: [
-    'id',
-    'name',
-    'sort_order',
-    'created_at',
-    'updated_at',
-  ],
-  topic_items: [
-    'id',
-    'question',
-    'answer',
-    'category_id',
-    'order',
-    'created_at',
-    'updated_at',
-  ],
 } as const
 
 // ────────────────────────────────────────────
