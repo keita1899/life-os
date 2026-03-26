@@ -68,6 +68,12 @@ export const SWR_KEYS = {
   interviewItems: 'interview-items',
   interviewCategories: 'interview-categories',
 
+  // ── Job Applications ──
+  jobApplications: 'job-applications',
+  jobApplication: (id: number) => `job-application-${id}` as const,
+  jobInterviews: (applicationId: number) =>
+    ['job-interviews', applicationId] as const,
+
   // ── Roadmap ──
   roadmapProjects: 'roadmap-projects',
   roadmapSections: (projectId: number) =>

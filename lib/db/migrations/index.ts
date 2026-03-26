@@ -21,6 +21,7 @@ import { migration019 } from './019_dev_project_readmes'
 import { migration020 } from './020_dev_memos_category'
 import { migration022 } from './022_task_completed_dates'
 import { migration023 } from './023_roadmap'
+import { migration024 } from './024_job_applications'
 import { migration025 } from './025_roadmap_section_status'
 
 export const allMigrations: Migration[] = [
@@ -46,5 +47,6 @@ export const allMigrations: Migration[] = [
   migration020,
   migration022,
   migration023,
+  migration024,
   migration025,
 ]

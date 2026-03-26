@@ -343,6 +343,30 @@ const SCHEMA = {
     'created_at',
     'updated_at',
   ],
+  job_applications: [
+    'id',
+    'company_name',
+    'status',
+    'url',
+    'applied_date',
+    'notes',
+    'order',
+    'created_at',
+    'updated_at',
+  ],
+  job_interviews: [
+    'id',
+    'application_id',
+    'round',
+    'interview_type',
+    'scheduled_date',
+    'scheduled_time',
+    'location',
+    'notes',
+    'result',
+    'created_at',
+    'updated_at',
+  ],
 } as const
 
 // ────────────────────────────────────────────

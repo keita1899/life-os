@@ -18,6 +18,7 @@ import {
   BookOpen,
   ClipboardPen,
   Map,
+  Briefcase,
 } from 'lucide-react'
 
 export const DEV_REPORT_ITEM: SidebarItemData = {
@@ -243,5 +244,14 @@ export const DEV_TASK_ITEMS: SidebarItemData[] = [
       'group-hover:bg-teal-100 group-hover:text-teal-600 dark:group-hover:bg-teal-900/30 dark:group-hover:text-teal-400',
     activeIcon:
       'bg-teal-100 text-teal-600 dark:bg-teal-900/30 dark:text-teal-400',
+  },
+  {
+    href: '/dev/applications',
+    icon: Briefcase,
+    title: '応募管理',
+    hoverIcon:
+      'group-hover:bg-rose-100 group-hover:text-rose-600 dark:group-hover:bg-rose-900/30 dark:group-hover:text-rose-400',
+    activeIcon:
+      'bg-rose-100 text-rose-600 dark:bg-rose-900/30 dark:text-rose-400',
   },
 ]
