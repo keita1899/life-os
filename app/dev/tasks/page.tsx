@@ -352,7 +352,7 @@ export default function DevTasksPage() {
           }}
           onSubmit={editingTask ? handleUpdateTask : handleCreateTask}
           task={editingTask}
-          defaultExecutionDate={defaultDate !== undefined ? (defaultDate ?? undefined) : undefined}
+          defaultExecutionDate={defaultDate !== undefined ? defaultDate : undefined}
         />
 
         <DeleteConfirmDialog

@@ -1004,7 +1004,7 @@ function DevProjectPageContent(): ReactElement | null {
           }}
           onSubmit={taskDialog.editingItem ? handleUpdateTask : handleCreateTask}
           task={taskDialog.editingItem}
-          defaultExecutionDate={defaultDate !== undefined ? (defaultDate ?? undefined) : undefined}
+          defaultExecutionDate={defaultDate !== undefined ? defaultDate : undefined}
         />
 
         <DeleteConfirmDialog

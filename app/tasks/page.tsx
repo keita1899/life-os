@@ -411,7 +411,7 @@ export default function TasksPage() {
         }}
         onSubmit={editingTask ? handleUpdateTask : handleCreateTask}
         task={editingTask}
-        defaultExecutionDate={defaultDate !== undefined ? (defaultDate ?? undefined) : undefined}
+        defaultExecutionDate={defaultDate !== undefined ? defaultDate : undefined}
       />
 
       {deleteConfirm.deletingItem?.recurrenceRule ? (

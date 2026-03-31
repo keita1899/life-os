@@ -60,7 +60,7 @@ interface TaskFormProps {
   onCancel?: () => void
   initialData?: Task
   defaultTitle?: string
-  defaultExecutionDate?: string
+  defaultExecutionDate?: string | null
   submitLabel?: string
 }
 
@@ -91,7 +91,7 @@ export const TaskForm = ({
         }
       : {
           title: defaultTitle ?? '',
-          executionDate: defaultExecutionDate ?? getTodayDateString(),
+          executionDate: defaultExecutionDate === null ? '' : (defaultExecutionDate ?? getTodayDateString()),
           scheduledTime: '',
           recurrenceRule: null,
           recurrenceDaysOfWeek: [],

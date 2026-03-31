@@ -10,7 +10,7 @@ interface TaskDialogProps {
   onSubmit: (input: CreateTaskInput) => Promise<void>
   task?: Task
   defaultTitle?: string
-  defaultExecutionDate?: string
+  defaultExecutionDate?: string | null
 }
 
 export const TaskDialog = ({
